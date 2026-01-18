@@ -66,6 +66,17 @@
         .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 20px; font-weight: 900; border-radius: 10px; cursor: pointer; transition: 0.1s; font-size: 1rem; margin-bottom: 15px; }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item { background: #181818; border: 1px solid #252525; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%; color: #fff; }
+/* This targets the button specifically by its ID and Class */
+#up-0.u-item.click-upgrade {
+    border: 2px solid var(--btc) !important; /* !important ensures it wins */
+    background: linear-gradient(90deg, #222 0%, #111 100%) !important;
+    box-shadow: 0 0 15px rgba(247, 147, 26, 0.2);
+}
+
+/* This makes the Level text white for just this button */
+#up-0.click-upgrade #lvl-txt-0 {
+    color: #ffffff !important;
+}
         .u-item:disabled { opacity: 0.2; cursor: not-allowed; }
         
         ::-webkit-scrollbar { width: 4px; }
@@ -115,12 +126,14 @@
     let btcBalance = 0;
     let btcLifetime = 0; 
     let btcPerSec = 0;
+let btcClickValue = 0.00000250;
     let hardwareEquity = 0; 
     let lastTickTime = Date.now();
     const MIN_PRICE = 50000;
     const MAX_PRICE = 200000;
 
     const upgrades = [
+	{ id: 0, name: "Manual Hash", baseUsd: 50, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000250 }, // NEW BUTTON
         { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.000000115 }, 
         { id: 2, name: "GTX 1660 Super", baseUsd: 100, baseYield: 0.0000007 },
         { id: 3, name: "RTX 5090 Rig", baseUsd: 3000, baseYield: 0.000015 },
@@ -178,6 +191,11 @@
             const btn = document.createElement('button');
             btn.className = 'u-item';
             btn.id = `up-${u.id}`;
+if (u.isClickUpgrade) {
+            btn.classList.add('click-upgrade');
+        }
+
+        btn.onclick = () => buyLevel(i);
             btn.onclick = () => buyLevel(i);
             btn.innerHTML = `
                 <div style="text-align:left">
@@ -192,26 +210,40 @@
         });
     }
 
-    function manualHash() { 
-        btcBalance += 0.00000250; 
-        btcLifetime += 0.00000250; 
-        updateUI(); 
-    }
+function manualHash() { 
+    // This adds your current click power to your spendable balance
+    btcBalance += btcClickValue;  
+    
+    // This ensures every manual click also increases your Lifetime Total
+    btcLifetime += btcClickValue; 
+    
+    // This refreshes the screen so you see the numbers go up
+    updateUI(); 
+}
 
     function buyLevel(i) {
-        const u = upgrades[i];
-        const costBtc = u.currentUsd / btcPrice;
-        if (btcBalance >= costBtc) {
-            btcBalance -= costBtc;
-            hardwareEquity += u.currentUsd;
-            u.level++;
+    const u = upgrades[i];
+    const costBtc = u.currentUsd / btcPrice;
+    if (btcBalance >= costBtc) {
+        btcBalance -= costBtc;
+        hardwareEquity += u.currentUsd;
+        u.level++;
+
+        // NEW LOGIC FOR CLICK UPGRADES
+        if (u.isClickUpgrade) {
+            btcClickValue += 0.00000250; // Increases your power per click
+            // Update the text on the big orange button
+            document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
+        } else {
             u.currentYield = u.baseYield * u.level;
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
-            btcPerSec = upgrades.reduce((sum, item) => sum + item.currentYield, 0);
-            updateUI();
-            saveGame(); // Save immediately on purchase
         }
+
+        u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        updateUI();
+        saveGame();
     }
+}
 
     function updateUI() {
         let netWorth = (btcBalance * btcPrice); 
@@ -220,20 +252,31 @@
         document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
         document.getElementById('asset-usd').innerText = "$" + Math.floor(hardwareEquity).toLocaleString();
         document.getElementById('yield-btc').innerText = btcPerSec.toFixed(8) + "/s";
+document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
 
-        upgrades.forEach(u => {
-            const costBtc = u.currentUsd / btcPrice;
-            const yEl = document.getElementById(`yield-${u.id}`);
-            if(yEl) yEl.innerText = `+${(u.currentYield).toFixed(8)} ₿/s`;
-            const uEl = document.getElementById(`usd-${u.id}`);
-            if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
-            const cEl = document.getElementById(`btc-cost-${u.id}`);
-            if(cEl) cEl.innerText = "₿ " + costBtc.toFixed(8);
-            const bEl = document.getElementById(`up-${u.id}`);
-            if(bEl) bEl.disabled = (btcBalance < costBtc);
-            const lEl = document.getElementById(`lvl-txt-${u.id}`);
-            if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
-        });
+ upgrades.forEach(u => {
+    const costBtc = u.currentUsd / btcPrice;
+    const yEl = document.getElementById(`yield-${u.id}`);
+
+    // --- REPLACE YOUR OLD yEl LINE WITH THIS ---
+    if (yEl) {
+        if (u.isClickUpgrade) {
+            yEl.innerText = `+${u.clickIncrease.toFixed(8)} ₿MANUAL HASH`;
+        } else {
+            yEl.innerText = `+${u.baseYield.toFixed(8)} ₿/s`;
+        }
+    }
+    // --- END OF REPLACEMENT ---
+
+    const uEl = document.getElementById(`usd-${u.id}`);
+    if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
+    const cEl = document.getElementById(`btc-cost-${u.id}`);
+    if(cEl) cEl.innerText = "₿ " + costBtc.toFixed(8);
+    const bEl = document.getElementById(`up-${u.id}`);
+    if(bEl) bEl.disabled = (btcBalance < costBtc);
+    const lEl = document.getElementById(`lvl-txt-${u.id}`);
+    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
+});
     }
 
     setInterval(() => { 
