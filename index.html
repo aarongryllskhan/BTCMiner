@@ -345,6 +345,7 @@ let btcClickValue = 0.00000250;
             hardwareEquity,
             btcClickValue,
             lastSaveTime: Date.now(),
+            chartData: nwChart.data.datasets[0].data.slice(),
             upgrades: upgrades.map(u => ({
                 id: u.id,
                 level: u.level,
@@ -388,6 +389,9 @@ function loadGame() {
         // Recalculate totals
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
+
+        // Store chart data to restore after chart initialization
+        window.savedChartData = state.chartData || null;
 
         // Debug log
         console.log('Loaded save:', { btcBalance, hardwareEquity, upgradeLevels: upgrades.map(u => `${u.name}: ${u.level}`) });
@@ -611,10 +615,15 @@ function buyBoost(i) {
         } 
     }, 100);
 
+    // Initialize game with manual BTC price
+    initShop();
+    loadGame(); // This calls updateUI() internally
+
     const ctx = document.getElementById('nwChart').getContext('2d');
+    const initialChartData = window.savedChartData || Array(60).fill(0);
     const nwChart = new Chart(ctx, {
         type: 'line',
-        data: { labels: Array(60).fill(''), datasets: [{ data: Array(60).fill(0), borderColor: '#00ff88', borderWidth: 4, pointRadius: 0, fill: true, backgroundColor: 'rgba(0, 255, 136, 0.1)', tension: 0.3 }] },
+        data: { labels: Array(60).fill(''), datasets: [{ data: initialChartData, borderColor: '#00ff88', borderWidth: 4, pointRadius: 0, fill: true, backgroundColor: 'rgba(0, 255, 136, 0.1)', tension: 0.3 }] },
         options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: true } }, plugins: { legend: { display: false } } }
     });
 
@@ -626,10 +635,6 @@ function buyBoost(i) {
 
     // Auto-save every 1.5 seconds
     setInterval(saveGame, 1500);
-
-    // Initialize game with manual BTC price
-    initShop();
-    loadGame(); // This calls updateUI() internally
 
     // Start price swings: frequent small swings every 2 seconds + occasional big swings
     frequentPriceSwing(); // Start frequent swings (±0.5%-2% every 2 seconds)
