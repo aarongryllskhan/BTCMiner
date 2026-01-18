@@ -188,8 +188,10 @@ let btcClickValue = 0.00000250;
             btcBalance,
             btcLifetime,
             hardwareEquity,
+            btcClickValue,
             lastSaveTime: Date.now(),
             upgrades: upgrades.map(u => ({
+                id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
                 currentYield: u.currentYield
@@ -205,6 +207,7 @@ function loadGame() {
         btcBalance = state.btcBalance || 0;
         btcLifetime = state.btcLifetime || 0;
         hardwareEquity = state.hardwareEquity || 0;
+        btcClickValue = state.btcClickValue || 0.00000250;
 
         // Safer loading: Match by ID instead of Array Index
         state.upgrades.forEach((savedU) => {
@@ -215,7 +218,7 @@ function loadGame() {
                 upgradeToUpdate.currentYield = savedU.currentYield || 0;
             }
         });
-        
+
         // Recalculate totals
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
