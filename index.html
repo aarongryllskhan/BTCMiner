@@ -120,7 +120,7 @@
     </style>
 </head>
 <body>
-
+<audio id="click-sound" src="https://cdn.pixabay.com/audio/2022/03/10/audio_c3527036c0.mp3" preload="auto"></audio>
     <div id="main-layout">
         <div class="panel">
             <span class="nw-label">Portfolio Valuation</span>
@@ -250,6 +250,22 @@ if (u.isClickUpgrade) {
     }
 
 function manualHash() { 
+// Create the audio object with your GitHub Raw link
+const clickSound = new Audio("https://raw.githubusercontent.com/aarongryllskhan/BTCMiner/main/money-pickup-2-89563.mp3");
+
+function mine() {
+    // Reset and Play
+    clickSound.currentTime = 0; 
+    clickSound.play();
+
+    // Your existing mining code here
+    console.log("Mined!");
+}
+
+    // 2. Your existing mining logic...
+    // btcBalance += manualPower; 
+    // updateDisplay();
+}
     // This adds your current click power to your spendable balance
     btcBalance += btcClickValue;  
     
