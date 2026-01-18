@@ -209,9 +209,16 @@ function loadGame() {
         hardwareEquity = state.hardwareEquity || 0;
         btcClickValue = state.btcClickValue || 0.00000250;
 
-        // Safer loading: Match by ID instead of Array Index
-        state.upgrades.forEach((savedU) => {
-            const upgradeToUpdate = upgrades.find(u => u.id === savedU.id);
+        // Load upgrades - handle both old saves (by index) and new saves (by id)
+        state.upgrades.forEach((savedU, index) => {
+            let upgradeToUpdate;
+            if (savedU.id !== undefined) {
+                // New format: match by id
+                upgradeToUpdate = upgrades.find(u => u.id === savedU.id);
+            } else {
+                // Old format: match by array index
+                upgradeToUpdate = upgrades[index];
+            }
             if (upgradeToUpdate) {
                 upgradeToUpdate.level = savedU.level || 0;
                 upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
