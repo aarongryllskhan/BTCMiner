@@ -160,13 +160,52 @@
 <script>
     let btcPrice = 96450;
     let btcBalance = 0;
-    let btcLifetime = 0; 
+    let btcLifetime = 0;
     let btcPerSec = 0;
 let btcClickValue = 0.00000250;
-    let hardwareEquity = 0; 
+    let hardwareEquity = 0;
     let lastTickTime = Date.now();
     const MIN_PRICE = 50000;
     const MAX_PRICE = 200000;
+
+    // Sound effects using Web Audio API
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playClickSound() {
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+        osc.type = 'sine';
+
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+        osc.start(now);
+        osc.stop(now + 0.1);
+    }
+
+    function playUpgradeSound() {
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        osc.frequency.setValueAtTime(500, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+        osc.type = 'square';
+
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+        osc.start(now);
+        osc.stop(now + 0.2);
+    }
 
     const upgrades = [
 	{ id: 0, name: "Manual Hash Upgrade", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000050 }, // NEW BUTTON
@@ -229,6 +268,9 @@ function loadGame() {
         // Recalculate totals
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
+
+        // Debug log
+        console.log('Loaded save:', { btcBalance, hardwareEquity, upgradeLevels: upgrades.map(u => `${u.name}: ${u.level}`) });
     }
 }
     // --- SAVE SYSTEM END ---
@@ -259,15 +301,18 @@ if (u.isClickUpgrade) {
         });
     }
 
-function manualHash() { 
+function manualHash() {
     // This adds your current click power to your spendable balance
-    btcBalance += btcClickValue;  
-    
+    btcBalance += btcClickValue;
+
     // This ensures every manual click also increases your Lifetime Total
-    btcLifetime += btcClickValue; 
-    
+    btcLifetime += btcClickValue;
+
+    // Play click sound
+    playClickSound();
+
     // This refreshes the screen so you see the numbers go up
-    updateUI(); 
+    updateUI();
 }
 
 function buyLevel(i) {
@@ -297,6 +342,9 @@ function buyLevel(i) {
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
         saveGame();
+
+        // Play upgrade sound
+        playUpgradeSound();
     }
 }
     function updateUI() {
