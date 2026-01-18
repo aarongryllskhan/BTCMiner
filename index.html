@@ -243,7 +243,7 @@ let btcClickValue = 0.00000250;
         { id: 8, name: "Data Center Facility", baseUsd: 5200000, baseYield: 0.62 },
         { id: 9, name: "Orbital Data Relay", baseUsd: 35000000, baseYield: 5.8 },
         { id: 10, name: "Quantum Computer", baseUsd: 500000000, baseYield: 125.0 }
-    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0 }));
+    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // --- SAVE SYSTEM START ---
     function saveGame() {
@@ -257,7 +257,9 @@ let btcClickValue = 0.00000250;
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
-                currentYield: u.currentYield
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
             }))
         };
         localStorage.setItem('satoshiTerminalSave', JSON.stringify(gameState));
@@ -286,6 +288,8 @@ function loadGame() {
                 upgradeToUpdate.level = savedU.level || 0;
                 upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
                 upgradeToUpdate.currentYield = savedU.currentYield || 0;
+                upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
+                upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
             }
         });
 
@@ -330,18 +334,46 @@ if (u.isClickUpgrade) {
             btn.classList.add('click-upgrade');
         }
 
-        btn.onclick = () => buyLevel(i);
+        // For manual hash upgrade, clicking upgrades AND applies boost
+        if (u.isClickUpgrade) {
+            btn.onclick = () => {
+                buyLevel(i);
+                buyBoost(i);
+            };
+        } else {
             btn.onclick = () => buyLevel(i);
-            btn.innerHTML = `
-                <div style="text-align:left">
-                    <span style="font-weight:800;font-size:1.3rem;display:block"><span id="lvl-txt-${u.id}" style="color:var(--btc)">[Lvl 0]</span> ${u.name}</span>
-                    <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="yield-${u.id}">+0 ₿/s</span>
-                </div>
-                <div style="text-align:right">
-                    <span style="font-size:1.16rem;font-weight:900;display:block" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
-                    <span style="font-size:1.2rem;color:#666;font-family:monospace" id="btc-cost-${u.id}">₿ 0.00</span>
-                </div>`;
-            container.appendChild(btn);
+        }
+
+        btn.innerHTML = `
+            <div style="text-align:left">
+                <span style="font-weight:800;font-size:1.3rem;display:block"><span id="lvl-txt-${u.id}" style="color:var(--btc)">[Lvl 0]</span> ${u.name}</span>
+                <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="yield-${u.id}">+0 ₿/s</span>
+            </div>
+            <div style="text-align:right">
+                <span style="font-size:1.16rem;font-weight:900;display:block" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                <span style="font-size:1.2rem;color:#666;font-family:monospace" id="btc-cost-${u.id}">₿ 0.00</span>
+            </div>`;
+        container.appendChild(btn);
+
+        // Add boost button only for non-manual upgrades
+        if (!u.isClickUpgrade) {
+            const boostBtn = document.createElement('button');
+            boostBtn.id = `boost-${u.id}`;
+            boostBtn.style.background = '#ff9500';
+            boostBtn.style.border = 'none';
+            boostBtn.style.borderRadius = '6px';
+            boostBtn.style.padding = '6px 10px';
+            boostBtn.style.fontSize = '0.7rem';
+            boostBtn.style.fontWeight = '700';
+            boostBtn.style.color = '#000';
+            boostBtn.style.cursor = 'pointer';
+            boostBtn.style.marginTop = '2px';
+            boostBtn.style.width = '100%';
+            boostBtn.style.transition = '0.1s';
+            boostBtn.onclick = () => buyBoost(i);
+            boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$0</span>`;
+            container.appendChild(boostBtn);
+        }
         });
     }
 
@@ -370,16 +402,17 @@ function buyLevel(i) {
 
         // Check if this is the Manual Hash upgrade
         if (u.id === 0 || u.isClickUpgrade) {
-            btcClickValue += 0.00000050; 
-            
+            // Increase click value by 10%
+            btcClickValue *= 1.10;
+
             // FASTER PRICE SCALE: % increase per level
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
-            
+
             // Update the main orange button text to show new click value
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
             // ALL OTHER MINERS: Standard 15% increase
-            u.currentYield = u.baseYield * u.level;
+            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         }
 
@@ -391,6 +424,31 @@ function buyLevel(i) {
         playUpgradeSound();
     }
 }
+
+function buyBoost(i) {
+    const u = upgrades[i];
+    const costBtc = u.boostCost / btcPrice;
+
+    if (btcBalance >= costBtc) {
+        btcBalance -= costBtc;
+        hardwareEquity += u.boostCost;
+        u.boostLevel++;
+
+        // Increase yield by 10% permanently
+        u.currentYield *= 1.10;
+
+        // Double the boost cost for next purchase
+        u.boostCost *= 2;
+
+        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        updateUI();
+        saveGame();
+
+        // Play upgrade sound
+        playUpgradeSound();
+    }
+}
+
     function updateUI() {
         let netWorth = (btcBalance * btcPrice); 
         document.getElementById('nw-val').innerText = "$" + netWorth.toLocaleString(undefined, {minimumFractionDigits: 2});
@@ -404,15 +462,15 @@ document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
     const costBtc = u.currentUsd / btcPrice;
     const yEl = document.getElementById(`yield-${u.id}`);
 
-    // --- REPLACE YOUR OLD yEl LINE WITH THIS ---
     if (yEl) {
         if (u.isClickUpgrade) {
-            yEl.innerText = `+${u.clickIncrease.toFixed(8)} ₿MANUAL HASH`;
+            yEl.innerText = `+10% MANUAL HASH RATE`;
         } else {
-            yEl.innerText = `+${u.baseYield.toFixed(8)} ₿/s`;
+            // Show the current speed
+            const currentSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            yEl.innerText = `+${currentSpeed.toFixed(8)} ₿/s - Current Speed`;
         }
     }
-    // --- END OF REPLACEMENT ---
 
     const uEl = document.getElementById(`usd-${u.id}`);
     if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
@@ -422,6 +480,29 @@ document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
     if(bEl) bEl.disabled = (btcBalance < costBtc);
     const lEl = document.getElementById(`lvl-txt-${u.id}`);
     if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
+
+    // Update boost button
+    const boostCostBtc = u.boostCost / btcPrice;
+    const boostCostEl = document.getElementById(`boost-cost-${u.id}`);
+    if(boostCostEl) boostCostEl.innerText = `$${Math.floor(u.boostCost).toLocaleString()}`;
+
+    // Format the current yield amount (after all boosts applied)
+    const currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+    const boostAmtEl = document.getElementById(`boost-amt-${u.id}`);
+    if(boostAmtEl) {
+        if (currentYield >= 1) {
+            boostAmtEl.innerText = currentYield.toFixed(2);
+        } else if (currentYield >= 0.0001) {
+            boostAmtEl.innerText = (currentYield * 1000000).toFixed(0) + 'μ';
+        } else if (currentYield > 0) {
+            boostAmtEl.innerText = (currentYield * 1000000000).toFixed(0);
+        } else {
+            boostAmtEl.innerText = '0';
+        }
+    }
+
+    const boostBtn = document.getElementById(`boost-${u.id}`);
+    if(boostBtn) boostBtn.disabled = (btcBalance < boostCostBtc);
 });
     }
 
@@ -459,9 +540,9 @@ document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
     // Auto-save every 1.5 seconds
     setInterval(saveGame, 1500);
 
-    // Fetch BTC price on startup and every ~14.4 minutes (3000 calls/month = 100/day = 1 every 14.4 min)
+    // Fetch BTC price on startup and every hour
     fetchBTCPrice();
-    setInterval(fetchBTCPrice, 864000); // 864000ms = 14.4 minutes
+    setInterval(fetchBTCPrice, 3600000); // 3600000ms = 1 hour
 
     initShop();
     loadGame(); // Load data on startup
