@@ -66,17 +66,53 @@
         .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 20px; font-weight: 900; border-radius: 10px; cursor: pointer; transition: 0.1s; font-size: 1rem; margin-bottom: 15px; }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item { background: #181818; border: 1px solid #252525; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%; color: #fff; }
-/* This targets the button specifically by its ID and Class */
-#up-0.u-item {
-            background: var(--btc) !important; /* Makes it orange like the top button */
-            border: none !important;
-            box-shadow: 0 4px 15px rgba(181, 102 17, 0.2);}
 
-/* This makes the Level text white for just this button */
-#up-0.click-upgrade #lvl-txt-0 {
-    color: #ffffff !important;
+/* 1. THE GENERAL HOVER (Works for all standard miners) */
+.u-item:hover:not(:disabled) {
+    border-color: var(--btc) !important;
+    box-shadow: 0 0 15px rgba(247, 147, 26, 0.4) !important;
+    transition: box-shadow 0.2s ease;
 }
-        .u-item:disabled { opacity: 0.2; cursor: not-allowed; }
+/* 1. HOVER: Only the main mining button glows */
+.mine-btn:hover {
+    box-shadow: 0 0 25px rgba(247, 147, 26, 0.6); /* Strong orange glow */
+    cursor: pointer;
+    filter: brightness(1.1); /* Makes it look slightly 'lit up' */
+}
+
+/* 2. CLICK: Only the main mining button moves */
+.mine-btn:active {
+    transform: scale(0.96) translateY(2px); /* Squishes down and moves slightly */
+    box-shadow: 0 0 10px rgba(247, 147, 26, 0.3); /* Shrinks the glow on press */
+}
+
+/* Ensure a smooth transition for the effects */
+.mine-btn {
+    transition: transform 0.05s, box-shadow 0.2s, filter 0.2s;
+}
+/* 2. MANUAL HASH BASE (The white border) */
+#up-0.u-item {
+    background: var(--btc) !important;
+    border: none !important;
+    box-shadow: inset 0 0 0 3px #ffffff !important;
+    padding: 15px !important; 
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-radius: 10px;
+}
+
+/* 3. MANUAL HASH HOVER (The white glow) */
+/* We use a comma to keep BOTH the inner white line AND the outer glow */
+#up-0.u-item:hover:not(:disabled) {
+    background: #ffaa44 !important;
+    box-shadow: inset 0 0 0 3px #ffffff, 0 0 20px rgba(255, 255, 255, 0.7) !important;
+}
+
+/* 4. KEEP THE TEXT WHITE */
+#up-0.u-item #lvl-txt-0 {
+    color: #ffffff !important;
+}   .u-item:disabled { opacity: 0.2; cursor: not-allowed; }
 
         
         ::-webkit-scrollbar { width: 4px; }
