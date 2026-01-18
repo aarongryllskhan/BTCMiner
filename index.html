@@ -70,7 +70,7 @@
 #up-0.u-item {
             background: var(--btc) !important; /* Makes it orange like the top button */
             border: none !important;
-            box-shadow: 0 4px 15px rgba(181, 102, 17, 0.2);}
+            box-shadow: 0 4px 15px rgba(181, 102 17, 0.2);}
 
 /* This makes the Level text white for just this button */
 #up-0.click-upgrade #lvl-txt-0 {
@@ -133,7 +133,7 @@ let btcClickValue = 0.00000250;
     const MAX_PRICE = 200000;
 
     const upgrades = [
-	{ id: 0, name: "Manual Hash Upgrade", baseUsd: 50, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000250 }, // NEW BUTTON
+	{ id: 0, name: "Manual Hash Upgrade", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000050 }, // NEW BUTTON
         { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.000000115 }, 
         { id: 2, name: "GTX 1660 Super", baseUsd: 100, baseYield: 0.0000007 },
         { id: 3, name: "RTX 5090 Rig", baseUsd: 3000, baseYield: 0.000015 },
@@ -224,30 +224,35 @@ function manualHash() {
     updateUI(); 
 }
 
-    function buyLevel(i) {
+function buyLevel(i) {
     const u = upgrades[i];
     const costBtc = u.currentUsd / btcPrice;
+    
     if (btcBalance >= costBtc) {
         btcBalance -= costBtc;
         hardwareEquity += u.currentUsd;
         u.level++;
 
-        // NEW LOGIC FOR CLICK UPGRADES
-        if (u.isClickUpgrade) {
-            btcClickValue += 0.00000250; // Increases your power per click
-            // Update the text on the big orange button
+        // Check if this is the Manual Hash upgrade
+        if (u.id === 0 || u.isClickUpgrade) {
+            btcClickValue += 0.00000050; 
+            
+            // FASTER PRICE SCALE: % increase per level
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            
+            // Update the main orange button text to show new click value
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
+            // ALL OTHER MINERS: Standard 15% increase
             u.currentYield = u.baseYield * u.level;
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         }
 
-        u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
         saveGame();
     }
 }
-
     function updateUI() {
         let netWorth = (btcBalance * btcPrice); 
         document.getElementById('nw-val').innerText = "$" + netWorth.toLocaleString(undefined, {minimumFractionDigits: 2});
@@ -322,7 +327,6 @@ document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
 </script></body>
 
 </html>
-
 
 
 
