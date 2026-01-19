@@ -282,6 +282,11 @@
                 <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
 
+            <button id="auto-click-btn" title="Clicks 5 times per second for 30 seconds. 5 minute cooldown." style="background: #ffaa44; color: #000; border: none; width: 100%; padding: 12px; font-weight: 900; border-radius: 10px; cursor: pointer; transition: 0.1s; font-size: 0.9rem; margin-bottom: 8px;" onclick="startAutoClicker()">AUTO-CLICKER</button>
+            <div style="background: rgba(255, 170, 68, 0.15); border: 1px solid #ffaa44; border-radius: 6px; padding: 8px; font-size: 0.7rem; color: #aaa; text-align: center; margin-bottom: 15px; line-height: 1.4;">
+                <span style="display: block; color: #ffaa44; font-weight: 700;">5 clicks/sec • 30s duration • 5m cooldown</span>
+            </div>
+
             <div style="display: flex; gap: 6px; margin: 12px 0; justify-content: center;">
                 <button onclick="setBuyMultiplier(1)" id="mult-1" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">1x</button>
                 <button onclick="setBuyMultiplier(5)" id="mult-5" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">5x</button>
@@ -314,6 +319,8 @@ let btcClickValue = 0.00000250;
     let lastRewardCheckBtc = 0; // Track last BTC amount we checked for reward halving
     let buyMultiplier = 1; // Buy multiplier: 1x, 5x, 10x, etc.
     let isMuted = false; // Mute toggle for sounds
+    let autoClickerActive = false; // Is auto-clicker running
+    let autoClickerCooldownEnd = 0; // When cooldown ends (timestamp)
 
     // Show price change notification
     function showPriceNotification(oldPrice, newPrice) {
@@ -497,6 +504,7 @@ let btcClickValue = 0.00000250;
             btcPerSec,
             blockchainRewardMultiplier,
             lastRewardCheckBtc,
+            autoClickerCooldownEnd,
             lastSaveTime: Date.now(),
             chartData: nwChart.data.datasets[0].data.slice(),
             upgrades: upgrades.map(u => ({
@@ -547,6 +555,9 @@ function loadGame() {
         lastRewardCheckBtc = state.lastRewardCheckBtc || 0;
         btcPerSec *= blockchainRewardMultiplier;
 
+        // Restore auto-clicker cooldown
+        autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
+
         // Calculate offline earnings (max 1 hour of earnings to prevent exploits)
         const lastSaveTime = state.lastSaveTime || Date.now();
         const currentTime = Date.now();
@@ -564,6 +575,7 @@ function loadGame() {
                 seconds: offlineSeconds
             };
         }
+
 
         updateUI();
 
@@ -713,6 +725,76 @@ function manualHash() {
 
     // This refreshes the screen so you see the numbers go up
     updateUI();
+}
+
+function updateAutoClickerButtonState() {
+    const autoClickBtn = document.getElementById('auto-click-btn');
+    if (!autoClickBtn) return;
+
+    const now = Date.now();
+    if (autoClickerCooldownEnd > now) {
+        const remaining = Math.ceil((autoClickerCooldownEnd - now) / 1000);
+        autoClickBtn.innerText = `COOLDOWN: ${remaining}s`;
+        autoClickBtn.style.background = '#666';
+        autoClickBtn.disabled = true;
+    } else {
+        autoClickBtn.innerText = 'AUTO-CLICKER';
+        autoClickBtn.style.background = '#ffaa44';
+        autoClickBtn.disabled = false;
+    }
+}
+
+function startAutoClicker() {
+    const now = Date.now();
+
+    // Check if cooldown is still active
+    if (autoClickerCooldownEnd > now) {
+        const cooldownMs = autoClickerCooldownEnd - now;
+        const cooldownSec = Math.ceil(cooldownMs / 1000);
+        alert(`Auto-Clicker is on cooldown for ${cooldownSec} more seconds`);
+        return;
+    }
+
+    if (autoClickerActive) {
+        return; // Already running
+    }
+
+    autoClickerActive = true;
+    const autoClickBtn = document.getElementById('auto-click-btn');
+    autoClickBtn.innerText = 'AUTO-CLICKER ACTIVE';
+    autoClickBtn.disabled = true;
+    autoClickBtn.style.background = '#666';
+
+    const clicksPerSec = 5;
+    const intervalMs = 1000 / clicksPerSec; // 200ms between clicks
+    const durationMs = 30000; // 30 seconds
+    const endTime = Date.now() + durationMs;
+
+    const clickInterval = setInterval(() => {
+        if (Date.now() >= endTime) {
+            clearInterval(clickInterval);
+            autoClickerActive = false;
+            autoClickerCooldownEnd = Date.now() + (5 * 60 * 1000); // 5 minute cooldown
+
+            // Update button for cooldown
+            const cooldownInterval = setInterval(() => {
+                const remaining = Math.ceil((autoClickerCooldownEnd - Date.now()) / 1000);
+                if (remaining <= 0) {
+                    autoClickBtn.innerText = 'AUTO-CLICKER';
+                    autoClickBtn.disabled = false;
+                    autoClickBtn.style.background = '#ffaa44';
+                    clearInterval(cooldownInterval);
+                } else {
+                    autoClickBtn.innerText = `COOLDOWN: ${remaining}s`;
+                    autoClickBtn.style.background = '#666';
+                }
+            }, 1000);
+
+            return;
+        }
+
+        manualHash();
+    }, intervalMs);
 }
 
     function setBuyMultiplier(mult) {
@@ -898,8 +980,9 @@ function buyBoost(i) {
     }, 100);
 
     // Initialize game with manual BTC price
-    initShop();
-    loadGame(); // This calls updateUI() internally
+    loadGame(); // Load save data first (including cooldown state)
+    initShop(); // Initialize shop after loading
+    updateAutoClickerButtonState(); // Apply cooldown state immediately after button creation
 
     const ctx = document.getElementById('nwChart').getContext('2d');
     const initialChartData = window.savedChartData || Array(60).fill(0);
@@ -917,6 +1000,13 @@ function buyBoost(i) {
 
     // Auto-save every 1.5 seconds
     setInterval(saveGame, 1500);
+
+    // Update auto-clicker cooldown countdown every second
+    setInterval(() => {
+        if (autoClickerCooldownEnd > Date.now()) {
+            updateAutoClickerButtonState();
+        }
+    }, 1000);
 
     // Show offline earnings if applicable
     console.log('Checking for offline earnings:', window.offlineEarningsToShow);
