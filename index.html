@@ -293,7 +293,17 @@ button:disabled:hover {
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 0.8rem;" onclick="startAutoClicker()">5 clicks/sec • 30s duration • 5m cooldown</button>
             <div class="upgrade-list" id="shop"></div>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <div style="flex: 1; padding: 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid #222;">
+                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Time This Session</span>
+                    <b id="session-time" style="font-size: 0.75rem; color: #ffffff; font-family: monospace; font-weight: 900;">0m 0s</b>
+                </div>
+                <div style="flex: 1; padding: 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid #222;">
+                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Earnings This Session</span>
+                    <b id="session-earnings" style="font-size: 0.75rem; color: #00ff88; font-family: monospace; font-weight: 900;">₿ 0.00000000</b>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
                 <button id="mute-btn" style="background: #888; color: white; border: none; flex: 1; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; font-size: 0.85rem;" onclick="toggleMute()">SOUND ON</button>
                 <button style="background: #ff3344; color: white; border: none; flex: 1; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; font-size: 0.85rem;" onclick="resetGame()">RESET SAVE</button>
             </div>
@@ -314,6 +324,11 @@ let btcClickValue = 0.00000250;
     let manualHashClickTime = 0;
     let manualHashCooldownEnd = 0;
     let clickTimestamps = [];
+
+    // Session tracking
+    let sessionStartTime = Date.now();
+    let sessionStartBalance = 0;
+    let sessionEarnings = 0;
 
     // Show price change notification
     function showPriceNotification(oldPrice, newPrice) {
@@ -474,6 +489,9 @@ function loadGame() {
         hardwareEquity = state.hardwareEquity || 0;
         btcClickValue = state.btcClickValue || 0.00000250;
 
+        // Initialize session tracking
+        sessionStartBalance = btcBalance;
+
         // Load upgrades - handle both old saves (by index) and new saves (by id)
         state.upgrades.forEach((savedU, index) => {
             let upgradeToUpdate;
@@ -537,6 +555,10 @@ function loadGame() {
             btcPerSec = 0;
             btcClickValue = 0.00000250;
             hardwareEquity = 0;
+            // Reset session stats
+            sessionStartTime = Date.now();
+            sessionStartBalance = 0;
+            sessionEarnings = 0;
             // Reset all upgrades
             upgrades.forEach(u => {
                 u.level = 0;
@@ -782,8 +804,28 @@ function buyBoost(i) {
     }
 }
 
+    function updateSessionStats() {
+        // Update session time
+        const now = Date.now();
+        const sessionSeconds = Math.floor((now - sessionStartTime) / 1000);
+        const hours = Math.floor(sessionSeconds / 3600);
+        const minutes = Math.floor((sessionSeconds % 3600) / 60);
+        const seconds = sessionSeconds % 60;
+
+        let timeStr = '';
+        if (hours > 0) timeStr += hours + 'h ';
+        if (minutes > 0) timeStr += minutes + 'm ';
+        timeStr += seconds + 's';
+
+        document.getElementById('session-time').innerText = timeStr;
+
+        // Update session earnings
+        sessionEarnings = btcBalance - sessionStartBalance;
+        document.getElementById('session-earnings').innerText = '₿ ' + sessionEarnings.toFixed(8);
+    }
+
     function updateUI() {
-        let netWorth = (btcBalance * btcPrice); 
+        let netWorth = (btcBalance * btcPrice);
         document.getElementById('nw-val').innerText = "$" + netWorth.toLocaleString(undefined, {minimumFractionDigits: 2});
         document.getElementById('bal-btc').innerText = btcBalance.toFixed(8);
         document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
@@ -800,6 +842,9 @@ function buyBoost(i) {
         document.getElementById('yield-btc').innerText = displayRate.toFixed(8) + "/s";
         document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
         document.getElementById('btc-price').innerText = "$" + Math.floor(btcPrice).toLocaleString();
+
+        // Update session stats
+        updateSessionStats();
 
  upgrades.forEach(u => {
     const costBtc = u.currentUsd / btcPrice;
