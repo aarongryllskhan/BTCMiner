@@ -72,6 +72,10 @@
         .tab-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
         .tab-btn { flex: 1; padding: 8px; background: #333; color: #888; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
         .tab-btn.active { background: var(--btc); color: #000; border-color: var(--btc); }
+
+        .qty-toggle { flex: 1; padding: 8px; background: #333; color: #888; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
+        .qty-toggle:hover { background: #444; border-color: #555; }
+        .qty-toggle.active { background: #444; color: #fff; border-color: #555; }
         .tab-content { display: none; flex-direction: column; min-height: 0; flex: 1; }
         .tab-content.active { display: flex; }
 
@@ -324,6 +328,14 @@ button:disabled:hover {
                 <button class="tab-btn" onclick="switchTab('power')">POWER</button>
             </div>
 
+            <!-- Buy Quantity Toggle -->
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                <button id="qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)">1x</button>
+                <button id="qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)">2x</button>
+                <button id="qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)">5x</button>
+                <button id="qty-toggle-10" class="qty-toggle" onclick="setBuyQuantity(10)">10x</button>
+            </div>
+
             <!-- Mining Tab -->
             <div id="mining-tab" class="tab-content active" style="flex-direction: column; min-height: 0; flex: 1;">
                 <div class="upgrade-list" id="shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
@@ -373,6 +385,9 @@ let btcClickValue = 0.00000250;
     let sessionStartBalance = 0;
     let sessionEarnings = 0;
 
+    // Buy quantity setting
+    let buyQuantity = 1;
+
     // Chart history tracking
     let chartHistory = [];
     let chartTimestamps = []; // Track when each data point was added
@@ -383,12 +398,12 @@ let btcClickValue = 0.00000250;
     let totalPowerAvailable = 0; // Total watts available
     let totalPowerUsed = 0; // Total watts being used
     const powerUpgrades = [
-        { id: 0, name: "Basic PSU", baseUsd: 50, basePower: 100 },
-        { id: 1, name: "Standard PSU", baseUsd: 200, basePower: 500 },
-        { id: 2, name: "Industrial PSU", baseUsd: 1000, basePower: 2000 },
-        { id: 3, name: "Enterprise PSU", baseUsd: 5000, basePower: 10000 },
-        { id: 4, name: "Heavy Duty PSU", baseUsd: 25000, basePower: 50000 },
-        { id: 5, name: "Mega PSU", baseUsd: 100000, basePower: 200000 }
+        { id: 0, name: "Regulated PSU", baseUsd: 50, basePower: 100 },
+        { id: 1, name: "High-Efficiency PSU", baseUsd: 200, basePower: 500 },
+        { id: 2, name: "Server-Grade PSU", baseUsd: 1000, basePower: 2000 },
+        { id: 3, name: "Mining Power Distribution Unit", baseUsd: 5000, basePower: 10000 },
+        { id: 4, name: "Modular Data Center Power System", baseUsd: 25000, basePower: 50000 },
+        { id: 5, name: "Dedicated Substation Power Unit", baseUsd: 100000, basePower: 200000 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentPower: 0 }));
 
     // Power requirements for mining equipment (in watts)
@@ -804,11 +819,11 @@ if (u.isClickUpgrade) {
         // For manual hash upgrade, clicking upgrades AND applies boost
         if (u.isClickUpgrade) {
             btn.onclick = () => {
-                buyLevel(i);
+                buyLevelMultiple(i, buyQuantity);
                 buyBoost(i);
             };
         } else {
-            btn.onclick = () => buyLevel(i);
+            btn.onclick = () => buyLevelMultiple(i, buyQuantity);
         }
 
         const powerReq = equipmentPowerReqs[u.id] || 0;
@@ -823,6 +838,7 @@ if (u.isClickUpgrade) {
             <div style="text-align:right">
                 <span style="font-size:1.16rem;font-weight:900;display:block" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
                 <span style="font-size:1.2rem;color:#666;font-family:monospace" id="btc-cost-${u.id}">₿ 0.00</span>
+                <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="afford-${u.id}">x0</span>
             </div>`;
         container.appendChild(btn);
 
@@ -869,6 +885,7 @@ if (u.isClickUpgrade) {
                 <div style="text-align:right">
                     <span style="font-size:1.16rem;font-weight:900;display:block" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
                     <span style="font-size:1.2rem;color:#666;font-family:monospace" id="pow-btc-cost-${u.id}">₿ 0.00</span>
+                    <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="pow-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
         });
@@ -880,6 +897,12 @@ if (u.isClickUpgrade) {
 
         document.getElementById(tab + '-tab').classList.add('active');
         event.target.classList.add('active');
+    }
+
+    function setBuyQuantity(qty) {
+        buyQuantity = qty;
+        document.querySelectorAll('.qty-toggle').forEach(el => el.classList.remove('active'));
+        document.getElementById(`qty-toggle-${qty}`).classList.add('active');
     }
 
     function buyPowerUpgrade(i) {
@@ -952,6 +975,26 @@ if (u.isClickUpgrade) {
             const costEl = document.getElementById(`pow-btc-cost-${u.id}`);
             if (costEl) costEl.innerText = '₿ ' + costBtc.toFixed(8);
 
+            // Calculate how many power upgrades can be afforded (accounting for price increases)
+            const affordEl = document.getElementById(`pow-afford-${u.id}`);
+            if (affordEl) {
+                let remaining = btcBalance;
+                let canAfford = 0;
+                let nextCost = costBtc;
+                let nextLevel = u.level;
+
+                while (remaining >= nextCost) {
+                    remaining -= nextCost;
+                    canAfford++;
+                    nextLevel++;
+                    // Power upgrades: 1.2x multiplier
+                    nextCost = (u.baseUsd * Math.pow(1.2, nextLevel)) / btcPrice;
+                }
+
+                affordEl.innerText = `x${canAfford}`;
+                affordEl.style.color = canAfford > 0 ? '#00ff88' : '#666';
+            }
+
             const btn = document.getElementById(`pow-${u.id}`);
             if (btn) btn.disabled = (btcBalance < costBtc);
         });
@@ -1017,6 +1060,54 @@ function buyLevel(i) {
         saveGame();
 
         // Play upgrade sound
+        playUpgradeSound();
+    }
+}
+
+function buyLevelMultiple(i, quantity) {
+    const u = upgrades[i];
+    const powerReq = equipmentPowerReqs[u.id] || 0;
+    let purchased = 0;
+
+    for (let q = 0; q < quantity; q++) {
+        const costBtc = u.currentUsd / btcPrice;
+
+        if (btcBalance < costBtc) {
+            break; // Not enough BTC
+        }
+
+        // Check power requirements
+        if (powerReq > 0) {
+            const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+            if (powerNeeded > totalPowerAvailable) {
+                break; // Not enough power
+            }
+        }
+
+        btcBalance -= costBtc;
+        hardwareEquity += u.currentUsd;
+        u.level++;
+
+        // Update price and yield based on upgrade type
+        if (u.id === 0 || u.isClickUpgrade) {
+            btcClickValue *= 1.10;
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+        } else {
+            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+        }
+
+        purchased++;
+        calculateTotalPowerUsed();
+    }
+
+    if (purchased > 0) {
+        if (u.id === 0 || u.isClickUpgrade) {
+            document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
+        }
+        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        updateUI();
+        saveGame();
         playUpgradeSound();
     }
 }
@@ -1115,6 +1206,33 @@ function buyBoost(i) {
     if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
     const cEl = document.getElementById(`btc-cost-${u.id}`);
     if(cEl) cEl.innerText = "₿ " + costBtc.toFixed(8);
+
+    // Calculate how many upgrades can be afforded (accounting for price increases)
+    const affordEl = document.getElementById(`afford-${u.id}`);
+    if(affordEl) {
+        let remaining = btcBalance;
+        let canAfford = 0;
+        let nextCost = costBtc;
+        let nextLevel = u.level;
+
+        while (remaining >= nextCost) {
+            remaining -= nextCost;
+            canAfford++;
+            nextLevel++;
+
+            // Calculate next cost based on upgrade type
+            if (u.isClickUpgrade) {
+                // Manual hash: 1.75x multiplier
+                nextCost = (u.baseUsd * Math.pow(1.75, nextLevel)) / btcPrice;
+            } else {
+                // Other miners: 1.15x multiplier
+                nextCost = (u.baseUsd * Math.pow(1.15, nextLevel)) / btcPrice;
+            }
+        }
+
+        affordEl.innerText = `x${canAfford}`;
+        affordEl.style.color = canAfford > 0 ? '#00ff88' : '#666';
+    }
 
     const bEl = document.getElementById(`up-${u.id}`);
     if(bEl) {
