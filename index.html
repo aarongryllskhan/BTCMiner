@@ -281,6 +281,15 @@
             <button class="mine-btn" onclick="manualHash()">MANUAL HASH<br>
                 <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
+
+            <div style="display: flex; gap: 6px; margin: 12px 0; justify-content: center;">
+                <button onclick="setBuyMultiplier(1)" id="mult-1" style="background: #f7931a; border: none; color: #000; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">1x</button>
+                <button onclick="setBuyMultiplier(5)" id="mult-5" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">5x</button>
+                <button onclick="setBuyMultiplier(10)" id="mult-10" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">10x</button>
+                <button onclick="setBuyMultiplier(25)" id="mult-25" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">25x</button>
+                <button onclick="setBuyMultiplier(100)" id="mult-100" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">100x</button>
+            </div>
+
             <div class="upgrade-list" id="shop"></div>
             <button style="background: #ff3344; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 15px; font-size: 0.9rem;" onclick="resetGame()">RESET SAVE</button>
         </div>
@@ -299,6 +308,7 @@ let btcClickValue = 0.00000250;
     let lastPriceUpdateTime = 0; // Track when price was last updated
     let blockchainRewardMultiplier = 1.0; // Starts at 100%, reduces by 5% per whole BTC
     let lastRewardCheckBtc = 0; // Track last BTC amount we checked for reward halving
+    let buyMultiplier = 1; // Buy multiplier: 1x, 5x, 10x, etc.
 
     // Show price change notification
     function showPriceNotification(oldPrice, newPrice) {
@@ -650,8 +660,21 @@ if (u.isClickUpgrade) {
             boostBtn.style.marginTop = '2px';
             boostBtn.style.width = '100%';
             boostBtn.style.transition = '0.1s';
-            boostBtn.onclick = () => buyBoost(i);
-            boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$0</span>`;
+
+            // Check if upgrade is unlocked (level > 0)
+            if (u.level > 0) {
+                boostBtn.onclick = () => {
+                    console.log('Boost button clicked for upgrade ID:', u.id);
+                    buyBoost(upgrades.findIndex(up => up.id === u.id));
+                };
+                boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$0</span>`;
+            } else {
+                boostBtn.disabled = true;
+                boostBtn.style.background = '#444';
+                boostBtn.style.color = '#888';
+                boostBtn.style.cursor = 'not-allowed';
+                boostBtn.innerHTML = `PURCHASE ${u.name.replace(/\s+/g,' ').toUpperCase()} FIRST`;
+            }
             container.appendChild(boostBtn);
         }
         });
@@ -671,31 +694,50 @@ function manualHash() {
     updateUI();
 }
 
+    function setBuyMultiplier(mult) {
+        buyMultiplier = mult;
+        // Update button styles
+        document.querySelectorAll('[id^="mult-"]').forEach(btn => btn.style.background = '#333');
+        document.querySelectorAll('[id^="mult-"]').forEach(btn => btn.style.borderColor = '#555');
+        document.getElementById(`mult-${mult}`).style.background = '#f7931a';
+        document.getElementById(`mult-${mult}`).style.borderColor = '#f7931a';
+    }
+
 function buyLevel(i) {
     const u = upgrades[i];
-    const costBtc = u.currentUsd / btcPrice;
-    
-    if (btcBalance >= costBtc) {
-        btcBalance -= costBtc;
-        hardwareEquity += u.currentUsd;
-        u.level++;
 
-        // Check if this is the Manual Hash upgrade
-        if (u.id === 0 || u.isClickUpgrade) {
-            // Increase click value by 10%
-            btcClickValue *= 1.10;
+    let purchaseCount = 0;
+    for (let x = 0; x < buyMultiplier; x++) {
+        // Calculate current cost BEFORE purchase
+        const currentCostBtc = u.currentUsd / btcPrice;
 
-            // FASTER PRICE SCALE: % increase per level
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+        if (btcBalance >= currentCostBtc) {
+            btcBalance -= currentCostBtc;
+            hardwareEquity += u.currentUsd;
+            u.level++;
+            purchaseCount++;
 
-            // Update the main orange button text to show new click value
-            document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
+            // Check if this is the Manual Hash upgrade
+            if (u.id === 0 || u.isClickUpgrade) {
+                // Increase click value by 10%
+                btcClickValue *= 1.10;
+
+                // FASTER PRICE SCALE: % increase per level
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+
+                // Update the main orange button text to show new click value
+                document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
+            } else {
+                // ALL OTHER MINERS: Standard 15% increase
+                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            }
         } else {
-            // ALL OTHER MINERS: Standard 15% increase
-            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            break; // Stop if not enough BTC
         }
+    }
 
+    if (purchaseCount > 0) {
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         btcPerSec *= blockchainRewardMultiplier; // Apply blockchain difficulty multiplier
         updateUI();
@@ -708,8 +750,10 @@ function buyLevel(i) {
 }
 
 function buyBoost(i) {
+    console.log('buyBoost called for upgrade', i);
     const u = upgrades[i];
     const costBtc = u.boostCost / btcPrice;
+    console.log('Cost in BTC:', costBtc, 'Balance:', btcBalance, 'Can afford:', btcBalance >= costBtc);
 
     if (btcBalance >= costBtc) {
         btcBalance -= costBtc;
@@ -730,6 +774,9 @@ function buyBoost(i) {
 
         // Play upgrade sound
         playUpgradeSound();
+        console.log('Boost purchased! New boost level:', u.boostLevel);
+    } else {
+        console.log('Not enough BTC for boost');
     }
 }
 
@@ -768,9 +815,34 @@ function buyBoost(i) {
     if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
 
     // Update boost button
-    const boostCostBtc = u.boostCost / btcPrice;
-    const boostCostEl = document.getElementById(`boost-cost-${u.id}`);
-    if(boostCostEl) boostCostEl.innerText = `$${Math.floor(u.boostCost).toLocaleString()}`;
+    const boostBtn = document.getElementById(`boost-${u.id}`);
+    if (boostBtn) {
+        if (u.level > 0) {
+            // Upgrade is unlocked, show cost and enable/disable based on balance
+            const boostCostBtc = u.boostCost / btcPrice;
+            const boostCostEl = document.getElementById(`boost-cost-${u.id}`);
+            if(boostCostEl) boostCostEl.innerText = `$${Math.floor(u.boostCost).toLocaleString()}`;
+
+            const hasEnoughBtc = btcBalance >= boostCostBtc;
+            boostBtn.disabled = !hasEnoughBtc;
+            boostBtn.style.background = !hasEnoughBtc ? '#666' : '#ff9500';
+            boostBtn.style.color = !hasEnoughBtc ? '#888' : '#000';
+            boostBtn.style.cursor = !hasEnoughBtc ? 'not-allowed' : 'pointer';
+            boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$${Math.floor(u.boostCost).toLocaleString()}</span>`;
+            boostBtn.onclick = () => {
+                console.log('Boost button clicked for upgrade ID:', u.id);
+                buyBoost(upgrades.findIndex(up => up.id === u.id));
+            };
+        } else {
+            // Upgrade not unlocked
+            boostBtn.disabled = true;
+            boostBtn.style.background = '#444';
+            boostBtn.style.color = '#888';
+            boostBtn.style.cursor = 'not-allowed';
+            boostBtn.innerHTML = `PURCHASE ${u.name.replace(/\s+/g,' ').toUpperCase()} FIRST`;
+            boostBtn.onclick = null;
+        }
+    }
 
     // Format the current yield amount (after all boosts applied)
     const currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
@@ -786,9 +858,6 @@ function buyBoost(i) {
             boostAmtEl.innerText = '0';
         }
     }
-
-    const boostBtn = document.getElementById(`boost-${u.id}`);
-    if(boostBtn) boostBtn.disabled = (btcBalance < boostCostBtc);
 });
     }
 
