@@ -69,6 +69,12 @@
             position: relative;
         }
 
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 8px; background: #333; color: #888; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
+        .tab-btn.active { background: var(--btc); color: #000; border-color: var(--btc); }
+        .tab-content { display: none; flex-direction: column; min-height: 0; flex: 1; }
+        .tab-content.active { display: flex; }
+
         .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 20px; font-weight: 900; border-radius: 10px; cursor: pointer; transition: 0.1s; font-size: 1rem; margin-bottom: 15px; }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item { background: #181818; border: 1px solid #252525; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%; color: #fff; }
@@ -293,13 +299,43 @@ button:disabled:hover {
             </div>
         </div>
 
-        <div class="panel">
+        <div class="panel" style="display: flex; flex-direction: column; min-height: 0;">
             <button class="mine-btn" onclick="manualHash()">MANUAL HASH<br>
                 <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 0.8rem;" onclick="startAutoClicker()">5 clicks/sec • 30s duration • 5m cooldown</button>
-            <div class="upgrade-list" id="shop"></div>
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+
+            <!-- Power Status Bar -->
+            <div style="padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222; margin-bottom: 12px;">
+                <span style="font-size: 0.85rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px;">Power Status</span>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 0.75rem; color: #00ff88; font-family: monospace; font-weight: 900;" id="power-used">0W / 0W</div>
+                        <div id="power-bar" style="height: 8px; background: #222; border-radius: 4px; margin-top: 4px;">
+                            <div id="power-bar-fill" style="height: 100%; background: #00ff88; border-radius: 4px; width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Buttons -->
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('mining')">MINING</button>
+                <button class="tab-btn" onclick="switchTab('power')">POWER</button>
+            </div>
+
+            <!-- Mining Tab -->
+            <div id="mining-tab" class="tab-content active" style="flex-direction: column; min-height: 0; flex: 1;">
+                <div class="upgrade-list" id="shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Power Tab -->
+            <div id="power-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <div class="upgrade-list" id="power-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Session Stats -->
+            <div style="display: flex; gap: 8px; margin-bottom: 10px; margin-top: 10px;">
                 <div style="flex: 1; padding: 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid #222;">
                     <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Time This Session</span>
                     <b id="session-time" style="font-size: 0.75rem; color: #ffffff; font-family: monospace; font-weight: 900;">0m 0s</b>
@@ -309,6 +345,7 @@ button:disabled:hover {
                     <b id="session-earnings" style="font-size: 0.75rem; color: #00ff88; font-family: monospace; font-weight: 900;">₿ 0.00000000</b>
                 </div>
             </div>
+
             <div style="display: flex; gap: 10px;">
                 <button id="mute-btn" style="background: #888; color: white; border: none; flex: 1; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; font-size: 0.85rem;" onclick="toggleMute()">SOUND ON</button>
                 <button style="background: #ff3344; color: white; border: none; flex: 1; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; font-size: 0.85rem;" onclick="resetGame()">RESET SAVE</button>
@@ -341,6 +378,33 @@ let btcClickValue = 0.00000250;
     let chartTimestamps = []; // Track when each data point was added
     let lastChartUpdateTime = Date.now();
     let chartStartTime = Date.now();
+
+    // Power system
+    let totalPowerAvailable = 0; // Total watts available
+    let totalPowerUsed = 0; // Total watts being used
+    const powerUpgrades = [
+        { id: 0, name: "Basic PSU", baseUsd: 50, basePower: 100 },
+        { id: 1, name: "Standard PSU", baseUsd: 200, basePower: 500 },
+        { id: 2, name: "Industrial PSU", baseUsd: 1000, basePower: 2000 },
+        { id: 3, name: "Enterprise PSU", baseUsd: 5000, basePower: 10000 },
+        { id: 4, name: "Heavy Duty PSU", baseUsd: 25000, basePower: 50000 },
+        { id: 5, name: "Mega PSU", baseUsd: 100000, basePower: 200000 }
+    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentPower: 0 }));
+
+    // Power requirements for mining equipment (in watts)
+    const equipmentPowerReqs = {
+        0: 0, // Manual hash uses no power
+        1: 2.5, // USB Miner
+        2: 75, // GTX 1660
+        3: 450, // RTX 5090
+        4: 1200, // ASIC
+        5: 3500, // Liquid ASIC
+        6: 12000, // Container
+        7: 45000, // Geothermal Farm
+        8: 300000, // Data Center
+        9: 1500000, // Orbital
+        10: 5000000 // Quantum
+    };
 
     // Show price change notification
     function showPriceNotification(oldPrice, newPrice) {
@@ -482,6 +546,13 @@ let btcClickValue = 0.00000250;
             chartHistory: chartHistory,
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
+            totalPowerAvailable,
+            powerUpgrades: powerUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentPower: u.currentPower
+            })),
             upgrades: upgrades.map(u => ({
                 id: u.id,
                 level: u.level,
@@ -508,6 +579,19 @@ function loadGame() {
         // Set chart start time to match when save was made (for accurate timeline)
         chartStartTime = state.chartStartTime || Date.now();
 
+        // Load power upgrades
+        if (state.powerUpgrades) {
+            state.powerUpgrades.forEach((savedU) => {
+                const powerUpgradeToUpdate = powerUpgrades.find(u => u.id === savedU.id);
+                if (powerUpgradeToUpdate) {
+                    powerUpgradeToUpdate.level = savedU.level || 0;
+                    powerUpgradeToUpdate.currentUsd = savedU.currentUsd || powerUpgradeToUpdate.baseUsd;
+                    powerUpgradeToUpdate.currentPower = savedU.currentPower || 0;
+                }
+            });
+        }
+        totalPowerAvailable = state.totalPowerAvailable || 0;
+
         // Load upgrades - handle both old saves (by index) and new saves (by id)
         state.upgrades.forEach((savedU, index) => {
             let upgradeToUpdate;
@@ -526,6 +610,9 @@ function loadGame() {
                 upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
             }
         });
+
+        // Calculate total power used
+        calculateTotalPowerUsed();
 
         // Recalculate totals
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
@@ -564,6 +651,15 @@ function loadGame() {
 }
     // --- SAVE SYSTEM END ---
 
+    function calculateTotalPowerUsed() {
+        totalPowerUsed = 0;
+        upgrades.forEach(u => {
+            if (u.level > 0 && equipmentPowerReqs[u.id] !== undefined) {
+                totalPowerUsed += equipmentPowerReqs[u.id] * u.level;
+            }
+        });
+    }
+
     function resetGame() {
         if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
             localStorage.removeItem('satoshiTerminalSave');
@@ -581,6 +677,14 @@ function loadGame() {
             chartHistory = [];
             chartTimestamps = [];
             chartStartTime = Date.now();
+            // Reset power system
+            totalPowerAvailable = 0;
+            totalPowerUsed = 0;
+            powerUpgrades.forEach(u => {
+                u.level = 0;
+                u.currentUsd = u.baseUsd;
+                u.currentPower = 0;
+            });
             // Reset all upgrades
             upgrades.forEach(u => {
                 u.level = 0;
@@ -687,7 +791,8 @@ function loadGame() {
 
     function initShop() {
         const container = document.getElementById('shop');
-        container.innerHTML = ''; 
+        container.innerHTML = '';
+
         upgrades.forEach((u, i) => {
             const btn = document.createElement('button');
             btn.className = 'u-item';
@@ -706,10 +811,14 @@ if (u.isClickUpgrade) {
             btn.onclick = () => buyLevel(i);
         }
 
+        const powerReq = equipmentPowerReqs[u.id] || 0;
+        const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:var(--btc);font-weight:700;display:block;margin-top:3px">${powerReq.toLocaleString()}W per level</span>` : '';
+
         btn.innerHTML = `
             <div style="text-align:left">
                 <span style="font-weight:800;font-size:1.3rem;display:block"><span id="lvl-txt-${u.id}" style="color:var(--btc)">[Lvl 0]</span> ${u.name}</span>
                 <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="yield-${u.id}">+0 ₿/s</span>
+                ${powerDisplay}
             </div>
             <div style="text-align:right">
                 <span style="font-size:1.16rem;font-weight:900;display:block" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
@@ -741,6 +850,91 @@ if (u.isClickUpgrade) {
         });
     }
 
+    function initPowerShop() {
+        const container = document.getElementById('power-shop');
+        container.innerHTML = '';
+
+        powerUpgrades.forEach((u, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'u-item';
+            btn.id = `pow-${u.id}`;
+            btn.onclick = () => buyPowerUpgrade(i);
+
+            const costBtc = u.currentUsd / btcPrice;
+            btn.innerHTML = `
+                <div style="text-align:left">
+                    <span style="font-weight:800;font-size:1.3rem;display:block"><span id="pow-lvl-txt-${u.id}" style="color:var(--btc)">[Lvl ${u.level}]</span> ${u.name}</span>
+                    <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="pow-power-${u.id}">+0W</span>
+                </div>
+                <div style="text-align:right">
+                    <span style="font-size:1.16rem;font-weight:900;display:block" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
+                    <span style="font-size:1.2rem;color:#666;font-family:monospace" id="pow-btc-cost-${u.id}">₿ 0.00</span>
+                </div>`;
+            container.appendChild(btn);
+        });
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+        document.getElementById(tab + '-tab').classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    function buyPowerUpgrade(i) {
+        const u = powerUpgrades[i];
+        const costBtc = u.currentUsd / btcPrice;
+
+        if (btcBalance >= costBtc) {
+            btcBalance -= costBtc;
+            hardwareEquity += u.currentUsd;
+            u.level++;
+            u.currentPower = u.basePower * u.level;
+            totalPowerAvailable += u.basePower;
+
+            // Update price with 1.2x multiplier
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.2, u.level));
+
+            updateUI();
+            saveGame();
+            playUpgradeSound();
+        }
+    }
+
+    function updatePowerDisplay() {
+        const powerUsedEl = document.getElementById('power-used');
+        if (powerUsedEl) {
+            powerUsedEl.innerText = totalPowerUsed.toLocaleString() + 'W / ' + totalPowerAvailable.toLocaleString() + 'W';
+        }
+
+        const powerBarFill = document.getElementById('power-bar-fill');
+        if (powerBarFill) {
+            const percentage = totalPowerAvailable > 0 ? (totalPowerUsed / totalPowerAvailable * 100) : 0;
+            powerBarFill.style.width = Math.min(percentage, 100) + '%';
+            powerBarFill.style.background = percentage > 100 ? '#ff3344' : '#00ff88';
+        }
+
+        // Update power upgrades display
+        powerUpgrades.forEach(u => {
+            const costBtc = u.currentUsd / btcPrice;
+            const lvlEl = document.getElementById(`pow-lvl-txt-${u.id}`);
+            if (lvlEl) lvlEl.innerText = `[Lvl ${u.level}]`;
+
+            const powerEl = document.getElementById(`pow-power-${u.id}`);
+            if (powerEl) powerEl.innerText = `+${u.currentPower.toLocaleString()}W`;
+
+            const usdEl = document.getElementById(`pow-usd-${u.id}`);
+            if (usdEl) usdEl.innerText = `$${u.currentUsd.toLocaleString()}`;
+
+            const costEl = document.getElementById(`pow-btc-cost-${u.id}`);
+            if (costEl) costEl.innerText = '₿ ' + costBtc.toFixed(8);
+
+            const btn = document.getElementById(`pow-${u.id}`);
+            if (btn) btn.disabled = (btcBalance < costBtc);
+        });
+    }
+
 function manualHash() {
     // This adds your current click power to your spendable balance
     btcBalance += btcClickValue;
@@ -765,8 +959,17 @@ function manualHash() {
 function buyLevel(i) {
     const u = upgrades[i];
     const costBtc = u.currentUsd / btcPrice;
-    
+
     if (btcBalance >= costBtc) {
+        // Check power requirements
+        const powerReq = equipmentPowerReqs[u.id] || 0;
+        const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+
+        if (powerNeeded > totalPowerAvailable && powerReq > 0) {
+            alert(`Insufficient power! This upgrade requires ${powerReq.toLocaleString()}W per level.\nYou need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power capacity.`);
+            return;
+        }
+
         btcBalance -= costBtc;
         hardwareEquity += u.currentUsd;
         u.level++;
@@ -868,6 +1071,10 @@ function buyBoost(i) {
         // Update session stats
         updateSessionStats();
 
+        // Update power display
+        calculateTotalPowerUsed();
+        updatePowerDisplay();
+
  upgrades.forEach(u => {
     const costBtc = u.currentUsd / btcPrice;
     const yEl = document.getElementById(`yield-${u.id}`);
@@ -886,8 +1093,26 @@ function buyBoost(i) {
     if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
     const cEl = document.getElementById(`btc-cost-${u.id}`);
     if(cEl) cEl.innerText = "₿ " + costBtc.toFixed(8);
+
     const bEl = document.getElementById(`up-${u.id}`);
-    if(bEl) bEl.disabled = (btcBalance < costBtc);
+    if(bEl) {
+        // Check both BTC balance and power requirements
+        const hasEnoughBtc = btcBalance >= costBtc;
+        const powerReq = equipmentPowerReqs[u.id] || 0;
+        const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+        const hasEnoughPower = powerNeeded <= totalPowerAvailable || powerReq === 0;
+        bEl.disabled = !(hasEnoughBtc && hasEnoughPower);
+
+        // Change button appearance if power is insufficient
+        if (!hasEnoughPower && hasEnoughBtc && powerReq > 0) {
+            bEl.style.opacity = '0.6';
+            bEl.title = `Insufficient power! Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more`;
+        } else {
+            bEl.style.opacity = '1';
+            bEl.title = '';
+        }
+    }
+
     const lEl = document.getElementById(`lvl-txt-${u.id}`);
     if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
 
@@ -938,6 +1163,7 @@ function buyBoost(i) {
 
     // Initialize game with manual BTC price
     initShop();
+    initPowerShop();
     loadGame(); // This calls updateUI() internally
     updateAutoClickerButtonState(); // Update button state immediately after loading
 
