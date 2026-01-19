@@ -52,15 +52,21 @@
             white-space: nowrap;
         }
 
-        .chart-container { 
-            flex: 1; 
-            min-height: 0; 
-            background: rgba(0,0,0,0.3); 
-            border-radius: 8px; 
-            border: 1px solid #1a1a1a; 
+        .chart-wrapper {
+            flex: 1;
+            min-height: 0;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border: 1px solid #1a1a1a;
             position: relative;
             margin-top: 10px;
             padding: 10px;
+        }
+
+        .chart-container {
+            flex: 1;
+            min-height: 0;
+            position: relative;
         }
 
         .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 20px; font-weight: 900; border-radius: 10px; cursor: pointer; transition: 0.1s; font-size: 1rem; margin-bottom: 15px; }
@@ -282,7 +288,7 @@ button:disabled:hover {
                 </div>
             </div>
 
-            <div class="chart-container">
+            <div class="chart-wrapper">
                 <canvas id="nwChart"></canvas>
             </div>
         </div>
@@ -329,6 +335,12 @@ let btcClickValue = 0.00000250;
     let sessionStartTime = Date.now();
     let sessionStartBalance = 0;
     let sessionEarnings = 0;
+
+    // Chart history tracking
+    let chartHistory = [];
+    let chartTimestamps = []; // Track when each data point was added
+    let lastChartUpdateTime = Date.now();
+    let chartStartTime = Date.now();
 
     // Show price change notification
     function showPriceNotification(oldPrice, newPrice) {
@@ -467,7 +479,9 @@ let btcClickValue = 0.00000250;
             btcPerSec,
             lastSaveTime: Date.now(),
             autoClickerCooldownEnd,
-            chartData: nwChart.data.datasets[0].data.slice(),
+            chartHistory: chartHistory,
+            chartTimestamps: chartTimestamps,
+            chartStartTime: chartStartTime,
             upgrades: upgrades.map(u => ({
                 id: u.id,
                 level: u.level,
@@ -491,6 +505,8 @@ function loadGame() {
 
         // Initialize session tracking
         sessionStartBalance = btcBalance;
+        // Set chart start time to match when save was made (for accurate timeline)
+        chartStartTime = state.chartStartTime || Date.now();
 
         // Load upgrades - handle both old saves (by index) and new saves (by id)
         state.upgrades.forEach((savedU, index) => {
@@ -537,8 +553,10 @@ function loadGame() {
 
         updateUI();
 
-        // Store chart data to restore after chart initialization
-        window.savedChartData = state.chartData || null;
+        // Restore chart history and timestamps
+        chartHistory = state.chartHistory || [];
+        chartTimestamps = state.chartTimestamps || [];
+        chartStartTime = state.chartStartTime || Date.now();
 
         // Debug log
         console.log('Loaded save:', { btcBalance, hardwareEquity, offlineEarnings, offlineEarningsToShow: window.offlineEarningsToShow, upgradeLevels: upgrades.map(u => `${u.name}: ${u.level}`) });
@@ -559,6 +577,10 @@ function loadGame() {
             sessionStartTime = Date.now();
             sessionStartBalance = 0;
             sessionEarnings = 0;
+            // Reset chart history
+            chartHistory = [];
+            chartTimestamps = [];
+            chartStartTime = Date.now();
             // Reset all upgrades
             upgrades.forEach(u => {
                 u.level = 0;
@@ -920,16 +942,47 @@ function buyBoost(i) {
     updateAutoClickerButtonState(); // Update button state immediately after loading
 
     const ctx = document.getElementById('nwChart').getContext('2d');
-    const initialChartData = window.savedChartData || Array(60).fill(0);
+
+    // Initialize chart with full history (at least one data point)
+    const currentNetWorth = btcBalance * btcPrice;
+    if (chartHistory.length === 0) {
+        chartHistory.push(currentNetWorth);
+        chartTimestamps.push({ time: Date.now(), value: currentNetWorth });
+        chartStartTime = Date.now();
+    }
+
     const nwChart = new Chart(ctx, {
         type: 'line',
-        data: { labels: Array(60).fill(''), datasets: [{ data: initialChartData, borderColor: '#00ff88', borderWidth: 4, pointRadius: 0, fill: true, backgroundColor: 'rgba(0, 255, 136, 0.1)', tension: 0.3 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: true } }, plugins: { legend: { display: false } } }
+        data: {
+            labels: chartHistory.map((_, i) => ''),
+            datasets: [{
+                data: chartHistory,
+                borderColor: '#00ff88',
+                borderWidth: 4,
+                pointRadius: 0,
+                fill: true,
+                backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { display: false },
+                y: { display: true }
+            },
+            plugins: { legend: { display: false } }
+        }
     });
 
     setInterval(() => {
-        nwChart.data.datasets[0].data.push(btcBalance * btcPrice);
-        nwChart.data.datasets[0].data.shift();
+        const netWorth = btcBalance * btcPrice;
+        chartHistory.push(netWorth);
+        chartTimestamps.push({ time: Date.now(), value: netWorth });
+
+        nwChart.data.datasets[0].data = chartHistory;
+        nwChart.data.labels = chartHistory.map((_, i) => '');
         nwChart.update('none');
     }, 2000);
 
