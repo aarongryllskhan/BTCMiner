@@ -267,6 +267,11 @@
                 </div>
             </div>
 
+            <div style="margin-top: 8px; padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid #222;">
+                <span style="font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; line-height: 1;">Blockchain Reward</span>
+                <b class="stat-val" id="blockchain-multiplier" style="font-size: 0.65rem; line-height: 1;">100%</b>
+            </div>
+
             <div class="chart-container">
                 <canvas id="nwChart"></canvas>
             </div>
@@ -292,6 +297,8 @@ let btcClickValue = 0.00000250;
     const MIN_PRICE = 50000;
     const MAX_PRICE = 200000;
     let lastPriceUpdateTime = 0; // Track when price was last updated
+    let blockchainRewardMultiplier = 1.0; // Starts at 100%, reduces by 5% per whole BTC
+    let lastRewardCheckBtc = 0; // Track last BTC amount we checked for reward halving
 
     // Show price change notification
     function showPriceNotification(oldPrice, newPrice) {
@@ -365,6 +372,37 @@ let btcClickValue = 0.00000250;
         setTimeout(bigPriceSwing, nextBigSwing);
     }
 
+    // Check for blockchain reward halving (5% reduction per whole BTC mined)
+    function checkBlockchainRewardHalving() {
+        const wholeBtcMined = Math.floor(btcLifetime);
+        const btcSinceLast = wholeBtcMined - lastRewardCheckBtc;
+
+        if (btcSinceLast > 0) {
+            // Apply 5% reduction for each whole BTC mined
+            for (let i = 0; i < btcSinceLast; i++) {
+                blockchainRewardMultiplier *= 0.95; // 5% reduction each time
+            }
+            lastRewardCheckBtc = wholeBtcMined;
+
+            // Show notification of reward reduction
+            const reductionPercent = ((1 - blockchainRewardMultiplier) * 100).toFixed(1);
+            showRewardHalvingNotification(wholeBtcMined, reductionPercent);
+        }
+    }
+
+    function showRewardHalvingNotification(btcMilestone, reductionPercent) {
+        const notif = document.createElement('div');
+        notif.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid #ff6b35; border-radius: 8px; padding: 12px 16px; text-align: center; z-index: 2000; color: #fff; font-weight: bold; font-family: monospace; max-width: 220px; box-shadow: 0 0 30px rgba(255, 107, 53, 0.4); animation: slideUp 0.4s ease;';
+        notif.innerHTML = `
+            <div style="font-size: 0.95rem; color: #ff6b35; margin-bottom: 6px;">⛓️ BLOCKCHAIN REWARD</div>
+            <div style="font-size: 0.8rem; color: #ff3344;">-5% @ ${btcMilestone}₿</div>
+            <div style="font-size: 0.7rem; color: #666; margin-top: 4px;">${(blockchainRewardMultiplier * 100).toFixed(1)}% efficiency</div>
+        `;
+        document.body.appendChild(notif);
+
+        setTimeout(() => notif.remove(), 4000);
+    }
+
     // Sound effects using Web Audio API
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -426,6 +464,8 @@ let btcClickValue = 0.00000250;
             hardwareEquity,
             btcClickValue,
             btcPerSec,
+            blockchainRewardMultiplier,
+            lastRewardCheckBtc,
             lastSaveTime: Date.now(),
             chartData: nwChart.data.datasets[0].data.slice(),
             upgrades: upgrades.map(u => ({
@@ -470,6 +510,11 @@ function loadGame() {
 
         // Recalculate totals
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+
+        // Restore blockchain difficulty multiplier
+        blockchainRewardMultiplier = state.blockchainRewardMultiplier || 1.0;
+        lastRewardCheckBtc = state.lastRewardCheckBtc || 0;
+        btcPerSec *= blockchainRewardMultiplier;
 
         // Calculate offline earnings (max 1 hour of earnings to prevent exploits)
         const lastSaveTime = state.lastSaveTime || Date.now();
@@ -652,7 +697,9 @@ function buyLevel(i) {
         }
 
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        btcPerSec *= blockchainRewardMultiplier; // Apply blockchain difficulty multiplier
         updateUI();
+        checkBlockchainRewardHalving(); // Check if we hit a new BTC milestone
         saveGame();
 
         // Play upgrade sound
@@ -676,7 +723,9 @@ function buyBoost(i) {
         u.boostCost *= 2;
 
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        btcPerSec *= blockchainRewardMultiplier; // Apply blockchain difficulty multiplier
         updateUI();
+        checkBlockchainRewardHalving(); // Check if we hit a new BTC milestone
         saveGame();
 
         // Play upgrade sound
@@ -693,6 +742,7 @@ function buyBoost(i) {
         document.getElementById('yield-btc').innerText = btcPerSec.toFixed(8) + "/s";
         document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
         document.getElementById('btc-price').innerText = "$" + Math.floor(btcPrice).toLocaleString();
+        document.getElementById('blockchain-multiplier').innerText = (blockchainRewardMultiplier * 100).toFixed(1) + "%";
 
  upgrades.forEach(u => {
     const costBtc = u.currentUsd / btcPrice;
