@@ -906,13 +906,35 @@ if (u.isClickUpgrade) {
         const powerUsedEl = document.getElementById('power-used');
         if (powerUsedEl) {
             powerUsedEl.innerText = totalPowerUsed.toLocaleString() + 'W / ' + totalPowerAvailable.toLocaleString() + 'W';
+
+            // Dynamic color for power text based on usage
+            const percentage = totalPowerAvailable > 0 ? (totalPowerUsed / totalPowerAvailable * 100) : 0;
+            if (percentage > 100) {
+                powerUsedEl.style.color = '#ff3344'; // Red - over capacity
+            } else if (percentage > 80) {
+                powerUsedEl.style.color = '#ff9500'; // Orange - critical
+            } else if (percentage > 60) {
+                powerUsedEl.style.color = '#ffdd00'; // Yellow - warning
+            } else {
+                powerUsedEl.style.color = '#00ff88'; // Green - safe
+            }
         }
 
         const powerBarFill = document.getElementById('power-bar-fill');
         if (powerBarFill) {
             const percentage = totalPowerAvailable > 0 ? (totalPowerUsed / totalPowerAvailable * 100) : 0;
             powerBarFill.style.width = Math.min(percentage, 100) + '%';
-            powerBarFill.style.background = percentage > 100 ? '#ff3344' : '#00ff88';
+
+            // Dynamic color for power bar based on usage
+            if (percentage > 100) {
+                powerBarFill.style.background = '#ff3344'; // Red - over capacity
+            } else if (percentage > 80) {
+                powerBarFill.style.background = '#ff9500'; // Orange - critical
+            } else if (percentage > 60) {
+                powerBarFill.style.background = '#ffdd00'; // Yellow - warning
+            } else {
+                powerBarFill.style.background = '#00ff88'; // Green - safe
+            }
         }
 
         // Update power upgrades display
