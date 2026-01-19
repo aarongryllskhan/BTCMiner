@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Anti-debugging protection -->
+    <!-- <script>
+      setInterval(function() {
+        debugger;
+      }, 100);
+    </script> -->
     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2H559N5J64"></script>
 <script>
@@ -54,13 +60,19 @@
 
         .chart-wrapper {
             flex: 1;
-            min-height: 0;
-            background: rgba(0,0,0,0.3);
+            min-height: 200px;
+            height: 300px;
+            background: #0a0a0a;
             border-radius: 8px;
             border: 1px solid #1a1a1a;
             position: relative;
             margin-top: 10px;
             padding: 10px;
+        }
+
+        #nwChart {
+            width: 100% !important;
+            height: 100% !important;
         }
 
         .chart-container {
@@ -70,16 +82,16 @@
         }
 
         .tab-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
-        .tab-btn { flex: 1; padding: 8px; background: #333; color: #888; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
-        .tab-btn.active { background: var(--btc); color: #000; border-color: var(--btc); }
+        .tab-btn { flex: 1; padding: 8px; background: #333; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
+        .tab-btn.active { background: transparent; border-width: 2px; }
 
-        .qty-toggle { flex: 1; padding: 8px; background: #333; color: #888; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
-        .qty-toggle:hover { background: #444; border-color: #555; }
-        .qty-toggle.active { background: #444; color: #fff; border-color: #555; }
+        .qty-toggle { flex: 1; padding: 5px; background: #1a1a1a; color: #666; border: 2px solid #333; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 0.7rem; transition: 0.2s; }
+        .qty-toggle:hover { background: #222; border-color: #444; color: #888; }
+        .qty-toggle.active { background: #222; color: #fff; border-color: #666; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
         .tab-content { display: none; flex-direction: column; min-height: 0; flex: 1; }
         .tab-content.active { display: flex; }
 
-        .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 20px; font-weight: 900; border-radius: 10px; cursor: pointer; transition: 0.1s; font-size: 1rem; margin-bottom: 15px; }
+        .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 12px; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.1s; font-size: 0.85rem; margin-bottom: 8px; }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item { background: #181818; border: 1px solid #252525; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%; color: #fff; }
 
@@ -106,29 +118,7 @@
 .mine-btn {
     transition: transform 0.05s, box-shadow 0.2s, filter 0.2s;
 }
-/* 2. MANUAL HASH BASE (The white border) */
-#up-0.u-item {
-    background: var(--btc) !important;
-    border: none !important;
-    box-shadow: inset 0 0 0 3px #ffffff !important;
-    padding: 15px !important; 
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    border-radius: 10px;
-}
-
-/* 3. MANUAL HASH HOVER (The white glow) */
-/* We use a comma to keep BOTH the inner white line AND the outer glow */
-#up-0.u-item:hover:not(:disabled) {
-    background: #ffaa44 !important;
-    box-shadow: inset 0 0 0 3px #ffffff, 0 0 20px rgba(255, 255, 255, 0.7) !important;
-}
-
-/* 4. KEEP THE TEXT WHITE */
-#up-0.u-item #lvl-txt-0 {
-    color: #ffffff !important;
-}
+/* Manual hash upgrade uses same styling as other upgrades */
 
 .u-item:disabled {
     opacity: 0.2;
@@ -272,21 +262,32 @@ button:disabled:hover {
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
 
-            <!-- Bitcoin Stats -->
-            <div class="btc-stat">₿ <span id="bal-btc">0.00000000</span></div>
-            <!-- Ethereum Stats -->
-            <div class="btc-stat" style="color: #627eea;">Ξ <span id="bal-eth">0.00000000</span></div>
-            <!-- Dogecoin Stats -->
-            <div class="btc-stat" style="color: #c2a633;">Ð <span id="bal-doge">0.00</span></div>
+            <!-- Crypto Balances -->
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                <div style="font-size: 1.4rem; color: #f7931a; font-weight: bold; font-family: monospace;">₿ <span id="bal-btc">0.00000000</span></div>
+                <div style="font-size: 1.4rem; color: #627eea; font-weight: bold; font-family: monospace;">Ξ <span id="bal-eth">0.00000000</span></div>
+                <div style="font-size: 1.4rem; color: #c2a633; font-weight: bold; font-family: monospace;">Ð <span id="bal-doge">0.00</span></div>
+            </div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 15px;">
+                <div style="padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">BTC HASHRATE</span>
+                    <b style="font-size: 0.7rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00/s</b>
+                </div>
+                <div style="padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">ETH HASHRATE</span>
+                    <b style="font-size: 0.7rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00/s</b>
+                </div>
+                <div style="padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">DOGE HASHRATE</span>
+                    <b style="font-size: 0.7rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00/s</b>
+                </div>
+            </div>
 
             <div class="mini-stats">
                 <div class="stat-item">
                     <span>Hardware Equity</span>
                     <b class="stat-val" id="asset-usd">$0</b>
-                </div>
-                <div class="stat-item">
-                    <span>Total Hashrate</span>
-                    <b class="stat-val" id="yield-total">0.00/s</b>
                 </div>
                 <div class="stat-item">
                     <span>BTC Lifetime</span>
@@ -320,15 +321,15 @@ button:disabled:hover {
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0;">
             <button class="mine-btn" onclick="manualHash()">MANUAL BTC HASH<br>
-                <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
+                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
             <button class="mine-btn" style="background: #627eea;" onclick="manualEthHash()">MANUAL ETH HASH<br>
-                <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+0.00050000 Ξ</span>
+                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+0.00050000 Ξ</span>
             </button>
             <button class="mine-btn" style="background: #c2a633;" onclick="manualDogeHash()">MANUAL DOGE HASH<br>
-                <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+2.50 Ð</span>
+                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+2.50 Ð</span>
             </button>
-            <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 0.8rem;" onclick="startAutoClicker()">5 clicks/sec • 30s duration • 5m cooldown</button>
+            <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 0.8rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
 
             <!-- Power Status Bar -->
             <div style="padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222; margin-bottom: 12px;">
@@ -343,40 +344,134 @@ button:disabled:hover {
                 </div>
             </div>
 
-            <!-- Tab Buttons -->
-            <div class="tab-buttons">
-                <button class="tab-btn active" onclick="switchTab('btc-mining')">BTC</button>
-                <button class="tab-btn" onclick="switchTab('eth-mining')">ETH</button>
-                <button class="tab-btn" onclick="switchTab('doge-mining')">DOGE</button>
-                <button class="tab-btn" onclick="switchTab('power')">POWER</button>
+            <!-- Dollar Balance Display -->
+            <div style="padding: 10px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 12px; text-align: center;">
+                <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">Cash Balance</span>
+                <b style="font-size: 2rem; color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
             </div>
 
-            <!-- Buy Quantity Toggle -->
-            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-                <button id="qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)">1x</button>
-                <button id="qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)">2x</button>
-                <button id="qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)">5x</button>
-                <button id="qty-toggle-10" class="qty-toggle" onclick="setBuyQuantity(10)">10x</button>
+            <!-- Tab Buttons -->
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('btc-mining')" style="border-color: #f7931a; color: #f7931a;">BTC</button>
+                <button class="tab-btn" onclick="switchTab('eth-mining')" style="border-color: #627eea; color: #627eea;">ETH</button>
+                <button class="tab-btn" onclick="switchTab('doge-mining')" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
+                <button class="tab-btn" onclick="switchTab('power')" style="border-color: #00ff88; color: #00ff88;">POWER</button>
+                <button class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">MARKET</button>
             </div>
 
             <!-- BTC Mining Tab -->
             <div id="btc-mining-tab" class="tab-content active" style="flex-direction: column; min-height: 0; flex: 1;">
+                <!-- Buy Quantity Toggle -->
+                <div style="margin-bottom: 10px;">
+                    <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button id="qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
+                        <button id="qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
+                        <button id="qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
+                        <button id="qty-toggle-10" class="qty-toggle" onclick="setBuyQuantity(10)" style="border-color: #888; color: #888;">10x</button>
+                    </div>
+                </div>
                 <div class="upgrade-list" id="btc-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
             </div>
 
             <!-- ETH Mining Tab -->
             <div id="eth-mining-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <!-- Buy Quantity Toggle -->
+                <div style="margin-bottom: 10px;">
+                    <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(10)" style="border-color: #888; color: #888;">10x</button>
+                    </div>
+                </div>
                 <div class="upgrade-list" id="eth-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
             </div>
 
             <!-- DOGE Mining Tab -->
             <div id="doge-mining-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <!-- Buy Quantity Toggle -->
+                <div style="margin-bottom: 10px;">
+                    <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(10)" style="border-color: #888; color: #888;">10x</button>
+                    </div>
+                </div>
                 <div class="upgrade-list" id="doge-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
             </div>
 
             <!-- Power Tab -->
             <div id="power-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <!-- Buy Quantity Toggle -->
+                <div style="margin-bottom: 10px;">
+                    <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
+                        <button class="qty-toggle" onclick="setBuyQuantity(10)" style="border-color: #888; color: #888;">10x</button>
+                    </div>
+                </div>
                 <div class="upgrade-list" id="power-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Market Tab -->
+            <div id="market-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <div class="upgrade-list" style="flex: 1; min-height: 0; overflow-y: auto; padding: 10px;">
+                    <div style="margin-bottom: 15px;">
+                        <h3 style="color: #00ff88; margin: 0 0 10px 0; font-size: 1.2rem;">Sell Crypto for Cash</h3>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0;">Convert your mined cryptocurrency to dollars to purchase upgrades</p>
+                    </div>
+
+                    <!-- BTC Sell -->
+                    <div style="background: rgba(247, 147, 26, 0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #f7931a; font-weight: 800; font-size: 1.1rem;">₿ Bitcoin</span>
+                            <span style="color: #888; font-size: 0.8rem;">$<span id="market-btc-price">100,000</span> each</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                            <button onclick="sellBTC(0.001)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.001</button>
+                            <button onclick="sellBTC(0.01)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.01</button>
+                            <button onclick="sellBTC(0.1)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.1</button>
+                            <button onclick="sellBTC(1)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 1</button>
+                        </div>
+                        <button onclick="sellAllBTC()" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                    </div>
+
+                    <!-- ETH Sell -->
+                    <div style="background: rgba(98, 126, 234, 0.1); border: 1px solid #627eea; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #627eea; font-weight: 800; font-size: 1.1rem;">Ξ Ethereum</span>
+                            <span style="color: #888; font-size: 0.8rem;">$<span id="market-eth-price">3,500</span> each</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                            <button onclick="sellETH(0.01)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.01</button>
+                            <button onclick="sellETH(0.1)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.1</button>
+                            <button onclick="sellETH(1)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 1</button>
+                            <button onclick="sellETH(10)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10</button>
+                        </div>
+                        <button onclick="sellAllETH()" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                    </div>
+
+                    <!-- DOGE Sell -->
+                    <div style="background: rgba(194, 166, 51, 0.1); border: 1px solid #c2a633; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #c2a633; font-weight: 800; font-size: 1.1rem;">Ð Dogecoin</span>
+                            <span style="color: #888; font-size: 0.8rem;">$<span id="market-doge-price">0.25</span> each</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                            <button onclick="sellDOGE(1)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 1</button>
+                            <button onclick="sellDOGE(10)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10</button>
+                            <button onclick="sellDOGE(100)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 100</button>
+                            <button onclick="sellDOGE(1000)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 1000</button>
+                        </div>
+                        <button onclick="sellAllDOGE()" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Session Stats -->
@@ -427,6 +522,7 @@ button:disabled:hover {
     const DOGE_MAX_PRICE = 2.00;
 
     let hardwareEquity = 0;
+    let dollarBalance = 0; // USD balance from selling crypto
     let lastTickTime = Date.now();
     let lastPriceUpdateTime = 0; // Track when price was last updated
     let manualHashClickTime = 0;
@@ -499,6 +595,7 @@ button:disabled:hover {
 
     // Guaranteed price swings: ±0.01%-1% every 2 seconds, with mean reversion
     function frequentPriceSwing() {
+        console.log('Price swing running - BTC:', btcPrice, 'ETH:', ethPrice, 'DOGE:', dogePrice);
         let movePercent = (Math.random() * 0.009) + 0.0001; // 0.01% to 1%
 
         // BTC price swing
@@ -682,6 +779,7 @@ button:disabled:hover {
             dogeClickValue,
             dogePerSec,
             // General data
+            dollarBalance,
             hardwareEquity,
             lastSaveTime: Date.now(),
             autoClickerCooldownEnd,
@@ -744,6 +842,7 @@ function loadGame() {
         dogeClickValue = state.dogeClickValue || 2.50;
 
         // Load general data
+        dollarBalance = state.dollarBalance || 0;
         hardwareEquity = state.hardwareEquity || 0;
 
         // Initialize session tracking
@@ -833,11 +932,11 @@ function loadGame() {
         // Restore autoclicker cooldown
         autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
 
-        // Calculate offline earnings (max 1 hour of earnings to prevent exploits)
+        // Calculate offline earnings (max 6 hours of earnings to prevent exploits)
         const lastSaveTime = state.lastSaveTime || Date.now();
         const currentTime = Date.now();
         let offlineSeconds = (currentTime - lastSaveTime) / 1000;
-        const maxOfflineSeconds = 3600; // Cap at 1 hour
+        const maxOfflineSeconds = 21600; // Cap at 6 hours
         if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
 
         const offlineBtcEarnings = (state.btcPerSec || 0) * offlineSeconds;
@@ -859,7 +958,9 @@ function loadGame() {
 
         if (offlineBtcEarnings > 0 || offlineEthEarnings > 0 || offlineDogeEarnings > 0) {
             window.offlineEarningsToShow = {
-                amount: offlineBtcEarnings,
+                btc: offlineBtcEarnings,
+                eth: offlineEthEarnings,
+                doge: offlineDogeEarnings,
                 seconds: offlineSeconds
             };
         }
@@ -867,12 +968,14 @@ function loadGame() {
         updateUI();
 
         // Restore chart history and timestamps
-        chartHistory = state.chartHistory || [];
-        chartTimestamps = state.chartTimestamps || [];
-        chartStartTime = state.chartStartTime || Date.now();
+        // FORCE RESET: Clear any corrupted chart data from saves
+        chartHistory = [];
+        chartTimestamps = [];
+        chartStartTime = Date.now();
 
         // Debug log
         console.log('Loaded save:', { btcBalance, ethBalance, dogeBalance, hardwareEquity });
+        console.log('Chart data reset on load');
     }
 }
     // --- SAVE SYSTEM END ---
@@ -922,8 +1025,8 @@ function loadGame() {
         }
     }
 
-    function showOfflineEarningsModal(btcEarned, secondsOffline) {
-        console.log('showOfflineEarningsModal called with:', btcEarned, secondsOffline);
+    function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, secondsOffline) {
+        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, secondsOffline);
 
         const overlay = document.createElement('div');
         overlay.className = 'offline-modal-overlay';
@@ -941,10 +1044,21 @@ function loadGame() {
         if (seconds > 0) timeStr += seconds + 's';
         if (!timeStr) timeStr = '< 1s';
 
+        let earningsHtml = '';
+        if (btcEarned > 0) {
+            earningsHtml += `<div class="earnings" style="color: #f7931a;">₿ ${btcEarned.toFixed(8)}</div>`;
+        }
+        if (ethEarned > 0) {
+            earningsHtml += `<div class="earnings" style="color: #627eea;">Ξ ${ethEarned.toFixed(8)}</div>`;
+        }
+        if (dogeEarned > 0) {
+            earningsHtml += `<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`;
+        }
+
         modal.innerHTML = `
             <h2>⏰ Welcome Back!</h2>
             <div class="earnings-label">Offline Earnings</div>
-            <div class="earnings">₿ ${btcEarned.toFixed(8)}</div>
+            ${earningsHtml}
             <div class="time-offline">While you were away for ${timeStr}</div>
             <button id="claim-btn">Claim Rewards</button>
         `;
@@ -987,7 +1101,10 @@ function loadGame() {
 
         const clickInterval = setInterval(() => {
             if (clicksRemaining > 0) {
-                manualHash();
+                // Click all three crypto types
+                manualHash();      // BTC
+                manualEthHash();   // ETH
+                manualDogeHash();  // DOGE
                 clicksRemaining--;
             } else {
                 clearInterval(clickInterval);
@@ -1008,10 +1125,10 @@ function loadGame() {
             const cooldownMs = autoClickerCooldownEnd - now;
             const seconds = Math.ceil(cooldownMs / 1000);
             btn.disabled = true;
-            btn.innerText = `COOLDOWN: ${seconds}s`;
+            btn.innerText = `AUTO CLICKER • COOLDOWN: ${seconds}s`;
         } else {
             btn.disabled = false;
-            btn.innerText = '5 clicks/sec • 30s duration • 5m cooldown';
+            btn.innerText = 'AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown';
         }
     }
 
@@ -1023,19 +1140,8 @@ function loadGame() {
             const btn = document.createElement('button');
             btn.className = 'u-item';
             btn.id = `up-${u.id}`;
-if (u.isClickUpgrade) {
-            btn.classList.add('click-upgrade');
-        }
-
-        // For manual hash upgrade, clicking upgrades AND applies boost
-        if (u.isClickUpgrade) {
-            btn.onclick = () => {
-                buyLevelMultiple(i, buyQuantity);
-                buyBoost(i);
-            };
-        } else {
-            btn.onclick = () => buyLevelMultiple(i, buyQuantity);
-        }
+        // All upgrades use the same purchase function
+        btn.onclick = () => buyLevelMultiple(i, buyQuantity);
 
         const powerReq = equipmentPowerReqs[u.id] || 0;
         const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:var(--btc);font-weight:700;display:block;margin-top:3px">${powerReq.toLocaleString()}W per level</span>` : '';
@@ -1047,8 +1153,7 @@ if (u.isClickUpgrade) {
                 ${powerDisplay}
             </div>
             <div style="text-align:right">
-                <span style="font-size:1.16rem;font-weight:900;display:block" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
-                <span style="font-size:1.2rem;color:#666;font-family:monospace" id="btc-cost-${u.id}">₿ 0.00</span>
+                <span style="font-size:1.4rem;font-weight:900;display:block" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
                 <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="afford-${u.id}">x0</span>
             </div>`;
         container.appendChild(btn);
@@ -1094,8 +1199,7 @@ if (u.isClickUpgrade) {
                     <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="pow-power-${u.id}">+0W</span>
                 </div>
                 <div style="text-align:right">
-                    <span style="font-size:1.16rem;font-weight:900;display:block" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
-                    <span style="font-size:1.2rem;color:#666;font-family:monospace" id="pow-btc-cost-${u.id}">₿ 0.00</span>
+                    <span style="font-size:1.4rem;font-weight:900;display:block" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
                     <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="pow-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
@@ -1122,8 +1226,7 @@ if (u.isClickUpgrade) {
                     <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="eth-yield-${u.id}">+0 Ξ/s</span>
                 </div>
                 <div style="text-align:right">
-                    <span style="font-size:1.16rem;font-weight:900;display:block" id="eth-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
-                    <span style="font-size:1.2rem;color:#666;font-family:monospace" id="eth-cost-${u.id}">Ξ 0.00</span>
+                    <span style="font-size:1.4rem;font-weight:900;display:block" id="eth-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
                     <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="eth-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
@@ -1150,8 +1253,7 @@ if (u.isClickUpgrade) {
                     <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="doge-yield-${u.id}">+0 Ð/s</span>
                 </div>
                 <div style="text-align:right">
-                    <span style="font-size:1.16rem;font-weight:900;display:block" id="doge-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
-                    <span style="font-size:1.2rem;color:#666;font-family:monospace" id="doge-cost-${u.id}">Ð 0.00</span>
+                    <span style="font-size:1.4rem;font-weight:900;display:block" id="doge-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
                     <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="doge-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
@@ -1168,16 +1270,94 @@ if (u.isClickUpgrade) {
 
     function setBuyQuantity(qty) {
         buyQuantity = qty;
-        document.querySelectorAll('.qty-toggle').forEach(el => el.classList.remove('active'));
-        document.getElementById(`qty-toggle-${qty}`).classList.add('active');
+        // All buttons are grey
+        const defaultColor = '#888';
+
+        document.querySelectorAll('.qty-toggle').forEach(el => {
+            el.classList.remove('active');
+            // Reset to default grey color
+            el.style.borderColor = defaultColor;
+            el.style.color = defaultColor;
+        });
+
+        const activeBtn = document.getElementById(`qty-toggle-${qty}`);
+        activeBtn.classList.add('active');
+        activeBtn.style.borderColor = '#666';
+        activeBtn.style.color = '#fff';
+        activeBtn.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.2)';
+    }
+
+    // Market sell functions
+    function sellBTC(amount) {
+        if (btcBalance < amount) {
+            alert('Not enough Bitcoin!');
+            return;
+        }
+        btcBalance -= amount;
+        dollarBalance += amount * btcPrice;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
+    }
+
+    function sellAllBTC() {
+        if (btcBalance <= 0) return;
+        dollarBalance += btcBalance * btcPrice;
+        btcBalance = 0;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
+    }
+
+    function sellETH(amount) {
+        if (ethBalance < amount) {
+            alert('Not enough Ethereum!');
+            return;
+        }
+        ethBalance -= amount;
+        dollarBalance += amount * ethPrice;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
+    }
+
+    function sellAllETH() {
+        if (ethBalance <= 0) return;
+        dollarBalance += ethBalance * ethPrice;
+        ethBalance = 0;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
+    }
+
+    function sellDOGE(amount) {
+        // DOGE uses whole numbers
+        if (dogeBalance < amount) {
+            alert('Not enough Dogecoin!');
+            return;
+        }
+        dogeBalance -= amount;
+        dollarBalance += amount * dogePrice;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
+    }
+
+    function sellAllDOGE() {
+        if (dogeBalance <= 0) return;
+        dollarBalance += dogeBalance * dogePrice;
+        dogeBalance = 0;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
     }
 
     function buyPowerUpgrade(i) {
         const u = powerUpgrades[i];
-        const costBtc = u.currentUsd / btcPrice;
+        const costUsd = u.currentUsd;
 
-        if (btcBalance >= costBtc) {
-            btcBalance -= costBtc;
+        if (dollarBalance >= costUsd) {
+            dollarBalance -= costUsd;
             hardwareEquity += u.currentUsd;
             u.level++;
             u.currentPower = u.basePower * u.level;
@@ -1229,7 +1409,7 @@ if (u.isClickUpgrade) {
 
         // Update power upgrades display
         powerUpgrades.forEach(u => {
-            const costBtc = u.currentUsd / btcPrice;
+            const costUsd = u.currentUsd;
             const lvlEl = document.getElementById(`pow-lvl-txt-${u.id}`);
             if (lvlEl) lvlEl.innerText = `[Lvl ${u.level}]`;
 
@@ -1239,15 +1419,12 @@ if (u.isClickUpgrade) {
             const usdEl = document.getElementById(`pow-usd-${u.id}`);
             if (usdEl) usdEl.innerText = `$${u.currentUsd.toLocaleString()}`;
 
-            const costEl = document.getElementById(`pow-btc-cost-${u.id}`);
-            if (costEl) costEl.innerText = '₿ ' + costBtc.toFixed(8);
-
             // Calculate how many power upgrades can be afforded (accounting for price increases)
             const affordEl = document.getElementById(`pow-afford-${u.id}`);
             if (affordEl) {
-                let remaining = btcBalance;
+                let remaining = dollarBalance;
                 let canAfford = 0;
-                let nextCost = costBtc;
+                let nextCost = costUsd;
                 let nextLevel = u.level;
 
                 while (remaining >= nextCost) {
@@ -1255,7 +1432,7 @@ if (u.isClickUpgrade) {
                     canAfford++;
                     nextLevel++;
                     // Power upgrades: 1.2x multiplier
-                    nextCost = (u.baseUsd * Math.pow(1.2, nextLevel)) / btcPrice;
+                    nextCost = u.baseUsd * Math.pow(1.2, nextLevel);
                 }
 
                 affordEl.innerText = `x${canAfford}`;
@@ -1263,7 +1440,7 @@ if (u.isClickUpgrade) {
             }
 
             const btn = document.getElementById(`pow-${u.id}`);
-            if (btn) btn.disabled = (btcBalance < costBtc);
+            if (btn) btn.disabled = (dollarBalance < costUsd);
         });
     }
 
@@ -1375,10 +1552,10 @@ function buyLevelMultiple(i, quantity) {
     let purchased = 0;
 
     for (let q = 0; q < quantity; q++) {
-        const costBtc = u.currentUsd / btcPrice;
+        const costUsd = u.currentUsd;
 
-        if (btcBalance < costBtc) {
-            break; // Not enough BTC
+        if (dollarBalance < costUsd) {
+            break; // Not enough dollars
         }
 
         // Check power requirements
@@ -1389,7 +1566,7 @@ function buyLevelMultiple(i, quantity) {
             }
         }
 
-        btcBalance -= costBtc;
+        dollarBalance -= costUsd;
         hardwareEquity += u.currentUsd;
         u.level++;
 
@@ -1425,10 +1602,10 @@ function buyBoost(i) {
         return; // Cannot boost if upgrade hasn't been purchased
     }
 
-    const costBtc = u.boostCost / btcPrice;
+    const costUsd = u.boostCost;
 
-    if (btcBalance >= costBtc) {
-        btcBalance -= costBtc;
+    if (dollarBalance >= costUsd) {
+        dollarBalance -= costUsd;
         hardwareEquity += u.boostCost;
         u.boostLevel++;
 
@@ -1453,13 +1630,13 @@ function buyBoost(i) {
         let purchased = 0;
 
         for (let q = 0; q < quantity; q++) {
-            const costEth = u.currentUsd / ethPrice;
+            const costUsd = u.currentUsd;
 
-            if (ethBalance < costEth) {
-                break; // Not enough ETH
+            if (dollarBalance < costUsd) {
+                break; // Not enough dollars
             }
 
-            ethBalance -= costEth;
+            dollarBalance -= costUsd;
             hardwareEquity += u.currentUsd;
             u.level++;
 
@@ -1489,13 +1666,13 @@ function buyBoost(i) {
         let purchased = 0;
 
         for (let q = 0; q < quantity; q++) {
-            const costDoge = u.currentUsd / dogePrice;
+            const costUsd = u.currentUsd;
 
-            if (dogeBalance < costDoge) {
-                break; // Not enough DOGE
+            if (dollarBalance < costUsd) {
+                break; // Not enough dollars
             }
 
-            dogeBalance -= costDoge;
+            dollarBalance -= costUsd;
             hardwareEquity += u.currentUsd;
             u.level++;
 
@@ -1555,14 +1732,31 @@ function buyBoost(i) {
         // Update hardware equity
         document.getElementById('asset-usd').innerText = "$" + Math.floor(hardwareEquity).toLocaleString();
 
-        // Calculate total hashrate display
-        let totalHashrate = btcPerSec + ethPerSec + dogePerSec;
-        document.getElementById('yield-total').innerText = totalHashrate.toFixed(2) + "/s";
+        // Update individual hashrate displays
+        const btcEl = document.getElementById('yield-btc');
+        const ethEl = document.getElementById('yield-eth');
+        const dogeEl = document.getElementById('yield-doge');
+
+        if (btcEl) btcEl.innerText = btcPerSec.toFixed(8) + "/s";
+        if (ethEl) ethEl.innerText = ethPerSec.toFixed(8) + "/s";
+        if (dogeEl) dogeEl.innerText = dogePerSec.toFixed(2) + "/s";
 
         // Update prices
         document.getElementById('btc-price').innerText = "$" + Math.floor(btcPrice).toLocaleString();
         document.getElementById('eth-price').innerText = "$" + Math.floor(ethPrice).toLocaleString();
         document.getElementById('doge-price').innerText = "$" + dogePrice.toFixed(4);
+
+        // Update dollar balance
+        const dollarBalanceEl = document.getElementById('dollar-balance');
+        if (dollarBalanceEl) dollarBalanceEl.innerText = "$" + Math.floor(dollarBalance).toLocaleString();
+
+        // Update market prices
+        const marketBtcPrice = document.getElementById('market-btc-price');
+        const marketEthPrice = document.getElementById('market-eth-price');
+        const marketDogePrice = document.getElementById('market-doge-price');
+        if (marketBtcPrice) marketBtcPrice.innerText = Math.floor(btcPrice).toLocaleString();
+        if (marketEthPrice) marketEthPrice.innerText = Math.floor(ethPrice).toLocaleString();
+        if (marketDogePrice) marketDogePrice.innerText = dogePrice.toFixed(4);
 
         // Update session stats
         updateSessionStats();
@@ -1572,7 +1766,7 @@ function buyBoost(i) {
         updatePowerDisplay();
 
  upgrades.forEach(u => {
-    const costBtc = u.currentUsd / btcPrice;
+    const costUsd = u.currentUsd;
     const yEl = document.getElementById(`yield-${u.id}`);
 
     if (yEl) {
@@ -1587,15 +1781,13 @@ function buyBoost(i) {
 
     const uEl = document.getElementById(`usd-${u.id}`);
     if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
-    const cEl = document.getElementById(`btc-cost-${u.id}`);
-    if(cEl) cEl.innerText = "₿ " + costBtc.toFixed(8);
 
     // Calculate how many upgrades can be afforded (accounting for price increases)
     const affordEl = document.getElementById(`afford-${u.id}`);
     if(affordEl) {
-        let remaining = btcBalance;
+        let remaining = dollarBalance;
         let canAfford = 0;
-        let nextCost = costBtc;
+        let nextCost = costUsd;
         let nextLevel = u.level;
 
         while (remaining >= nextCost) {
@@ -1606,10 +1798,10 @@ function buyBoost(i) {
             // Calculate next cost based on upgrade type
             if (u.isClickUpgrade) {
                 // Manual hash: 1.75x multiplier
-                nextCost = (u.baseUsd * Math.pow(1.75, nextLevel)) / btcPrice;
+                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
             } else {
                 // Other miners: 1.15x multiplier
-                nextCost = (u.baseUsd * Math.pow(1.15, nextLevel)) / btcPrice;
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             }
         }
 
@@ -1619,15 +1811,15 @@ function buyBoost(i) {
 
     const bEl = document.getElementById(`up-${u.id}`);
     if(bEl) {
-        // Check both BTC balance and power requirements
-        const hasEnoughBtc = btcBalance >= costBtc;
+        // Check both dollar balance and power requirements
+        const hasEnoughDollars = dollarBalance >= costUsd;
         const powerReq = equipmentPowerReqs[u.id] || 0;
         const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
         const hasEnoughPower = powerNeeded <= totalPowerAvailable || powerReq === 0;
-        bEl.disabled = !(hasEnoughBtc && hasEnoughPower);
+        bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
 
         // Change button appearance if power is insufficient
-        if (!hasEnoughPower && hasEnoughBtc && powerReq > 0) {
+        if (!hasEnoughPower && hasEnoughDollars && powerReq > 0) {
             bEl.style.opacity = '0.6';
             bEl.title = `Insufficient power! Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more`;
         } else {
@@ -1672,7 +1864,7 @@ function buyBoost(i) {
 
 // Update ETH upgrades display
 ethUpgrades.forEach(u => {
-    const costEth = u.currentUsd / ethPrice;
+    const costUsd = u.currentUsd;
     const yEl = document.getElementById(`eth-yield-${u.id}`);
     if (yEl) {
         if (u.isClickUpgrade) {
@@ -1685,14 +1877,12 @@ ethUpgrades.forEach(u => {
 
     const uEl = document.getElementById(`eth-usd-${u.id}`);
     if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
-    const cEl = document.getElementById(`eth-cost-${u.id}`);
-    if(cEl) cEl.innerText = "Ξ " + costEth.toFixed(8);
 
     const affordEl = document.getElementById(`eth-afford-${u.id}`);
     if(affordEl) {
-        let remaining = ethBalance;
+        let remaining = dollarBalance;
         let canAfford = 0;
-        let nextCost = costEth;
+        let nextCost = costUsd;
         let nextLevel = u.level;
 
         while (remaining >= nextCost) {
@@ -1700,9 +1890,9 @@ ethUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = (u.baseUsd * Math.pow(1.75, nextLevel)) / ethPrice;
+                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
             } else {
-                nextCost = (u.baseUsd * Math.pow(1.15, nextLevel)) / ethPrice;
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             }
         }
 
@@ -1712,7 +1902,7 @@ ethUpgrades.forEach(u => {
 
     const bEl = document.getElementById(`eth-up-${u.id}`);
     if(bEl) {
-        bEl.disabled = ethBalance < costEth;
+        bEl.disabled = dollarBalance < costUsd;
     }
 
     const lEl = document.getElementById(`eth-lvl-txt-${u.id}`);
@@ -1721,7 +1911,7 @@ ethUpgrades.forEach(u => {
 
 // Update DOGE upgrades display
 dogeUpgrades.forEach(u => {
-    const costDoge = u.currentUsd / dogePrice;
+    const costUsd = u.currentUsd;
     const yEl = document.getElementById(`doge-yield-${u.id}`);
     if (yEl) {
         if (u.isClickUpgrade) {
@@ -1734,14 +1924,12 @@ dogeUpgrades.forEach(u => {
 
     const uEl = document.getElementById(`doge-usd-${u.id}`);
     if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
-    const cEl = document.getElementById(`doge-cost-${u.id}`);
-    if(cEl) cEl.innerText = "Ð " + costDoge.toFixed(2);
 
     const affordEl = document.getElementById(`doge-afford-${u.id}`);
     if(affordEl) {
-        let remaining = dogeBalance;
+        let remaining = dollarBalance;
         let canAfford = 0;
-        let nextCost = costDoge;
+        let nextCost = costUsd;
         let nextLevel = u.level;
 
         while (remaining >= nextCost) {
@@ -1749,9 +1937,9 @@ dogeUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = (u.baseUsd * Math.pow(1.75, nextLevel)) / dogePrice;
+                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
             } else {
-                nextCost = (u.baseUsd * Math.pow(1.15, nextLevel)) / dogePrice;
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             }
         }
 
@@ -1761,7 +1949,7 @@ dogeUpgrades.forEach(u => {
 
     const bEl = document.getElementById(`doge-up-${u.id}`);
     if(bEl) {
-        bEl.disabled = dogeBalance < costDoge;
+        bEl.disabled = dollarBalance < costUsd;
     }
 
     const lEl = document.getElementById(`doge-lvl-txt-${u.id}`);
@@ -1799,81 +1987,189 @@ dogeUpgrades.forEach(u => {
         updateAutoClickerButtonState();
     }, 100);
 
-    // Initialize all shops
-    initBtcShop();
-    initEthShop();
-    initDogeShop();
-    initPowerShop();
-    loadGame(); // This calls updateUI() internally
-    updateAutoClickerButtonState(); // Update button state immediately after loading
+    // Initialize all shops after DOM is ready
+    function initializeGame() {
+        initBtcShop();
+        initEthShop();
+        initDogeShop();
+        initPowerShop();
+        loadGame(); // This calls updateUI() internally
+        updateAutoClickerButtonState(); // Update button state immediately after loading
 
-    const ctx = document.getElementById('nwChart').getContext('2d');
+        const canvasElement = document.getElementById('nwChart');
+        console.log('Canvas element:', canvasElement);
 
-    // Initialize chart with full history (at least one data point)
-    const currentNetWorth = btcBalance * btcPrice;
-    if (chartHistory.length === 0) {
+        if (!canvasElement) {
+            console.error('ERROR: Canvas element not found!');
+            return;
+        }
+
+        const ctx = canvasElement.getContext('2d');
+        console.log('Canvas context:', ctx);
+
+        // Initialize chart with full history (at least one data point)
+        const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity;
+        console.log('=== CHART DEBUG ===');
+        console.log('btcBalance:', btcBalance, 'btcPrice:', btcPrice);
+        console.log('ethBalance:', ethBalance, 'ethPrice:', ethPrice);
+        console.log('dogeBalance:', dogeBalance, 'dogePrice:', dogePrice);
+        console.log('hardwareEquity:', hardwareEquity);
+        console.log('Current net worth for chart:', currentNetWorth);
+
+        // Ensure chartHistory is always an array and force reset
+        chartHistory = [];
+        chartTimestamps = [];
+
+        // Always add at least 2 data points for the chart to render properly
+        chartHistory.push(currentNetWorth);
         chartHistory.push(currentNetWorth);
         chartTimestamps.push({ time: Date.now(), value: currentNetWorth });
+        chartTimestamps.push({ time: Date.now() + 1000, value: currentNetWorth });
         chartStartTime = Date.now();
-    }
 
-    const nwChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartHistory.map((_, i) => ''),
-            datasets: [{
-                data: chartHistory,
-                borderColor: '#00ff88',
-                borderWidth: 4,
-                pointRadius: 0,
-                fill: true,
-                backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: { display: false },
-                y: { display: true }
-            },
-            plugins: { legend: { display: false } }
+        console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
+
+        // Check if Chart.js loaded
+        if (typeof Chart === 'undefined') {
+            console.error('ERROR: Chart.js library not loaded!');
+            document.querySelector('.chart-wrapper').innerHTML = '<div style="color: red; padding: 20px;">ERROR: Chart.js failed to load. Check internet connection.</div>';
+            return;
         }
-    });
 
-    setInterval(() => {
-        const netWorth = btcBalance * btcPrice;
-        chartHistory.push(netWorth);
-        chartTimestamps.push({ time: Date.now(), value: netWorth });
+        console.log('Chart.js version:', Chart.version);
 
-        nwChart.data.datasets[0].data = chartHistory;
-        nwChart.data.labels = chartHistory.map((_, i) => '');
-        nwChart.update('none');
-    }, 2000);
+        let nwChart;
+        try {
+            nwChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartHistory.map((_, i) => ''),
+                datasets: [{
+                    data: chartHistory,
+                    borderColor: '#00ff88',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            display: true,
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        display: true,
+                        beginAtZero: false,
+                        grid: {
+                            display: true,
+                            color: 'rgba(255, 255, 255, 0.08)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            display: true,
+                            color: '#666',
+                            font: {
+                                size: 10
+                            },
+                            maxTicksLimit: 8,
+                            callback: function(value) {
+                                if (value >= 1000) {
+                                    return '$' + (value / 1000).toFixed(1) + 'k';
+                                }
+                                return '$' + value.toFixed(0);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                }
+            }
+        });
 
-    // Auto-save every 1.5 seconds
-    setInterval(saveGame, 1500);
+            console.log('Chart object created:', nwChart);
+            console.log('Chart initialized with data:', chartHistory);
+        } catch (error) {
+            console.error('ERROR creating chart:', error);
+            document.querySelector('.chart-wrapper').innerHTML = '<div style="color: red; padding: 20px;">ERROR: Failed to create chart - ' + error.message + '</div>';
+            return;
+        }
+
+        let updateCount = 0;
+        setInterval(() => {
+            if (!nwChart) return;
+
+            const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity;
+            chartHistory.push(netWorth);
+            chartTimestamps.push({ time: Date.now(), value: netWorth });
+
+            // Keep only last 100 data points to prevent memory issues
+            if (chartHistory.length > 100) {
+                chartHistory.shift();
+                chartTimestamps.shift();
+            }
+
+            nwChart.data.datasets[0].data = chartHistory;
+            nwChart.data.labels = chartHistory.map((_, i) => '');
+            nwChart.update('none');
+
+            updateCount++;
+            if (updateCount % 5 === 0) {
+                console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length, 'Latest value:', netWorth);
+            }
+        }, 2000);
+
+        // Auto-save every 1.5 seconds
+        setInterval(saveGame, 1500);
 
     // Show offline earnings if applicable
     console.log('Checking for offline earnings:', window.offlineEarningsToShow);
     if (window.offlineEarningsToShow) {
-        if (window.offlineEarningsToShow.amount > 0) {
+        const hasEarnings = (window.offlineEarningsToShow.btc || 0) > 0 ||
+                           (window.offlineEarningsToShow.eth || 0) > 0 ||
+                           (window.offlineEarningsToShow.doge || 0) > 0;
+        if (hasEarnings) {
             console.log('Showing offline earnings modal with:', window.offlineEarningsToShow);
             setTimeout(() => {
-                showOfflineEarningsModal(window.offlineEarningsToShow.amount, window.offlineEarningsToShow.seconds);
+                showOfflineEarningsModal(
+                    window.offlineEarningsToShow.btc || 0,
+                    window.offlineEarningsToShow.eth || 0,
+                    window.offlineEarningsToShow.doge || 0,
+                    window.offlineEarningsToShow.seconds
+                );
                 window.offlineEarningsToShow = null;
             }, 300);
         } else {
-            console.log('Offline earnings was 0 or less:', window.offlineEarningsToShow.amount);
+            console.log('Offline earnings were all 0 or less');
         }
     } else {
         console.log('No offline earnings data stored');
     }
 
-    // Start price swings: frequent small swings every 2 seconds + occasional big swings
-    frequentPriceSwing(); // Start frequent swings (±0.5%-2% every 2 seconds)
-    bigPriceSwing();      // Start occasional big swings (±5-20% every 5-10 minutes)
+        // Start price swings: frequent small swings every 2 seconds + occasional big swings
+        frequentPriceSwing(); // Start frequent swings (±0.5%-2% every 2 seconds)
+        bigPriceSwing();      // Start occasional big swings (±5-20% every 5-10 minutes)
+    }
+
+    // Run initialization when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    } else {
+        initializeGame();
+    }
 </script>
 
 </body>
