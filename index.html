@@ -268,10 +268,16 @@ button:disabled:hover {
         <div class="panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                 <span class="nw-label">Portfolio Valuation</span>
-                <span style="font-size: 0.6rem; color: #555;">Idle BTC Miner™ 2026 - Aaron Khan</span>
+                <span style="font-size: 0.6rem; color: #555;">Idle Crypto Miner™ 2026 - Aaron Khan</span>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
+
+            <!-- Bitcoin Stats -->
             <div class="btc-stat">₿ <span id="bal-btc">0.00000000</span></div>
+            <!-- Ethereum Stats -->
+            <div class="btc-stat" style="color: #627eea;">Ξ <span id="bal-eth">0.00000000</span></div>
+            <!-- Dogecoin Stats -->
+            <div class="btc-stat" style="color: #c2a633;">Ð <span id="bal-doge">0.00</span></div>
 
             <div class="mini-stats">
                 <div class="stat-item">
@@ -279,22 +285,31 @@ button:disabled:hover {
                     <b class="stat-val" id="asset-usd">$0</b>
                 </div>
                 <div class="stat-item">
-                    <span>Hashrate</span>
-                    <b class="stat-val" id="yield-btc">0.00/s</b>
+                    <span>Total Hashrate</span>
+                    <b class="stat-val" id="yield-total">0.00/s</b>
                 </div>
                 <div class="stat-item">
-                    <span>Lifetime Mined</span>
-                    <b class="stat-val" style="font-size: 48px;">₿<span id="lifetime-btc" style="font-size: 48px; color: white;">0.00013000</span>
-</b>
-
+                    <span>BTC Lifetime</span>
+                    <b class="stat-val" style="font-size: 32px;">₿<span id="lifetime-btc" style="font-size: 32px; color: white;">0.00000000</span></b>
                 </div>
             </div>
 
+            <!-- Crypto Prices -->
             <div style="margin-top: 20px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222;">
-                <span style="font-size: 0.85rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px;">BTC Price (Virtual price)</span>
-                <div style="display: flex; align-items: center;">
-                    <b class="stat-val" id="btc-price" style="font-size: 2rem;">$100,000</b>
-                    <div id="price-notif-container"></div>
+                <span style="font-size: 0.85rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 8px;">Crypto Prices (Virtual)</span>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 120px;">
+                        <div style="font-size: 0.65rem; color: #f7931a; font-weight: 800;">BITCOIN</div>
+                        <b class="stat-val" id="btc-price" style="font-size: 1.4rem;">$100,000</b>
+                    </div>
+                    <div style="flex: 1; min-width: 120px;">
+                        <div style="font-size: 0.65rem; color: #627eea; font-weight: 800;">ETHEREUM</div>
+                        <b class="stat-val" id="eth-price" style="font-size: 1.4rem;">$3,500</b>
+                    </div>
+                    <div style="flex: 1; min-width: 120px;">
+                        <div style="font-size: 0.65rem; color: #c2a633; font-weight: 800;">DOGECOIN</div>
+                        <b class="stat-val" id="doge-price" style="font-size: 1.4rem;">$0.25</b>
+                    </div>
                 </div>
             </div>
 
@@ -304,8 +319,14 @@ button:disabled:hover {
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0;">
-            <button class="mine-btn" onclick="manualHash()">MANUAL HASH<br>
+            <button class="mine-btn" onclick="manualHash()">MANUAL BTC HASH<br>
                 <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
+            </button>
+            <button class="mine-btn" style="background: #627eea;" onclick="manualEthHash()">MANUAL ETH HASH<br>
+                <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+0.00050000 Ξ</span>
+            </button>
+            <button class="mine-btn" style="background: #c2a633;" onclick="manualDogeHash()">MANUAL DOGE HASH<br>
+                <span style="font-size: 1.25rem; font-weight: normal; opacity: 0.7;">+2.50 Ð</span>
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 0.8rem;" onclick="startAutoClicker()">5 clicks/sec • 30s duration • 5m cooldown</button>
 
@@ -324,7 +345,9 @@ button:disabled:hover {
 
             <!-- Tab Buttons -->
             <div class="tab-buttons">
-                <button class="tab-btn active" onclick="switchTab('mining')">MINING</button>
+                <button class="tab-btn active" onclick="switchTab('btc-mining')">BTC</button>
+                <button class="tab-btn" onclick="switchTab('eth-mining')">ETH</button>
+                <button class="tab-btn" onclick="switchTab('doge-mining')">DOGE</button>
                 <button class="tab-btn" onclick="switchTab('power')">POWER</button>
             </div>
 
@@ -336,9 +359,19 @@ button:disabled:hover {
                 <button id="qty-toggle-10" class="qty-toggle" onclick="setBuyQuantity(10)">10x</button>
             </div>
 
-            <!-- Mining Tab -->
-            <div id="mining-tab" class="tab-content active" style="flex-direction: column; min-height: 0; flex: 1;">
-                <div class="upgrade-list" id="shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
+            <!-- BTC Mining Tab -->
+            <div id="btc-mining-tab" class="tab-content active" style="flex-direction: column; min-height: 0; flex: 1;">
+                <div class="upgrade-list" id="btc-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
+            </div>
+
+            <!-- ETH Mining Tab -->
+            <div id="eth-mining-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <div class="upgrade-list" id="eth-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
+            </div>
+
+            <!-- DOGE Mining Tab -->
+            <div id="doge-mining-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <div class="upgrade-list" id="doge-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
             </div>
 
             <!-- Power Tab -->
@@ -366,15 +399,35 @@ button:disabled:hover {
     </div>
 
 <script>
+    // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
     let btcLifetime = 0;
     let btcPerSec = 0;
-let btcClickValue = 0.00000250;
+    let btcClickValue = 0.00000250;
+    const BTC_MIN_PRICE = 50000;
+    const BTC_MAX_PRICE = 200000;
+
+    // Ethereum
+    let ethPrice = 3500; // Starting ETH price
+    let ethBalance = 0;
+    let ethLifetime = 0;
+    let ethPerSec = 0;
+    let ethClickValue = 0.00050000;
+    const ETH_MIN_PRICE = 1500;
+    const ETH_MAX_PRICE = 8000;
+
+    // Dogecoin
+    let dogePrice = 0.25; // Starting DOGE price
+    let dogeBalance = 0;
+    let dogeLifetime = 0;
+    let dogePerSec = 0;
+    let dogeClickValue = 2.50;
+    const DOGE_MIN_PRICE = 0.05;
+    const DOGE_MAX_PRICE = 2.00;
+
     let hardwareEquity = 0;
     let lastTickTime = Date.now();
-    const MIN_PRICE = 50000;
-    const MAX_PRICE = 200000;
     let lastPriceUpdateTime = 0; // Track when price was last updated
     let manualHashClickTime = 0;
     let manualHashCooldownEnd = 0;
@@ -444,28 +497,51 @@ let btcClickValue = 0.00000250;
         setTimeout(() => notif.remove(), 2500);
     }
 
-    // Guaranteed price swings: ±0.01%-1% every 2 seconds, with mean reversion to 100k
+    // Guaranteed price swings: ±0.01%-1% every 2 seconds, with mean reversion
     function frequentPriceSwing() {
         let movePercent = (Math.random() * 0.009) + 0.0001; // 0.01% to 1%
-        let oldPrice = btcPrice;
-        let newPrice = oldPrice * (1 + movePercent);
 
-        // Mean reversion: 60% chance to move towards 100k, 40% chance random walk
+        // BTC price swing
+        let oldBtcPrice = btcPrice;
+        let newBtcPrice = oldBtcPrice * (1 + movePercent);
         if (Math.random() < 0.6) {
-            // Move towards 100k
             const targetPrice = 100000;
-            const diff = targetPrice - oldPrice;
-            newPrice = oldPrice + (diff * 0.02); // Move 2% towards target
+            const diff = targetPrice - oldBtcPrice;
+            newBtcPrice = oldBtcPrice + (diff * 0.02);
         } else {
-            // Random walk
             let direction = Math.random() > 0.5 ? 1 : -1;
-            newPrice = oldPrice * (1 + (direction * movePercent));
+            newBtcPrice = oldBtcPrice * (1 + (direction * movePercent));
         }
+        btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, newBtcPrice));
 
-        btcPrice = Math.max(MIN_PRICE, Math.min(MAX_PRICE, newPrice));
+        // ETH price swing
+        let oldEthPrice = ethPrice;
+        let newEthPrice = oldEthPrice * (1 + movePercent);
+        if (Math.random() < 0.6) {
+            const targetPrice = 3500;
+            const diff = targetPrice - oldEthPrice;
+            newEthPrice = oldEthPrice + (diff * 0.02);
+        } else {
+            let direction = Math.random() > 0.5 ? 1 : -1;
+            newEthPrice = oldEthPrice * (1 + (direction * movePercent));
+        }
+        ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, newEthPrice));
 
-        if (btcPrice !== oldPrice) {
-            showPriceNotification(oldPrice, btcPrice);
+        // DOGE price swing
+        let oldDogePrice = dogePrice;
+        let newDogePrice = oldDogePrice * (1 + movePercent * 1.5); // DOGE is more volatile
+        if (Math.random() < 0.6) {
+            const targetPrice = 0.25;
+            const diff = targetPrice - oldDogePrice;
+            newDogePrice = oldDogePrice + (diff * 0.02);
+        } else {
+            let direction = Math.random() > 0.5 ? 1 : -1;
+            newDogePrice = oldDogePrice * (1 + (direction * movePercent * 1.5));
+        }
+        dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, newDogePrice));
+
+        if (btcPrice !== oldBtcPrice) {
+            showPriceNotification(oldBtcPrice, btcPrice);
         }
         updateUI();
 
@@ -478,13 +554,18 @@ let btcClickValue = 0.00000250;
         let movePercent = (Math.random() * 0.075) + 0.025; // 2.5% to 10%
         let direction = Math.random() > 0.5 ? 1 : -1;
         let move = direction * movePercent;
-        let oldPrice = btcPrice;
-        let newPrice = btcPrice * (1 + move);
 
-        btcPrice = Math.max(MIN_PRICE, Math.min(MAX_PRICE, newPrice));
+        let oldBtcPrice = btcPrice;
+        btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, btcPrice * (1 + move)));
 
-        if (btcPrice !== oldPrice) {
-            showPriceNotification(oldPrice, btcPrice);
+        let oldEthPrice = ethPrice;
+        ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, ethPrice * (1 + move)));
+
+        let oldDogePrice = dogePrice;
+        dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, dogePrice * (1 + move * 1.8))); // DOGE more volatile
+
+        if (btcPrice !== oldBtcPrice) {
+            showPriceNotification(oldBtcPrice, btcPrice);
         }
         updateUI();
 
@@ -534,9 +615,10 @@ let btcClickValue = 0.00000250;
         osc.stop(now + 0.2);
     }
 
-    const upgrades = [
-	{ id: 0, name: "Manual Hash Upgrade", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000050 }, // NEW BUTTON
-        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.000000115 }, 
+    // Bitcoin mining upgrades
+    const btcUpgrades = [
+	{ id: 0, name: "Manual Hash Upgrade", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000050 },
+        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.000000115 },
         { id: 2, name: "GTX 1660 Super", baseUsd: 100, baseYield: 0.0000007 },
         { id: 3, name: "RTX 5090 Rig", baseUsd: 3000, baseYield: 0.000015 },
         { id: 4, name: "ASIC Mining Unit", baseUsd: 7500, baseYield: 0.000085 },
@@ -548,14 +630,59 @@ let btcClickValue = 0.00000250;
         { id: 10, name: "Quantum Computer", baseUsd: 500000000, baseYield: 125.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
+    // Ethereum mining upgrades
+    const ethUpgrades = [
+	{ id: 0, name: "Manual ETH Mining", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00010000 },
+        { id: 1, name: "Single GPU Rig", baseUsd: 8, baseYield: 0.00002500 },
+        { id: 2, name: "RTX 4090 Miner", baseUsd: 150, baseYield: 0.00015000 },
+        { id: 3, name: "8-GPU Mining Rig", baseUsd: 4500, baseYield: 0.00325000 },
+        { id: 4, name: "Professional ETH Farm", baseUsd: 12000, baseYield: 0.01800000 },
+        { id: 5, name: "Staking Validator Node", baseUsd: 40000, baseYield: 0.09500000 },
+        { id: 6, name: "Multi-Validator Farm", baseUsd: 175000, baseYield: 0.68000000 },
+        { id: 7, name: "ETH Mining Complex", baseUsd: 950000, baseYield: 9.50000000 },
+        { id: 8, name: "Enterprise Staking Pool", baseUsd: 7500000, baseYield: 132.00000000 },
+        { id: 9, name: "Layer 2 Validation Network", baseUsd: 52000000, baseYield: 1230.00000000 },
+        { id: 10, name: "Ethereum Foundation Node", baseUsd: 700000000, baseYield: 26500.00000000 }
+    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
+
+    // Dogecoin mining upgrades
+    const dogeUpgrades = [
+	{ id: 0, name: "Manual DOGE Mining", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.50 },
+        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 0.50 },
+        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 3.20 },
+        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 68.00 },
+        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 385.00 },
+        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 2050.00 },
+        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 14500.00 },
+        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 205000.00 },
+        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 2820000.00 },
+        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 26400000.00 },
+        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 570000000.00 }
+    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
+
+    // Keep reference to btcUpgrades as upgrades for backward compatibility
+    const upgrades = btcUpgrades;
+
     // --- SAVE SYSTEM START ---
     function saveGame() {
         const gameState = {
+            // Bitcoin data
             btcBalance,
             btcLifetime,
-            hardwareEquity,
             btcClickValue,
             btcPerSec,
+            // Ethereum data
+            ethBalance,
+            ethLifetime,
+            ethClickValue,
+            ethPerSec,
+            // Dogecoin data
+            dogeBalance,
+            dogeLifetime,
+            dogeClickValue,
+            dogePerSec,
+            // General data
+            hardwareEquity,
             lastSaveTime: Date.now(),
             autoClickerCooldownEnd,
             chartHistory: chartHistory,
@@ -568,7 +695,23 @@ let btcClickValue = 0.00000250;
                 currentUsd: u.currentUsd,
                 currentPower: u.currentPower
             })),
-            upgrades: upgrades.map(u => ({
+            btcUpgrades: btcUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
+            })),
+            ethUpgrades: ethUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
+            })),
+            dogeUpgrades: dogeUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
@@ -584,14 +727,27 @@ function loadGame() {
     const savedData = localStorage.getItem('satoshiTerminalSave');
     if (savedData) {
         const state = JSON.parse(savedData);
+
+        // Load Bitcoin data
         btcBalance = state.btcBalance || 0;
         btcLifetime = state.btcLifetime || 0;
-        hardwareEquity = state.hardwareEquity || 0;
         btcClickValue = state.btcClickValue || 0.00000250;
+
+        // Load Ethereum data
+        ethBalance = state.ethBalance || 0;
+        ethLifetime = state.ethLifetime || 0;
+        ethClickValue = state.ethClickValue || 0.00050000;
+
+        // Load Dogecoin data
+        dogeBalance = state.dogeBalance || 0;
+        dogeLifetime = state.dogeLifetime || 0;
+        dogeClickValue = state.dogeClickValue || 2.50;
+
+        // Load general data
+        hardwareEquity = state.hardwareEquity || 0;
 
         // Initialize session tracking
         sessionStartBalance = btcBalance;
-        // Set chart start time to match when save was made (for accurate timeline)
         chartStartTime = state.chartStartTime || Date.now();
 
         // Load power upgrades
@@ -607,30 +763,72 @@ function loadGame() {
         }
         totalPowerAvailable = state.totalPowerAvailable || 0;
 
-        // Load upgrades - handle both old saves (by index) and new saves (by id)
-        state.upgrades.forEach((savedU, index) => {
-            let upgradeToUpdate;
-            if (savedU.id !== undefined) {
-                // New format: match by id
-                upgradeToUpdate = upgrades.find(u => u.id === savedU.id);
-            } else {
-                // Old format: match by array index
-                upgradeToUpdate = upgrades[index];
-            }
-            if (upgradeToUpdate) {
-                upgradeToUpdate.level = savedU.level || 0;
-                upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
-                upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
-            }
-        });
+        // Load BTC upgrades
+        if (state.btcUpgrades) {
+            state.btcUpgrades.forEach((savedU) => {
+                const upgradeToUpdate = btcUpgrades.find(u => u.id === savedU.id);
+                if (upgradeToUpdate) {
+                    upgradeToUpdate.level = savedU.level || 0;
+                    upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
+                    upgradeToUpdate.currentYield = savedU.currentYield || 0;
+                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
+                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
+                }
+            });
+        } else if (state.upgrades) {
+            // Backward compatibility: load old saves
+            state.upgrades.forEach((savedU, index) => {
+                let upgradeToUpdate;
+                if (savedU.id !== undefined) {
+                    upgradeToUpdate = btcUpgrades.find(u => u.id === savedU.id);
+                } else {
+                    upgradeToUpdate = btcUpgrades[index];
+                }
+                if (upgradeToUpdate) {
+                    upgradeToUpdate.level = savedU.level || 0;
+                    upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
+                    upgradeToUpdate.currentYield = savedU.currentYield || 0;
+                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
+                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
+                }
+            });
+        }
+
+        // Load ETH upgrades
+        if (state.ethUpgrades) {
+            state.ethUpgrades.forEach((savedU) => {
+                const upgradeToUpdate = ethUpgrades.find(u => u.id === savedU.id);
+                if (upgradeToUpdate) {
+                    upgradeToUpdate.level = savedU.level || 0;
+                    upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
+                    upgradeToUpdate.currentYield = savedU.currentYield || 0;
+                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
+                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
+                }
+            });
+        }
+
+        // Load DOGE upgrades
+        if (state.dogeUpgrades) {
+            state.dogeUpgrades.forEach((savedU) => {
+                const upgradeToUpdate = dogeUpgrades.find(u => u.id === savedU.id);
+                if (upgradeToUpdate) {
+                    upgradeToUpdate.level = savedU.level || 0;
+                    upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
+                    upgradeToUpdate.currentYield = savedU.currentYield || 0;
+                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
+                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
+                }
+            });
+        }
 
         // Calculate total power used
         calculateTotalPowerUsed();
 
-        // Recalculate totals
-        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        // Recalculate totals for all cryptos
+        btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
 
         // Restore autoclicker cooldown
         autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
@@ -639,16 +837,29 @@ function loadGame() {
         const lastSaveTime = state.lastSaveTime || Date.now();
         const currentTime = Date.now();
         let offlineSeconds = (currentTime - lastSaveTime) / 1000;
-        const offlineSavedRate = state.btcPerSec || 0;
         const maxOfflineSeconds = 3600; // Cap at 1 hour
         if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
-        const offlineEarnings = offlineSavedRate * offlineSeconds;
 
-        if (offlineEarnings > 0) {
-            btcBalance += offlineEarnings;
-            btcLifetime += offlineEarnings;
+        const offlineBtcEarnings = (state.btcPerSec || 0) * offlineSeconds;
+        const offlineEthEarnings = (state.ethPerSec || 0) * offlineSeconds;
+        const offlineDogeEarnings = (state.dogePerSec || 0) * offlineSeconds;
+
+        if (offlineBtcEarnings > 0) {
+            btcBalance += offlineBtcEarnings;
+            btcLifetime += offlineBtcEarnings;
+        }
+        if (offlineEthEarnings > 0) {
+            ethBalance += offlineEthEarnings;
+            ethLifetime += offlineEthEarnings;
+        }
+        if (offlineDogeEarnings > 0) {
+            dogeBalance += offlineDogeEarnings;
+            dogeLifetime += offlineDogeEarnings;
+        }
+
+        if (offlineBtcEarnings > 0 || offlineEthEarnings > 0 || offlineDogeEarnings > 0) {
             window.offlineEarningsToShow = {
-                amount: offlineEarnings,
+                amount: offlineBtcEarnings,
                 seconds: offlineSeconds
             };
         }
@@ -661,7 +872,7 @@ function loadGame() {
         chartStartTime = state.chartStartTime || Date.now();
 
         // Debug log
-        console.log('Loaded save:', { btcBalance, hardwareEquity, offlineEarnings, offlineEarningsToShow: window.offlineEarningsToShow, upgradeLevels: upgrades.map(u => `${u.name}: ${u.level}`) });
+        console.log('Loaded save:', { btcBalance, ethBalance, dogeBalance, hardwareEquity });
     }
 }
     // --- SAVE SYSTEM END ---
@@ -804,11 +1015,11 @@ function loadGame() {
         }
     }
 
-    function initShop() {
-        const container = document.getElementById('shop');
+    function initBtcShop() {
+        const container = document.getElementById('btc-shop');
         container.innerHTML = '';
 
-        upgrades.forEach((u, i) => {
+        btcUpgrades.forEach((u, i) => {
             const btn = document.createElement('button');
             btn.className = 'u-item';
             btn.id = `up-${u.id}`;
@@ -886,6 +1097,62 @@ if (u.isClickUpgrade) {
                     <span style="font-size:1.16rem;font-weight:900;display:block" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
                     <span style="font-size:1.2rem;color:#666;font-family:monospace" id="pow-btc-cost-${u.id}">₿ 0.00</span>
                     <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="pow-afford-${u.id}">x0</span>
+                </div>`;
+            container.appendChild(btn);
+        });
+    }
+
+    function initEthShop() {
+        const container = document.getElementById('eth-shop');
+        container.innerHTML = '';
+
+        ethUpgrades.forEach((u, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'u-item';
+            btn.id = `eth-up-${u.id}`;
+            if (u.isClickUpgrade) {
+                btn.classList.add('click-upgrade');
+            }
+
+            btn.onclick = () => buyEthLevel(i, buyQuantity);
+
+            btn.innerHTML = `
+                <div style="text-align:left">
+                    <span style="font-weight:800;font-size:1.3rem;display:block"><span id="eth-lvl-txt-${u.id}" style="color:#627eea">[Lvl 0]</span> ${u.name}</span>
+                    <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="eth-yield-${u.id}">+0 Ξ/s</span>
+                </div>
+                <div style="text-align:right">
+                    <span style="font-size:1.16rem;font-weight:900;display:block" id="eth-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                    <span style="font-size:1.2rem;color:#666;font-family:monospace" id="eth-cost-${u.id}">Ξ 0.00</span>
+                    <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="eth-afford-${u.id}">x0</span>
+                </div>`;
+            container.appendChild(btn);
+        });
+    }
+
+    function initDogeShop() {
+        const container = document.getElementById('doge-shop');
+        container.innerHTML = '';
+
+        dogeUpgrades.forEach((u, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'u-item';
+            btn.id = `doge-up-${u.id}`;
+            if (u.isClickUpgrade) {
+                btn.classList.add('click-upgrade');
+            }
+
+            btn.onclick = () => buyDogeLevel(i, buyQuantity);
+
+            btn.innerHTML = `
+                <div style="text-align:left">
+                    <span style="font-weight:800;font-size:1.3rem;display:block"><span id="doge-lvl-txt-${u.id}" style="color:#c2a633">[Lvl 0]</span> ${u.name}</span>
+                    <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="doge-yield-${u.id}">+0 Ð/s</span>
+                </div>
+                <div style="text-align:right">
+                    <span style="font-size:1.16rem;font-weight:900;display:block" id="doge-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                    <span style="font-size:1.2rem;color:#666;font-family:monospace" id="doge-cost-${u.id}">Ð 0.00</span>
+                    <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="doge-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
         });
@@ -1021,6 +1288,44 @@ function manualHash() {
     updateUI();
 }
 
+function manualEthHash() {
+    // Add ETH to balance
+    ethBalance += ethClickValue;
+    ethLifetime += ethClickValue;
+
+    // Track clicks for hashrate
+    const now = Date.now();
+    manualHashClickTime = now;
+    manualHashCooldownEnd = now + 1000;
+    clickTimestamps.push(now);
+    if (clickTimestamps.length > 60) clickTimestamps.shift();
+
+    // Play click sound
+    playClickSound();
+
+    // Refresh the screen
+    updateUI();
+}
+
+function manualDogeHash() {
+    // Add DOGE to balance
+    dogeBalance += dogeClickValue;
+    dogeLifetime += dogeClickValue;
+
+    // Track clicks for hashrate
+    const now = Date.now();
+    manualHashClickTime = now;
+    manualHashCooldownEnd = now + 1000;
+    clickTimestamps.push(now);
+    if (clickTimestamps.length > 60) clickTimestamps.shift();
+
+    // Play click sound
+    playClickSound();
+
+    // Refresh the screen
+    updateUI();
+}
+
 function buyLevel(i) {
     const u = upgrades[i];
     const costBtc = u.currentUsd / btcPrice;
@@ -1142,6 +1447,78 @@ function buyBoost(i) {
     }
 }
 
+    // Ethereum buy functions
+    function buyEthLevel(i, quantity) {
+        const u = ethUpgrades[i];
+        let purchased = 0;
+
+        for (let q = 0; q < quantity; q++) {
+            const costEth = u.currentUsd / ethPrice;
+
+            if (ethBalance < costEth) {
+                break; // Not enough ETH
+            }
+
+            ethBalance -= costEth;
+            hardwareEquity += u.currentUsd;
+            u.level++;
+
+            // Update price and yield based on upgrade type
+            if (u.id === 0 || u.isClickUpgrade) {
+                ethClickValue *= 1.10;
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            } else {
+                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            }
+
+            purchased++;
+        }
+
+        if (purchased > 0) {
+            ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+            updateUI();
+            saveGame();
+            playUpgradeSound();
+        }
+    }
+
+    // Dogecoin buy functions
+    function buyDogeLevel(i, quantity) {
+        const u = dogeUpgrades[i];
+        let purchased = 0;
+
+        for (let q = 0; q < quantity; q++) {
+            const costDoge = u.currentUsd / dogePrice;
+
+            if (dogeBalance < costDoge) {
+                break; // Not enough DOGE
+            }
+
+            dogeBalance -= costDoge;
+            hardwareEquity += u.currentUsd;
+            u.level++;
+
+            // Update price and yield based on upgrade type
+            if (u.id === 0 || u.isClickUpgrade) {
+                dogeClickValue *= 1.10;
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            } else {
+                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            }
+
+            purchased++;
+        }
+
+        if (purchased > 0) {
+            dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+            updateUI();
+            saveGame();
+            playUpgradeSound();
+        }
+    }
+
     function updateSessionStats() {
         // Update session time
         const now = Date.now();
@@ -1163,23 +1540,29 @@ function buyBoost(i) {
     }
 
     function updateUI() {
-        let netWorth = (btcBalance * btcPrice);
+        // Calculate total net worth from all cryptocurrencies
+        let netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
         document.getElementById('nw-val').innerText = "$" + netWorth.toLocaleString(undefined, {minimumFractionDigits: 2});
+
+        // Update balances
         document.getElementById('bal-btc').innerText = btcBalance.toFixed(8);
+        document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
+        document.getElementById('bal-doge').innerText = dogeBalance.toFixed(2);
+
+        // Update lifetime stats
         document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
+
+        // Update hardware equity
         document.getElementById('asset-usd').innerText = "$" + Math.floor(hardwareEquity).toLocaleString();
-        let displayRate = btcPerSec;
-        const now = Date.now();
-        if (now < manualHashCooldownEnd && clickTimestamps.length > 0) {
-            const timeSpan = now - clickTimestamps[0];
-            const cps = timeSpan > 0 ? (clickTimestamps.length / (timeSpan / 1000)) : clickTimestamps.length;
-            displayRate = btcPerSec + (btcClickValue * cps);
-        } else {
-            clickTimestamps = [];
-        }
-        document.getElementById('yield-btc').innerText = displayRate.toFixed(8) + "/s";
-        document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
+
+        // Calculate total hashrate display
+        let totalHashrate = btcPerSec + ethPerSec + dogePerSec;
+        document.getElementById('yield-total').innerText = totalHashrate.toFixed(2) + "/s";
+
+        // Update prices
         document.getElementById('btc-price').innerText = "$" + Math.floor(btcPrice).toLocaleString();
+        document.getElementById('eth-price').innerText = "$" + Math.floor(ethPrice).toLocaleString();
+        document.getElementById('doge-price').innerText = "$" + dogePrice.toFixed(4);
 
         // Update session stats
         updateSessionStats();
@@ -1286,23 +1669,140 @@ function buyBoost(i) {
         }
     }
 });
+
+// Update ETH upgrades display
+ethUpgrades.forEach(u => {
+    const costEth = u.currentUsd / ethPrice;
+    const yEl = document.getElementById(`eth-yield-${u.id}`);
+    if (yEl) {
+        if (u.isClickUpgrade) {
+            yEl.innerText = `+10% MANUAL ETH RATE`;
+        } else {
+            const currentSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            yEl.innerText = `+${currentSpeed.toFixed(8)} Ξ/s`;
+        }
+    }
+
+    const uEl = document.getElementById(`eth-usd-${u.id}`);
+    if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
+    const cEl = document.getElementById(`eth-cost-${u.id}`);
+    if(cEl) cEl.innerText = "Ξ " + costEth.toFixed(8);
+
+    const affordEl = document.getElementById(`eth-afford-${u.id}`);
+    if(affordEl) {
+        let remaining = ethBalance;
+        let canAfford = 0;
+        let nextCost = costEth;
+        let nextLevel = u.level;
+
+        while (remaining >= nextCost) {
+            remaining -= nextCost;
+            canAfford++;
+            nextLevel++;
+            if (u.isClickUpgrade) {
+                nextCost = (u.baseUsd * Math.pow(1.75, nextLevel)) / ethPrice;
+            } else {
+                nextCost = (u.baseUsd * Math.pow(1.15, nextLevel)) / ethPrice;
+            }
+        }
+
+        affordEl.innerText = `x${canAfford}`;
+        affordEl.style.color = canAfford > 0 ? '#00ff88' : '#666';
+    }
+
+    const bEl = document.getElementById(`eth-up-${u.id}`);
+    if(bEl) {
+        bEl.disabled = ethBalance < costEth;
+    }
+
+    const lEl = document.getElementById(`eth-lvl-txt-${u.id}`);
+    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
+});
+
+// Update DOGE upgrades display
+dogeUpgrades.forEach(u => {
+    const costDoge = u.currentUsd / dogePrice;
+    const yEl = document.getElementById(`doge-yield-${u.id}`);
+    if (yEl) {
+        if (u.isClickUpgrade) {
+            yEl.innerText = `+10% MANUAL DOGE RATE`;
+        } else {
+            const currentSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            yEl.innerText = `+${currentSpeed.toFixed(2)} Ð/s`;
+        }
+    }
+
+    const uEl = document.getElementById(`doge-usd-${u.id}`);
+    if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
+    const cEl = document.getElementById(`doge-cost-${u.id}`);
+    if(cEl) cEl.innerText = "Ð " + costDoge.toFixed(2);
+
+    const affordEl = document.getElementById(`doge-afford-${u.id}`);
+    if(affordEl) {
+        let remaining = dogeBalance;
+        let canAfford = 0;
+        let nextCost = costDoge;
+        let nextLevel = u.level;
+
+        while (remaining >= nextCost) {
+            remaining -= nextCost;
+            canAfford++;
+            nextLevel++;
+            if (u.isClickUpgrade) {
+                nextCost = (u.baseUsd * Math.pow(1.75, nextLevel)) / dogePrice;
+            } else {
+                nextCost = (u.baseUsd * Math.pow(1.15, nextLevel)) / dogePrice;
+            }
+        }
+
+        affordEl.innerText = `x${canAfford}`;
+        affordEl.style.color = canAfford > 0 ? '#00ff88' : '#666';
+    }
+
+    const bEl = document.getElementById(`doge-up-${u.id}`);
+    if(bEl) {
+        bEl.disabled = dogeBalance < costDoge;
+    }
+
+    const lEl = document.getElementById(`doge-lvl-txt-${u.id}`);
+    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
+});
     }
 
     setInterval(() => {
         const now = Date.now();
         const deltaTime = (now - lastTickTime) / 1000;
         lastTickTime = now;
+
+        // BTC mining gains
         if (btcPerSec > 0) {
             let gain = btcPerSec * deltaTime;
             btcBalance += gain;
             btcLifetime += gain;
-            updateUI();
         }
+
+        // ETH mining gains
+        if (ethPerSec > 0) {
+            let gain = ethPerSec * deltaTime;
+            ethBalance += gain;
+            ethLifetime += gain;
+        }
+
+        // DOGE mining gains
+        if (dogePerSec > 0) {
+            let gain = dogePerSec * deltaTime;
+            dogeBalance += gain;
+            dogeLifetime += gain;
+        }
+
+        updateUI();
         updateAutoClickerButtonState();
     }, 100);
 
-    // Initialize game with manual BTC price
-    initShop();
+    // Initialize all shops
+    initBtcShop();
+    initEthShop();
+    initDogeShop();
     initPowerShop();
     loadGame(); // This calls updateUI() internally
     updateAutoClickerButtonState(); // Update button state immediately after loading
