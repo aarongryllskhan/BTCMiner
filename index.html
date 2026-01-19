@@ -283,7 +283,7 @@
             </button>
 
             <div style="display: flex; gap: 6px; margin: 12px 0; justify-content: center;">
-                <button onclick="setBuyMultiplier(1)" id="mult-1" style="background: #f7931a; border: none; color: #000; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">1x</button>
+                <button onclick="setBuyMultiplier(1)" id="mult-1" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">1x</button>
                 <button onclick="setBuyMultiplier(5)" id="mult-5" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">5x</button>
                 <button onclick="setBuyMultiplier(10)" id="mult-10" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">10x</button>
                 <button onclick="setBuyMultiplier(25)" id="mult-25" style="background: #333; border: 1px solid #555; color: #fff; padding: 6px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">25x</button>
@@ -291,7 +291,11 @@
             </div>
 
             <div class="upgrade-list" id="shop"></div>
-            <button style="background: #ff3344; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-top: 15px; font-size: 0.9rem;" onclick="resetGame()">RESET SAVE</button>
+
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button id="mute-btn" style="background: #666; color: white; border: none; flex: 1; padding: 8px; font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 0.8rem;" onclick="toggleMute()">🔊 SOUND ON</button>
+                <button style="background: #ff3344; color: white; border: none; flex: 1; padding: 8px; font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 0.8rem;" onclick="resetGame()">RESET SAVE</button>
+            </div>
         </div>
     </div>
 
@@ -309,6 +313,7 @@ let btcClickValue = 0.00000250;
     let blockchainRewardMultiplier = 1.0; // Starts at 100%, reduces by 5% per whole BTC
     let lastRewardCheckBtc = 0; // Track last BTC amount we checked for reward halving
     let buyMultiplier = 1; // Buy multiplier: 1x, 5x, 10x, etc.
+    let isMuted = false; // Mute toggle for sounds
 
     // Show price change notification
     function showPriceNotification(oldPrice, newPrice) {
@@ -416,7 +421,21 @@ let btcClickValue = 0.00000250;
     // Sound effects using Web Audio API
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
+    function toggleMute() {
+        isMuted = !isMuted;
+        const muteBtn = document.getElementById('mute-btn');
+        if (isMuted) {
+            muteBtn.innerText = '🔇 SOUND OFF';
+            muteBtn.style.background = '#444';
+        } else {
+            muteBtn.innerText = '🔊 SOUND ON';
+            muteBtn.style.background = '#666';
+        }
+    }
+
     function playClickSound() {
+        if (isMuted) return;
+
         const now = audioContext.currentTime;
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
@@ -435,6 +454,8 @@ let btcClickValue = 0.00000250;
     }
 
     function playUpgradeSound() {
+        if (isMuted) return;
+
         const now = audioContext.currentTime;
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
@@ -702,6 +723,9 @@ function manualHash() {
         document.getElementById(`mult-${mult}`).style.background = '#f7931a';
         document.getElementById(`mult-${mult}`).style.borderColor = '#f7931a';
     }
+
+    // Initialize with 1x selected by default
+    setBuyMultiplier(1);
 
 function buyLevel(i) {
     const u = upgrades[i];
