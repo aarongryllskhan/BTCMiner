@@ -1132,14 +1132,9 @@ function loadGame() {
 
         updateUI();
 
-        // Restore chart history and timestamps
-        if (state.chartHistory && Array.isArray(state.chartHistory)) {
-            chartHistory = state.chartHistory;
-            chartTimestamps = state.chartTimestamps || [];
-        } else {
-            chartHistory = [];
-            chartTimestamps = [];
-        }
+        // Always reset chart history to start fresh on load
+        chartHistory = [];
+        chartTimestamps = [];
 
         // Debug log
         console.log('Loaded save:', { btcBalance, ethBalance, dogeBalance, hardwareEquity });
@@ -2325,13 +2320,12 @@ dogeUpgrades.forEach(u => {
         console.log('hardwareEquity:', hardwareEquity);
         console.log('Current net worth for chart:', currentNetWorth);
 
-        // Ensure chartHistory is always an array - don't reset if we have data
+        // Always start chart at 0
         if (chartHistory.length === 0) {
-            // Only initialize if empty
-            chartHistory.push(currentNetWorth);
-            chartHistory.push(currentNetWorth);
-            chartTimestamps.push({ time: Date.now(), value: currentNetWorth });
-            chartTimestamps.push({ time: Date.now() + 1000, value: currentNetWorth });
+            chartHistory.push(0);
+            chartHistory.push(0);
+            chartTimestamps.push({ time: Date.now(), value: 0 });
+            chartTimestamps.push({ time: Date.now() + 1000, value: 0 });
         }
 
         console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
@@ -2497,7 +2491,6 @@ dogeUpgrades.forEach(u => {
 </body>
 
 </html>
-
 
 
 
