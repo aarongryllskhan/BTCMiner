@@ -435,6 +435,7 @@ button:disabled:hover {
                 <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important;">Crypto Portfolio Valuation</span>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="toggleMute()">SOUND ON</button>
+                    <button style="background: #ffa500; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetGame()">RESET SAVE</button>
                     <span style="font-size: 0.6rem; color: #555;">Idle BTC Miner™ 2026 - Aaron Khan</span>
                 </div>
@@ -1485,6 +1486,17 @@ function loadGame() {
         if (instructionsEl) {
             instructionsEl.style.display = 'none';
             localStorage.setItem('instructionsDismissed', 'true');
+        }
+    }
+
+    function resetEarningsStats() {
+        if (confirm('Reset lifetime and session earnings to $0? This will not affect your crypto or upgrades.')) {
+            lifetimeEarnings = 0;
+            sessionEarnings = 0;
+            sessionStartTime = Date.now();
+            saveGame();
+            updateUI();
+            alert('Earnings stats have been reset!');
         }
     }
 
