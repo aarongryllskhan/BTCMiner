@@ -336,7 +336,7 @@ button:disabled:hover {
                     <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-time">0m 0s</b>
                 </div>
                 <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">EARNINGS THIS SESSION</span>
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">LIFETIME EARNINGS</span>
                     <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-earnings">₿ 0.00000000</b>
                 </div>
                 <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
@@ -590,7 +590,8 @@ button:disabled:hover {
     let sessionStartBalance = 0;
     let sessionStartNetWorth = 0;
     let sessionEarnings = 0;
-    let sessionAccumulatedEarnings = 0; // Running total of all mined value in USD
+    let lifetimeEarnings = 0; // Lifetime total - only ever increases, never decreases
+    let previousPortfolioValue = 0; // Track previous value to detect increases
 
     // Buy quantity setting
     let buyQuantity = 1;
@@ -981,7 +982,7 @@ button:disabled:hover {
             hardwareEquity,
             lastSaveTime: Date.now(),
             autoClickerCooldownEnd,
-            sessionAccumulatedEarnings,
+            lifetimeEarnings,
             chartHistory: chartHistory,
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
@@ -1046,7 +1047,8 @@ function loadGame() {
         // Load general data
         dollarBalance = state.dollarBalance || 0;
         hardwareEquity = state.hardwareEquity || 0;
-        sessionAccumulatedEarnings = state.sessionAccumulatedEarnings || 0;
+        lifetimeEarnings = state.lifetimeEarnings || 0;
+        previousPortfolioValue = 0; // Reset tracking on load
 
         // Initialize session tracking
         sessionStartBalance = btcBalance;
@@ -1956,10 +1958,14 @@ function buyBoost(i) {
 
         document.getElementById('session-time').innerText = timeStr;
 
-        // Update session accumulated earnings - add the current mined value
-        const currentMinedValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-        sessionAccumulatedEarnings = currentMinedValue;
-        document.getElementById('session-earnings').innerText = '$' + sessionAccumulatedEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        // Update lifetime earnings - only increases, never decreases
+        const currentPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+        const valueIncrease = currentPortfolioValue - previousPortfolioValue;
+        if (valueIncrease > 0) {
+            lifetimeEarnings += valueIncrease;
+        }
+        previousPortfolioValue = currentPortfolioValue;
+        document.getElementById('session-earnings').innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
     function updateUI() {
