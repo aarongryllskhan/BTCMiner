@@ -455,6 +455,15 @@ button:disabled:hover {
                 </div>
             </div>
 
+            <!-- Game Instructions -->
+            <div id="game-instructions" style="margin: 12px auto; padding: 8px 16px; background: rgba(255, 193, 7, 0.08); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 4px; max-width: 600px; text-align: center; position: relative;">
+                <button onclick="dismissInstructions()" style="position: absolute; top: 4px; right: 4px; background: rgba(255, 255, 255, 0.1); border: none; color: #888; cursor: pointer; font-size: 0.8rem; padding: 2px 6px; border-radius: 3px; font-weight: bold; line-height: 1;">×</button>
+                <div style="font-size: 0.715rem; color: #ccc; line-height: 1.5;">
+                    Begin by <strong>Manually Hashing BTC, ETH or Doge</strong>. Sell or Stake your Crypto at the Exchange.<br>
+                    You will find Miners in the BTC, ETH and DOGE tabs. <strong style="color: #ff3344;">DON'T FORGET ABOUT POWER!</strong>
+                </div>
+            </div>
+
             <!-- Hashrate Display -->
             <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 0.1px; justify-content: flex-end;">
                 <div class="stat-box stat-box-session" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
@@ -816,14 +825,8 @@ button:disabled:hover {
     let sessionStartTime = Date.now();
     let sessionStartBalance = 0;
     let sessionStartNetWorth = 0;
-    let sessionEarnings = 0;
-    let lifetimeEarnings = 0; // Lifetime total - only ever increases, never decreases
-    let previousPortfolioValue = 0; // Track previous value to detect increases
-
-    // Track starting crypto balances for this session (to calculate mined value only)
-    let sessionStartBTC = 0;
-    let sessionStartETH = 0;
-    let sessionStartDOGE = 0;
+    let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
+    let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
 
     // Buy quantity setting
     let buyQuantity = 1;
@@ -1216,6 +1219,8 @@ button:disabled:hover {
             lastSaveTime: Date.now(),
             autoClickerCooldownEnd,
             lifetimeEarnings,
+            sessionEarnings,
+            sessionStartTime,
             chartHistory: chartHistory,
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
@@ -1283,17 +1288,26 @@ function loadGame() {
         dollarBalance = state.dollarBalance || 0;
         hardwareEquity = state.hardwareEquity || 0;
         lifetimeEarnings = state.lifetimeEarnings || 0;
-        previousPortfolioValue = 0; // Reset tracking on load
+
+        // Load or reset session-specific data
+        // Check if this is a new session (page refresh within reasonable time = continue session)
+        const timeSinceLastSave = Date.now() - (state.lastSaveTime || 0);
+        const isNewSession = timeSinceLastSave > 300000; // 5 minutes = new session
+
+        if (isNewSession) {
+            // New session - reset session earnings and start time
+            sessionEarnings = 0;
+            sessionStartTime = Date.now();
+        } else {
+            // Continue existing session - restore session data
+            sessionEarnings = state.sessionEarnings || 0;
+            sessionStartTime = state.sessionStartTime || Date.now();
+        }
 
         // Load staking data
         if (state.staking) {
             loadStakingData(state.staking);
         }
-
-        // Initialize session tracking - track crypto balances at session start
-        sessionStartBTC = btcBalance;
-        sessionStartETH = ethBalance;
-        sessionStartDOGE = dogeBalance;
         sessionStartBalance = btcBalance;
         sessionStartNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity + dollarBalance;
         chartStartTime = state.chartStartTime || Date.now();
@@ -1395,14 +1409,23 @@ function loadGame() {
         if (offlineBtcEarnings > 0) {
             btcBalance += offlineBtcEarnings;
             btcLifetime += offlineBtcEarnings;
+            const btcUsdValue = offlineBtcEarnings * btcPrice;
+            lifetimeEarnings += btcUsdValue;
+            sessionEarnings += btcUsdValue; // Offline earnings count toward session
         }
         if (offlineEthEarnings > 0) {
             ethBalance += offlineEthEarnings;
             ethLifetime += offlineEthEarnings;
+            const ethUsdValue = offlineEthEarnings * ethPrice;
+            lifetimeEarnings += ethUsdValue;
+            sessionEarnings += ethUsdValue; // Offline earnings count toward session
         }
         if (offlineDogeEarnings > 0) {
             dogeBalance += offlineDogeEarnings;
             dogeLifetime += offlineDogeEarnings;
+            const dogeUsdValue = offlineDogeEarnings * dogePrice;
+            lifetimeEarnings += dogeUsdValue;
+            sessionEarnings += dogeUsdValue; // Offline earnings count toward session
         }
 
         if (offlineBtcEarnings > 0 || offlineEthEarnings > 0 || offlineDogeEarnings > 0) {
@@ -1455,6 +1478,14 @@ function loadGame() {
                 totalPowerUsed += equipmentPowerReqs[u.id] * u.level;
             }
         });
+    }
+
+    function dismissInstructions() {
+        const instructionsEl = document.getElementById('game-instructions');
+        if (instructionsEl) {
+            instructionsEl.style.display = 'none';
+            localStorage.setItem('instructionsDismissed', 'true');
+        }
     }
 
     function resetGame() {
@@ -2029,6 +2060,11 @@ function manualHash() {
     // This ensures every manual click also increases your Lifetime Total
     btcLifetime += btcClickValue;
 
+    // Track lifetime and session earnings in USD
+    const usdValue = btcClickValue * btcPrice;
+    lifetimeEarnings += usdValue;
+    sessionEarnings += usdValue;
+
     // Track clicks for hashrate
     const now = Date.now();
     manualHashClickTime = now;
@@ -2048,6 +2084,11 @@ function manualEthHash() {
     ethBalance += ethClickValue;
     ethLifetime += ethClickValue;
 
+    // Track lifetime and session earnings in USD
+    const usdValue = ethClickValue * ethPrice;
+    lifetimeEarnings += usdValue;
+    sessionEarnings += usdValue;
+
     // Track clicks for hashrate
     const now = Date.now();
     manualHashClickTime = now;
@@ -2066,6 +2107,11 @@ function manualDogeHash() {
     // Add DOGE to balance
     dogeBalance += dogeClickValue;
     dogeLifetime += dogeClickValue;
+
+    // Track lifetime and session earnings in USD
+    const usdValue = dogeClickValue * dogePrice;
+    lifetimeEarnings += usdValue;
+    sessionEarnings += usdValue;
 
     // Track clicks for hashrate
     const now = Date.now();
@@ -2373,26 +2419,13 @@ function buyDogeBoost(i) {
 
         document.getElementById('session-time').innerText = timeStr;
 
-        // Calculate session earnings (only from mined crypto - excluding sales/purchases)
-        const btcMined = btcBalance - sessionStartBTC;
-        const ethMined = ethBalance - sessionStartETH;
-        const dogeMined = dogeBalance - sessionStartDOGE;
-        const sessionEarnings = (btcMined * btcPrice) + (ethMined * ethPrice) + (dogeMined * dogePrice);
-
+        // Display session earnings (tracked directly from mining/staking)
         const sessionEarningEl = document.getElementById('session-earning');
         if (sessionEarningEl) {
             sessionEarningEl.innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
-        // Update lifetime earnings - only from mined crypto value increases, never decreases
-        const currentCryptoValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-        const valueIncrease = currentCryptoValue - previousPortfolioValue;
-        if (valueIncrease > 0) {
-            lifetimeEarnings += valueIncrease;
-        }
-        previousPortfolioValue = currentCryptoValue;
-
-        // Update lifetime earnings display
+        // Update lifetime earnings display (earnings are now tracked directly when crypto is mined/staked)
         const lifetimeEarningEl = document.getElementById('lifetime-earning');
         if (lifetimeEarningEl) {
             lifetimeEarningEl.innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -3035,22 +3068,31 @@ dogeUpgrades.forEach(u => {
         // BTC mining gains
         if (btcPerSec > 0) {
             let gain = btcPerSec * deltaTime;
+            let usdValue = gain * btcPrice;
             btcBalance += gain;
             btcLifetime += gain;
+            lifetimeEarnings += usdValue; // Track USD value of mined BTC
+            sessionEarnings += usdValue; // Track session earnings
         }
 
         // ETH mining gains
         if (ethPerSec > 0) {
             let gain = ethPerSec * deltaTime;
+            let usdValue = gain * ethPrice;
             ethBalance += gain;
             ethLifetime += gain;
+            lifetimeEarnings += usdValue; // Track USD value of mined ETH
+            sessionEarnings += usdValue; // Track session earnings
         }
 
         // DOGE mining gains
         if (dogePerSec > 0) {
             let gain = dogePerSec * deltaTime;
+            let usdValue = gain * dogePrice;
             dogeBalance += gain;
             dogeLifetime += gain;
+            lifetimeEarnings += usdValue; // Track USD value of mined DOGE
+            sessionEarnings += usdValue; // Track session earnings
         }
 
         updateUI();
@@ -3070,6 +3112,14 @@ dogeUpgrades.forEach(u => {
         // Initialize staking system
         initStaking();
         updateStakingUI();
+
+        // Check if instructions were dismissed
+        if (localStorage.getItem('instructionsDismissed') === 'true') {
+            const instructionsEl = document.getElementById('game-instructions');
+            if (instructionsEl) {
+                instructionsEl.style.display = 'none';
+            }
+        }
 
         const canvasElement = document.getElementById('nwChart');
         console.log('Canvas element:', canvasElement);
