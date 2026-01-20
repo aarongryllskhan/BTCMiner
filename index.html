@@ -561,6 +561,102 @@ button:disabled:hover {
                         </div>
                         <button onclick="sellAllDOGE()" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
+
+                    <!-- Staking Section -->
+                    <div style="margin: 25px 0 15px 0; padding-top: 20px; border-top: 2px solid #222;">
+                        <h3 style="color: #ffaa33; margin: 0 0 10px 0; font-size: 1.2rem;">🏦 Crypto Staking Bank</h3>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 15px 0;">Lock your crypto to earn 0.1% APR every 2 seconds, paid directly to your cash balance!</p>
+                    </div>
+
+                    <!-- BTC Staking -->
+                    <div style="background: rgba(247, 147, 26, 0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #f7931a; font-weight: 800; font-size: 1.1rem;">₿ Bitcoin Staking</span>
+                            <span style="color: #ffaa33; font-size: 0.8rem;" id="btc-apr-display">$0.00/hr</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem;">Staked: </span>
+                            <span style="color: #f7931a; font-family: monospace; font-weight: 800;" id="btc-staked-amount">0.00000000</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Stake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickStake('BTC', 25)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickStake('BTC', 50)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickStake('BTC', 75)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickStake('BTC', 100)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickUnstake('BTC', 25)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickUnstake('BTC', 50)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickUnstake('BTC', 75)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickUnstake('BTC', 100)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ETH Staking -->
+                    <div style="background: rgba(98, 126, 234, 0.1); border: 1px solid #627eea; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #627eea; font-weight: 800; font-size: 1.1rem;">Ξ Ethereum Staking</span>
+                            <span style="color: #ffaa33; font-size: 0.8rem;" id="eth-apr-display">$0.00/hr</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem;">Staked: </span>
+                            <span style="color: #627eea; font-family: monospace; font-weight: 800;" id="eth-staked-amount">0.00000000</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Stake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickStake('ETH', 25)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickStake('ETH', 50)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickStake('ETH', 75)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickStake('ETH', 100)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickUnstake('ETH', 25)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickUnstake('ETH', 50)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickUnstake('ETH', 75)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickUnstake('ETH', 100)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DOGE Staking -->
+                    <div style="background: rgba(194, 166, 51, 0.1); border: 1px solid #c2a633; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #c2a633; font-weight: 800; font-size: 1.1rem;">Ð Dogecoin Staking</span>
+                            <span style="color: #ffaa33; font-size: 0.8rem;" id="doge-apr-display">$0.00/hr</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem;">Staked: </span>
+                            <span style="color: #c2a633; font-family: monospace; font-weight: 800;" id="doge-staked-amount">0.00</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Stake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickStake('DOGE', 25)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickStake('DOGE', 50)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickStake('DOGE', 75)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickStake('DOGE', 100)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickUnstake('DOGE', 25)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickUnstake('DOGE', 50)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickUnstake('DOGE', 75)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickUnstake('DOGE', 100)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1006,6 +1102,8 @@ button:disabled:hover {
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
             totalPowerAvailable,
+            // Staking data
+            staking: getStakingData(),
             powerUpgrades: powerUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
@@ -1068,6 +1166,11 @@ function loadGame() {
         hardwareEquity = state.hardwareEquity || 0;
         lifetimeEarnings = state.lifetimeEarnings || 0;
         previousPortfolioValue = 0; // Reset tracking on load
+
+        // Load staking data
+        if (state.staking) {
+            loadStakingData(state.staking);
+        }
 
         // Initialize session tracking
         sessionStartBalance = btcBalance;
@@ -2561,6 +2664,11 @@ dogeUpgrades.forEach(u => {
         }
     }
     });
+
+    // Update staking UI
+    if (typeof updateStakingUI === 'function') {
+        updateStakingUI();
+    }
     }
 
     setInterval(() => {
@@ -2602,6 +2710,10 @@ dogeUpgrades.forEach(u => {
         loadGame(); // This calls updateUI() internally
         updateAutoClickerButtonState(); // Update button state immediately after loading
         setBuyQuantity(1); // Highlight the 1x button on page load
+
+        // Initialize staking system
+        initStaking();
+        updateStakingUI();
 
         const canvasElement = document.getElementById('nwChart');
         console.log('Canvas element:', canvasElement);
@@ -2790,6 +2902,9 @@ dogeUpgrades.forEach(u => {
         initializeGame();
     }
 </script>
+
+<!-- Load staking system after main game variables are defined -->
+<script src="staking.js"></script>
 
 </body>
 
