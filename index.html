@@ -98,6 +98,10 @@
             }
             #hashrate-display span {
                 font-size: 0.6rem !important;
+            }
+            /* Responsive dollar balance for mobile */
+            #dollar-balance {
+                font-size: 1rem !important;
                 margin-bottom: 4px !important;
                 line-height: 1.2;
                 display: block;
@@ -1562,8 +1566,13 @@ function loadGame() {
                 u.boostCost = u.baseCost || u.currentUsd;
                 u.boostLevel = 0;
             });
+            // Reset staked crypto amounts
+            stakedBTC = 0;
+            stakedETH = 0;
+            stakedDOGE = 0;
             saveGame();
             updateUI();
+            updateStakingUI(); // Update staking display
             alert('Game reset! Starting fresh.');
         }
     }
@@ -2464,7 +2473,7 @@ function buyDogeBoost(i) {
 
         if (btcEl) btcEl.innerText = btcPerSec.toFixed(8) + "/s";
         if (ethEl) ethEl.innerText = ethPerSec.toFixed(8) + "/s";
-        if (dogeEl) dogeEl.innerText = dogePerSec.toFixed(2) + "/s";
+        if (dogeEl) dogeEl.innerText = dogePerSec.toFixed(8) + "/s";
 
         // Update hashrate displays in new location
         const btcDisplayEl = document.getElementById('yield-btc-display');
