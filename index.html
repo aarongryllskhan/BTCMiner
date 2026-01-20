@@ -45,6 +45,11 @@
             .chart-wrapper { min-height: 150px; padding: 8px; }
             /* Stack crypto prices vertically on mobile */
             #crypto-prices-flex > div { flex: 1 0 100% !important; min-width: 100% !important; }
+            /* Make hashrate display smaller and wrap on mobile */
+            #hashrate-display { flex-wrap: wrap; gap: 4px !important; }
+            #hashrate-display > div { padding: 6px 10px !important; flex: 0 1 calc(50% - 2px) !important; }
+            #hashrate-display span { font-size: 0.6rem !important; margin-bottom: 2px !important; }
+            #hashrate-display b { font-size: 0.8rem !important; }
         }
 
         @media (max-width: 480px) and (orientation: portrait) {
@@ -56,6 +61,11 @@
             .nw-amount { font-size: 1.8rem; }
             .stat-val { font-size: 1.2rem !important; }
             .chart-wrapper { min-height: 120px; }
+            /* Make hashrate display even smaller on small phones */
+            #hashrate-display { gap: 3px !important; }
+            #hashrate-display > div { padding: 4px 8px !important; flex: 0 1 calc(50% - 1.5px) !important; }
+            #hashrate-display span { font-size: 0.5rem !important; margin-bottom: 1px !important; }
+            #hashrate-display b { font-size: 0.65rem !important; }
         }
 
         @media (max-height: 500px) and (orientation: landscape) {
@@ -334,7 +344,7 @@ button:disabled:hover {
             </div>
 
             <!-- Hashrate Display -->
-            <div style="display: flex; gap: 6px; margin-bottom: 0.1px; justify-content: flex-end;">
+            <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 0.1px; justify-content: flex-end;">
                 <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">TIME THIS SESSION</span>
                     <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-time">0m 0s</b>
