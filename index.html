@@ -23,6 +23,7 @@
     <style>
         :root { --btc: #f7931a; --bg: #050505; --panel: #111; --green: #00ff88; --red: #ff3344; --border: #222; }
         body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; }
+        #dollar-balance { font-size: 1.5rem; }
         
         #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; }
@@ -44,7 +45,7 @@
             .mini-stats { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
             .stat-item span { font-size: 0.55rem; }
             .stat-val { font-size: 1.1rem !important; }
-            .chart-wrapper { min-height: 150px !important; height: 150px !important; flex: 0 0 150px !important; padding: 6px; display: block; margin-top: 6px; overflow: hidden; }
+            .chart-wrapper { min-height: 150px !important; height: 150px !important; flex: 0 0 150px !important; padding: 6px; display: flex !important; margin-top: 6px; overflow: hidden; }
             /* Keep crypto prices in a compact row on mobile */
             #crypto-prices-flex { gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto; }
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; }
@@ -101,11 +102,12 @@
             }
             /* Responsive dollar balance for mobile */
             #dollar-balance {
-                font-size: 1rem !important;
+                font-size: 1.05rem !important;
                 margin-bottom: 4px !important;
-                line-height: 1.2;
+                line-height: 1.1;
                 display: block;
-                letter-spacing: 0.5px;
+                letter-spacing: -0.5px;
+                word-break: break-word;
             }
             #hashrate-display b {
                 font-size: 0.75rem !important;
@@ -562,7 +564,7 @@ button:disabled:hover {
             <!-- Dollar Balance Display -->
             <div style="padding: 6px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 8px; text-align: center;">
                 <span style="font-size: 0.6rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Cash Balance</span>
-                <b style="font-size: 1.5rem; color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
+                <b style="color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
             </div>
 
             <!-- Tab Buttons -->
