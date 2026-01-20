@@ -33,39 +33,51 @@
         }
 
         @media (max-width: 768px) {
-            body { padding: 8px; margin: 0; height: auto; overflow-y: auto !important; }
-            #main-layout { height: auto; grid-template-columns: 1fr; gap: 10px; }
-            .panel { padding: 12px; margin: 0; overflow-y: auto !important; overflow-x: hidden; }
+            body { padding: 6px; margin: 0; height: 100vh; overflow: hidden; }
+            #main-layout { height: 100vh; grid-template-columns: 1fr; gap: 6px; }
+            .panel { padding: 8px; margin: 0; overflow: hidden; display: flex; flex-direction: column; }
+            .panel:first-child { overflow-y: hidden; flex: 0 0 auto; }
+            .panel:last-child { overflow-y: auto; flex: 1; min-height: 0; }
             .upgrade-list { overflow-y: auto !important; }
-            .nw-label { font-size: 0.8rem; letter-spacing: 1px; }
-            .nw-amount { font-size: 2.2rem; margin: 4px 0; }
-            .mini-stats { gap: 15px; flex-wrap: wrap; }
-            .stat-item span { font-size: 0.65rem; }
-            .stat-val { font-size: 1.5rem !important; }
-            .chart-wrapper { min-height: 150px; padding: 8px; }
-            /* Stack crypto prices vertically on mobile */
-            #crypto-prices-flex > div { flex: 1 0 100% !important; min-width: 100% !important; }
-            /* Make hashrate display smaller and wrap on mobile */
-            #hashrate-display { flex-wrap: wrap; gap: 3px !important; }
-            #hashrate-display > div { padding: 4px 6px !important; flex: 0 1 calc(50% - 1.5px) !important; }
-            #hashrate-display span { font-size: 0.5rem !important; margin-bottom: 1px !important; }
-            #hashrate-display b { font-size: 0.65rem !important; }
+            .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; }
+            .nw-amount { font-size: 1.6rem; margin: 2px 0; }
+            .mini-stats { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+            .stat-item span { font-size: 0.55rem; }
+            .stat-val { font-size: 1.1rem !important; }
+            .chart-wrapper { min-height: 100px; padding: 6px; display: none; }
+            /* Keep crypto prices in a compact row on mobile */
+            #crypto-prices-flex { gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto; }
+            #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; }
+            #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
+            #crypto-prices-flex span { font-size: 0.5rem !important; }
+            /* Make hashrate display smaller and compact on mobile */
+            #hashrate-display { flex-wrap: wrap; gap: 2px !important; margin-bottom: 6px; }
+            #hashrate-display > div { padding: 3px 5px !important; flex: 0 1 calc(33.33% - 1.5px) !important; }
+            #hashrate-display span { font-size: 0.45rem !important; margin-bottom: 0 !important; line-height: 1; }
+            #hashrate-display b { font-size: 0.55rem !important; line-height: 1; }
         }
 
         @media (max-width: 480px) and (orientation: portrait) {
-            body { padding: 6px; overflow-y: auto !important; }
-            #main-layout { gap: 8px; }
-            .panel { padding: 10px; overflow-y: auto !important; overflow-x: hidden; }
+            body { padding: 5px; margin: 0; height: 100vh; overflow: hidden; }
+            #main-layout { height: 100vh; gap: 5px; }
+            .panel { padding: 6px; margin: 0; overflow: hidden; display: flex; flex-direction: column; }
+            .panel:first-child { overflow: hidden; flex: 0 0 auto; }
+            .panel:last-child { overflow-y: auto; flex: 1; min-height: 0; }
             .upgrade-list { overflow-y: auto !important; }
-            .nw-label { font-size: 0.7rem; }
-            .nw-amount { font-size: 1.8rem; }
-            .stat-val { font-size: 1.2rem !important; }
-            .chart-wrapper { min-height: 120px; }
+            .nw-label { font-size: 0.6rem; }
+            .nw-amount { font-size: 1.5rem; margin: 1px 0; }
+            .stat-val { font-size: 0.95rem !important; }
+            .chart-wrapper { min-height: 80px; display: none; }
+            /* Keep crypto prices in compact row on small phones */
+            #crypto-prices-flex { gap: 4px !important; flex-wrap: nowrap !important; overflow-x: auto; }
+            #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; padding: 3px !important; }
+            #crypto-prices-flex .stat-val { font-size: 0.7rem !important; }
+            #crypto-prices-flex span { font-size: 0.4rem !important; }
             /* Make hashrate display even smaller on small phones */
-            #hashrate-display { gap: 2px !important; flex-wrap: wrap; }
-            #hashrate-display > div { padding: 3px 5px !important; flex: 0 1 calc(50% - 1px) !important; }
-            #hashrate-display span { font-size: 0.45rem !important; margin-bottom: 0px !important; line-height: 1; }
-            #hashrate-display b { font-size: 0.55rem !important; line-height: 1; }
+            #hashrate-display { gap: 1px !important; flex-wrap: wrap; margin-bottom: 4px; }
+            #hashrate-display > div { padding: 2px 3px !important; flex: 0 1 calc(33.33% - 1px) !important; }
+            #hashrate-display span { font-size: 0.4rem !important; margin-bottom: 0px !important; line-height: 1; }
+            #hashrate-display b { font-size: 0.5rem !important; line-height: 1; }
         }
 
         @media (max-height: 500px) and (orientation: landscape) {
@@ -313,9 +325,74 @@ button:disabled:hover {
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        /* Landscape mode notification */
+        #landscape-notification {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ff9500;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            z-index: 2000;
+            max-width: 90%;
+        }
+
+        #landscape-notification h2 {
+            color: #ff9500;
+            font-size: 1.2rem;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+
+        #landscape-notification p {
+            color: #fff;
+            font-size: 0.95rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        #landscape-notification-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1999;
+        }
+
+        @media (max-width: 768px) and (orientation: portrait) {
+            #landscape-notification {
+                display: block;
+            }
+            #landscape-notification-overlay {
+                display: block;
+            }
+        }
+
+        @media (max-width: 480px) and (orientation: portrait) {
+            #landscape-notification {
+                display: block;
+            }
+            #landscape-notification-overlay {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Landscape Mode Notification -->
+    <div id="landscape-notification-overlay"></div>
+    <div id="landscape-notification">
+        <h2>📱 Better in Landscape</h2>
+        <p>Rotate your device to landscape mode for the best gaming experience!</p>
+    </div>
 
     <div id="main-layout">
         <div class="panel">
