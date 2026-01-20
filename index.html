@@ -34,10 +34,10 @@
 
         @media (max-width: 768px) {
             body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { grid-template-columns: 1fr; gap: 6px; }
+            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
             .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
-            .panel:first-child { overflow-y: auto; flex: 0 0 auto; }
-            .panel:last-child { overflow-y: auto; flex: 1; min-height: 0; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; }
+            .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .upgrade-list { overflow-y: auto !important; }
             .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; }
             .nw-amount { font-size: 1.6rem; margin: 2px 0; }
@@ -59,10 +59,10 @@
 
         @media (max-width: 480px) and (orientation: portrait) {
             body { padding: 5px; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { gap: 5px; }
+            #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; }
             .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; }
-            .panel:first-child { overflow-y: auto; flex: 0 0 auto; }
-            .panel:last-child { overflow-y: auto; flex: 1; min-height: 0; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; }
+            .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .upgrade-list { overflow-y: auto !important; }
             .nw-label { font-size: 0.6rem; }
             .nw-amount { font-size: 1.5rem; margin: 1px 0; }
@@ -1585,11 +1585,19 @@ function loadGame() {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
-        document.getElementById(tab + '-tab').classList.add('active');
+        const tabElement = document.getElementById(tab + '-tab');
+        tabElement.classList.add('active');
         event.target.classList.add('active');
 
         // Reset purchase quantity to 1x when switching tabs
         setBuyQuantity(1);
+
+        // Scroll to the tab content on mobile
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                tabElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
     }
 
     function setBuyQuantity(qty) {
