@@ -1190,7 +1190,20 @@ function loadGame() {
 
     function calculateTotalPowerUsed() {
         totalPowerUsed = 0;
+        // Calculate BTC equipment power
         upgrades.forEach(u => {
+            if (u.level > 0 && equipmentPowerReqs[u.id] !== undefined) {
+                totalPowerUsed += equipmentPowerReqs[u.id] * u.level;
+            }
+        });
+        // Calculate ETH equipment power
+        ethUpgrades.forEach(u => {
+            if (u.level > 0 && equipmentPowerReqs[u.id] !== undefined) {
+                totalPowerUsed += equipmentPowerReqs[u.id] * u.level;
+            }
+        });
+        // Calculate DOGE equipment power
+        dogeUpgrades.forEach(u => {
             if (u.level > 0 && equipmentPowerReqs[u.id] !== undefined) {
                 totalPowerUsed += equipmentPowerReqs[u.id] * u.level;
             }
@@ -1386,6 +1399,7 @@ function loadGame() {
             <div style="text-align:left;flex:1">
                 <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
                 <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="yield-${u.id}">+0 ₿/s - Current Speed</div>
+                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;display:block;margin-top:3px" id="increase-${u.id}">+0 ₿/s per level</div>
                 ${powerDisplay}
             </div>
             <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
@@ -1464,6 +1478,7 @@ function loadGame() {
                 <div style="text-align:left;flex:1">
                     <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="eth-yield-${u.id}">+0 Ξ/s - Current Speed</div>
+                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-increase-${u.id}">+0 Ξ/s per level</div>
                     ${powerDisplay}
                 </div>
                 <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
@@ -1495,6 +1510,7 @@ function loadGame() {
                 <div style="text-align:left;flex:1">
                     <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="doge-yield-${u.id}">+0 Ð/s - Current Speed</div>
+                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-increase-${u.id}">+0 Ð/s per level</div>
                     ${powerDisplay}
                 </div>
                 <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
@@ -2073,6 +2089,18 @@ function buyBoost(i) {
         }
     }
 
+    // Update per-level increase
+    const increaseEl = document.getElementById(`increase-${u.id}`);
+    if (increaseEl) {
+        if (u.isClickUpgrade) {
+            increaseEl.style.display = 'none';
+        } else {
+            const perLevelIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            increaseEl.innerText = `+${perLevelIncrease.toFixed(8)} ₿/s per level`;
+            increaseEl.style.display = 'block';
+        }
+    }
+
     const uEl = document.getElementById(`usd-${u.id}`);
     if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
 
@@ -2197,6 +2225,18 @@ ethUpgrades.forEach(u => {
         }
     }
 
+    // Update per-level increase for ETH
+    const ethIncreaseEl = document.getElementById(`eth-increase-${u.id}`);
+    if (ethIncreaseEl) {
+        if (u.isClickUpgrade) {
+            ethIncreaseEl.style.display = 'none';
+        } else {
+            const perLevelIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            ethIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ξ/s per level`;
+            ethIncreaseEl.style.display = 'block';
+        }
+    }
+
     const uEl = document.getElementById(`eth-usd-${u.id}`);
     if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
 
@@ -2278,6 +2318,18 @@ dogeUpgrades.forEach(u => {
         } else {
             const currentSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
             yEl.innerText = `+${currentSpeed.toFixed(8)} Ð/s - Current Speed`;
+        }
+    }
+
+    // Update per-level increase for DOGE
+    const dogeIncreaseEl = document.getElementById(`doge-increase-${u.id}`);
+    if (dogeIncreaseEl) {
+        if (u.isClickUpgrade) {
+            dogeIncreaseEl.style.display = 'none';
+        } else {
+            const perLevelIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            dogeIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ð/s per level`;
+            dogeIncreaseEl.style.display = 'block';
         }
     }
 
