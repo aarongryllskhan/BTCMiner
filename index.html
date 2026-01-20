@@ -33,9 +33,37 @@
         }
 
         @media (max-width: 768px) {
-            #main-layout { height: auto; }
-            .panel { padding: 16px; }
-            body { padding: 8px; }
+            body { padding: 8px; margin: 0; height: auto; }
+            #main-layout { height: auto; grid-template-columns: 1fr; gap: 10px; }
+            .panel { padding: 12px; margin: 0; }
+            .nw-label { font-size: 0.8rem; letter-spacing: 1px; }
+            .nw-amount { font-size: 2.2rem; margin: 4px 0; }
+            .mini-stats { gap: 15px; flex-wrap: wrap; }
+            .stat-item span { font-size: 0.65rem; }
+            .stat-val { font-size: 1.5rem !important; }
+            .chart-wrapper { min-height: 150px; padding: 8px; }
+        }
+
+        @media (max-width: 480px) and (orientation: portrait) {
+            body { padding: 6px; }
+            #main-layout { gap: 8px; }
+            .panel { padding: 10px; }
+            .nw-label { font-size: 0.7rem; }
+            .nw-amount { font-size: 1.8rem; }
+            .stat-val { font-size: 1.2rem !important; }
+            .chart-wrapper { min-height: 120px; }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            body { padding: 6px; height: 100vh; }
+            #main-layout { height: calc(100vh - 12px); gap: 8px; }
+            .panel { padding: 8px; }
+            .nw-label { font-size: 0.7rem; }
+            .nw-amount { font-size: 1.6rem; margin: 2px 0; }
+            .mini-stats { gap: 10px; margin-bottom: 8px; }
+            .stat-item span { font-size: 0.55rem; }
+            .stat-val { font-size: 1rem !important; }
+            .chart-wrapper { min-height: 100px; padding: 6px; }
         }
         
         .nw-label { font-size: 1.2rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
@@ -73,7 +101,6 @@
         .chart-wrapper {
             flex: 1;
             min-height: 200px;
-            height: 300px;
             background: #0a0a0a;
             border-radius: 8px;
             border: 1px solid #1a1a1a;
@@ -280,7 +307,11 @@ button:disabled:hover {
         <div class="panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                 <span class="nw-label">Crypto Portfolio Valuation</span>
-                <span style="font-size: 0.6rem; color: #555;">Idle BTC Miner™ 2026 - Aaron Khan</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="toggleMute()">SOUND ON</button>
+                    <button style="background: #ff3344; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetGame()">RESET SAVE</button>
+                    <span style="font-size: 0.6rem; color: #555;">Idle BTC Miner™ 2026 - Aaron Khan</span>
+                </div>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
 
@@ -296,21 +327,29 @@ button:disabled:hover {
                     <span>Hardware Equity</span>
                     <b class="stat-val" id="asset-usd">$0</b>
                 </div>
-                <div class="stat-item" style="flex: 2;">
-                    <div style="display: flex; gap: 6px;">
-                        <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; flex: 1;">
-                            <span style="font-size: 0.55rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">BTC HASHRATE</span>
-                            <b style="font-size: 0.85rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00/s</b>
-                        </div>
-                        <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; flex: 1;">
-                            <span style="font-size: 0.55rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">ETH HASHRATE</span>
-                            <b style="font-size: 0.85rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00/s</b>
-                        </div>
-                        <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; flex: 1;">
-                            <span style="font-size: 0.55rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">DOGE HASHRATE</span>
-                            <b style="font-size: 0.85rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00/s</b>
-                        </div>
-                    </div>
+            </div>
+
+            <!-- Hashrate Display -->
+            <div style="display: flex; gap: 6px; margin-bottom: 0.1px; justify-content: flex-end;">
+                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">TIME THIS SESSION</span>
+                    <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-time">0m 0s</b>
+                </div>
+                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">EARNINGS THIS SESSION</span>
+                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-earnings">₿ 0.00000000</b>
+                </div>
+                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">BTC HASHRATE</span>
+                    <b style="font-size: 1.1rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00000000/s</b>
+                </div>
+                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">ETH HASHRATE</span>
+                    <b style="font-size: 1.1rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00000000/s</b>
+                </div>
+                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">DOGE HASHRATE</span>
+                    <b style="font-size: 1.1rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00000000/s</b>
                 </div>
             </div>
 
@@ -413,10 +452,10 @@ button:disabled:hover {
                 <div style="margin-bottom: 10px;">
                     <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
                     <div style="display: flex; gap: 6px;">
-                        <button class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
-                        <button class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
-                        <button class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
-                        <button class="qty-toggle" onclick="setBuyQuantity(10)" style="border-color: #888; color: #888;">10x</button>
+                        <button id="eth-qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
+                        <button id="eth-qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
+                        <button id="eth-qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
+                        <button id="eth-qty-toggle-10" class="qty-toggle" onclick="setBuyQuantity(10)" style="border-color: #888; color: #888;">10x</button>
                     </div>
                 </div>
                 <div class="upgrade-list" id="eth-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
@@ -428,10 +467,10 @@ button:disabled:hover {
                 <div style="margin-bottom: 10px;">
                     <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
                     <div style="display: flex; gap: 6px;">
-                        <button class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
-                        <button class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
-                        <button class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
-                        <button class="qty-toggle" onclick="setBuyQuantity(10)" style="border-color: #888; color: #888;">10x</button>
+                        <button id="doge-qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
+                        <button id="doge-qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
+                        <button id="doge-qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
+                        <button id="doge-qty-toggle-10" class="qty-toggle" onclick="setBuyQuantity(10)" style="border-color: #888; color: #888;">10x</button>
                     </div>
                 </div>
                 <div class="upgrade-list" id="doge-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
@@ -505,23 +544,6 @@ button:disabled:hover {
                         <button onclick="sellAllDOGE()" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
                 </div>
-            </div>
-
-            <!-- Session Stats -->
-            <div style="display: flex; gap: 8px; margin-bottom: 10px; margin-top: 10px;">
-                <div style="flex: 1; padding: 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid #222;">
-                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Time This Session</span>
-                    <b id="session-time" style="font-size: 0.75rem; color: #ffffff; font-family: monospace; font-weight: 900;">0m 0s</b>
-                </div>
-                <div style="flex: 1; padding: 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid #222;">
-                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Earnings This Session</span>
-                    <b id="session-earnings" style="font-size: 0.75rem; color: #00ff88; font-family: monospace; font-weight: 900;">₿ 0.00000000</b>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button id="mute-btn" style="background: #888; color: white; border: none; flex: 1; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; font-size: 0.85rem;" onclick="toggleMute()">SOUND ON</button>
-                <button style="background: #ff3344; color: white; border: none; flex: 1; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; font-size: 0.85rem;" onclick="resetGame()">RESET SAVE</button>
             </div>
         </div>
     </div>
@@ -1474,6 +1496,9 @@ function loadGame() {
 
         document.getElementById(tab + '-tab').classList.add('active');
         event.target.classList.add('active');
+
+        // Reset purchase quantity to 1x when switching tabs
+        setBuyQuantity(1);
     }
 
     function setBuyQuantity(qty) {
@@ -1488,11 +1513,15 @@ function loadGame() {
             el.style.color = defaultColor;
         });
 
-        const activeBtn = document.getElementById(`qty-toggle-${qty}`);
-        activeBtn.classList.add('active');
-        activeBtn.style.borderColor = '#666';
-        activeBtn.style.color = '#fff';
-        activeBtn.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.2)';
+        // Find and highlight the active button in the current tab
+        document.querySelectorAll('.qty-toggle').forEach(el => {
+            if (el.textContent.trim() === `${qty}x`) {
+                el.classList.add('active');
+                el.style.borderColor = '#666';
+                el.style.color = '#fff';
+                el.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.2)';
+            }
+        });
     }
 
     // Market sell functions
@@ -1856,6 +1885,8 @@ function buyBoost(i) {
             if (u.id === 0 || u.isClickUpgrade) {
                 ethClickValue *= 1.10;
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+                // Update the ETH button text to show new click value
+                document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
             } else {
                 u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
@@ -1892,6 +1923,8 @@ function buyBoost(i) {
             if (u.id === 0 || u.isClickUpgrade) {
                 dogeClickValue *= 1.10;
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+                // Update the DOGE button text to show new click value
+                document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
             } else {
                 u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
@@ -1937,7 +1970,7 @@ function buyBoost(i) {
         // Update balances
         document.getElementById('bal-btc').innerText = btcBalance.toFixed(8);
         document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
-        document.getElementById('bal-doge').innerText = dogeBalance.toFixed(2);
+        document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
 
         // Update hardware equity
         document.getElementById('asset-usd').innerText = "$" + Math.floor(hardwareEquity).toLocaleString();
@@ -2202,7 +2235,7 @@ dogeUpgrades.forEach(u => {
             yEl.innerText = `+10% MANUAL DOGE RATE`;
         } else {
             const currentSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            yEl.innerText = `+${currentSpeed.toFixed(2)} Ð/s`;
+            yEl.innerText = `+${currentSpeed.toFixed(8)} Ð/s - Current Speed`;
         }
     }
 
@@ -2316,6 +2349,7 @@ dogeUpgrades.forEach(u => {
         initPowerShop();
         loadGame(); // This calls updateUI() internally
         updateAutoClickerButtonState(); // Update button state immediately after loading
+        setBuyQuantity(1); // Highlight the 1x button on page load
 
         const canvasElement = document.getElementById('nwChart');
         console.log('Canvas element:', canvasElement);
