@@ -33,10 +33,10 @@
         }
 
         @media (max-width: 768px) {
-            body { padding: 6px; margin: 0; height: 100vh; overflow: hidden; }
-            #main-layout { height: 100vh; grid-template-columns: 1fr; gap: 6px; }
+            body { padding: 6px; margin: 0; height: 100vh; overflow: auto; }
+            #main-layout { grid-template-columns: 1fr; gap: 6px; }
             .panel { padding: 8px; margin: 0; overflow: hidden; display: flex; flex-direction: column; }
-            .panel:first-child { overflow-y: hidden; flex: 0 0 auto; }
+            .panel:first-child { overflow-y: auto; flex: 0 0 auto; }
             .panel:last-child { overflow-y: auto; flex: 1; min-height: 0; }
             .upgrade-list { overflow-y: auto !important; }
             .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; }
@@ -44,7 +44,7 @@
             .mini-stats { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
             .stat-item span { font-size: 0.55rem; }
             .stat-val { font-size: 1.1rem !important; }
-            .chart-wrapper { min-height: 100px; padding: 6px; display: none; }
+            .chart-wrapper { min-height: 100px; padding: 6px; display: block; }
             /* Keep crypto prices in a compact row on mobile */
             #crypto-prices-flex { gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto; }
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; }
@@ -58,16 +58,16 @@
         }
 
         @media (max-width: 480px) and (orientation: portrait) {
-            body { padding: 5px; margin: 0; height: 100vh; overflow: hidden; }
-            #main-layout { height: 100vh; gap: 5px; }
+            body { padding: 5px; margin: 0; height: 100vh; overflow: auto; }
+            #main-layout { gap: 5px; }
             .panel { padding: 6px; margin: 0; overflow: hidden; display: flex; flex-direction: column; }
-            .panel:first-child { overflow: hidden; flex: 0 0 auto; }
+            .panel:first-child { overflow-y: auto; flex: 0 0 auto; }
             .panel:last-child { overflow-y: auto; flex: 1; min-height: 0; }
             .upgrade-list { overflow-y: auto !important; }
             .nw-label { font-size: 0.6rem; }
             .nw-amount { font-size: 1.5rem; margin: 1px 0; }
             .stat-val { font-size: 0.95rem !important; }
-            .chart-wrapper { min-height: 80px; display: none; }
+            .chart-wrapper { min-height: 80px; display: block; }
             /* Keep crypto prices in compact row on small phones */
             #crypto-prices-flex { gap: 4px !important; flex-wrap: nowrap !important; overflow-x: auto; }
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; padding: 3px !important; }
