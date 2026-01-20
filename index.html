@@ -3313,6 +3313,26 @@ dogeUpgrades.forEach(u => {
         }
     }
 
+    // Save game when page becomes hidden (mobile browser close, tab switch, etc.)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            console.log('Page hidden - saving game state');
+            saveGame();
+        }
+    });
+
+    // Save game when user is about to leave the page
+    window.addEventListener('beforeunload', function() {
+        console.log('Page unloading - saving game state');
+        saveGame();
+    });
+
+    // Save game when page is hidden on mobile (iOS Safari support)
+    window.addEventListener('pagehide', function() {
+        console.log('Page hide event - saving game state');
+        saveGame();
+    });
+
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeGame);
