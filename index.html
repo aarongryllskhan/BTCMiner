@@ -93,37 +93,47 @@
 
         .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 12px; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.1s; font-size: 0.85rem; margin-bottom: 8px; }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
-        .u-item { background: #181818; border: 1px solid #252525; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%; color: #fff; }
+        .u-item {
+            background: #181818;
+            border: 1px solid #252525;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            cursor: pointer;
+            width: 100%;
+            color: #fff;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
 
-/* 1. THE GENERAL HOVER (Works for all standard miners) */
-.u-item:hover:not(:disabled) {
-    border-color: var(--btc) !important;
-    box-shadow: 0 0 15px rgba(247, 147, 26, 0.4) !important;
-    transition: box-shadow 0.2s ease;
-}
-/* 1. HOVER: Only the main mining button glows */
-.mine-btn:hover {
-    box-shadow: 0 0 25px rgba(247, 147, 26, 0.6); /* Strong orange glow */
-    cursor: pointer;
-    filter: brightness(1.1); /* Makes it look slightly 'lit up' */
-}
+        .u-item:hover:not(:disabled) {
+            border-color: var(--btc) !important;
+            box-shadow: 0 0 15px rgba(247, 147, 26, 0.4) !important;
+            transition: box-shadow 0.2s ease;
+        }
 
-/* 2. CLICK: Only the main mining button moves */
-.mine-btn:active {
-    transform: scale(0.96) translateY(2px); /* Squishes down and moves slightly */
-    box-shadow: 0 0 10px rgba(247, 147, 26, 0.3); /* Shrinks the glow on press */
-}
+        .mine-btn:hover {
+            box-shadow: 0 0 25px rgba(247, 147, 26, 0.6);
+            cursor: pointer;
+            filter: brightness(1.1);
+        }
 
-/* Ensure a smooth transition for the effects */
-.mine-btn {
-    transition: transform 0.05s, box-shadow 0.2s, filter 0.2s;
-}
-/* Manual hash upgrade uses same styling as other upgrades */
+        .mine-btn:active {
+            transform: scale(0.96) translateY(2px);
+            box-shadow: 0 0 10px rgba(247, 147, 26, 0.3);
+        }
 
-.u-item:disabled {
-    opacity: 0.2;
-    cursor: not-allowed;
-}
+        .mine-btn {
+            transition: transform 0.05s, box-shadow 0.2s, filter 0.2s;
+        }
+
+        .u-item:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+        }
 
 /* Disabled boost buttons styling */
 button:disabled {
@@ -257,7 +267,7 @@ button:disabled:hover {
     <div id="main-layout">
         <div class="panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
-                <span class="nw-label">Portfolio Valuation</span>
+                <span class="nw-label">Crypto Portfolio Valuation</span>
                 <span style="font-size: 0.6rem; color: #555;">Idle Crypto Miner™ 2026 - Aaron Khan</span>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
@@ -269,29 +279,26 @@ button:disabled:hover {
                 <div style="font-size: 1.4rem; color: #c2a633; font-weight: bold; font-family: monospace;">Ð <span id="bal-doge">0.00</span></div>
             </div>
 
-            <div style="display: flex; gap: 6px; margin-bottom: 15px;">
-                <div style="padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
-                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">BTC HASHRATE</span>
-                    <b style="font-size: 0.7rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00/s</b>
-                </div>
-                <div style="padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
-                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">ETH HASHRATE</span>
-                    <b style="font-size: 0.7rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00/s</b>
-                </div>
-                <div style="padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
-                    <span style="font-size: 0.5rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">DOGE HASHRATE</span>
-                    <b style="font-size: 0.7rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00/s</b>
-                </div>
-            </div>
-
             <div class="mini-stats">
                 <div class="stat-item">
                     <span>Hardware Equity</span>
                     <b class="stat-val" id="asset-usd">$0</b>
                 </div>
-                <div class="stat-item">
-                    <span>BTC Lifetime</span>
-                    <b class="stat-val" style="font-size: 32px;">₿<span id="lifetime-btc" style="font-size: 32px; color: white;">0.00000000</span></b>
+                <div class="stat-item" style="flex: 2;">
+                    <div style="display: flex; gap: 6px;">
+                        <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; flex: 1;">
+                            <span style="font-size: 0.55rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">BTC HASHRATE</span>
+                            <b style="font-size: 0.85rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00/s</b>
+                        </div>
+                        <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; flex: 1;">
+                            <span style="font-size: 0.55rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">ETH HASHRATE</span>
+                            <b style="font-size: 0.85rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00/s</b>
+                        </div>
+                        <div style="padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; flex: 1;">
+                            <span style="font-size: 0.55rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">DOGE HASHRATE</span>
+                            <b style="font-size: 0.85rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00/s</b>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -301,15 +308,27 @@ button:disabled:hover {
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 120px;">
                         <div style="font-size: 0.65rem; color: #f7931a; font-weight: 800;">BITCOIN</div>
-                        <b class="stat-val" id="btc-price" style="font-size: 1.4rem;">$100,000</b>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <b class="stat-val" id="btc-price" style="font-size: 1.4rem;">$100,000</b>
+                            <span id="btc-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
+                            <span id="btc-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
+                        </div>
                     </div>
                     <div style="flex: 1; min-width: 120px;">
                         <div style="font-size: 0.65rem; color: #627eea; font-weight: 800;">ETHEREUM</div>
-                        <b class="stat-val" id="eth-price" style="font-size: 1.4rem;">$3,500</b>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <b class="stat-val" id="eth-price" style="font-size: 1.4rem;">$3,500</b>
+                            <span id="eth-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
+                            <span id="eth-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
+                        </div>
                     </div>
                     <div style="flex: 1; min-width: 120px;">
                         <div style="font-size: 0.65rem; color: #c2a633; font-weight: 800;">DOGECOIN</div>
-                        <b class="stat-val" id="doge-price" style="font-size: 1.4rem;">$0.25</b>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <b class="stat-val" id="doge-price" style="font-size: 1.4rem;">$0.25</b>
+                            <span id="doge-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
+                            <span id="doge-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -324,10 +343,10 @@ button:disabled:hover {
                 <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
             <button class="mine-btn" style="background: #627eea;" onclick="manualEthHash()">MANUAL ETH HASH<br>
-                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+0.00050000 Ξ</span>
+                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+0.00007143 Ξ</span>
             </button>
             <button class="mine-btn" style="background: #c2a633;" onclick="manualDogeHash()">MANUAL DOGE HASH<br>
-                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+2.50 Ð</span>
+                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+1.00000000 Ð</span>
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 0.8rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
 
@@ -508,7 +527,7 @@ button:disabled:hover {
     let ethBalance = 0;
     let ethLifetime = 0;
     let ethPerSec = 0;
-    let ethClickValue = 0.00050000;
+    let ethClickValue = 0.00007143; // $0.25 worth at $3500/ETH
     const ETH_MIN_PRICE = 1500;
     const ETH_MAX_PRICE = 8000;
 
@@ -517,7 +536,7 @@ button:disabled:hover {
     let dogeBalance = 0;
     let dogeLifetime = 0;
     let dogePerSec = 0;
-    let dogeClickValue = 2.50;
+    let dogeClickValue = 1.00000000; // $0.25 worth at $0.25/DOGE
     const DOGE_MIN_PRICE = 0.05;
     const DOGE_MAX_PRICE = 2.00;
 
@@ -528,10 +547,12 @@ button:disabled:hover {
     let manualHashClickTime = 0;
     let manualHashCooldownEnd = 0;
     let clickTimestamps = [];
+    let priceSwingsStarted = false; // Flag to prevent starting price swings multiple times
 
     // Session tracking
     let sessionStartTime = Date.now();
     let sessionStartBalance = 0;
+    let sessionStartNetWorth = 0;
     let sessionEarnings = 0;
 
     // Buy quantity setting
@@ -571,104 +592,241 @@ button:disabled:hover {
     };
 
     // Show price change notification
-    function showPriceNotification(oldPrice, newPrice) {
+    // Track timeout IDs for each crypto to clear previous timers
+    let indicatorTimeouts = { btc: null, eth: null, doge: null };
+
+    function updatePriceIndicator(crypto, oldPrice, newPrice) {
         const change = newPrice - oldPrice;
         const changePercent = ((change / oldPrice) * 100).toFixed(2);
         const isUp = change >= 0;
+        const indicatorId = crypto + '-indicator';
+        const changeId = crypto + '-change';
+        const indicator = document.getElementById(indicatorId);
+        const changeDisplay = document.getElementById(changeId);
 
-        const container = document.getElementById('price-notif-container');
-
-        // Remove existing notification if any
-        const existing = container.querySelector('.price-notification');
-        if (existing) {
-            existing.remove();
+        // Clear previous timeout if exists
+        if (indicatorTimeouts[crypto]) {
+            clearTimeout(indicatorTimeouts[crypto]);
         }
 
-        const notif = document.createElement('div');
-        notif.className = 'price-notification ' + (isUp ? 'up' : 'down');
-        notif.innerText = (isUp ? '+' : '') + changePercent + '%';
+        if (indicator && changeDisplay) {
+            indicator.textContent = isUp ? '▲' : '▼';
+            indicator.style.color = isUp ? '#00ff88' : '#ff3344';
+            changeDisplay.textContent = (isUp ? '+' : '') + changePercent + '%';
+            changeDisplay.style.color = isUp ? '#00ff88' : '#ff3344';
 
-        container.appendChild(notif);
-
-        setTimeout(() => notif.remove(), 2500);
+            // Set timeout to clear both after 0.8 seconds
+            indicatorTimeouts[crypto] = setTimeout(() => {
+                indicator.textContent = '';
+                changeDisplay.textContent = '';
+                indicatorTimeouts[crypto] = null;
+            }, 800);
+        }
     }
 
-    // Guaranteed price swings: ±0.01%-1% every 2 seconds, with mean reversion
-    function frequentPriceSwing() {
-        console.log('Price swing running - BTC:', btcPrice, 'ETH:', ethPrice, 'DOGE:', dogePrice);
-        let movePercent = (Math.random() * 0.009) + 0.0001; // 0.01% to 1%
+    // BTC tiny swings: ±0.05%-0.1% every 2 seconds with mean reversion
+    function btcTinySwing() {
+        setTimeout(() => {
+            let oldBtcPrice = btcPrice;
+            const btcTarget = 100000;
+            const distanceFromTarget = Math.abs(btcPrice - btcTarget);
+            const maxDistance = Math.abs(BTC_MAX_PRICE - btcTarget);
+            const distancePercent = distanceFromTarget / maxDistance;
 
-        // BTC price swing
-        let oldBtcPrice = btcPrice;
-        let newBtcPrice = oldBtcPrice * (1 + movePercent);
-        if (Math.random() < 0.6) {
-            const targetPrice = 100000;
-            const diff = targetPrice - oldBtcPrice;
-            newBtcPrice = oldBtcPrice + (diff * 0.02);
-        } else {
-            let direction = Math.random() > 0.5 ? 1 : -1;
-            newBtcPrice = oldBtcPrice * (1 + (direction * movePercent));
-        }
-        btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, newBtcPrice));
+            let movePercent = (Math.random() * 0.0005) + 0.0005;
+            let direction;
 
-        // ETH price swing
-        let oldEthPrice = ethPrice;
-        let newEthPrice = oldEthPrice * (1 + movePercent);
-        if (Math.random() < 0.6) {
-            const targetPrice = 3500;
-            const diff = targetPrice - oldEthPrice;
-            newEthPrice = oldEthPrice + (diff * 0.02);
-        } else {
-            let direction = Math.random() > 0.5 ? 1 : -1;
-            newEthPrice = oldEthPrice * (1 + (direction * movePercent));
-        }
-        ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, newEthPrice));
+            if (Math.random() < (0.3 + distancePercent * 0.4)) {
+                direction = btcPrice > btcTarget ? -1 : 1;
+            } else {
+                direction = Math.random() > 0.5 ? 1 : -1;
+            }
 
-        // DOGE price swing
-        let oldDogePrice = dogePrice;
-        let newDogePrice = oldDogePrice * (1 + movePercent * 1.5); // DOGE is more volatile
-        if (Math.random() < 0.6) {
-            const targetPrice = 0.25;
-            const diff = targetPrice - oldDogePrice;
-            newDogePrice = oldDogePrice + (diff * 0.02);
-        } else {
-            let direction = Math.random() > 0.5 ? 1 : -1;
-            newDogePrice = oldDogePrice * (1 + (direction * movePercent * 1.5));
-        }
-        dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, newDogePrice));
-
-        if (btcPrice !== oldBtcPrice) {
-            showPriceNotification(oldBtcPrice, btcPrice);
-        }
-        updateUI();
-
-        // Schedule next swing every 2 seconds
-        setTimeout(frequentPriceSwing, 2000);
+            let newBtcPrice = oldBtcPrice * (1 + (direction * movePercent));
+            btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, newBtcPrice));
+            updatePriceIndicator('btc', oldBtcPrice, btcPrice);
+            updateUI();
+            btcTinySwing();
+        }, 2000);
     }
 
-    // Occasional big swings: ±2.5%-10% every 5 to 10 minutes
-    function bigPriceSwing() {
-        let movePercent = (Math.random() * 0.075) + 0.025; // 2.5% to 10%
-        let direction = Math.random() > 0.5 ? 1 : -1;
-        let move = direction * movePercent;
+    // BTC frequent swings: ±0.1%-1% every 2-60 seconds randomly with mean reversion
+    function btcFrequentSwing() {
+        let randomInterval = (Math.random() * (60000 - 2000)) + 2000; // 2-60 seconds
+        setTimeout(() => {
+            let movePercent = (Math.random() * 0.009) + 0.001; // 0.1% to 1%
+            let oldBtcPrice = btcPrice;
+            const btcTarget = 100000;
+            const distanceFromTarget = Math.abs(btcPrice - btcTarget);
+            const maxDistance = Math.abs(BTC_MAX_PRICE - btcTarget);
+            const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
 
-        let oldBtcPrice = btcPrice;
-        btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, btcPrice * (1 + move)));
+            // 60% + up to 30% more chance to revert when far from target
+            let newBtcPrice = oldBtcPrice * (1 + movePercent);
+            if (Math.random() < (0.6 + distancePercent * 0.3)) {
+                const targetPrice = 100000;
+                const diff = targetPrice - oldBtcPrice;
+                newBtcPrice = oldBtcPrice + (diff * 0.02);
+            } else {
+                let direction = Math.random() > 0.5 ? 1 : -1;
+                newBtcPrice = oldBtcPrice * (1 + (direction * movePercent));
+            }
+            btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, newBtcPrice));
+            updatePriceIndicator('btc', oldBtcPrice, btcPrice);
+            updateUI();
+            btcFrequentSwing();
+        }, randomInterval);
+    }
 
-        let oldEthPrice = ethPrice;
-        ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, ethPrice * (1 + move)));
+    // ETH tiny swings: ±0.05%-0.1% every 2.3 seconds with mean reversion
+    function ethTinySwing() {
+        setTimeout(() => {
+            let oldEthPrice = ethPrice;
+            const ethTarget = 3500;
+            const distanceFromTarget = Math.abs(ethPrice - ethTarget);
+            const maxDistance = Math.abs(ETH_MAX_PRICE - ethTarget);
+            const distancePercent = distanceFromTarget / maxDistance;
 
-        let oldDogePrice = dogePrice;
-        dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, dogePrice * (1 + move * 1.8))); // DOGE more volatile
+            let movePercent = (Math.random() * 0.0005) + 0.0005;
+            let direction;
 
-        if (btcPrice !== oldBtcPrice) {
-            showPriceNotification(oldBtcPrice, btcPrice);
-        }
-        updateUI();
+            if (Math.random() < (0.3 + distancePercent * 0.4)) {
+                direction = ethPrice > ethTarget ? -1 : 1;
+            } else {
+                direction = Math.random() > 0.5 ? 1 : -1;
+            }
 
-        // Schedule next big swing randomly between 5 and 10 minutes
-        let nextBigSwing = (Math.random() * (600000 - 300000)) + 300000; // 5min to 10min
-        setTimeout(bigPriceSwing, nextBigSwing);
+            let newEthPrice = oldEthPrice * (1 + (direction * movePercent));
+            ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, newEthPrice));
+            updatePriceIndicator('eth', oldEthPrice, ethPrice);
+            updateUI();
+            ethTinySwing();
+        }, 2300);
+    }
+
+    // ETH frequent swings: ±0.1%-1.2% every 3-75 seconds randomly with mean reversion
+    function ethFrequentSwing() {
+        let randomInterval = (Math.random() * (75000 - 3000)) + 3000; // 3-75 seconds
+        setTimeout(() => {
+            let movePercent = (Math.random() * 0.011) + 0.001; // 0.1% to 1.2%
+            let oldEthPrice = ethPrice;
+            const ethTarget = 3500;
+            const distanceFromTarget = Math.abs(ethPrice - ethTarget);
+            const maxDistance = Math.abs(ETH_MAX_PRICE - ethTarget);
+            const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
+
+            let newEthPrice = oldEthPrice * (1 + movePercent);
+            if (Math.random() < (0.6 + distancePercent * 0.3)) {
+                const targetPrice = 3500;
+                const diff = targetPrice - oldEthPrice;
+                newEthPrice = oldEthPrice + (diff * 0.02);
+            } else {
+                let direction = Math.random() > 0.5 ? 1 : -1;
+                newEthPrice = oldEthPrice * (1 + (direction * movePercent));
+            }
+            ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, newEthPrice));
+            updatePriceIndicator('eth', oldEthPrice, ethPrice);
+            updateUI();
+            ethFrequentSwing();
+        }, randomInterval);
+    }
+
+    // DOGE tiny swings: ±0.05%-0.15% every 2.7 seconds with mean reversion (more volatile)
+    function dogeTinySwing() {
+        setTimeout(() => {
+            let oldDogePrice = dogePrice;
+            const dogeTarget = 0.25;
+            const distanceFromTarget = Math.abs(dogePrice - dogeTarget);
+            const maxDistance = Math.abs(DOGE_MAX_PRICE - dogeTarget);
+            const distancePercent = distanceFromTarget / maxDistance;
+
+            let movePercent = (Math.random() * 0.001) + 0.0005;
+            let direction;
+
+            if (Math.random() < (0.3 + distancePercent * 0.4)) {
+                direction = dogePrice > dogeTarget ? -1 : 1;
+            } else {
+                direction = Math.random() > 0.5 ? 1 : -1;
+            }
+
+            let newDogePrice = oldDogePrice * (1 + (direction * movePercent * 1.5));
+            dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, newDogePrice));
+            updatePriceIndicator('doge', oldDogePrice, dogePrice);
+            updateUI();
+            dogeTinySwing();
+        }, 2700);
+    }
+
+    // DOGE frequent swings: ±0.15%-1.8% every 2-45 seconds randomly (more volatile) with mean reversion
+    function dogeFrequentSwing() {
+        let randomInterval = (Math.random() * (45000 - 2000)) + 2000; // 2-45 seconds
+        setTimeout(() => {
+            let movePercent = (Math.random() * 0.0165) + 0.0015; // 0.15% to 1.8%
+            let oldDogePrice = dogePrice;
+            const dogeTarget = 0.25;
+            const distanceFromTarget = Math.abs(dogePrice - dogeTarget);
+            const maxDistance = Math.abs(DOGE_MAX_PRICE - dogeTarget);
+            const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
+
+            let newDogePrice = oldDogePrice * (1 + movePercent * 1.5);
+            if (Math.random() < (0.6 + distancePercent * 0.3)) {
+                const targetPrice = 0.25;
+                const diff = targetPrice - oldDogePrice;
+                newDogePrice = oldDogePrice + (diff * 0.02);
+            } else {
+                let direction = Math.random() > 0.5 ? 1 : -1;
+                newDogePrice = oldDogePrice * (1 + (direction * movePercent * 1.5));
+            }
+            dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, newDogePrice));
+            updatePriceIndicator('doge', oldDogePrice, dogePrice);
+            updateUI();
+            dogeFrequentSwing();
+        }, randomInterval);
+    }
+
+    // BTC occasional big swings: ±2.5%-10% every 5 to 10 minutes
+    function btcBigSwing() {
+        let nextBigSwing = (Math.random() * (600000 - 300000)) + 300000;
+        setTimeout(() => {
+            let movePercent = (Math.random() * 0.075) + 0.025;
+            let direction = Math.random() > 0.5 ? 1 : -1;
+            let move = direction * movePercent;
+            let oldBtcPrice = btcPrice;
+            btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, btcPrice * (1 + move)));
+            updatePriceIndicator('btc', oldBtcPrice, btcPrice);
+            updateUI();
+            btcBigSwing();
+        }, nextBigSwing);
+    }
+
+    // ETH occasional big swings: ±2.5%-12% every 4 to 12 minutes (more volatile than BTC)
+    function ethBigSwing() {
+        let nextBigSwing = (Math.random() * (720000 - 240000)) + 240000;
+        setTimeout(() => {
+            let movePercent = (Math.random() * 0.095) + 0.025; // Slightly more volatile
+            let direction = Math.random() > 0.5 ? 1 : -1;
+            let move = direction * movePercent;
+            let oldEthPrice = ethPrice;
+            ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, ethPrice * (1 + move)));
+            updatePriceIndicator('eth', oldEthPrice, ethPrice);
+            updateUI();
+            ethBigSwing();
+        }, nextBigSwing);
+    }
+
+    // DOGE occasional big swings: ±3%-18% every 3 to 8 minutes (much more volatile)
+    function dogeBigSwing() {
+        let nextBigSwing = (Math.random() * (480000 - 180000)) + 180000;
+        setTimeout(() => {
+            let movePercent = (Math.random() * 0.15) + 0.03; // 3% to 18%
+            let direction = Math.random() > 0.5 ? 1 : -1;
+            let move = direction * movePercent;
+            let oldDogePrice = dogePrice;
+            dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, dogePrice * (1 + move * 1.8)));
+            updatePriceIndicator('doge', oldDogePrice, dogePrice);
+            updateUI();
+            dogeBigSwing();
+        }, nextBigSwing);
     }
 
     // Sound effects using Web Audio API
@@ -768,16 +926,19 @@ button:disabled:hover {
             btcLifetime,
             btcClickValue,
             btcPerSec,
+            btcPrice,
             // Ethereum data
             ethBalance,
             ethLifetime,
             ethClickValue,
             ethPerSec,
+            ethPrice,
             // Dogecoin data
             dogeBalance,
             dogeLifetime,
             dogeClickValue,
             dogePerSec,
+            dogePrice,
             // General data
             dollarBalance,
             hardwareEquity,
@@ -830,16 +991,19 @@ function loadGame() {
         btcBalance = state.btcBalance || 0;
         btcLifetime = state.btcLifetime || 0;
         btcClickValue = state.btcClickValue || 0.00000250;
+        btcPrice = state.btcPrice || 100000;
 
         // Load Ethereum data
         ethBalance = state.ethBalance || 0;
         ethLifetime = state.ethLifetime || 0;
-        ethClickValue = state.ethClickValue || 0.00050000;
+        ethClickValue = state.ethClickValue || 0.00007143;
+        ethPrice = state.ethPrice || 3500;
 
         // Load Dogecoin data
         dogeBalance = state.dogeBalance || 0;
         dogeLifetime = state.dogeLifetime || 0;
-        dogeClickValue = state.dogeClickValue || 2.50;
+        dogeClickValue = state.dogeClickValue || 1.00000000;
+        dogePrice = state.dogePrice || 0.25;
 
         // Load general data
         dollarBalance = state.dollarBalance || 0;
@@ -847,6 +1011,7 @@ function loadGame() {
 
         // Initialize session tracking
         sessionStartBalance = btcBalance;
+        sessionStartNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity + dollarBalance;
         chartStartTime = state.chartStartTime || Date.now();
 
         // Load power upgrades
@@ -939,9 +1104,9 @@ function loadGame() {
         const maxOfflineSeconds = 21600; // Cap at 6 hours
         if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
 
-        const offlineBtcEarnings = (state.btcPerSec || 0) * offlineSeconds;
-        const offlineEthEarnings = (state.ethPerSec || 0) * offlineSeconds;
-        const offlineDogeEarnings = (state.dogePerSec || 0) * offlineSeconds;
+        const offlineBtcEarnings = btcPerSec * offlineSeconds;
+        const offlineEthEarnings = ethPerSec * offlineSeconds;
+        const offlineDogeEarnings = dogePerSec * offlineSeconds;
 
         if (offlineBtcEarnings > 0) {
             btcBalance += offlineBtcEarnings;
@@ -968,14 +1133,17 @@ function loadGame() {
         updateUI();
 
         // Restore chart history and timestamps
-        // FORCE RESET: Clear any corrupted chart data from saves
-        chartHistory = [];
-        chartTimestamps = [];
-        chartStartTime = Date.now();
+        if (state.chartHistory && Array.isArray(state.chartHistory)) {
+            chartHistory = state.chartHistory;
+            chartTimestamps = state.chartTimestamps || [];
+        } else {
+            chartHistory = [];
+            chartTimestamps = [];
+        }
 
         // Debug log
         console.log('Loaded save:', { btcBalance, ethBalance, dogeBalance, hardwareEquity });
-        console.log('Chart data reset on load');
+        console.log('Chart data restored:', chartHistory.length, 'data points');
     }
 }
     // --- SAVE SYSTEM END ---
@@ -997,10 +1165,21 @@ function loadGame() {
             btcLifetime = 0;
             btcPerSec = 0;
             btcClickValue = 0.00000250;
+            ethBalance = 0;
+            ethLifetime = 0;
+            ethPerSec = 0;
+            ethClickValue = 0.00007143;
+            dogeBalance = 0;
+            dogeLifetime = 0;
+            dogePerSec = 0;
+            dogeClickValue = 1.00000000;
+            dollarBalance = 0;
             hardwareEquity = 0;
+            autoClickerCooldownEnd = 0;
             // Reset session stats
             sessionStartTime = Date.now();
             sessionStartBalance = 0;
+            sessionStartNetWorth = 0;
             sessionEarnings = 0;
             // Reset chart history
             chartHistory = [];
@@ -1015,11 +1194,28 @@ function loadGame() {
                 u.currentPower = 0;
             });
             // Reset all upgrades
-            upgrades.forEach(u => {
+            btcUpgrades.forEach(u => {
                 u.level = 0;
                 u.currentUsd = u.baseUsd;
                 u.currentYield = 0;
+                u.boostCost = u.baseCost || u.currentUsd;
+                u.boostLevel = 0;
             });
+            ethUpgrades.forEach(u => {
+                u.level = 0;
+                u.currentUsd = u.baseUsd;
+                u.currentYield = 0;
+                u.boostCost = u.baseCost || u.currentUsd;
+                u.boostLevel = 0;
+            });
+            dogeUpgrades.forEach(u => {
+                u.level = 0;
+                u.currentUsd = u.baseUsd;
+                u.currentYield = 0;
+                u.boostCost = u.baseCost || u.currentUsd;
+                u.boostLevel = 0;
+            });
+            saveGame();
             updateUI();
             alert('Game reset! Starting fresh.');
         }
@@ -1147,14 +1343,14 @@ function loadGame() {
         const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:var(--btc);font-weight:700;display:block;margin-top:3px">${powerReq.toLocaleString()}W per level</span>` : '';
 
         btn.innerHTML = `
-            <div style="text-align:left">
-                <span style="font-weight:800;font-size:1.3rem;display:block"><span id="lvl-txt-${u.id}" style="color:var(--btc)">[Lvl 0]</span> ${u.name}</span>
-                <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="yield-${u.id}">+0 ₿/s</span>
+            <div style="text-align:left;flex:1">
+                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="yield-${u.id}">+0 ₿/s - Current Speed</div>
                 ${powerDisplay}
             </div>
-            <div style="text-align:right">
-                <span style="font-size:1.4rem;font-weight:900;display:block" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
-                <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="afford-${u.id}">x0</span>
+            <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
+                <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="afford-${u.id}">x0</span>
             </div>`;
         container.appendChild(btn);
 
@@ -1194,13 +1390,13 @@ function loadGame() {
 
             const costBtc = u.currentUsd / btcPrice;
             btn.innerHTML = `
-                <div style="text-align:left">
-                    <span style="font-weight:800;font-size:1.3rem;display:block"><span id="pow-lvl-txt-${u.id}" style="color:var(--btc)">[Lvl ${u.level}]</span> ${u.name}</span>
-                    <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="pow-power-${u.id}">+0W</span>
+                <div style="text-align:left;flex:1">
+                    <div style="font-size:0.9rem;color:#00ff88;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="pow-lvl-txt-${u.id}">[Lvl ${u.level}]</span> ${u.name}</div>
+                    <div style="font-size:1.1rem;color:#00ff88;font-family:monospace;font-weight:700;display:block" id="pow-power-${u.id}">+0W per level</div>
                 </div>
-                <div style="text-align:right">
-                    <span style="font-size:1.4rem;font-weight:900;display:block" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
-                    <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="pow-afford-${u.id}">x0</span>
+                <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
+                    <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="pow-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
         });
@@ -1221,13 +1417,13 @@ function loadGame() {
             btn.onclick = () => buyEthLevel(i, buyQuantity);
 
             btn.innerHTML = `
-                <div style="text-align:left">
-                    <span style="font-weight:800;font-size:1.3rem;display:block"><span id="eth-lvl-txt-${u.id}" style="color:#627eea">[Lvl 0]</span> ${u.name}</span>
-                    <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="eth-yield-${u.id}">+0 Ξ/s</span>
+                <div style="text-align:left;flex:1">
+                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                    <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="eth-yield-${u.id}">+0 Ξ/s - Current Speed</div>
                 </div>
-                <div style="text-align:right">
-                    <span style="font-size:1.4rem;font-weight:900;display:block" id="eth-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
-                    <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="eth-afford-${u.id}">x0</span>
+                <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="eth-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                    <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="eth-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
         });
@@ -1248,13 +1444,13 @@ function loadGame() {
             btn.onclick = () => buyDogeLevel(i, buyQuantity);
 
             btn.innerHTML = `
-                <div style="text-align:left">
-                    <span style="font-weight:800;font-size:1.3rem;display:block"><span id="doge-lvl-txt-${u.id}" style="color:#c2a633">[Lvl 0]</span> ${u.name}</span>
-                    <span style="font-size:1.2rem;color:var(--green);font-family:monospace" id="doge-yield-${u.id}">+0 Ð/s</span>
+                <div style="text-align:left;flex:1">
+                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                    <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="doge-yield-${u.id}">+0 Ð/s - Current Speed</div>
                 </div>
-                <div style="text-align:right">
-                    <span style="font-size:1.4rem;font-weight:900;display:block" id="doge-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
-                    <span style="font-size:0.85rem;color:#00ff88;font-family:monospace;font-weight:900;" id="doge-afford-${u.id}">x0</span>
+                <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="doge-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                    <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="doge-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
         });
@@ -1302,7 +1498,8 @@ function loadGame() {
 
     function sellAllBTC() {
         if (btcBalance <= 0) return;
-        dollarBalance += btcBalance * btcPrice;
+        const saleValue = btcBalance * btcPrice * 0.95; // 5% fee
+        dollarBalance += saleValue;
         btcBalance = 0;
         updateUI();
         saveGame();
@@ -1315,7 +1512,8 @@ function loadGame() {
             return;
         }
         ethBalance -= amount;
-        dollarBalance += amount * ethPrice;
+        const saleValue = amount * ethPrice * 0.95; // 5% fee
+        dollarBalance += saleValue;
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -1323,7 +1521,8 @@ function loadGame() {
 
     function sellAllETH() {
         if (ethBalance <= 0) return;
-        dollarBalance += ethBalance * ethPrice;
+        const saleValue = ethBalance * ethPrice * 0.95; // 5% fee
+        dollarBalance += saleValue;
         ethBalance = 0;
         updateUI();
         saveGame();
@@ -1337,7 +1536,8 @@ function loadGame() {
             return;
         }
         dogeBalance -= amount;
-        dollarBalance += amount * dogePrice;
+        const saleValue = amount * dogePrice * 0.95; // 5% fee
+        dollarBalance += saleValue;
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -1711,28 +1911,26 @@ function buyBoost(i) {
 
         document.getElementById('session-time').innerText = timeStr;
 
-        // Update session earnings
-        sessionEarnings = btcBalance - sessionStartBalance;
-        document.getElementById('session-earnings').innerText = '₿ ' + sessionEarnings.toFixed(8);
+        // Update session earnings (total value of crypto + cash balance)
+        const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity + dollarBalance;
+        sessionEarnings = currentNetWorth - sessionStartNetWorth;
+        document.getElementById('session-earnings').innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
     function updateUI() {
-        // Calculate total net worth from all cryptocurrencies
-        let netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-        document.getElementById('nw-val').innerText = "$" + netWorth.toLocaleString(undefined, {minimumFractionDigits: 2});
+        // Crypto portfolio value = value of all crypto holdings only
+        let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+        document.getElementById('nw-val').innerText = "$" + cryptoPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2});
 
         // Update balances
         document.getElementById('bal-btc').innerText = btcBalance.toFixed(8);
         document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
         document.getElementById('bal-doge').innerText = dogeBalance.toFixed(2);
 
-        // Update lifetime stats
-        document.getElementById('lifetime-btc').innerText = btcLifetime.toFixed(8);
-
         // Update hardware equity
         document.getElementById('asset-usd').innerText = "$" + Math.floor(hardwareEquity).toLocaleString();
 
-        // Update individual hashrate displays
+        // Update individual hashrate displays (old location - keep for backwards compatibility)
         const btcEl = document.getElementById('yield-btc');
         const ethEl = document.getElementById('yield-eth');
         const dogeEl = document.getElementById('yield-doge');
@@ -1740,6 +1938,15 @@ function buyBoost(i) {
         if (btcEl) btcEl.innerText = btcPerSec.toFixed(8) + "/s";
         if (ethEl) ethEl.innerText = ethPerSec.toFixed(8) + "/s";
         if (dogeEl) dogeEl.innerText = dogePerSec.toFixed(2) + "/s";
+
+        // Update hashrate displays in new location
+        const btcDisplayEl = document.getElementById('yield-btc-display');
+        const ethDisplayEl = document.getElementById('yield-eth-display');
+        const dogeDisplayEl = document.getElementById('yield-doge-display');
+
+        if (btcDisplayEl) btcDisplayEl.innerText = btcPerSec.toFixed(8) + "/s";
+        if (ethDisplayEl) ethDisplayEl.innerText = ethPerSec.toFixed(8) + "/s";
+        if (dogeDisplayEl) dogeDisplayEl.innerText = dogePerSec.toFixed(8) + "/s";
 
         // Update prices
         document.getElementById('btc-price').innerText = "$" + Math.floor(btcPrice).toLocaleString();
@@ -1765,7 +1972,7 @@ function buyBoost(i) {
         calculateTotalPowerUsed();
         updatePowerDisplay();
 
- upgrades.forEach(u => {
+        btcUpgrades.forEach(u => {
     const costUsd = u.currentUsd;
     const yEl = document.getElementById(`yield-${u.id}`);
 
@@ -1816,15 +2023,43 @@ function buyBoost(i) {
         const powerReq = equipmentPowerReqs[u.id] || 0;
         const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
         const hasEnoughPower = powerNeeded <= totalPowerAvailable || powerReq === 0;
-        bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
+        const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
+        bEl.disabled = shouldDisable;
+        if (u.id === 1) console.log(`USB Miner: dollars=${dollarBalance}/${costUsd}, power=${totalPowerUsed}/${totalPowerAvailable}, needed=${powerNeeded}, disabled=${shouldDisable}`);
 
         // Change button appearance if power is insufficient
-        if (!hasEnoughPower && hasEnoughDollars && powerReq > 0) {
-            bEl.style.opacity = '0.6';
-            bEl.title = `Insufficient power! Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more`;
+        if (!hasEnoughPower && powerReq > 0) {
+            // Show overlay message
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE POWER';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            }
+            bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power capacity.`;
         } else {
-            bEl.style.opacity = '1';
-            bEl.title = '';
+            // Hide overlay if it exists
+            let overlay = bEl.querySelector('.power-overlay');
+            if (overlay) overlay.remove();
+
+            if (!hasEnoughDollars) {
+                bEl.title = `Need $${(costUsd - dollarBalance).toLocaleString()} more`;
+            } else {
+                bEl.title = '';
+            }
         }
     }
 
@@ -1902,7 +2137,44 @@ ethUpgrades.forEach(u => {
 
     const bEl = document.getElementById(`eth-up-${u.id}`);
     if(bEl) {
-        bEl.disabled = dollarBalance < costUsd;
+        const hasEnoughDollars = dollarBalance >= costUsd;
+        const powerReq = equipmentPowerReqs[u.id] || 0;
+        const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+        const hasEnoughPower = powerNeeded <= totalPowerAvailable || powerReq === 0;
+        bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
+
+        // Change button appearance if power is insufficient
+        if (!hasEnoughPower && powerReq > 0) {
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE POWER';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            }
+            bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power capacity.`;
+        } else {
+            let overlay = bEl.querySelector('.power-overlay');
+            if (overlay) overlay.remove();
+
+            if (!hasEnoughDollars) {
+                bEl.title = `Need $${(costUsd - dollarBalance).toLocaleString()} more`;
+            } else {
+                bEl.title = '';
+            }
+        }
     }
 
     const lEl = document.getElementById(`eth-lvl-txt-${u.id}`);
@@ -1949,12 +2221,49 @@ dogeUpgrades.forEach(u => {
 
     const bEl = document.getElementById(`doge-up-${u.id}`);
     if(bEl) {
-        bEl.disabled = dollarBalance < costUsd;
+        const hasEnoughDollars = dollarBalance >= costUsd;
+        const powerReq = equipmentPowerReqs[u.id] || 0;
+        const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+        const hasEnoughPower = powerNeeded <= totalPowerAvailable || powerReq === 0;
+        bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
+
+        // Change button appearance if power is insufficient
+        if (!hasEnoughPower && powerReq > 0) {
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE POWER';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            }
+            bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power capacity.`;
+        } else {
+            let overlay = bEl.querySelector('.power-overlay');
+            if (overlay) overlay.remove();
+
+            if (!hasEnoughDollars) {
+                bEl.title = `Need $${(costUsd - dollarBalance).toLocaleString()} more`;
+            } else {
+                bEl.title = '';
+            }
+        }
     }
 
     const lEl = document.getElementById(`doge-lvl-txt-${u.id}`);
     if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
-});
+    });
     }
 
     setInterval(() => {
@@ -2008,7 +2317,7 @@ dogeUpgrades.forEach(u => {
         console.log('Canvas context:', ctx);
 
         // Initialize chart with full history (at least one data point)
-        const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity;
+        const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
         console.log('=== CHART DEBUG ===');
         console.log('btcBalance:', btcBalance, 'btcPrice:', btcPrice);
         console.log('ethBalance:', ethBalance, 'ethPrice:', ethPrice);
@@ -2016,16 +2325,14 @@ dogeUpgrades.forEach(u => {
         console.log('hardwareEquity:', hardwareEquity);
         console.log('Current net worth for chart:', currentNetWorth);
 
-        // Ensure chartHistory is always an array and force reset
-        chartHistory = [];
-        chartTimestamps = [];
-
-        // Always add at least 2 data points for the chart to render properly
-        chartHistory.push(currentNetWorth);
-        chartHistory.push(currentNetWorth);
-        chartTimestamps.push({ time: Date.now(), value: currentNetWorth });
-        chartTimestamps.push({ time: Date.now() + 1000, value: currentNetWorth });
-        chartStartTime = Date.now();
+        // Ensure chartHistory is always an array - don't reset if we have data
+        if (chartHistory.length === 0) {
+            // Only initialize if empty
+            chartHistory.push(currentNetWorth);
+            chartHistory.push(currentNetWorth);
+            chartTimestamps.push({ time: Date.now(), value: currentNetWorth });
+            chartTimestamps.push({ time: Date.now() + 1000, value: currentNetWorth });
+        }
 
         console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
 
@@ -2059,10 +2366,9 @@ dogeUpgrades.forEach(u => {
                 animation: false,
                 scales: {
                     x: {
-                        display: true,
+                        display: false,
                         grid: {
-                            display: true,
-                            color: 'rgba(255, 255, 255, 0.05)',
+                            display: false,
                             drawBorder: false
                         },
                         ticks: {
@@ -2071,24 +2377,25 @@ dogeUpgrades.forEach(u => {
                     },
                     y: {
                         display: true,
-                        beginAtZero: false,
+                        beginAtZero: true,
+                        min: 0,
+                        grace: '5%',
                         grid: {
-                            display: true,
-                            color: 'rgba(255, 255, 255, 0.08)',
+                            display: false,
                             drawBorder: false
                         },
                         ticks: {
                             display: true,
-                            color: '#666',
+                            color: '#999',
                             font: {
                                 size: 10
                             },
                             maxTicksLimit: 8,
                             callback: function(value) {
                                 if (value >= 1000) {
-                                    return '$' + (value / 1000).toFixed(1) + 'k';
+                                    return '$' + (value / 1000).toFixed(2) + 'k';
                                 }
-                                return '$' + value.toFixed(0);
+                                return '$' + value.toFixed(2);
                             }
                         }
                     }
@@ -2112,15 +2419,14 @@ dogeUpgrades.forEach(u => {
         setInterval(() => {
             if (!nwChart) return;
 
-            const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity;
+            const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+
+            // Always update the chart with the current net worth
             chartHistory.push(netWorth);
             chartTimestamps.push({ time: Date.now(), value: netWorth });
 
-            // Keep only last 100 data points to prevent memory issues
-            if (chartHistory.length > 100) {
-                chartHistory.shift();
-                chartTimestamps.shift();
-            }
+            // Keep all data points - chart will stretch to the right showing full history
+            // No limit on data points so we preserve the entire game history
 
             nwChart.data.datasets[0].data = chartHistory;
             nwChart.data.labels = chartHistory.map((_, i) => '');
@@ -2128,7 +2434,7 @@ dogeUpgrades.forEach(u => {
 
             updateCount++;
             if (updateCount % 5 === 0) {
-                console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length, 'Latest value:', netWorth);
+                console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length, 'Latest value:', netWorth, 'BTC:', btcBalance, 'ETH:', ethBalance, 'DOGE:', dogeBalance);
             }
         }, 2000);
 
@@ -2159,9 +2465,25 @@ dogeUpgrades.forEach(u => {
         console.log('No offline earnings data stored');
     }
 
-        // Start price swings: frequent small swings every 2 seconds + occasional big swings
-        frequentPriceSwing(); // Start frequent swings (±0.5%-2% every 2 seconds)
-        bigPriceSwing();      // Start occasional big swings (±5-20% every 5-10 minutes)
+        // Start price swings: separate timing for each crypto
+        // Only start if not already running (prevents multiple loops on refresh)
+        if (!priceSwingsStarted) {
+            priceSwingsStarted = true;
+            // BTC swings (start immediately)
+            btcTinySwing();       // ±0.05%-0.1% every 2 seconds
+            btcFrequentSwing();   // ±0.1%-1% every 2-60 seconds
+            btcBigSwing();        // ±2.5%-10% every 5-10 minutes
+
+            // ETH swings (start with 700ms delay to stagger from BTC)
+            setTimeout(ethTinySwing, 700);       // ±0.05%-0.1% every 2.3 seconds
+            setTimeout(ethFrequentSwing, 1200);  // ±0.1%-1.2% every 3-75 seconds
+            setTimeout(ethBigSwing, 1500);       // ±2.5%-12% every 4-12 minutes
+
+            // DOGE swings (start with 1400ms delay to stagger from BTC and ETH)
+            setTimeout(dogeTinySwing, 1400);     // ±0.05%-0.15% every 2.7 seconds
+            setTimeout(dogeFrequentSwing, 2100); // ±0.15%-1.8% every 2-45 seconds
+            setTimeout(dogeBigSwing, 2800);      // ±3%-18% every 3-8 minutes
+        }
     }
 
     // Run initialization when DOM is ready
