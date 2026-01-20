@@ -340,42 +340,44 @@ button:disabled:hover {
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0;">
             <button class="mine-btn" onclick="manualHash()">MANUAL BTC HASH<br>
-                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
+                <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
-            <button class="mine-btn" style="background: #627eea;" onclick="manualEthHash()">MANUAL ETH HASH<br>
-                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+0.00007143 Ξ</span>
+            <button class="mine-btn" style="background: #627eea; padding: 8px;" onclick="manualEthHash()">MANUAL ETH HASH<br>
+                <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00007143 Ξ</span>
             </button>
-            <button class="mine-btn" style="background: #c2a633;" onclick="manualDogeHash()">MANUAL DOGE HASH<br>
-                <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.7;">+1.00000000 Ð</span>
+            <button class="mine-btn" style="background: #c2a633; padding: 8px;" onclick="manualDogeHash()">MANUAL DOGE HASH<br>
+                <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+1.00000000 Ð</span>
             </button>
-            <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 10px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 0.8rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
+            <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 8px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-size: 0.75rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
 
             <!-- Power Status Bar -->
-            <div style="padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222; margin-bottom: 12px;">
-                <span style="font-size: 0.85rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px;">Power Status</span>
-                <div style="display: flex; gap: 10px; align-items: center;">
+            <div style="padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222; margin-bottom: 8px;">
+                <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
                     <div style="flex: 1;">
-                        <div style="font-size: 0.75rem; color: #00ff88; font-family: monospace; font-weight: 900;" id="power-used">0W / 0W</div>
-                        <div id="power-bar" style="height: 8px; background: #222; border-radius: 4px; margin-top: 4px;">
-                            <div id="power-bar-fill" style="height: 100%; background: #00ff88; border-radius: 4px; width: 0%;"></div>
+                        <span style="font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 2px;">Power Status</span>
+                        <div style="font-size: 0.65rem; color: #00ff88; font-family: monospace; font-weight: 900;" id="power-used">0W / 0W</div>
+                        <div id="power-bar" style="height: 6px; background: #222; border-radius: 3px; margin-top: 2px;">
+                            <div id="power-bar-fill" style="height: 100%; background: #00ff88; border-radius: 3px; width: 0%;"></div>
                         </div>
                     </div>
+                    <button class="tab-btn" onclick="switchTab('power')" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">POWER</button>
                 </div>
             </div>
 
             <!-- Dollar Balance Display -->
-            <div style="padding: 10px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 12px; text-align: center;">
-                <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">Cash Balance</span>
-                <b style="font-size: 2rem; color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
+            <div style="padding: 6px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 8px; text-align: center;">
+                <span style="font-size: 0.6rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Cash Balance</span>
+                <b style="font-size: 1.5rem; color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
             </div>
 
             <!-- Tab Buttons -->
-            <div class="tab-buttons">
+            <div class="tab-buttons" style="margin-bottom: 6px;">
                 <button class="tab-btn active" onclick="switchTab('btc-mining')" style="border-color: #f7931a; color: #f7931a;">BTC</button>
                 <button class="tab-btn" onclick="switchTab('eth-mining')" style="border-color: #627eea; color: #627eea;">ETH</button>
                 <button class="tab-btn" onclick="switchTab('doge-mining')" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
-                <button class="tab-btn" onclick="switchTab('power')" style="border-color: #00ff88; color: #00ff88;">POWER</button>
-                <button class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">MARKET</button>
+            </div>
+            <div class="tab-buttons">
+                <button class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
             </div>
 
             <!-- BTC Mining Tab -->
@@ -554,6 +556,7 @@ button:disabled:hover {
     let sessionStartBalance = 0;
     let sessionStartNetWorth = 0;
     let sessionEarnings = 0;
+    let sessionAccumulatedEarnings = 0; // Running total of all mined value in USD
 
     // Buy quantity setting
     let buyQuantity = 1;
@@ -944,6 +947,7 @@ button:disabled:hover {
             hardwareEquity,
             lastSaveTime: Date.now(),
             autoClickerCooldownEnd,
+            sessionAccumulatedEarnings,
             chartHistory: chartHistory,
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
@@ -1008,6 +1012,7 @@ function loadGame() {
         // Load general data
         dollarBalance = state.dollarBalance || 0;
         hardwareEquity = state.hardwareEquity || 0;
+        sessionAccumulatedEarnings = state.sessionAccumulatedEarnings || 0;
 
         // Initialize session tracking
         sessionStartBalance = btcBalance;
@@ -1906,10 +1911,10 @@ function buyBoost(i) {
 
         document.getElementById('session-time').innerText = timeStr;
 
-        // Update session earnings (total value of crypto + cash balance)
-        const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity + dollarBalance;
-        sessionEarnings = currentNetWorth - sessionStartNetWorth;
-        document.getElementById('session-earnings').innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        // Update session accumulated earnings - add the current mined value
+        const currentMinedValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+        sessionAccumulatedEarnings = currentMinedValue;
+        document.getElementById('session-earnings').innerText = '$' + sessionAccumulatedEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
     function updateUI() {
