@@ -39,7 +39,7 @@
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .upgrade-list { overflow-y: auto !important; }
-            .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; }
+            .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; color: #555; }
             .nw-amount { font-size: 1.6rem; margin: 2px 0; }
             .mini-stats { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
             .stat-item span { font-size: 0.55rem; }
@@ -64,7 +64,7 @@
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .upgrade-list { overflow-y: auto !important; }
-            .nw-label { font-size: 0.6rem; }
+            .nw-label { font-size: 0.6rem; color: #555; }
             .nw-amount { font-size: 1.5rem; margin: 1px 0; }
             .stat-val { font-size: 0.95rem !important; }
             .chart-wrapper { min-height: 120px !important; height: 120px !important; flex: 0 0 120px !important; display: block; margin-top: 4px; overflow: hidden; }
@@ -83,7 +83,7 @@
             .u-item { padding: 10px; margin-bottom: 8px; }
         }
         
-        .nw-label { font-size: 1.2rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
+        .nw-label { font-size: 1.5rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
         .nw-amount { 
             font-size: 4.5rem; 
             font-weight: 950; 
@@ -147,7 +147,7 @@
         .tab-content { display: none; flex-direction: column; min-height: 0; flex: 1; }
         .tab-content.active { display: flex; }
 
-        .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 12px; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.1s; font-size: 0.85rem; margin-bottom: 8px; }
+        .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 12px; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.1s; font-size: 0.85rem; margin-bottom: 8px; position: relative; z-index: 10; pointer-events: auto; }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item {
             background: #181818;
@@ -324,7 +324,7 @@ button:disabled:hover {
     <div id="main-layout">
         <div class="panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
-                <span class="nw-label">Crypto Portfolio Valuation</span>
+                <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important;">Crypto Portfolio Valuation</span>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="toggleMute()">SOUND ON</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetGame()">RESET SAVE</button>
@@ -407,8 +407,8 @@ button:disabled:hover {
             </div>
         </div>
 
-        <div class="panel" style="display: flex; flex-direction: column; min-height: 0;">
-            <button class="mine-btn" onclick="manualHash()">MANUAL BTC HASH<br>
+        <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
+            <button class="mine-btn" onclick="manualHash()" style="position: relative; z-index: 100;">MANUAL BTC HASH<br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
             <button class="mine-btn" style="background: #627eea; padding: 8px;" onclick="manualEthHash()">MANUAL ETH HASH<br>
@@ -929,7 +929,7 @@ button:disabled:hover {
 
     // Bitcoin mining upgrades
     const btcUpgrades = [
-	{ id: 0, name: "Manual Hash Upgrade", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000050 },
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000050 },
         { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.000000115 },
         { id: 2, name: "GTX 1660 Super", baseUsd: 100, baseYield: 0.0000007 },
         { id: 3, name: "RTX 5090 Rig", baseUsd: 3000, baseYield: 0.000015 },
@@ -944,7 +944,7 @@ button:disabled:hover {
 
     // Ethereum mining upgrades
     const ethUpgrades = [
-	{ id: 0, name: "Manual ETH Mining", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00010000 },
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00010000 },
         { id: 1, name: "Single GPU Rig", baseUsd: 8, baseYield: 0.00002500 },
         { id: 2, name: "RTX 4090 Miner", baseUsd: 150, baseYield: 0.00015000 },
         { id: 3, name: "8-GPU Mining Rig", baseUsd: 4500, baseYield: 0.00325000 },
@@ -959,7 +959,7 @@ button:disabled:hover {
 
     // Dogecoin mining upgrades
     const dogeUpgrades = [
-	{ id: 0, name: "Manual DOGE Mining", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.50 },
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.50 },
         { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 0.50 },
         { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 3.20 },
         { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 68.00 },
@@ -1192,13 +1192,21 @@ function loadGame() {
 
         updateUI();
 
-        // Always reset chart history to start fresh on load
-        chartHistory = [];
-        chartTimestamps = [];
+        // Restore chart history from save, starting from 0
+        if (state.chartHistory && state.chartHistory.length > 0) {
+            chartHistory = state.chartHistory;
+            chartTimestamps = state.chartTimestamps || [];
+            console.log('Chart data restored:', chartHistory.length, 'data points');
+        } else {
+            // Start fresh if no saved chart data
+            chartHistory = [];
+            chartTimestamps = [];
+            console.log('No saved chart data, starting fresh');
+        }
 
         // Debug log
         console.log('Loaded save:', { btcBalance, ethBalance, dogeBalance, hardwareEquity });
-        console.log('Chart data restored:', chartHistory.length, 'data points');
+        console.log('Chart history length:', chartHistory.length);
     }
 }
     // --- SAVE SYSTEM END ---
