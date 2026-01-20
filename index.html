@@ -17,6 +17,7 @@
   gtag('config', 'G-2H559N5J64');
 </script>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idle BTC Miner | GAME</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -25,6 +26,17 @@
         
         #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; }
+
+        @media (max-width: 1024px) {
+            #main-layout { grid-template-columns: 1fr; gap: 15px; }
+            body { padding: 10px; }
+        }
+
+        @media (max-width: 768px) {
+            #main-layout { height: auto; }
+            .panel { padding: 16px; }
+            body { padding: 8px; }
+        }
         
         .nw-label { font-size: 1.2rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
         .nw-amount { 
