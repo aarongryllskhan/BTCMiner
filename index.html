@@ -50,11 +50,65 @@
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; }
             #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
             #crypto-prices-flex span { font-size: 0.5rem !important; }
-            /* Make hashrate display smaller and compact on mobile */
-            #hashrate-display { flex-wrap: wrap; gap: 2px !important; margin-bottom: 6px; }
-            #hashrate-display > div { padding: 3px 5px !important; flex: 0 1 calc(33.33% - 1.5px) !important; }
-            #hashrate-display span { font-size: 0.45rem !important; margin-bottom: 0 !important; line-height: 1; }
-            #hashrate-display b { font-size: 0.55rem !important; line-height: 1; }
+
+            /* Professional 2-column grid layout for stat boxes on mobile */
+            #hashrate-display {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 6px !important;
+                margin-bottom: 8px;
+                justify-content: stretch !important;
+            }
+            /* Left column: TIME, SESSION EARNING, and LIFETIME EARNINGS stack vertically */
+            .stat-box-session {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            .stat-box-session-earnings {
+                grid-column: 1;
+                grid-row: 2;
+            }
+            .stat-box-earnings {
+                grid-column: 1;
+                grid-row: 3;
+            }
+            /* Right column: BTC, ETH, DOGE stack vertically */
+            .stat-box-btc {
+                grid-column: 2;
+                grid-row: 1;
+            }
+            .stat-box-eth {
+                grid-column: 2;
+                grid-row: 2;
+            }
+            .stat-box-doge {
+                grid-column: 2;
+                grid-row: 3;
+            }
+            #hashrate-display .stat-box {
+                padding: 8px 10px !important;
+                background: rgba(0,0,0,0.4) !important;
+                border-radius: 6px !important;
+                border: 1px solid #333 !important;
+                text-align: center;
+                flex: none !important;
+                min-width: 0;
+                overflow: hidden;
+            }
+            #hashrate-display span {
+                font-size: 0.6rem !important;
+                margin-bottom: 4px !important;
+                line-height: 1.2;
+                display: block;
+                letter-spacing: 0.5px;
+            }
+            #hashrate-display b {
+                font-size: 0.75rem !important;
+                line-height: 1.3;
+                display: block;
+                word-break: break-all;
+            }
         }
 
         @media (max-width: 480px) and (orientation: portrait) {
@@ -73,11 +127,65 @@
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; padding: 3px !important; }
             #crypto-prices-flex .stat-val { font-size: 0.7rem !important; }
             #crypto-prices-flex span { font-size: 0.4rem !important; }
-            /* Make hashrate display even smaller on small phones */
-            #hashrate-display { gap: 1px !important; flex-wrap: wrap; margin-bottom: 4px; }
-            #hashrate-display > div { padding: 2px 3px !important; flex: 0 1 calc(33.33% - 1px) !important; }
-            #hashrate-display span { font-size: 0.4rem !important; margin-bottom: 0px !important; line-height: 1; }
-            #hashrate-display b { font-size: 0.5rem !important; line-height: 1; }
+
+            /* Professional 2-column grid layout for small phones */
+            #hashrate-display {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 5px !important;
+                margin-bottom: 6px;
+                justify-content: stretch !important;
+            }
+            /* Left column: TIME, SESSION EARNING, and LIFETIME EARNINGS stack vertically */
+            .stat-box-session {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            .stat-box-session-earnings {
+                grid-column: 1;
+                grid-row: 2;
+            }
+            .stat-box-earnings {
+                grid-column: 1;
+                grid-row: 3;
+            }
+            /* Right column: BTC, ETH, DOGE stack vertically */
+            .stat-box-btc {
+                grid-column: 2;
+                grid-row: 1;
+            }
+            .stat-box-eth {
+                grid-column: 2;
+                grid-row: 2;
+            }
+            .stat-box-doge {
+                grid-column: 2;
+                grid-row: 3;
+            }
+            #hashrate-display .stat-box {
+                padding: 6px 8px !important;
+                background: rgba(0,0,0,0.4) !important;
+                border-radius: 6px !important;
+                border: 1px solid #333 !important;
+                text-align: center;
+                flex: none !important;
+                min-width: 0;
+                overflow: hidden;
+            }
+            #hashrate-display span {
+                font-size: 0.5rem !important;
+                margin-bottom: 3px !important;
+                line-height: 1.2;
+                display: block;
+                letter-spacing: 0.3px;
+            }
+            #hashrate-display b {
+                font-size: 0.65rem !important;
+                line-height: 1.3;
+                display: block;
+                word-break: break-all;
+            }
         }
 
             .u-item { padding: 10px; margin-bottom: 8px; }
@@ -349,23 +457,27 @@ button:disabled:hover {
 
             <!-- Hashrate Display -->
             <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 0.1px; justify-content: flex-end;">
-                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                <div class="stat-box stat-box-session" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">TIME THIS SESSION</span>
                     <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-time">0m 0s</b>
                 </div>
-                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">LIFETIME EARNINGS</span>
-                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-earnings">₿ 0.00000000</b>
+                <div class="stat-box stat-box-session-earnings" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">EARNING THIS SESSION</span>
+                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-earning">$0.00</b>
                 </div>
-                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                <div class="stat-box stat-box-earnings" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">LIFETIME EARNINGS</span>
+                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; white-space: nowrap;" id="lifetime-earning">$0.00</b>
+                </div>
+                <div class="stat-box stat-box-btc" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">BTC HASHRATE</span>
                     <b style="font-size: 1.1rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00000000/s</b>
                 </div>
-                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                <div class="stat-box stat-box-eth" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">ETH HASHRATE</span>
                     <b style="font-size: 1.1rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00000000/s</b>
                 </div>
-                <div style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                <div class="stat-box stat-box-doge" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">DOGE HASHRATE</span>
                     <b style="font-size: 1.1rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00000000/s</b>
                 </div>
@@ -561,6 +673,102 @@ button:disabled:hover {
                         </div>
                         <button onclick="sellAllDOGE()" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
+
+                    <!-- Staking Section -->
+                    <div style="margin: 25px 0 15px 0; padding-top: 20px; border-top: 2px solid #222;">
+                        <h3 style="color: #ffaa33; margin: 0 0 10px 0; font-size: 1.2rem;">🏦 Crypto Staking Bank</h3>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 15px 0;">Lock your crypto to earn 0.1% APR every 2 seconds, paid directly to your cash balance!</p>
+                    </div>
+
+                    <!-- BTC Staking -->
+                    <div style="background: rgba(247, 147, 26, 0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #f7931a; font-weight: 800; font-size: 1.1rem;">₿ Bitcoin Staking</span>
+                            <span style="color: #ffaa33; font-size: 0.8rem;" id="btc-apr-display">$0.00/hr</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem;">Staked: </span>
+                            <span style="color: #f7931a; font-family: monospace; font-weight: 800;" id="btc-staked-amount">0.00000000</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Stake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickStake('BTC', 25)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickStake('BTC', 50)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickStake('BTC', 75)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickStake('BTC', 100)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickUnstake('BTC', 25)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickUnstake('BTC', 50)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickUnstake('BTC', 75)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickUnstake('BTC', 100)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ETH Staking -->
+                    <div style="background: rgba(98, 126, 234, 0.1); border: 1px solid #627eea; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #627eea; font-weight: 800; font-size: 1.1rem;">Ξ Ethereum Staking</span>
+                            <span style="color: #ffaa33; font-size: 0.8rem;" id="eth-apr-display">$0.00/hr</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem;">Staked: </span>
+                            <span style="color: #627eea; font-family: monospace; font-weight: 800;" id="eth-staked-amount">0.00000000</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Stake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickStake('ETH', 25)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickStake('ETH', 50)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickStake('ETH', 75)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickStake('ETH', 100)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickUnstake('ETH', 25)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickUnstake('ETH', 50)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickUnstake('ETH', 75)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickUnstake('ETH', 100)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DOGE Staking -->
+                    <div style="background: rgba(194, 166, 51, 0.1); border: 1px solid #c2a633; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #c2a633; font-weight: 800; font-size: 1.1rem;">Ð Dogecoin Staking</span>
+                            <span style="color: #ffaa33; font-size: 0.8rem;" id="doge-apr-display">$0.00/hr</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem;">Staked: </span>
+                            <span style="color: #c2a633; font-family: monospace; font-weight: 800;" id="doge-staked-amount">0.00</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Stake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickStake('DOGE', 25)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickStake('DOGE', 50)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickStake('DOGE', 75)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickStake('DOGE', 100)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0px;">
+                            <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button onclick="quickUnstake('DOGE', 25)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
+                                <button onclick="quickUnstake('DOGE', 50)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
+                                <button onclick="quickUnstake('DOGE', 75)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
+                                <button onclick="quickUnstake('DOGE', 100)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -612,6 +820,11 @@ button:disabled:hover {
     let lifetimeEarnings = 0; // Lifetime total - only ever increases, never decreases
     let previousPortfolioValue = 0; // Track previous value to detect increases
 
+    // Track starting crypto balances for this session (to calculate mined value only)
+    let sessionStartBTC = 0;
+    let sessionStartETH = 0;
+    let sessionStartDOGE = 0;
+
     // Buy quantity setting
     let buyQuantity = 1;
 
@@ -621,16 +834,17 @@ button:disabled:hover {
     let lastChartUpdateTime = Date.now();
     let chartStartTime = Date.now();
 
-    // Power system
+    // Power system - Rebalanced for strategic gameplay
     let totalPowerAvailable = 0; // Total watts available
     let totalPowerUsed = 0; // Total watts being used
     const powerUpgrades = [
-        { id: 0, name: "Regulated PSU", baseUsd: 50, basePower: 100 },
-        { id: 1, name: "High-Efficiency PSU", baseUsd: 200, basePower: 500 },
-        { id: 2, name: "Server-Grade PSU", baseUsd: 1000, basePower: 2000 },
-        { id: 3, name: "Mining Power Distribution Unit", baseUsd: 5000, basePower: 10000 },
-        { id: 4, name: "Modular Data Center Power System", baseUsd: 25000, basePower: 50000 },
-        { id: 5, name: "Dedicated Substation Power Unit", baseUsd: 100000, basePower: 200000 }
+        { id: 0, name: "Basic Power Strip", baseUsd: 25, basePower: 10 },
+        { id: 1, name: "Regulated PSU", baseUsd: 400, basePower: 100 },
+        { id: 2, name: "High-Efficiency PSU", baseUsd: 2000, basePower: 600 },
+        { id: 3, name: "Server-Grade PSU", baseUsd: 10000, basePower: 3000 },
+        { id: 4, name: "Mining Power Distribution Unit", baseUsd: 50000, basePower: 15000 },
+        { id: 5, name: "Modular Data Center Power System", baseUsd: 250000, basePower: 80000 },
+        { id: 6, name: "Dedicated Substation Power Unit", baseUsd: 1250000, basePower: 400000 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentPower: 0 }));
 
     // Power requirements for mining equipment (in watts)
@@ -1006,6 +1220,8 @@ button:disabled:hover {
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
             totalPowerAvailable,
+            // Staking data
+            staking: getStakingData(),
             powerUpgrades: powerUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
@@ -1069,7 +1285,15 @@ function loadGame() {
         lifetimeEarnings = state.lifetimeEarnings || 0;
         previousPortfolioValue = 0; // Reset tracking on load
 
-        // Initialize session tracking
+        // Load staking data
+        if (state.staking) {
+            loadStakingData(state.staking);
+        }
+
+        // Initialize session tracking - track crypto balances at session start
+        sessionStartBTC = btcBalance;
+        sessionStartETH = ethBalance;
+        sessionStartDOGE = dogeBalance;
         sessionStartBalance = btcBalance;
         sessionStartNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity + dollarBalance;
         chartStartTime = state.chartStartTime || Date.now();
@@ -1254,6 +1478,9 @@ function loadGame() {
             autoClickerCooldownEnd = 0;
             // Reset session stats
             sessionStartTime = Date.now();
+            sessionStartBTC = 0;
+            sessionStartETH = 0;
+            sessionStartDOGE = 0;
             sessionStartBalance = 0;
             sessionStartNetWorth = 0;
             sessionEarnings = 0;
@@ -1861,7 +2088,7 @@ function buyLevel(i) {
     if (btcBalance >= costBtc) {
         // Check power requirements
         const powerReq = equipmentPowerReqs[u.id] || 0;
-        const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+        const powerNeeded = totalPowerUsed + powerReq;
 
         if (powerNeeded > totalPowerAvailable && powerReq > 0) {
             alert(`Insufficient power! This upgrade requires ${powerReq.toLocaleString()}W per level.\nYou need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power capacity.`);
@@ -1911,7 +2138,7 @@ function buyLevelMultiple(i, quantity) {
 
         // Check power requirements
         if (powerReq > 0) {
-            const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+            const powerNeeded = totalPowerUsed + powerReq;
             if (powerNeeded > totalPowerAvailable) {
                 break; // Not enough power
             }
@@ -2050,7 +2277,7 @@ function buyDogeBoost(i) {
 
             // Check power requirements
             if (powerReq > 0) {
-                const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+                const powerNeeded = totalPowerUsed + powerReq;
                 if (powerNeeded > totalPowerAvailable) {
                     break; // Not enough power
                 }
@@ -2098,7 +2325,7 @@ function buyDogeBoost(i) {
 
             // Check power requirements
             if (powerReq > 0) {
-                const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+                const powerNeeded = totalPowerUsed + powerReq;
                 if (powerNeeded > totalPowerAvailable) {
                     break; // Not enough power
                 }
@@ -2146,14 +2373,30 @@ function buyDogeBoost(i) {
 
         document.getElementById('session-time').innerText = timeStr;
 
-        // Update lifetime earnings - only increases, never decreases
-        const currentPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-        const valueIncrease = currentPortfolioValue - previousPortfolioValue;
+        // Calculate session earnings (only from mined crypto - excluding sales/purchases)
+        const btcMined = btcBalance - sessionStartBTC;
+        const ethMined = ethBalance - sessionStartETH;
+        const dogeMined = dogeBalance - sessionStartDOGE;
+        const sessionEarnings = (btcMined * btcPrice) + (ethMined * ethPrice) + (dogeMined * dogePrice);
+
+        const sessionEarningEl = document.getElementById('session-earning');
+        if (sessionEarningEl) {
+            sessionEarningEl.innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        // Update lifetime earnings - only from mined crypto value increases, never decreases
+        const currentCryptoValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+        const valueIncrease = currentCryptoValue - previousPortfolioValue;
         if (valueIncrease > 0) {
             lifetimeEarnings += valueIncrease;
         }
-        previousPortfolioValue = currentPortfolioValue;
-        document.getElementById('session-earnings').innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        previousPortfolioValue = currentCryptoValue;
+
+        // Update lifetime earnings display
+        const lifetimeEarningEl = document.getElementById('lifetime-earning');
+        if (lifetimeEarningEl) {
+            lifetimeEarningEl.innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
     }
 
     function updateUI() {
@@ -2238,7 +2481,20 @@ function buyDogeBoost(i) {
     }
 
     const uEl = document.getElementById(`usd-${u.id}`);
-    if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
+    if(uEl) {
+        // Calculate total cost for the selected quantity
+        let displayCost = 0;
+        let tempLevel = u.level;
+        for (let i = 0; i < buyQuantity; i++) {
+            if (u.isClickUpgrade) {
+                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+            } else {
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+            }
+            tempLevel++;
+        }
+        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
+    }
 
     // Calculate how many upgrades can be afforded (accounting for price increases)
     const affordEl = document.getElementById(`afford-${u.id}`);
@@ -2269,18 +2525,78 @@ function buyDogeBoost(i) {
 
     const bEl = document.getElementById(`up-${u.id}`);
     if(bEl) {
-        // Check both dollar balance and power requirements
-        const hasEnoughDollars = dollarBalance >= costUsd;
+        // Check both dollar balance and power requirements for the selected quantity
+        // Calculate total cost for buyQuantity items
+        let totalCost = 0;
+        let tempLevel = u.level;
+        for (let i = 0; i < buyQuantity; i++) {
+            if (u.isClickUpgrade) {
+                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+            } else {
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+            }
+            tempLevel++;
+        }
+
+        const hasEnoughDollars = dollarBalance >= totalCost;
         const powerReq = equipmentPowerReqs[u.id] || 0;
-        const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+        const powerNeeded = totalPowerUsed + (powerReq * buyQuantity);
         const hasEnoughPower = powerNeeded <= totalPowerAvailable || powerReq === 0;
         const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
         bEl.disabled = shouldDisable;
-        if (u.id === 1) console.log(`USB Miner: dollars=${dollarBalance}/${costUsd}, power=${totalPowerUsed}/${totalPowerAvailable}, needed=${powerNeeded}, disabled=${shouldDisable}`);
+        if (u.id === 1) console.log(`USB Miner: dollars=${dollarBalance}/${totalCost}, power=${totalPowerUsed}/${totalPowerAvailable}, needed=${powerNeeded}, qty=${buyQuantity}, disabled=${shouldDisable}`);
 
-        // Change button appearance if power is insufficient
-        if (!hasEnoughPower && powerReq > 0) {
-            // Show overlay message
+        // Change button appearance based on what's missing
+        if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
+            // Need both cash and power - prioritize showing cash need
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+            }
+            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power`;
+        } else if (!hasEnoughDollars) {
+            // Only need cash
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+            }
+            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
+        } else if (!hasEnoughPower && powerReq > 0) {
+            // Only need power
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -2299,18 +2615,15 @@ function buyDogeBoost(i) {
                 overlay.innerHTML = 'YOU NEED MORE POWER';
                 bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE POWER';
             }
             bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power capacity.`;
         } else {
-            // Hide overlay if it exists
+            // Can afford - remove overlay
             let overlay = bEl.querySelector('.power-overlay');
             if (overlay) overlay.remove();
-
-            if (!hasEnoughDollars) {
-                bEl.title = `Need $${(costUsd - dollarBalance).toLocaleString()} more`;
-            } else {
-                bEl.title = '';
-            }
+            bEl.title = '';
         }
     }
 
@@ -2374,7 +2687,20 @@ ethUpgrades.forEach(u => {
     }
 
     const uEl = document.getElementById(`eth-usd-${u.id}`);
-    if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
+    if(uEl) {
+        // Calculate total cost for the selected quantity
+        let displayCost = 0;
+        let tempLevel = u.level;
+        for (let i = 0; i < buyQuantity; i++) {
+            if (u.isClickUpgrade) {
+                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+            } else {
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+            }
+            tempLevel++;
+        }
+        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
+    }
 
     const affordEl = document.getElementById(`eth-afford-${u.id}`);
     if(affordEl) {
@@ -2400,14 +2726,76 @@ ethUpgrades.forEach(u => {
 
     const bEl = document.getElementById(`eth-up-${u.id}`);
     if(bEl) {
-        const hasEnoughDollars = dollarBalance >= costUsd;
+        // Check both dollar balance and power requirements for the selected quantity
+        // Calculate total cost for buyQuantity items
+        let totalCost = 0;
+        let tempLevel = u.level;
+        for (let i = 0; i < buyQuantity; i++) {
+            if (u.isClickUpgrade) {
+                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+            } else {
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+            }
+            tempLevel++;
+        }
+
+        const hasEnoughDollars = dollarBalance >= totalCost;
         const powerReq = equipmentPowerReqs[u.id] || 0;
-        const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+        const powerNeeded = totalPowerUsed + (powerReq * buyQuantity);
         const hasEnoughPower = powerNeeded <= totalPowerAvailable || powerReq === 0;
         bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
 
-        // Change button appearance if power is insufficient
-        if (!hasEnoughPower && powerReq > 0) {
+        // Change button appearance based on what's missing
+        if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
+            // Need both cash and power - prioritize showing cash need
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+            }
+            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power`;
+        } else if (!hasEnoughDollars) {
+            // Only need cash
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+            }
+            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
+        } else if (!hasEnoughPower && powerReq > 0) {
+            // Only need power
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -2426,17 +2814,15 @@ ethUpgrades.forEach(u => {
                 overlay.innerHTML = 'YOU NEED MORE POWER';
                 bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE POWER';
             }
             bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power capacity.`;
         } else {
+            // Can afford - remove overlay
             let overlay = bEl.querySelector('.power-overlay');
             if (overlay) overlay.remove();
-
-            if (!hasEnoughDollars) {
-                bEl.title = `Need $${(costUsd - dollarBalance).toLocaleString()} more`;
-            } else {
-                bEl.title = '';
-            }
+            bEl.title = '';
         }
     }
 
@@ -2481,7 +2867,20 @@ dogeUpgrades.forEach(u => {
     }
 
     const uEl = document.getElementById(`doge-usd-${u.id}`);
-    if(uEl) uEl.innerText = `$${u.currentUsd.toLocaleString()}`;
+    if(uEl) {
+        // Calculate total cost for the selected quantity
+        let displayCost = 0;
+        let tempLevel = u.level;
+        for (let i = 0; i < buyQuantity; i++) {
+            if (u.isClickUpgrade) {
+                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+            } else {
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+            }
+            tempLevel++;
+        }
+        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
+    }
 
     const affordEl = document.getElementById(`doge-afford-${u.id}`);
     if(affordEl) {
@@ -2507,14 +2906,76 @@ dogeUpgrades.forEach(u => {
 
     const bEl = document.getElementById(`doge-up-${u.id}`);
     if(bEl) {
-        const hasEnoughDollars = dollarBalance >= costUsd;
+        // Check both dollar balance and power requirements for the selected quantity
+        // Calculate total cost for buyQuantity items
+        let totalCost = 0;
+        let tempLevel = u.level;
+        for (let i = 0; i < buyQuantity; i++) {
+            if (u.isClickUpgrade) {
+                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+            } else {
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+            }
+            tempLevel++;
+        }
+
+        const hasEnoughDollars = dollarBalance >= totalCost;
         const powerReq = equipmentPowerReqs[u.id] || 0;
-        const powerNeeded = totalPowerUsed + (powerReq * (u.level + 1));
+        const powerNeeded = totalPowerUsed + (powerReq * buyQuantity);
         const hasEnoughPower = powerNeeded <= totalPowerAvailable || powerReq === 0;
         bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
 
-        // Change button appearance if power is insufficient
-        if (!hasEnoughPower && powerReq > 0) {
+        // Change button appearance based on what's missing
+        if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
+            // Need both cash and power - prioritize showing cash need
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+            }
+            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power`;
+        } else if (!hasEnoughDollars) {
+            // Only need cash
+            let overlay = bEl.querySelector('.power-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'power-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.inset = '0';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.borderRadius = '10px';
+                overlay.style.color = '#999';
+                overlay.style.fontWeight = 'bold';
+                overlay.style.fontSize = '1.1rem';
+                overlay.style.textAlign = 'center';
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+                bEl.style.position = 'relative';
+                bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE CASH';
+            }
+            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
+        } else if (!hasEnoughPower && powerReq > 0) {
+            // Only need power
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -2533,17 +2994,15 @@ dogeUpgrades.forEach(u => {
                 overlay.innerHTML = 'YOU NEED MORE POWER';
                 bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
+            } else {
+                overlay.innerHTML = 'YOU NEED MORE POWER';
             }
             bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - totalPowerAvailable).toLocaleString()}W more power capacity.`;
         } else {
+            // Can afford - remove overlay
             let overlay = bEl.querySelector('.power-overlay');
             if (overlay) overlay.remove();
-
-            if (!hasEnoughDollars) {
-                bEl.title = `Need $${(costUsd - dollarBalance).toLocaleString()} more`;
-            } else {
-                bEl.title = '';
-            }
+            bEl.title = '';
         }
     }
 
@@ -2561,6 +3020,11 @@ dogeUpgrades.forEach(u => {
         }
     }
     });
+
+    // Update staking UI
+    if (typeof updateStakingUI === 'function') {
+        updateStakingUI();
+    }
     }
 
     setInterval(() => {
@@ -2602,6 +3066,10 @@ dogeUpgrades.forEach(u => {
         loadGame(); // This calls updateUI() internally
         updateAutoClickerButtonState(); // Update button state immediately after loading
         setBuyQuantity(1); // Highlight the 1x button on page load
+
+        // Initialize staking system
+        initStaking();
+        updateStakingUI();
 
         const canvasElement = document.getElementById('nwChart');
         console.log('Canvas element:', canvasElement);
@@ -2790,6 +3258,9 @@ dogeUpgrades.forEach(u => {
         initializeGame();
     }
 </script>
+
+<!-- Load staking system after main game variables are defined -->
+<script src="staking.js"></script>
 
 </body>
 
