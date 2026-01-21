@@ -2445,13 +2445,23 @@ function buyDogeBoost(i) {
         // Display session earnings (tracked directly from mining/staking)
         const sessionEarningEl = document.getElementById('session-earning');
         if (sessionEarningEl) {
-            sessionEarningEl.innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile && sessionEarnings >= 1000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e6 >= 1 ? (sessionEarnings / 1e6).toFixed(1) + 'm' : sessionEarnings / 1e3 >= 1 ? (sessionEarnings / 1e3).toFixed(1) + 'k' : sessionEarnings.toFixed(2));
+            } else {
+                sessionEarningEl.innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
         }
 
         // Update lifetime earnings display (earnings are now tracked directly when crypto is mined/staked)
         const lifetimeEarningEl = document.getElementById('lifetime-earning');
         if (lifetimeEarningEl) {
-            lifetimeEarningEl.innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile && lifetimeEarnings >= 1000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e6 >= 1 ? (lifetimeEarnings / 1e6).toFixed(1) + 'm' : lifetimeEarnings / 1e3 >= 1 ? (lifetimeEarnings / 1e3).toFixed(1) + 'k' : lifetimeEarnings.toFixed(2));
+            } else {
+                lifetimeEarningEl.innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
         }
     }
 
@@ -2479,7 +2489,13 @@ function buyDogeBoost(i) {
     function updateUI() {
         // Crypto portfolio value = value of all crypto holdings only
         let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-        document.getElementById('nw-val').innerText = "$" + cryptoPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2});
+        const isMobileUI = window.innerWidth <= 768;
+        if (isMobileUI && cryptoPortfolioValue >= 1000) {
+            const abbrev = cryptoPortfolioValue / 1e9 >= 1 ? (cryptoPortfolioValue / 1e9).toFixed(1) + 'b' : cryptoPortfolioValue / 1e6 >= 1 ? (cryptoPortfolioValue / 1e6).toFixed(1) + 'm' : (cryptoPortfolioValue / 1e3).toFixed(1) + 'k';
+            document.getElementById('nw-val').innerText = "$" + abbrev;
+        } else {
+            document.getElementById('nw-val').innerText = "$" + cryptoPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2});
+        }
 
         // Update balances
         document.getElementById('bal-btc').innerText = btcBalance.toFixed(8);
@@ -2487,7 +2503,11 @@ function buyDogeBoost(i) {
         document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
 
         // Update hardware equity
-        document.getElementById('asset-usd').innerText = "$" + Math.floor(hardwareEquity).toLocaleString();
+        let hardwareEquityDisplay = "$" + Math.floor(hardwareEquity).toLocaleString();
+        if (isMobileUI && hardwareEquity >= 1000) {
+            hardwareEquityDisplay = "$" + (hardwareEquity / 1e9 >= 1 ? (hardwareEquity / 1e9).toFixed(1) + 'b' : hardwareEquity / 1e6 >= 1 ? (hardwareEquity / 1e6).toFixed(1) + 'm' : (hardwareEquity / 1e3).toFixed(1) + 'k');
+        }
+        document.getElementById('asset-usd').innerText = hardwareEquityDisplay;
 
         // Update individual hashrate displays (old location - keep for backwards compatibility)
         const btcEl = document.getElementById('yield-btc');
