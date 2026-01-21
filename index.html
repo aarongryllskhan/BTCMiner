@@ -247,20 +247,8 @@
         }
 
         #nwChart {
-            width: 100%;
-            height: 100%;
             display: block;
-            max-width: 100%;
-            max-height: 100%;
             image-rendering: crisp-edges;
-        }
-
-        @media (max-width: 768px) {
-            #nwChart {
-                width: 100%;
-                height: 100%;
-                display: block;
-            }
         }
 
         .chart-container {
@@ -3244,6 +3232,12 @@ dogeUpgrades.forEach(u => {
             console.log('Canvas context:', ctx);
             console.log('Canvas dimensions:', canvasElement.width, 'x', canvasElement.height);
 
+            // Verify canvas is valid
+            if (!ctx || canvasElement.width <= 0 || canvasElement.height <= 0) {
+                console.error('ERROR: Invalid canvas dimensions or context');
+                return null;
+            }
+
             // Initialize chart with full history (at least one data point)
             const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
             console.log('=== CHART DEBUG ===');
@@ -3266,8 +3260,8 @@ dogeUpgrades.forEach(u => {
             // Check if Chart.js loaded
             if (typeof Chart === 'undefined') {
                 console.error('ERROR: Chart.js library not loaded!');
-                document.querySelector('.chart-wrapper').innerHTML = '<div style="color: red; padding: 20px;">ERROR: Chart.js failed to load. Check internet connection.</div>';
-                return;
+                document.querySelector('.chart-wrapper').innerHTML = '<div style="color: #ff3344; padding: 20px; text-align: center; font-size: 0.8rem;">Chart.js failed to load<br>Check internet connection</div>';
+                return null;
             }
 
             console.log('Chart.js version:', Chart.version);
@@ -3288,7 +3282,7 @@ dogeUpgrades.forEach(u => {
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false,
                     animation: false,
                     scales: {
@@ -3336,10 +3330,19 @@ dogeUpgrades.forEach(u => {
 
                 console.log('Chart object created:', nwChart);
                 console.log('Chart initialized with data:', chartHistory);
+
+                // Force an immediate render
+                try {
+                    nwChart.update();
+                    console.log('Chart render forced successfully');
+                } catch (renderError) {
+                    console.error('ERROR forcing chart render:', renderError);
+                }
+
                 return nwChart;
             } catch (error) {
                 console.error('ERROR creating chart:', error);
-                document.querySelector('.chart-wrapper').innerHTML = '<div style="color: red; padding: 20px;">ERROR: Failed to create chart - ' + error.message + '</div>';
+                document.querySelector('.chart-wrapper').innerHTML = '<div style="color: #ff3344; padding: 20px; text-align: center; font-size: 0.8rem;">Chart Error: ' + error.message + '<br><small>Try refreshing the page</small></div>';
                 return null;
             }
         };
