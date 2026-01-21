@@ -29,8 +29,14 @@
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; }
 
         @media (max-width: 1024px) {
-            #main-layout { grid-template-columns: 1fr; gap: 15px; }
-            body { padding: 10px; }
+            body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
+            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; }
+            .panel:last-child { overflow: visible; flex: 0 0 auto; }
+            .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
+            .stat-box b { word-break: break-word; }
+            #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; }
         }
 
         @media (max-width: 768px) {
@@ -45,7 +51,7 @@
             .mini-stats { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
             .stat-item span { font-size: 0.55rem; }
             .stat-val { font-size: 1.1rem !important; }
-            .chart-wrapper { min-height: 150px !important; height: 150px !important; flex: 0 0 150px !important; padding: 6px; display: flex !important; margin-top: 6px; overflow: hidden; }
+            .chart-wrapper { min-height: 150px !important; height: 150px !important; flex: 0 0 150px !important; padding: 6px; display: block !important; margin-top: 6px; overflow: hidden; position: relative; }
             /* Keep crypto prices in a compact row on mobile */
             #crypto-prices-flex { gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto; }
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; }
@@ -117,7 +123,7 @@
             }
         }
 
-        @media (max-width: 480px) and (orientation: portrait) {
+        @media (max-width: 480px) {
             body { padding: 5px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; }
             .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; }
@@ -127,7 +133,7 @@
             .nw-label { font-size: 0.6rem; color: #555; }
             .nw-amount { font-size: 1.5rem; margin: 1px 0; }
             .stat-val { font-size: 0.95rem !important; }
-            .chart-wrapper { min-height: 120px !important; height: 120px !important; flex: 0 0 120px !important; display: flex !important; margin-top: 4px; overflow: hidden; }
+            .chart-wrapper { min-height: 120px !important; height: 120px !important; flex: 0 0 120px !important; display: block !important; margin-top: 4px; overflow: hidden; position: relative; }
             /* Keep crypto prices in compact row on small phones */
             #crypto-prices-flex { gap: 4px !important; flex-wrap: nowrap !important; overflow-x: auto; }
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; padding: 3px !important; }
@@ -241,8 +247,11 @@
         }
 
         #nwChart {
-            width: 100% !important;
-            height: 100% !important;
+            width: 100%;
+            height: 100%;
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         .chart-container {
@@ -472,18 +481,18 @@ button:disabled:hover {
             </div>
 
             <!-- Hashrate Display -->
-            <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 0.1px; justify-content: flex-end;">
+            <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 0.1px; justify-content: flex-end; flex-wrap: wrap;">
                 <div class="stat-box stat-box-session" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">TIME THIS SESSION</span>
-                    <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-time">0m 0s</b>
+                    <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-time">0m 0s</b>
                 </div>
                 <div class="stat-box stat-box-session-earnings" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">EARNING THIS SESSION</span>
-                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; white-space: nowrap;" id="session-earning">$0.00</b>
+                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-earning">$0.00</b>
                 </div>
                 <div class="stat-box stat-box-earnings" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">LIFETIME EARNINGS</span>
-                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; white-space: nowrap;" id="lifetime-earning">$0.00</b>
+                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="lifetime-earning">$0.00</b>
                 </div>
                 <div class="stat-box stat-box-btc" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">BTC HASHRATE</span>
@@ -530,8 +539,8 @@ button:disabled:hover {
                 </div>
             </div>
 
-            <div class="chart-wrapper" style="position: relative; display: block;">
-                <canvas id="nwChart" style="width: 100% !important; height: 100% !important; display: block;"></canvas>
+            <div class="chart-wrapper" style="position: relative;">
+                <canvas id="nwChart"></canvas>
             </div>
         </div>
 
@@ -3192,6 +3201,12 @@ dogeUpgrades.forEach(u => {
             console.error('ERROR: Canvas element not found!');
             return;
         }
+
+        // Set canvas dimensions to match container
+        const wrapper = canvasElement.parentElement;
+        const rect = wrapper.getBoundingClientRect();
+        canvasElement.width = Math.floor(rect.width);
+        canvasElement.height = Math.floor(rect.height);
 
         const ctx = canvasElement.getContext('2d');
         console.log('Canvas context:', ctx);
