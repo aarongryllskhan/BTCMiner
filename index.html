@@ -252,6 +252,15 @@
             display: block;
             max-width: 100%;
             max-height: 100%;
+            image-rendering: crisp-edges;
+        }
+
+        @media (max-width: 768px) {
+            #nwChart {
+                width: 100%;
+                height: 100%;
+                display: block;
+            }
         }
 
         .chart-container {
@@ -3208,9 +3217,15 @@ dogeUpgrades.forEach(u => {
             const wrapper = canvasElement.parentElement;
             const rect = wrapper.getBoundingClientRect();
 
-            // Ensure minimum dimensions for mobile
-            canvasElement.width = Math.max(Math.floor(rect.width), 280);
-            canvasElement.height = Math.max(Math.floor(rect.height), 100);
+            // Get computed dimensions
+            const computedWidth = Math.floor(rect.width - 12); // Account for padding
+            const computedHeight = Math.floor(rect.height - 12);
+
+            // Use computed dimensions, with sensible fallbacks for mobile
+            canvasElement.width = Math.max(computedWidth, 250);
+            canvasElement.height = Math.max(computedHeight, 80);
+
+            console.log('Canvas set to:', canvasElement.width, 'x', canvasElement.height, '(computed from wrapper:', computedWidth, 'x', computedHeight, ')');
 
             const ctx = canvasElement.getContext('2d');
             console.log('Canvas context:', ctx);
@@ -3316,18 +3331,38 @@ dogeUpgrades.forEach(u => {
             }
         };
 
-        // Initialize chart, with retry for mobile
-        let nwChart = initChart();
-        if (!nwChart && window.innerWidth <= 768) {
-            console.log('Chart init failed on mobile, retrying after delay...');
-            setTimeout(() => {
-                nwChart = initChart();
-            }, 200);
+        // Initialize chart with retry logic
+        let nwChart = null;
+        let chartInitialized = false;
+
+        const tryInitChart = () => {
+            nwChart = initChart();
+            if (nwChart) {
+                chartInitialized = true;
+                console.log('Chart successfully initialized');
+            }
+        };
+
+        // Try immediate initialization
+        tryInitChart();
+
+        // If failed and on mobile, retry with delays
+        if (!chartInitialized && window.innerWidth <= 768) {
+            console.log('Chart init failed on mobile, retrying...');
+            setTimeout(tryInitChart, 100);
+            setTimeout(tryInitChart, 300);
+            setTimeout(tryInitChart, 500);
         }
 
         let updateCount = 0;
         setInterval(() => {
-            if (!nwChart) return;
+            if (!nwChart) {
+                // Try initializing again if still not ready
+                if (!chartInitialized) {
+                    tryInitChart();
+                }
+                return;
+            }
 
             const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
 
