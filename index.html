@@ -127,7 +127,7 @@
             .nw-label { font-size: 0.6rem; color: #555; }
             .nw-amount { font-size: 1.5rem; margin: 1px 0; }
             .stat-val { font-size: 0.95rem !important; }
-            .chart-wrapper { min-height: 120px !important; height: 120px !important; flex: 0 0 120px !important; display: block; margin-top: 4px; overflow: hidden; }
+            .chart-wrapper { min-height: 120px !important; height: 120px !important; flex: 0 0 120px !important; display: flex !important; margin-top: 4px; overflow: hidden; }
             /* Keep crypto prices in compact row on small phones */
             #crypto-prices-flex { gap: 4px !important; flex-wrap: nowrap !important; overflow-x: auto; }
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; padding: 3px !important; }
@@ -2455,6 +2455,27 @@ function buyDogeBoost(i) {
         }
     }
 
+    // Helper function to abbreviate large numbers only on mobile
+    function formatNumberForDisplay(num) {
+        // Check if viewport is mobile (max-width: 768px)
+        const isMobile = window.innerWidth <= 768;
+
+        if (!isMobile) {
+            return Math.floor(num).toLocaleString();
+        }
+
+        // Mobile abbreviation: 1k, 1m, 1b, etc
+        const abs = Math.abs(num);
+        if (abs >= 1e9) {
+            return (num / 1e9).toFixed(1) + 'b';
+        } else if (abs >= 1e6) {
+            return (num / 1e6).toFixed(1) + 'm';
+        } else if (abs >= 1e3) {
+            return (num / 1e3).toFixed(1) + 'k';
+        }
+        return Math.floor(num).toLocaleString();
+    }
+
     function updateUI() {
         // Crypto portfolio value = value of all crypto holdings only
         let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
@@ -2493,7 +2514,7 @@ function buyDogeBoost(i) {
 
         // Update dollar balance
         const dollarBalanceEl = document.getElementById('dollar-balance');
-        if (dollarBalanceEl) dollarBalanceEl.innerText = "$" + Math.floor(dollarBalance).toLocaleString();
+        if (dollarBalanceEl) dollarBalanceEl.innerText = "$" + formatNumberForDisplay(dollarBalance);
 
         // Update market prices
         const marketBtcPrice = document.getElementById('market-btc-price');
