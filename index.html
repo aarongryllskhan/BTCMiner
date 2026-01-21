@@ -247,9 +247,11 @@
         }
 
         #nwChart {
+            width: 100% !important;
+            height: 100% !important;
             display: block !important;
             image-rendering: crisp-edges;
-            background: rgba(0, 255, 136, 0.05); /* Slight green tint to show canvas exists */
+            background: transparent !important;
         }
 
         .chart-container {
@@ -1431,6 +1433,12 @@ function loadGame() {
         const maxOfflineSeconds = 21600; // Cap at 6 hours
         if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
 
+        console.log('=== OFFLINE EARNINGS DEBUG ===');
+        console.log('Last save time:', new Date(lastSaveTime));
+        console.log('Current time:', new Date(currentTime));
+        console.log('Offline seconds:', offlineSeconds);
+        console.log('Will show modal:', offlineSeconds >= 5);
+
         const offlineBtcEarnings = btcPerSec * offlineSeconds;
         const offlineEthEarnings = ethPerSec * offlineSeconds;
         const offlineDogeEarnings = dogePerSec * offlineSeconds;
@@ -1457,13 +1465,18 @@ function loadGame() {
             sessionEarnings += dogeUsdValue; // Offline earnings count toward session
         }
 
-        if (offlineBtcEarnings > 0 || offlineEthEarnings > 0 || offlineDogeEarnings > 0) {
+        // Always show offline earnings if we've been away (even if earnings are 0)
+        // Only skip if the time away is less than 5 seconds (quick refresh)
+        if (offlineSeconds >= 5) {
             window.offlineEarningsToShow = {
                 btc: offlineBtcEarnings,
                 eth: offlineEthEarnings,
                 doge: offlineDogeEarnings,
                 seconds: offlineSeconds
             };
+            console.log('Offline earnings set:', window.offlineEarningsToShow);
+        } else {
+            console.log('Time away too short for offline modal:', offlineSeconds, 'seconds');
         }
 
         updateUI();
@@ -1632,6 +1645,12 @@ function loadGame() {
         }
         if (dogeEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`;
+        }
+
+        // If no earnings, show a message
+        if (!earningsHtml) {
+            earningsHtml = `<div class="earnings" style="color: #888; font-size: 1.2rem;">$0.00</div>
+                           <div style="color: #666; font-size: 0.9rem; margin-top: 10px;">Purchase miners to earn while offline!</div>`;
         }
 
         modal.innerHTML = `
@@ -3190,6 +3209,16 @@ dogeUpgrades.forEach(u => {
 
     // Initialize all shops after DOM is ready
     function initializeGame() {
+        // Test localStorage availability
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            console.log('localStorage is available and working');
+        } catch (e) {
+            console.error('localStorage is NOT available:', e);
+            alert('WARNING: Browser storage is disabled! Your game progress will not be saved. Please enable cookies/storage in your browser settings.');
+        }
+
         initBtcShop();
         initEthShop();
         initDogeShop();
@@ -3211,27 +3240,25 @@ dogeUpgrades.forEach(u => {
         }
 
         // Show offline earnings if applicable (must be after loadGame())
-        console.log('Checking for offline earnings:', window.offlineEarningsToShow);
+        console.log('=== MODAL CHECK ===');
+        console.log('window.offlineEarningsToShow:', window.offlineEarningsToShow);
+        console.log('Type:', typeof window.offlineEarningsToShow);
+
         if (window.offlineEarningsToShow) {
-            const hasEarnings = (window.offlineEarningsToShow.btc || 0) > 0 ||
-                               (window.offlineEarningsToShow.eth || 0) > 0 ||
-                               (window.offlineEarningsToShow.doge || 0) > 0;
-            if (hasEarnings) {
-                console.log('Showing offline earnings modal with:', window.offlineEarningsToShow);
-                setTimeout(() => {
-                    showOfflineEarningsModal(
-                        window.offlineEarningsToShow.btc || 0,
-                        window.offlineEarningsToShow.eth || 0,
-                        window.offlineEarningsToShow.doge || 0,
-                        window.offlineEarningsToShow.seconds
-                    );
-                    window.offlineEarningsToShow = null;
-                }, 500);
-            } else {
-                console.log('Offline earnings were all 0 or less');
-            }
+            console.log('✓ SHOWING OFFLINE EARNINGS MODAL');
+            console.log('Data:', window.offlineEarningsToShow);
+            setTimeout(() => {
+                console.log('Calling showOfflineEarningsModal function...');
+                showOfflineEarningsModal(
+                    window.offlineEarningsToShow.btc || 0,
+                    window.offlineEarningsToShow.eth || 0,
+                    window.offlineEarningsToShow.doge || 0,
+                    window.offlineEarningsToShow.seconds
+                );
+                window.offlineEarningsToShow = null;
+            }, 500);
         } else {
-            console.log('No offline earnings data stored');
+            console.log('✗ No offline earnings data - modal will not show');
         }
 
         const canvasElement = document.getElementById('nwChart');
@@ -3244,40 +3271,12 @@ dogeUpgrades.forEach(u => {
 
         // Function to initialize the chart
         const initChart = () => {
-            // Set canvas dimensions to match container
-            const wrapper = canvasElement.parentElement;
-            const rect = wrapper.getBoundingClientRect();
-
-            // Get computed dimensions
-            let computedWidth = Math.floor(rect.width - 12); // Account for padding
-            let computedHeight = Math.floor(rect.height - 12);
-
-            // Mobile fallback: if dimensions are too small, use window width and fixed height
-            if (computedWidth < 200 || computedHeight < 50) {
-                console.log('Wrapper dimensions too small, using mobile fallback');
-                computedWidth = window.innerWidth - 40; // Full width minus some padding
-                if (window.innerWidth <= 480) {
-                    computedHeight = 108; // 120px - padding for small phones
-                } else if (window.innerWidth <= 768) {
-                    computedHeight = 138; // 150px - padding for tablets
-                } else {
-                    computedHeight = 188; // 200px - padding for desktop
-                }
-            }
-
-            // Use computed dimensions, with sensible fallbacks
-            canvasElement.width = Math.max(computedWidth, 250);
-            canvasElement.height = Math.max(computedHeight, 80);
-
-            console.log('Canvas set to:', canvasElement.width, 'x', canvasElement.height, '(computed from wrapper:', computedWidth, 'x', computedHeight, ')');
-
             const ctx = canvasElement.getContext('2d');
             console.log('Canvas context:', ctx);
-            console.log('Canvas dimensions:', canvasElement.width, 'x', canvasElement.height);
 
-            // Verify canvas is valid
-            if (!ctx || canvasElement.width <= 0 || canvasElement.height <= 0) {
-                console.error('ERROR: Invalid canvas dimensions or context');
+            // Verify canvas context is valid
+            if (!ctx) {
+                console.error('ERROR: Could not get canvas 2D context');
                 return null;
             }
 
@@ -3325,7 +3324,7 @@ dogeUpgrades.forEach(u => {
                     }]
                 },
                 options: {
-                    responsive: false,
+                    responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
                     scales: {
@@ -3488,20 +3487,54 @@ dogeUpgrades.forEach(u => {
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             console.log('Page hidden - saving game state');
-            saveGame();
+            try {
+                saveGame();
+                console.log('Save successful on visibility change');
+            } catch (e) {
+                console.error('Save failed on visibility change:', e);
+            }
+        } else {
+            console.log('Page visible - checking saved data exists');
+            const testSave = localStorage.getItem('satoshiTerminalSave');
+            if (testSave) {
+                console.log('Save data confirmed in localStorage');
+            } else {
+                console.error('WARNING: No save data found in localStorage!');
+            }
         }
     });
 
     // Save game when user is about to leave the page
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function(e) {
         console.log('Page unloading - saving game state');
-        saveGame();
+        try {
+            saveGame();
+            console.log('Save successful on beforeunload');
+        } catch (err) {
+            console.error('Save failed on beforeunload:', err);
+        }
     });
 
     // Save game when page is hidden on mobile (iOS Safari support)
-    window.addEventListener('pagehide', function() {
+    window.addEventListener('pagehide', function(e) {
         console.log('Page hide event - saving game state');
-        saveGame();
+        try {
+            saveGame();
+            console.log('Save successful on pagehide');
+        } catch (err) {
+            console.error('Save failed on pagehide:', err);
+        }
+    });
+
+    // Additional mobile save on freeze event (newer mobile browsers)
+    window.addEventListener('freeze', function(e) {
+        console.log('Page freeze event - saving game state');
+        try {
+            saveGame();
+            console.log('Save successful on freeze');
+        } catch (err) {
+            console.error('Save failed on freeze:', err);
+        }
     });
 
     // Run initialization when DOM is ready
