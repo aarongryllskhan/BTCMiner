@@ -1277,25 +1277,42 @@ button:disabled:hover {
 
         try {
             const saveString = JSON.stringify(gameState);
+            console.log('=== ATTEMPTING SAVE ===');
+            console.log('BTC Balance:', btcBalance);
+            console.log('Dollar Balance:', dollarBalance);
+            console.log('Save string length:', saveString.length, 'bytes');
+
             localStorage.setItem('satoshiTerminalSave', saveString);
-            console.log('Game saved successfully. Save size:', saveString.length, 'bytes');
+
+            // Verify save worked
+            const testLoad = localStorage.getItem('satoshiTerminalSave');
+            if (testLoad && testLoad.length > 0) {
+                console.log('✓ SAVE SUCCESSFUL - Verified in localStorage');
+            } else {
+                console.error('✗ SAVE FAILED - Could not verify in localStorage');
+            }
         } catch (error) {
-            console.error('ERROR saving game to localStorage:', error);
+            console.error('✗ ERROR saving game to localStorage:', error);
             alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
         }
     }
 
 function loadGame() {
+    console.log('=== LOAD GAME CALLED ===');
     try {
         const savedData = localStorage.getItem('satoshiTerminalSave');
+        console.log('localStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
+
         if (!savedData) {
-            console.log('No saved game found, starting fresh');
+            console.log('✗ No saved game found, starting fresh');
             return;
         }
 
-        console.log('Loading game... Save data size:', savedData.length, 'bytes');
+        console.log('✓ Loading game... Save data size:', savedData.length, 'bytes');
         const state = JSON.parse(savedData);
-        console.log('Save data parsed successfully');
+        console.log('✓ Save data parsed successfully');
+        console.log('Loaded BTC balance:', state.btcBalance);
+        console.log('Loaded dollar balance:', state.dollarBalance);
 
         // Load Bitcoin data
         btcBalance = state.btcBalance || 0;
@@ -1443,6 +1460,37 @@ function loadGame() {
         const offlineEthEarnings = ethPerSec * offlineSeconds;
         const offlineDogeEarnings = dogePerSec * offlineSeconds;
 
+        // Calculate offline staking earnings (cash from staked crypto)
+        const APR_RATE = 0.001; // 0.1% per 2 seconds
+        const stakingIntervals = offlineSeconds / 2; // Number of 2-second intervals
+        let offlineStakingCash = 0;
+
+        if (state.staking) {
+            const stakedBTC = state.staking.stakedBTC || 0;
+            const stakedETH = state.staking.stakedETH || 0;
+            const stakedDOGE = state.staking.stakedDOGE || 0;
+
+            if (stakedBTC > 0) {
+                const btcStakingEarnings = stakedBTC * APR_RATE * stakingIntervals;
+                offlineStakingCash += btcStakingEarnings * btcPrice;
+            }
+            if (stakedETH > 0) {
+                const ethStakingEarnings = stakedETH * APR_RATE * stakingIntervals;
+                offlineStakingCash += ethStakingEarnings * ethPrice;
+            }
+            if (stakedDOGE > 0) {
+                const dogeStakingEarnings = stakedDOGE * APR_RATE * stakingIntervals;
+                offlineStakingCash += dogeStakingEarnings * dogePrice;
+            }
+
+            // Add staking cash to dollar balance
+            if (offlineStakingCash > 0) {
+                dollarBalance += offlineStakingCash;
+                lifetimeEarnings += offlineStakingCash;
+                sessionEarnings += offlineStakingCash;
+            }
+        }
+
         if (offlineBtcEarnings > 0) {
             btcBalance += offlineBtcEarnings;
             btcLifetime += offlineBtcEarnings;
@@ -1472,6 +1520,7 @@ function loadGame() {
                 btc: offlineBtcEarnings,
                 eth: offlineEthEarnings,
                 doge: offlineDogeEarnings,
+                stakingCash: offlineStakingCash,
                 seconds: offlineSeconds
             };
             console.log('Offline earnings set:', window.offlineEarningsToShow);
@@ -1494,10 +1543,12 @@ function loadGame() {
         }
 
         // Debug log
-        console.log('Loaded save:', { btcBalance, ethBalance, dogeBalance, hardwareEquity });
+        console.log('✓ LOAD COMPLETE');
+        console.log('Final balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
         console.log('Chart history length:', chartHistory.length);
     } catch (error) {
-        console.error('ERROR loading game from localStorage:', error);
+        console.error('✗ ERROR loading game from localStorage:', error);
+        console.error('Error stack:', error.stack);
         alert('Failed to load saved game! Starting fresh. Error: ' + error.message);
     }
 }
@@ -1617,8 +1668,8 @@ function loadGame() {
         }
     }
 
-    function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, secondsOffline) {
-        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, secondsOffline);
+    function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline) {
+        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline);
 
         const overlay = document.createElement('div');
         overlay.className = 'offline-modal-overlay';
@@ -1645,6 +1696,9 @@ function loadGame() {
         }
         if (dogeEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`;
+        }
+        if (stakingCash > 0) {
+            earningsHtml += `<div class="earnings" style="color: #4caf50;">💰 $${stakingCash.toFixed(2)} (Staking)</div>`;
         }
 
         // If no earnings, show a message
@@ -3253,6 +3307,7 @@ dogeUpgrades.forEach(u => {
                     window.offlineEarningsToShow.btc || 0,
                     window.offlineEarningsToShow.eth || 0,
                     window.offlineEarningsToShow.doge || 0,
+                    window.offlineEarningsToShow.stakingCash || 0,
                     window.offlineEarningsToShow.seconds
                 );
                 window.offlineEarningsToShow = null;
