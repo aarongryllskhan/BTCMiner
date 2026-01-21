@@ -247,8 +247,9 @@
         }
 
         #nwChart {
-            display: block;
+            display: block !important;
             image-rendering: crisp-edges;
+            background: rgba(0, 255, 136, 0.05); /* Slight green tint to show canvas exists */
         }
 
         .chart-container {
@@ -1271,13 +1272,28 @@ button:disabled:hover {
                 boostLevel: u.boostLevel
             }))
         };
-        localStorage.setItem('satoshiTerminalSave', JSON.stringify(gameState));
+
+        try {
+            const saveString = JSON.stringify(gameState);
+            localStorage.setItem('satoshiTerminalSave', saveString);
+            console.log('Game saved successfully. Save size:', saveString.length, 'bytes');
+        } catch (error) {
+            console.error('ERROR saving game to localStorage:', error);
+            alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
+        }
     }
 
 function loadGame() {
-    const savedData = localStorage.getItem('satoshiTerminalSave');
-    if (savedData) {
+    try {
+        const savedData = localStorage.getItem('satoshiTerminalSave');
+        if (!savedData) {
+            console.log('No saved game found, starting fresh');
+            return;
+        }
+
+        console.log('Loading game... Save data size:', savedData.length, 'bytes');
         const state = JSON.parse(savedData);
+        console.log('Save data parsed successfully');
 
         // Load Bitcoin data
         btcBalance = state.btcBalance || 0;
@@ -1467,6 +1483,9 @@ function loadGame() {
         // Debug log
         console.log('Loaded save:', { btcBalance, ethBalance, dogeBalance, hardwareEquity });
         console.log('Chart history length:', chartHistory.length);
+    } catch (error) {
+        console.error('ERROR loading game from localStorage:', error);
+        alert('Failed to load saved game! Starting fresh. Error: ' + error.message);
     }
 }
     // --- SAVE SYSTEM END ---
@@ -3191,6 +3210,30 @@ dogeUpgrades.forEach(u => {
             }
         }
 
+        // Show offline earnings if applicable (must be after loadGame())
+        console.log('Checking for offline earnings:', window.offlineEarningsToShow);
+        if (window.offlineEarningsToShow) {
+            const hasEarnings = (window.offlineEarningsToShow.btc || 0) > 0 ||
+                               (window.offlineEarningsToShow.eth || 0) > 0 ||
+                               (window.offlineEarningsToShow.doge || 0) > 0;
+            if (hasEarnings) {
+                console.log('Showing offline earnings modal with:', window.offlineEarningsToShow);
+                setTimeout(() => {
+                    showOfflineEarningsModal(
+                        window.offlineEarningsToShow.btc || 0,
+                        window.offlineEarningsToShow.eth || 0,
+                        window.offlineEarningsToShow.doge || 0,
+                        window.offlineEarningsToShow.seconds
+                    );
+                    window.offlineEarningsToShow = null;
+                }, 500);
+            } else {
+                console.log('Offline earnings were all 0 or less');
+            }
+        } else {
+            console.log('No offline earnings data stored');
+        }
+
         const canvasElement = document.getElementById('nwChart');
         console.log('Canvas element:', canvasElement);
 
@@ -3360,16 +3403,19 @@ dogeUpgrades.forEach(u => {
         };
 
         // Try immediate initialization
-        tryInitChart();
+        setTimeout(() => {
+            tryInitChart();
 
-        // Retry with delays (especially important for mobile)
-        if (!chartInitialized) {
-            console.log('Chart init failed, retrying with delays...');
-            setTimeout(tryInitChart, 100);
-            setTimeout(tryInitChart, 300);
-            setTimeout(tryInitChart, 500);
-            setTimeout(tryInitChart, 1000); // Extra retry for slow mobile devices
-        }
+            // Retry with delays (especially important for mobile)
+            if (!chartInitialized) {
+                console.log('Chart init failed, retrying with delays...');
+                setTimeout(tryInitChart, 200);
+                setTimeout(tryInitChart, 500);
+                setTimeout(tryInitChart, 1000);
+                setTimeout(tryInitChart, 2000); // Extra retry for slow mobile devices
+                setTimeout(tryInitChart, 3000); // Final attempt
+            }
+        }, 100); // Small initial delay to ensure DOM is fully rendered
 
         // Handle window resize/orientation change on mobile
         let resizeTimeout;
@@ -3416,30 +3462,6 @@ dogeUpgrades.forEach(u => {
 
         // Auto-save every 1.5 seconds
         setInterval(saveGame, 1500);
-
-    // Show offline earnings if applicable
-    console.log('Checking for offline earnings:', window.offlineEarningsToShow);
-    if (window.offlineEarningsToShow) {
-        const hasEarnings = (window.offlineEarningsToShow.btc || 0) > 0 ||
-                           (window.offlineEarningsToShow.eth || 0) > 0 ||
-                           (window.offlineEarningsToShow.doge || 0) > 0;
-        if (hasEarnings) {
-            console.log('Showing offline earnings modal with:', window.offlineEarningsToShow);
-            setTimeout(() => {
-                showOfflineEarningsModal(
-                    window.offlineEarningsToShow.btc || 0,
-                    window.offlineEarningsToShow.eth || 0,
-                    window.offlineEarningsToShow.doge || 0,
-                    window.offlineEarningsToShow.seconds
-                );
-                window.offlineEarningsToShow = null;
-            }, 300);
-        } else {
-            console.log('Offline earnings were all 0 or less');
-        }
-    } else {
-        console.log('No offline earnings data stored');
-    }
 
         // Start price swings: separate timing for each crypto
         // Only start if not already running (prevents multiple loops on refresh)
