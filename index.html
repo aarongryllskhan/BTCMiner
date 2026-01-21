@@ -134,6 +134,7 @@
             .nw-amount { font-size: 1.5rem; margin: 1px 0; }
             .stat-val { font-size: 0.95rem !important; }
             .chart-wrapper { min-height: 120px !important; height: 120px !important; flex: 0 0 120px !important; display: block !important; margin-top: 4px; overflow: hidden; position: relative; }
+            #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 120px !important; }
             /* Keep crypto prices in compact row on small phones */
             #crypto-prices-flex { gap: 4px !important; flex-wrap: nowrap !important; overflow-x: auto; }
             #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; padding: 3px !important; }
@@ -1337,20 +1338,9 @@ function loadGame() {
         hardwareEquity = state.hardwareEquity || 0;
         lifetimeEarnings = state.lifetimeEarnings || 0;
 
-        // Load or reset session-specific data
-        // Check if this is a new session (page refresh within reasonable time = continue session)
-        const timeSinceLastSave = Date.now() - (state.lastSaveTime || 0);
-        const isNewSession = timeSinceLastSave > 300000; // 5 minutes = new session
-
-        if (isNewSession) {
-            // New session - reset session earnings and start time
-            sessionEarnings = 0;
-            sessionStartTime = Date.now();
-        } else {
-            // Continue existing session - restore session data
-            sessionEarnings = state.sessionEarnings || 0;
-            sessionStartTime = state.sessionStartTime || Date.now();
-        }
+        // Reset session on every page load/refresh
+        sessionEarnings = 0;
+        sessionStartTime = Date.now();
 
         // Load staking data
         if (state.staking) {
@@ -1456,13 +1446,18 @@ function loadGame() {
         console.log('Offline seconds:', offlineSeconds);
         console.log('Will show modal:', offlineSeconds >= 5);
 
-        const offlineBtcEarnings = btcPerSec * offlineSeconds;
-        const offlineEthEarnings = ethPerSec * offlineSeconds;
-        const offlineDogeEarnings = dogePerSec * offlineSeconds;
+        // Cap offline time at 6 hours (21600 seconds)
+        const MAX_OFFLINE_SECONDS = 21600; // 6 hours
+        const cappedOfflineSeconds = Math.min(offlineSeconds, MAX_OFFLINE_SECONDS);
+        const wasTimeCaped = offlineSeconds > MAX_OFFLINE_SECONDS;
+
+        const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds;
+        const offlineEthEarnings = ethPerSec * cappedOfflineSeconds;
+        const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds;
 
         // Calculate offline staking earnings (cash from staked crypto)
         const APR_RATE = 0.001; // 0.1% per 2 seconds
-        const stakingIntervals = offlineSeconds / 2; // Number of 2-second intervals
+        const stakingIntervals = cappedOfflineSeconds / 2; // Number of 2-second intervals (capped)
         let offlineStakingCash = 0;
 
         if (state.staking) {
@@ -1521,7 +1516,9 @@ function loadGame() {
                 eth: offlineEthEarnings,
                 doge: offlineDogeEarnings,
                 stakingCash: offlineStakingCash,
-                seconds: offlineSeconds
+                seconds: offlineSeconds,
+                wasCapped: wasTimeCaped,
+                cappedSeconds: cappedOfflineSeconds
             };
             console.log('Offline earnings set:', window.offlineEarningsToShow);
         } else {
@@ -1668,8 +1665,8 @@ function loadGame() {
         }
     }
 
-    function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline) {
-        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline);
+    function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds) {
+        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds);
 
         const overlay = document.createElement('div');
         overlay.className = 'offline-modal-overlay';
@@ -1698,7 +1695,7 @@ function loadGame() {
             earningsHtml += `<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`;
         }
         if (stakingCash > 0) {
-            earningsHtml += `<div class="earnings" style="color: #4caf50;">💰 $${stakingCash.toFixed(2)} (Staking)</div>`;
+            earningsHtml += `<div class="earnings" style="color: #4caf50;">💰 $${stakingCash.toFixed(2)}</div>`;
         }
 
         // If no earnings, show a message
@@ -1707,11 +1704,18 @@ function loadGame() {
                            <div style="color: #666; font-size: 0.9rem; margin-top: 10px;">Purchase miners to earn while offline!</div>`;
         }
 
+        // Add cap notice if time was capped
+        let capNotice = '';
+        if (wasCapped) {
+            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 6 hours</div>`;
+        }
+
         modal.innerHTML = `
             <h2>⏰ Welcome Back!</h2>
-            <div class="earnings-label">Offline Earnings</div>
+            <div class="earnings-label">Offline Earnings${wasCapped ? ' (6 hour max)' : ''}</div>
             ${earningsHtml}
             <div class="time-offline">While you were away for ${timeStr}</div>
+            ${capNotice}
             <button id="claim-btn">Claim Rewards</button>
         `;
 
@@ -3308,7 +3312,9 @@ dogeUpgrades.forEach(u => {
                     window.offlineEarningsToShow.eth || 0,
                     window.offlineEarningsToShow.doge || 0,
                     window.offlineEarningsToShow.stakingCash || 0,
-                    window.offlineEarningsToShow.seconds
+                    window.offlineEarningsToShow.seconds,
+                    window.offlineEarningsToShow.wasCapped || false,
+                    window.offlineEarningsToShow.cappedSeconds || window.offlineEarningsToShow.seconds
                 );
                 window.offlineEarningsToShow = null;
             }, 500);
