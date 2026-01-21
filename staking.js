@@ -30,33 +30,54 @@ function initStaking() {
  */
 function processStakingEarnings() {
     let totalEarnings = 0;
+    let btcEarned = 0;
+    let ethEarned = 0;
+    let dogeEarned = 0;
+
+    // Get skill tree staking bonus
+    const stakingBonus = (typeof getStakingBonus === 'function') ? getStakingBonus() : 1;
 
     // Calculate BTC staking earnings
     if (stakedBTC > 0) {
-        const btcEarnings = stakedBTC * APR_RATE;
+        const btcEarnings = stakedBTC * APR_RATE * stakingBonus;
+        btcEarned = btcEarnings;
         const btcCashValue = btcEarnings * btcPrice;
         totalEarnings += btcCashValue;
     }
 
     // Calculate ETH staking earnings
     if (stakedETH > 0) {
-        const ethEarnings = stakedETH * APR_RATE;
+        const ethEarnings = stakedETH * APR_RATE * stakingBonus;
+        ethEarned = ethEarnings;
         const ethCashValue = ethEarnings * ethPrice;
         totalEarnings += ethCashValue;
     }
 
     // Calculate DOGE staking earnings
     if (stakedDOGE > 0) {
-        const dogeEarnings = stakedDOGE * APR_RATE;
+        const dogeEarnings = stakedDOGE * APR_RATE * stakingBonus;
+        dogeEarned = dogeEarnings;
         const dogeCashValue = dogeEarnings * dogePrice;
         totalEarnings += dogeCashValue;
     }
 
-    // Add earnings to dollar balance
+    // Add earnings to dollar balance and lifetime totals
     if (totalEarnings > 0) {
         dollarBalance += totalEarnings;
         lifetimeEarnings += totalEarnings; // Track staking rewards in lifetime earnings
         sessionEarnings += totalEarnings; // Track staking rewards in session earnings
+
+        // Add to lifetime crypto totals for skill tree milestones
+        if (btcEarned > 0) {
+            btcLifetime += btcEarned;
+        }
+        if (ethEarned > 0) {
+            ethLifetime += ethEarned;
+        }
+        if (dogeEarned > 0) {
+            dogeLifetime += dogeEarned;
+        }
+
         updateUI();
     }
 }
