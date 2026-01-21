@@ -3202,111 +3202,127 @@ dogeUpgrades.forEach(u => {
             return;
         }
 
-        // Set canvas dimensions to match container
-        const wrapper = canvasElement.parentElement;
-        const rect = wrapper.getBoundingClientRect();
-        canvasElement.width = Math.floor(rect.width);
-        canvasElement.height = Math.floor(rect.height);
+        // Function to initialize the chart
+        const initChart = () => {
+            // Set canvas dimensions to match container
+            const wrapper = canvasElement.parentElement;
+            const rect = wrapper.getBoundingClientRect();
 
-        const ctx = canvasElement.getContext('2d');
-        console.log('Canvas context:', ctx);
+            // Ensure minimum dimensions for mobile
+            canvasElement.width = Math.max(Math.floor(rect.width), 280);
+            canvasElement.height = Math.max(Math.floor(rect.height), 100);
 
-        // Initialize chart with full history (at least one data point)
-        const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-        console.log('=== CHART DEBUG ===');
-        console.log('btcBalance:', btcBalance, 'btcPrice:', btcPrice);
-        console.log('ethBalance:', ethBalance, 'ethPrice:', ethPrice);
-        console.log('dogeBalance:', dogeBalance, 'dogePrice:', dogePrice);
-        console.log('hardwareEquity:', hardwareEquity);
-        console.log('Current net worth for chart:', currentNetWorth);
+            const ctx = canvasElement.getContext('2d');
+            console.log('Canvas context:', ctx);
+            console.log('Canvas dimensions:', canvasElement.width, 'x', canvasElement.height);
 
-        // Always start chart at 0
-        if (chartHistory.length === 0) {
-            chartHistory.push(0);
-            chartHistory.push(0);
-            chartTimestamps.push({ time: Date.now(), value: 0 });
-            chartTimestamps.push({ time: Date.now() + 1000, value: 0 });
-        }
+            // Initialize chart with full history (at least one data point)
+            const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+            console.log('=== CHART DEBUG ===');
+            console.log('btcBalance:', btcBalance, 'btcPrice:', btcPrice);
+            console.log('ethBalance:', ethBalance, 'ethPrice:', ethPrice);
+            console.log('dogeBalance:', dogeBalance, 'dogePrice:', dogePrice);
+            console.log('hardwareEquity:', hardwareEquity);
+            console.log('Current net worth for chart:', currentNetWorth);
 
-        console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
+            // Always start chart at 0
+            if (chartHistory.length === 0) {
+                chartHistory.push(0);
+                chartHistory.push(0);
+                chartTimestamps.push({ time: Date.now(), value: 0 });
+                chartTimestamps.push({ time: Date.now() + 1000, value: 0 });
+            }
 
-        // Check if Chart.js loaded
-        if (typeof Chart === 'undefined') {
-            console.error('ERROR: Chart.js library not loaded!');
-            document.querySelector('.chart-wrapper').innerHTML = '<div style="color: red; padding: 20px;">ERROR: Chart.js failed to load. Check internet connection.</div>';
-            return;
-        }
+            console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
 
-        console.log('Chart.js version:', Chart.version);
+            // Check if Chart.js loaded
+            if (typeof Chart === 'undefined') {
+                console.error('ERROR: Chart.js library not loaded!');
+                document.querySelector('.chart-wrapper').innerHTML = '<div style="color: red; padding: 20px;">ERROR: Chart.js failed to load. Check internet connection.</div>';
+                return;
+            }
 
-        let nwChart;
-        try {
-            nwChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartHistory.map((_, i) => ''),
-                datasets: [{
-                    data: chartHistory,
-                    borderColor: '#00ff88',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: false,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                scales: {
-                    x: {
-                        display: false,
-                        grid: {
+            console.log('Chart.js version:', Chart.version);
+
+            let nwChart;
+            try {
+                nwChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartHistory.map((_, i) => ''),
+                    datasets: [{
+                        data: chartHistory,
+                        borderColor: '#00ff88',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: {
                             display: false,
-                            drawBorder: false
-                        },
-                        ticks: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        display: true,
-                        beginAtZero: true,
-                        min: 0,
-                        grace: '5%',
-                        grid: {
-                            display: false,
-                            drawBorder: false
-                        },
-                        ticks: {
-                            display: true,
-                            color: '#999',
-                            font: {
-                                size: 10
+                            grid: {
+                                display: false,
+                                drawBorder: false
                             },
-                            maxTicksLimit: 8,
-                            callback: function(value) {
-                                if (value >= 1000) {
-                                    return '$' + (value / 1000).toFixed(2) + 'k';
+                            ticks: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            display: true,
+                            beginAtZero: true,
+                            min: 0,
+                            grace: '5%',
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                display: true,
+                                color: '#999',
+                                font: {
+                                    size: 10
+                                },
+                                maxTicksLimit: 8,
+                                callback: function(value) {
+                                    if (value >= 1000) {
+                                        return '$' + (value / 1000).toFixed(2) + 'k';
+                                    }
+                                    return '$' + value.toFixed(2);
                                 }
-                                return '$' + value.toFixed(2);
                             }
                         }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
                     }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false }
                 }
-            }
-        });
+            });
 
-            console.log('Chart object created:', nwChart);
-            console.log('Chart initialized with data:', chartHistory);
-        } catch (error) {
-            console.error('ERROR creating chart:', error);
-            document.querySelector('.chart-wrapper').innerHTML = '<div style="color: red; padding: 20px;">ERROR: Failed to create chart - ' + error.message + '</div>';
-            return;
+                console.log('Chart object created:', nwChart);
+                console.log('Chart initialized with data:', chartHistory);
+                return nwChart;
+            } catch (error) {
+                console.error('ERROR creating chart:', error);
+                document.querySelector('.chart-wrapper').innerHTML = '<div style="color: red; padding: 20px;">ERROR: Failed to create chart - ' + error.message + '</div>';
+                return null;
+            }
+        };
+
+        // Initialize chart, with retry for mobile
+        let nwChart = initChart();
+        if (!nwChart && window.innerWidth <= 768) {
+            console.log('Chart init failed on mobile, retrying after delay...');
+            setTimeout(() => {
+                nwChart = initChart();
+            }, 200);
         }
 
         let updateCount = 0;
