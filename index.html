@@ -3218,10 +3218,23 @@ dogeUpgrades.forEach(u => {
             const rect = wrapper.getBoundingClientRect();
 
             // Get computed dimensions
-            const computedWidth = Math.floor(rect.width - 12); // Account for padding
-            const computedHeight = Math.floor(rect.height - 12);
+            let computedWidth = Math.floor(rect.width - 12); // Account for padding
+            let computedHeight = Math.floor(rect.height - 12);
 
-            // Use computed dimensions, with sensible fallbacks for mobile
+            // Mobile fallback: if dimensions are too small, use window width and fixed height
+            if (computedWidth < 200 || computedHeight < 50) {
+                console.log('Wrapper dimensions too small, using mobile fallback');
+                computedWidth = window.innerWidth - 40; // Full width minus some padding
+                if (window.innerWidth <= 480) {
+                    computedHeight = 108; // 120px - padding for small phones
+                } else if (window.innerWidth <= 768) {
+                    computedHeight = 138; // 150px - padding for tablets
+                } else {
+                    computedHeight = 188; // 200px - padding for desktop
+                }
+            }
+
+            // Use computed dimensions, with sensible fallbacks
             canvasElement.width = Math.max(computedWidth, 250);
             canvasElement.height = Math.max(computedHeight, 80);
 
@@ -3346,13 +3359,28 @@ dogeUpgrades.forEach(u => {
         // Try immediate initialization
         tryInitChart();
 
-        // If failed and on mobile, retry with delays
-        if (!chartInitialized && window.innerWidth <= 768) {
-            console.log('Chart init failed on mobile, retrying...');
+        // Retry with delays (especially important for mobile)
+        if (!chartInitialized) {
+            console.log('Chart init failed, retrying with delays...');
             setTimeout(tryInitChart, 100);
             setTimeout(tryInitChart, 300);
             setTimeout(tryInitChart, 500);
+            setTimeout(tryInitChart, 1000); // Extra retry for slow mobile devices
         }
+
+        // Handle window resize/orientation change on mobile
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (nwChart) {
+                    console.log('Window resized, reinitializing chart...');
+                    nwChart.destroy();
+                    chartInitialized = false;
+                    tryInitChart();
+                }
+            }, 300);
+        });
 
         let updateCount = 0;
         setInterval(() => {
