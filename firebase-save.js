@@ -15,37 +15,71 @@ async function saveGameToCloud() {
 
         // Gather game data from your existing game variables
         const gameData = {
-            // Core game stats - all crypto balances
-            btc: typeof btc !== 'undefined' ? btc : 0,
-            eth: typeof eth !== 'undefined' ? eth : 0,
-            doge: typeof doge !== 'undefined' ? doge : 0,
+            // Bitcoin data
+            btcBalance: typeof btcBalance !== 'undefined' ? btcBalance : 0,
+            btcLifetime: typeof btcLifetime !== 'undefined' ? btcLifetime : 0,
+            btcClickValue: typeof btcClickValue !== 'undefined' ? btcClickValue : 0,
+            btcPerSec: typeof btcPerSec !== 'undefined' ? btcPerSec : 0,
+            btcPrice: typeof btcPrice !== 'undefined' ? btcPrice : 100000,
+            // Ethereum data
+            ethBalance: typeof ethBalance !== 'undefined' ? ethBalance : 0,
+            ethLifetime: typeof ethLifetime !== 'undefined' ? ethLifetime : 0,
+            ethClickValue: typeof ethClickValue !== 'undefined' ? ethClickValue : 0,
+            ethPerSec: typeof ethPerSec !== 'undefined' ? ethPerSec : 0,
+            ethPrice: typeof ethPrice !== 'undefined' ? ethPrice : 3500,
+            // Dogecoin data
+            dogeBalance: typeof dogeBalance !== 'undefined' ? dogeBalance : 0,
+            dogeLifetime: typeof dogeLifetime !== 'undefined' ? dogeLifetime : 0,
+            dogeClickValue: typeof dogeClickValue !== 'undefined' ? dogeClickValue : 0,
+            dogePerSec: typeof dogePerSec !== 'undefined' ? dogePerSec : 0,
+            dogePrice: typeof dogePrice !== 'undefined' ? dogePrice : 0.25,
+            // General data
             dollarBalance: typeof dollarBalance !== 'undefined' ? dollarBalance : 0,
-            bitcoinPerSecond: typeof bitcoinPerSecond !== 'undefined' ? bitcoinPerSecond : 0,
-
-            // Upgrades
-            upgrades: typeof upgrades !== 'undefined' ? upgrades : {},
-
-            // Skills
-            skills: typeof skills !== 'undefined' ? skills : {},
-            skillTokens: typeof skillTokens !== 'undefined' ? skillTokens : 0,
-
-            // Achievements
-            achievements: typeof achievements !== 'undefined' ? achievements : [],
-
-            // Statistics
-            totalEarned: typeof lifetimeEarnings !== 'undefined' ? lifetimeEarnings : (typeof totalEarned !== 'undefined' ? totalEarned : 0),
-            totalSpent: typeof totalSpent !== 'undefined' ? totalSpent : 0,
-            totalClicks: typeof totalClicks !== 'undefined' ? totalClicks : 0,
-
-            // Staking
-            stakedBTC: typeof stakedBTC !== 'undefined' ? stakedBTC : 0,
-            stakedETH: typeof stakedETH !== 'undefined' ? stakedETH : 0,
-            stakedDOGE: typeof stakedDOGE !== 'undefined' ? stakedDOGE : 0,
-            stakingRewards: typeof stakingRewards !== 'undefined' ? stakingRewards : 0,
+            hardwareEquity: typeof hardwareEquity !== 'undefined' ? hardwareEquity : 0,
+            autoClickerCooldownEnd: typeof autoClickerCooldownEnd !== 'undefined' ? autoClickerCooldownEnd : 0,
+            lifetimeEarnings: typeof lifetimeEarnings !== 'undefined' ? lifetimeEarnings : 0,
+            sessionEarnings: typeof sessionEarnings !== 'undefined' ? sessionEarnings : 0,
+            sessionStartTime: typeof sessionStartTime !== 'undefined' ? sessionStartTime : 0,
+            chartHistory: typeof chartHistory !== 'undefined' ? chartHistory : [],
+            chartTimestamps: typeof chartTimestamps !== 'undefined' ? chartTimestamps : [],
+            chartStartTime: typeof chartStartTime !== 'undefined' ? chartStartTime : 0,
+            totalPowerAvailable: typeof totalPowerAvailable !== 'undefined' ? totalPowerAvailable : 0,
+            // Upgrades and skills
+            powerUpgrades: typeof powerUpgrades !== 'undefined' ? powerUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentPower: u.currentPower
+            })) : [],
+            btcUpgrades: typeof btcUpgrades !== 'undefined' ? btcUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
+            })) : [],
+            ethUpgrades: typeof ethUpgrades !== 'undefined' ? ethUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
+            })) : [],
+            dogeUpgrades: typeof dogeUpgrades !== 'undefined' ? dogeUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
+            })) : [],
+            skillTree: typeof getSkillTreeData === 'function' ? getSkillTreeData() : {},
+            staking: typeof getStakingData === 'function' ? getStakingData() : {},
 
             // Timestamps
-            lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
-            playTime: typeof totalPlayTime !== 'undefined' ? totalPlayTime : 0
+            lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         // ANTI-CHEAT: Server-side validation
@@ -119,8 +153,8 @@ async function loadGameFromCloud(userId = null) {
         let useCloudData = true;
 
         if (hasLocalSave && localData) {
-            const localEarnings = localData.lifetimeEarnings || localData.totalEarned || 0;
-            const cloudEarnings = cloudData.totalEarned || 0;
+            const localEarnings = localData.lifetimeEarnings || 0;
+            const cloudEarnings = cloudData.lifetimeEarnings || 0;
 
             console.log(`📊 Comparing saves - Local: $${localEarnings}, Cloud: $${cloudEarnings}`);
 
@@ -139,23 +173,35 @@ async function loadGameFromCloud(userId = null) {
         // Only apply cloud data if it's better than local
         if (useCloudData) {
             // Apply cloud data to game variables
-            if (typeof btc !== 'undefined') btc = cloudData.btc || 0;
-            if (typeof eth !== 'undefined') eth = cloudData.eth || 0;
-            if (typeof doge !== 'undefined') doge = cloudData.doge || 0;
+            // Bitcoin data
+            if (typeof btcBalance !== 'undefined') btcBalance = cloudData.btcBalance || 0;
+            if (typeof btcLifetime !== 'undefined') btcLifetime = cloudData.btcLifetime || 0;
+            if (typeof btcClickValue !== 'undefined') btcClickValue = cloudData.btcClickValue || 0;
+            if (typeof btcPerSec !== 'undefined') btcPerSec = cloudData.btcPerSec || 0;
+            if (typeof btcPrice !== 'undefined') btcPrice = cloudData.btcPrice || 100000;
+            // Ethereum data
+            if (typeof ethBalance !== 'undefined') ethBalance = cloudData.ethBalance || 0;
+            if (typeof ethLifetime !== 'undefined') ethLifetime = cloudData.ethLifetime || 0;
+            if (typeof ethClickValue !== 'undefined') ethClickValue = cloudData.ethClickValue || 0;
+            if (typeof ethPerSec !== 'undefined') ethPerSec = cloudData.ethPerSec || 0;
+            if (typeof ethPrice !== 'undefined') ethPrice = cloudData.ethPrice || 3500;
+            // Dogecoin data
+            if (typeof dogeBalance !== 'undefined') dogeBalance = cloudData.dogeBalance || 0;
+            if (typeof dogeLifetime !== 'undefined') dogeLifetime = cloudData.dogeLifetime || 0;
+            if (typeof dogeClickValue !== 'undefined') dogeClickValue = cloudData.dogeClickValue || 0;
+            if (typeof dogePerSec !== 'undefined') dogePerSec = cloudData.dogePerSec || 0;
+            if (typeof dogePrice !== 'undefined') dogePrice = cloudData.dogePrice || 0.25;
+            // General data
             if (typeof dollarBalance !== 'undefined') dollarBalance = cloudData.dollarBalance || 0;
-            if (typeof bitcoinPerSecond !== 'undefined') bitcoinPerSecond = cloudData.bitcoinPerSecond || 0;
-            if (typeof upgrades !== 'undefined') upgrades = cloudData.upgrades || {};
-            if (typeof skills !== 'undefined') skills = cloudData.skills || {};
-            if (typeof skillTokens !== 'undefined') skillTokens = cloudData.skillTokens || 0;
-            if (typeof achievements !== 'undefined') achievements = cloudData.achievements || [];
-            if (typeof lifetimeEarnings !== 'undefined') lifetimeEarnings = cloudData.totalEarned || 0;
-            if (typeof totalEarned !== 'undefined') totalEarned = cloudData.totalEarned || 0;
-            if (typeof totalSpent !== 'undefined') totalSpent = cloudData.totalSpent || 0;
-            if (typeof totalClicks !== 'undefined') totalClicks = cloudData.totalClicks || 0;
-            if (typeof stakedBTC !== 'undefined') stakedBTC = cloudData.stakedBTC || 0;
-            if (typeof stakedETH !== 'undefined') stakedETH = cloudData.stakedETH || 0;
-            if (typeof stakedDOGE !== 'undefined') stakedDOGE = cloudData.stakedDOGE || 0;
-            if (typeof totalPlayTime !== 'undefined') totalPlayTime = cloudData.playTime || 0;
+            if (typeof hardwareEquity !== 'undefined') hardwareEquity = cloudData.hardwareEquity || 0;
+            if (typeof autoClickerCooldownEnd !== 'undefined') autoClickerCooldownEnd = cloudData.autoClickerCooldownEnd || 0;
+            if (typeof lifetimeEarnings !== 'undefined') lifetimeEarnings = cloudData.lifetimeEarnings || 0;
+            if (typeof sessionEarnings !== 'undefined') sessionEarnings = cloudData.sessionEarnings || 0;
+            if (typeof sessionStartTime !== 'undefined') sessionStartTime = cloudData.sessionStartTime || 0;
+            if (typeof chartHistory !== 'undefined') chartHistory = cloudData.chartHistory || [];
+            if (typeof chartTimestamps !== 'undefined') chartTimestamps = cloudData.chartTimestamps || [];
+            if (typeof chartStartTime !== 'undefined') chartStartTime = cloudData.chartStartTime || 0;
+            if (typeof totalPowerAvailable !== 'undefined') totalPowerAvailable = cloudData.totalPowerAvailable || 0;
 
             // Update UI if functions exist
             if (typeof updateDisplay === 'function') updateDisplay();
