@@ -492,9 +492,15 @@
             }
 
             // Sync to cloud if user is logged in
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('📤 Syncing to cloud...');
-                window.saveGameToCloud().catch(err => console.error('Cloud sync failed:', err));
+            if (typeof window.saveGameToCloud === 'function') {
+                try {
+                    if (typeof auth !== 'undefined' && auth && auth.currentUser) {
+                        console.log('📤 Syncing to cloud...');
+                        window.saveGameToCloud().catch(err => console.error('Cloud sync failed:', err));
+                    }
+                } catch (syncError) {
+                    console.warn('Cloud sync check failed (user not logged in):', syncError.message);
+                }
             }
         } catch (error) {
             console.error('✗ ERROR saving game to localStorage:', error);
@@ -2968,6 +2974,9 @@ dogeUpgrades.forEach(u => {
     }
 
     // Make functions available globally
+    window.manualHash = manualHash;
+    window.manualEthHash = manualEthHash;
+    window.manualDogeHash = manualDogeHash;
     window.acceptAgeDisclaimer = acceptAgeDisclaimer;
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;

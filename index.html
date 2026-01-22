@@ -778,10 +778,10 @@
         }
     });
 
-    // Clear localStorage on page load to prevent loading other account's data
-    // This ensures each account starts fresh until they login
-    console.log('🔄 Page loaded - clearing previous session data');
-    localStorage.clear();
+    // Clear game save data on page load to prevent loading other account's data
+    // But preserve user preferences like consent and dismissed instructions
+    console.log('🔄 Page loaded - clearing previous game session data');
+    localStorage.removeItem('satoshiTerminalSave');
 
     // Save game before user closes/refreshes page
     window.addEventListener('beforeunload', (e) => {
