@@ -187,27 +187,38 @@ async function loginWithGoogle() {
 // Logout user
 async function logoutUser() {
     try {
+        console.log('🔓 Starting logout process...');
+
         // Save game before logging out
         if (auth.currentUser) {
+            console.log('💾 Saving game before logout...');
             await saveGameToCloud();
+            console.log('✅ Game saved');
         }
 
+        console.log('🔐 Signing out from Firebase...');
         await auth.signOut();
-        console.log('✅ User logged out');
+        console.log('✅ Signed out from Firebase - auth.currentUser should now be null');
+
         showMessage('Logged out successfully', 'success');
 
         // Clear local game data
         // Clear localStorage to prevent data leaking to next user
+        console.log('🗑️ Clearing localStorage...');
         localStorage.clear();
+        console.log('✅ localStorage cleared');
 
         // Reset login iframe to clear form state
         const loginScreenDiv = document.getElementById('login-screen');
         if (loginScreenDiv) {
             const iframe = loginScreenDiv.querySelector('iframe');
             if (iframe) {
+                console.log('🔄 Reloading login iframe...');
                 iframe.src = iframe.src; // Reload iframe to reset form
             }
         }
+
+        console.log('✅ Logout complete - auth state listener should trigger UI update');
 
     } catch (error) {
         console.error('❌ Logout error:', error);

@@ -179,38 +179,47 @@ async function loadGameFromCloud(userId = null) {
         }
 
         const cloudData = docSnap.data();
-        console.log('☁️ Cloud save found:', cloudData);
+        console.log('☁️ Cloud save found, loading into game...');
+        console.log('  BTC Balance:', cloudData.btcBalance);
+        console.log('  Dollar Balance:', cloudData.dollarBalance);
+        console.log('  Lifetime Earnings:', cloudData.lifetimeEarnings);
 
-        // Apply cloud data to game variables
+        // Apply cloud data to game variables using window accessors (these use the setters)
         // Bitcoin data
-        if (typeof btcBalance !== 'undefined') btcBalance = cloudData.btcBalance || 0;
-        if (typeof btcLifetime !== 'undefined') btcLifetime = cloudData.btcLifetime || 0;
-        if (typeof btcClickValue !== 'undefined') btcClickValue = cloudData.btcClickValue || 0;
-        if (typeof btcPerSec !== 'undefined') btcPerSec = cloudData.btcPerSec || 0;
-        if (typeof btcPrice !== 'undefined') btcPrice = cloudData.btcPrice || 100000;
+        window.btcBalance = cloudData.btcBalance || 0;
+        window.btcLifetime = cloudData.btcLifetime || 0;
+        window.btcClickValue = cloudData.btcClickValue || 0;
+        window.btcPerSec = cloudData.btcPerSec || 0;
+        window.btcPrice = cloudData.btcPrice || 100000;
         // Ethereum data
-        if (typeof ethBalance !== 'undefined') ethBalance = cloudData.ethBalance || 0;
-        if (typeof ethLifetime !== 'undefined') ethLifetime = cloudData.ethLifetime || 0;
-        if (typeof ethClickValue !== 'undefined') ethClickValue = cloudData.ethClickValue || 0;
-        if (typeof ethPerSec !== 'undefined') ethPerSec = cloudData.ethPerSec || 0;
-        if (typeof ethPrice !== 'undefined') ethPrice = cloudData.ethPrice || 3500;
+        window.ethBalance = cloudData.ethBalance || 0;
+        window.ethLifetime = cloudData.ethLifetime || 0;
+        window.ethClickValue = cloudData.ethClickValue || 0;
+        window.ethPerSec = cloudData.ethPerSec || 0;
+        window.ethPrice = cloudData.ethPrice || 3500;
         // Dogecoin data
-        if (typeof dogeBalance !== 'undefined') dogeBalance = cloudData.dogeBalance || 0;
-        if (typeof dogeLifetime !== 'undefined') dogeLifetime = cloudData.dogeLifetime || 0;
-        if (typeof dogeClickValue !== 'undefined') dogeClickValue = cloudData.dogeClickValue || 0;
-        if (typeof dogePerSec !== 'undefined') dogePerSec = cloudData.dogePerSec || 0;
-        if (typeof dogePrice !== 'undefined') dogePrice = cloudData.dogePrice || 0.25;
+        window.dogeBalance = cloudData.dogeBalance || 0;
+        window.dogeLifetime = cloudData.dogeLifetime || 0;
+        window.dogeClickValue = cloudData.dogeClickValue || 0;
+        window.dogePerSec = cloudData.dogePerSec || 0;
+        window.dogePrice = cloudData.dogePrice || 0.25;
         // General data
-        if (typeof dollarBalance !== 'undefined') dollarBalance = cloudData.dollarBalance || 0;
-        if (typeof hardwareEquity !== 'undefined') hardwareEquity = cloudData.hardwareEquity || 0;
-        if (typeof autoClickerCooldownEnd !== 'undefined') autoClickerCooldownEnd = cloudData.autoClickerCooldownEnd || 0;
-        if (typeof lifetimeEarnings !== 'undefined') lifetimeEarnings = cloudData.lifetimeEarnings || 0;
-        if (typeof sessionEarnings !== 'undefined') sessionEarnings = cloudData.sessionEarnings || 0;
-        if (typeof sessionStartTime !== 'undefined') sessionStartTime = cloudData.sessionStartTime || 0;
-        if (typeof chartHistory !== 'undefined') chartHistory = cloudData.chartHistory || [];
-        if (typeof chartTimestamps !== 'undefined') chartTimestamps = cloudData.chartTimestamps || [];
-        if (typeof chartStartTime !== 'undefined') chartStartTime = cloudData.chartStartTime || 0;
-        if (typeof totalPowerAvailable !== 'undefined') totalPowerAvailable = cloudData.totalPowerAvailable || 0;
+        window.dollarBalance = cloudData.dollarBalance || 0;
+        window.hardwareEquity = cloudData.hardwareEquity || 0;
+        window.autoClickerCooldownEnd = cloudData.autoClickerCooldownEnd || 0;
+        window.lifetimeEarnings = cloudData.lifetimeEarnings || 0;
+        window.sessionEarnings = cloudData.sessionEarnings || 0;
+        window.sessionStartTime = cloudData.sessionStartTime || 0;
+        window.chartHistory = cloudData.chartHistory || [];
+        window.chartTimestamps = cloudData.chartTimestamps || [];
+        window.chartStartTime = cloudData.chartStartTime || 0;
+        window.totalPowerAvailable = cloudData.totalPowerAvailable || 0;
+
+        // Verify data was actually loaded
+        console.log('📋 Verifying loaded data in game variables:');
+        console.log('  window.btcBalance:', window.btcBalance);
+        console.log('  window.dollarBalance:', window.dollarBalance);
+        console.log('  window.lifetimeEarnings:', window.lifetimeEarnings);
 
         // Update UI if functions exist
         if (typeof updateDisplay === 'function') updateDisplay();
