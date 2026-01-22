@@ -187,27 +187,38 @@ async function loginWithGoogle() {
 // Logout user
 async function logoutUser() {
     try {
+        console.log('🔓 Starting logout process...');
+
         // Save game before logging out
         if (auth.currentUser) {
+            console.log('💾 Saving game before logout...');
             await saveGameToCloud();
+            console.log('✅ Game saved');
         }
 
+        console.log('🔐 Signing out from Firebase...');
         await auth.signOut();
-        console.log('✅ User logged out');
+        console.log('✅ Signed out from Firebase - auth.currentUser should now be null');
+
         showMessage('Logged out successfully', 'success');
 
         // Clear local game data
         // Clear localStorage to prevent data leaking to next user
+        console.log('🗑️ Clearing localStorage...');
         localStorage.clear();
+        console.log('✅ localStorage cleared');
 
         // Reset login iframe to clear form state
         const loginScreenDiv = document.getElementById('login-screen');
         if (loginScreenDiv) {
             const iframe = loginScreenDiv.querySelector('iframe');
             if (iframe) {
+                console.log('🔄 Reloading login iframe...');
                 iframe.src = iframe.src; // Reload iframe to reset form
             }
         }
+
+        console.log('✅ Logout complete - auth state listener should trigger UI update');
 
     } catch (error) {
         console.error('❌ Logout error:', error);
@@ -457,9 +468,19 @@ function setupAuthListener() {
                 console.warn('⚠️ loadGameFromCloud function not available');
             }
 
+            // Start leaderboard updates
+            if (window.startLeaderboardUpdates) {
+                window.startLeaderboardUpdates();
+            }
+
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
             console.log('ℹ️ No user logged in - showing login screen');
+
+            // Stop leaderboard updates
+            if (window.stopLeaderboardUpdates) {
+                window.stopLeaderboardUpdates();
+            }
 
             // Show login screen for new users
             // They can login, register, or skip to play offline

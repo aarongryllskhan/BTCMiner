@@ -77,6 +77,19 @@
         </div>
     </div>
 
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10001; justify-content: center; align-items: center; overflow: auto;">
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5); position: relative;">
+            <button onclick="closeLeaderboardModal()" style="position: absolute; top: 15px; right: 15px; background: #f7931a; color: #000; border: none; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s; z-index: 1;">
+                CLOSE
+            </button>
+            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">🏆 LEADERBOARD</h2>
+            <div class="leaderboard-content" style="color: #fff;">
+                <div style="text-align: center; color: #888;">Loading leaderboard...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Privacy & Cookie Policy Modal -->
     <div id="privacy-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; overflow: auto;">
         <div style="background: #fff; padding: 20px; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; margin: 20px; position: relative; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
@@ -111,6 +124,7 @@
                 <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important;">Crypto Portfolio Valuation</span>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button id="login-btn" style="background: #f7931a; color: #000; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="showLoginScreen()">LOGIN / SIGN UP</button>
+                    <button style="background: #FFD700; color: #000; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="openLeaderboardModal()">🏆 LEADERBOARD</button>
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="toggleMute()">SOUND ON</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="document.getElementById('game-instructions').style.display='block'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetEarningsStats()">RESET EARNINGS</button>
@@ -213,7 +227,7 @@
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
-            <button class="mine-btn" onclick="manualHash()" style="position: relative; z-index: 100;">MANUAL BTC HASH<br>
+            <button class="mine-btn" onclick="console.log('🔲 ONCLICK FIRED'); if(typeof manualHash !== 'function') { alert('ERROR: manualHash is not a function!'); console.error('manualHash not found:', typeof manualHash); } else { manualHash(); }" style="position: relative; z-index: 100;">MANUAL BTC HASH<br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
             <button class="mine-btn" style="background: #627eea; padding: 8px;" onclick="manualEthHash()">MANUAL ETH HASH<br>
@@ -715,6 +729,9 @@
 <!-- Load staking system after main game variables are defined -->
 <script src="staking.js"></script>
 
+<!-- Load leaderboard system -->
+<script src="leaderboard.js"></script>
+
 <!-- Initialize Firebase -->
 <script>
     // Function to show login screen
@@ -760,6 +777,11 @@
             document.getElementById('main-layout').style.display = 'flex';
         }
     });
+
+    // Clear game save data on page load to prevent loading other account's data
+    // But preserve user preferences like consent and dismissed instructions
+    console.log('🔄 Page loaded - clearing previous game session data');
+    localStorage.removeItem('satoshiTerminalSave');
 
     // Save game before user closes/refreshes page
     window.addEventListener('beforeunload', (e) => {
