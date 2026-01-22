@@ -2978,6 +2978,12 @@ dogeUpgrades.forEach(u => {
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;
 
+    // Verify functions are accessible
+    console.log('✅ GAME.JS LOADED - Functions exported to window:');
+    console.log('  manualHash:', typeof window.manualHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  manualEthHash:', typeof window.manualEthHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  manualDogeHash:', typeof window.manualDogeHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+
     // Expose game variables globally for Firebase save/load
     // This creates a getter/setter interface so firebase-save.js can access the closure variables
     Object.defineProperty(window, 'btcBalance', {
@@ -3111,8 +3117,30 @@ dogeUpgrades.forEach(u => {
         document.addEventListener('DOMContentLoaded', function() {
             checkAgeDisclaimer();
             initializeGame();
+            // Test manual hash buttons after DOM is ready
+            setTimeout(() => {
+                const btcBtn = document.querySelector('button.mine-btn[onclick*="manualHash"]');
+                const ethBtn = document.querySelector('button.mine-btn[onclick*="manualEthHash"]');
+                const dogeBtn = document.querySelector('button.mine-btn[onclick*="manualDogeHash"]');
+                console.log('🔘 Button elements found:');
+                console.log('  BTC button:', btcBtn ? 'EXISTS ✓' : 'MISSING ✗');
+                console.log('  ETH button:', ethBtn ? 'EXISTS ✓' : 'MISSING ✗');
+                console.log('  DOGE button:', dogeBtn ? 'EXISTS ✓' : 'MISSING ✗');
+                if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
+            }, 500);
         });
     } else {
         checkAgeDisclaimer();
         initializeGame();
+        // Test manual hash buttons after initialization
+        setTimeout(() => {
+            const btcBtn = document.querySelector('button.mine-btn[onclick*="manualHash"]');
+            const ethBtn = document.querySelector('button.mine-btn[onclick*="manualEthHash"]');
+            const dogeBtn = document.querySelector('button.mine-btn[onclick*="manualDogeHash"]');
+            console.log('🔘 Button elements found:');
+            console.log('  BTC button:', btcBtn ? 'EXISTS ✓' : 'MISSING ✗');
+            console.log('  ETH button:', ethBtn ? 'EXISTS ✓' : 'MISSING ✗');
+            console.log('  DOGE button:', dogeBtn ? 'EXISTS ✓' : 'MISSING ✗');
+            if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
+        }, 500);
     }
