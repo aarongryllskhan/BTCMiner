@@ -13,45 +13,45 @@ async function saveGameToCloud() {
             return false;
         }
 
-        // Gather game data from your existing game variables
+        // Gather game data from your existing game variables (use window accessors for closure variables)
         const gameData = {
             // Bitcoin data
-            btcBalance: typeof btcBalance !== 'undefined' ? btcBalance : 0,
-            btcLifetime: typeof btcLifetime !== 'undefined' ? btcLifetime : 0,
-            btcClickValue: typeof btcClickValue !== 'undefined' ? btcClickValue : 0,
-            btcPerSec: typeof btcPerSec !== 'undefined' ? btcPerSec : 0,
-            btcPrice: typeof btcPrice !== 'undefined' ? btcPrice : 100000,
+            btcBalance: typeof window.btcBalance !== 'undefined' ? window.btcBalance : 0,
+            btcLifetime: typeof window.btcLifetime !== 'undefined' ? window.btcLifetime : 0,
+            btcClickValue: typeof window.btcClickValue !== 'undefined' ? window.btcClickValue : 0,
+            btcPerSec: typeof window.btcPerSec !== 'undefined' ? window.btcPerSec : 0,
+            btcPrice: typeof window.btcPrice !== 'undefined' ? window.btcPrice : 100000,
             // Ethereum data
-            ethBalance: typeof ethBalance !== 'undefined' ? ethBalance : 0,
-            ethLifetime: typeof ethLifetime !== 'undefined' ? ethLifetime : 0,
-            ethClickValue: typeof ethClickValue !== 'undefined' ? ethClickValue : 0,
-            ethPerSec: typeof ethPerSec !== 'undefined' ? ethPerSec : 0,
-            ethPrice: typeof ethPrice !== 'undefined' ? ethPrice : 3500,
+            ethBalance: typeof window.ethBalance !== 'undefined' ? window.ethBalance : 0,
+            ethLifetime: typeof window.ethLifetime !== 'undefined' ? window.ethLifetime : 0,
+            ethClickValue: typeof window.ethClickValue !== 'undefined' ? window.ethClickValue : 0,
+            ethPerSec: typeof window.ethPerSec !== 'undefined' ? window.ethPerSec : 0,
+            ethPrice: typeof window.ethPrice !== 'undefined' ? window.ethPrice : 3500,
             // Dogecoin data
-            dogeBalance: typeof dogeBalance !== 'undefined' ? dogeBalance : 0,
-            dogeLifetime: typeof dogeLifetime !== 'undefined' ? dogeLifetime : 0,
-            dogeClickValue: typeof dogeClickValue !== 'undefined' ? dogeClickValue : 0,
-            dogePerSec: typeof dogePerSec !== 'undefined' ? dogePerSec : 0,
-            dogePrice: typeof dogePrice !== 'undefined' ? dogePrice : 0.25,
+            dogeBalance: typeof window.dogeBalance !== 'undefined' ? window.dogeBalance : 0,
+            dogeLifetime: typeof window.dogeLifetime !== 'undefined' ? window.dogeLifetime : 0,
+            dogeClickValue: typeof window.dogeClickValue !== 'undefined' ? window.dogeClickValue : 0,
+            dogePerSec: typeof window.dogePerSec !== 'undefined' ? window.dogePerSec : 0,
+            dogePrice: typeof window.dogePrice !== 'undefined' ? window.dogePrice : 0.25,
             // General data
-            dollarBalance: typeof dollarBalance !== 'undefined' ? dollarBalance : 0,
-            hardwareEquity: typeof hardwareEquity !== 'undefined' ? hardwareEquity : 0,
-            autoClickerCooldownEnd: typeof autoClickerCooldownEnd !== 'undefined' ? autoClickerCooldownEnd : 0,
-            lifetimeEarnings: typeof lifetimeEarnings !== 'undefined' ? lifetimeEarnings : 0,
-            sessionEarnings: typeof sessionEarnings !== 'undefined' ? sessionEarnings : 0,
-            sessionStartTime: typeof sessionStartTime !== 'undefined' ? sessionStartTime : 0,
-            chartHistory: typeof chartHistory !== 'undefined' ? chartHistory : [],
-            chartTimestamps: typeof chartTimestamps !== 'undefined' ? chartTimestamps : [],
-            chartStartTime: typeof chartStartTime !== 'undefined' ? chartStartTime : 0,
-            totalPowerAvailable: typeof totalPowerAvailable !== 'undefined' ? totalPowerAvailable : 0,
+            dollarBalance: typeof window.dollarBalance !== 'undefined' ? window.dollarBalance : 0,
+            hardwareEquity: typeof window.hardwareEquity !== 'undefined' ? window.hardwareEquity : 0,
+            autoClickerCooldownEnd: typeof window.autoClickerCooldownEnd !== 'undefined' ? window.autoClickerCooldownEnd : 0,
+            lifetimeEarnings: typeof window.lifetimeEarnings !== 'undefined' ? window.lifetimeEarnings : 0,
+            sessionEarnings: typeof window.sessionEarnings !== 'undefined' ? window.sessionEarnings : 0,
+            sessionStartTime: typeof window.sessionStartTime !== 'undefined' ? window.sessionStartTime : 0,
+            chartHistory: typeof window.chartHistory !== 'undefined' ? window.chartHistory : [],
+            chartTimestamps: typeof window.chartTimestamps !== 'undefined' ? window.chartTimestamps : [],
+            chartStartTime: typeof window.chartStartTime !== 'undefined' ? window.chartStartTime : 0,
+            totalPowerAvailable: typeof window.totalPowerAvailable !== 'undefined' ? window.totalPowerAvailable : 0,
             // Upgrades and skills
-            powerUpgrades: typeof powerUpgrades !== 'undefined' ? powerUpgrades.map(u => ({
+            powerUpgrades: typeof window.powerUpgrades !== 'undefined' ? window.powerUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
                 currentPower: u.currentPower
             })) : [],
-            btcUpgrades: typeof btcUpgrades !== 'undefined' ? btcUpgrades.map(u => ({
+            btcUpgrades: typeof window.btcUpgrades !== 'undefined' ? window.btcUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
@@ -59,7 +59,7 @@ async function saveGameToCloud() {
                 boostCost: u.boostCost,
                 boostLevel: u.boostLevel
             })) : [],
-            ethUpgrades: typeof ethUpgrades !== 'undefined' ? ethUpgrades.map(u => ({
+            ethUpgrades: typeof window.ethUpgrades !== 'undefined' ? window.ethUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
@@ -67,7 +67,7 @@ async function saveGameToCloud() {
                 boostCost: u.boostCost,
                 boostLevel: u.boostLevel
             })) : [],
-            dogeUpgrades: typeof dogeUpgrades !== 'undefined' ? dogeUpgrades.map(u => ({
+            dogeUpgrades: typeof window.dogeUpgrades !== 'undefined' ? window.dogeUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
