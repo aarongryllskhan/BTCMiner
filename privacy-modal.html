@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy & Data - Idle BTC Miner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #f7931a;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(247, 147, 26, 0.5);
+        }
+
+        h1 {
+            color: #f7931a;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(247, 147, 26, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #ff9f2a;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 8px;
+        }
+
+        p {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+
+        li {
+            color: #ccc;
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        li:before {
+            content: "✓";
+            color: #4CAF50;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .highlight {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning {
+            background: rgba(247, 147, 26, 0.2);
+            border-left: 4px solid #f7931a;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .close-btn {
+            width: 100%;
+            padding: 15px;
+            background: #f7931a;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #ff9f2a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(247, 147, 26, 0.6);
+        }
+
+        .icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔒 Privacy & Your Data</h1>
+    <p class="subtitle">Simple explanation of how we handle your information</p>
+
+    <div class="warning">
+        <p style="text-align: center; font-weight: bold; color: #fff;">
+            <span class="icon">⚠️</span> WE DO NOT SELL YOUR DATA<br>
+            Your information is used only to save your game progress
+        </p>
+    </div>
+
+    <div class="section">
+        <h2><span class="icon">📊</span>What We Collect</h2>
+        <ul>
+            <li><strong>Email Address</strong> - Used for login and account recovery</li>
+            <li><strong>Password</strong> - Securely hashed (never stored in plain text) <span class="badge">SECURE</span></li>
+            <li><strong>Username</strong> - Your display name in the game</li>
+            <li><strong>Game Progress</strong> - Your BTC, upgrades, achievements, etc.</li>
+            <li><strong>Usage Stats</strong> - Anonymous data to improve the game</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2><span class="icon">☁️</span>How We Store Your Data</h2>
+        <p>We use <strong>Firebase by Google</strong> to store your account and game progress:</p>
+        <ul>
+            <li>Industry-standard encryption (HTTPS/SSL)</li>
+            <li>Enterprise-grade security by Google</li>
+            <li>Passwords hashed using bcrypt algorithm</li>
+            <li>Regular automated backups</li>
+            <li>Server-side anti-cheat validation</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2><span class="icon">🛡️</span>Your Privacy Rights</h2>
+        <ul>
+            <li><strong>Access:</strong> View your data anytime in game settings</li>
+            <li><strong>Export:</strong> Request a copy of your data</li>
+            <li><strong>Delete:</strong> Permanently delete your account and data</li>
+            <li><strong>Update:</strong> Change your email or username anytime</li>
+        </ul>
+        <p style="margin-top: 15px;">Contact us: <a href="mailto:idlebtcminer@gmail.com" style="color: #f7931a;">idlebtcminer@gmail.com</a></p>
+    </div>
+
+    <div class="section">
+        <h2><span class="icon">🔐</span>Password Security</h2>
+        <div class="highlight">
+            <p><strong>Your password is NEVER stored in plain text.</strong></p>
+            <p>Firebase uses bcrypt hashing, which means even we cannot see your actual password. It's stored as a one-way encrypted hash that can only verify if you enter the correct password - it cannot be reversed to reveal your original password.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><span class="icon">🚫</span>What We DON'T Do</h2>
+        <ul>
+            <li>We DON'T sell your email or personal data</li>
+            <li>We DON'T share your data for advertising</li>
+            <li>We DON'T send spam emails</li>
+            <li>We DON'T track your location (GPS)</li>
+            <li>We DON'T use your data for anything except game services</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2><span class="icon">🍪</span>Cookies & Local Storage</h2>
+        <p>We use:</p>
+        <ul>
+            <li><strong>Authentication cookies</strong> - Keep you logged in</li>
+            <li><strong>Local storage</strong> - Cache your game data for offline play</li>
+            <li><strong>Analytics cookies</strong> - Anonymous usage statistics (Google Analytics)</li>
+        </ul>
+        <p style="margin-top: 10px; font-size: 0.9rem;">You can clear cookies in your browser settings, but you'll be logged out.</p>
+    </div>
+
+    <div class="warning">
+        <p><strong>🌍 International Users:</strong> Your data may be stored on Google servers worldwide. By using this game, you consent to this data transfer. Firebase complies with GDPR and international privacy regulations.</p>
+    </div>
+
+    <div class="section" style="text-align: center; margin-top: 30px;">
+        <p style="font-size: 0.9rem; color: #888;">
+            Last Updated: January 22, 2026<br>
+            For complete legal privacy policy, see <a href="privacy.html" target="_blank" style="color: #f7931a;">Privacy Policy</a>
+        </p>
+    </div>
+
+    <button class="close-btn" onclick="window.parent.closePrivacyModal ? window.parent.closePrivacyModal() : window.close()">
+        ✓ I Understand
+    </button>
+</div>
+
+</body>
+</html>
