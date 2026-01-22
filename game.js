@@ -2981,6 +2981,134 @@ dogeUpgrades.forEach(u => {
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;
 
+    // Expose game variables globally for Firebase save/load
+    // This creates a getter/setter interface so firebase-save.js can access the closure variables
+    Object.defineProperty(window, 'btcBalance', {
+        get: () => btcBalance,
+        set: (val) => { btcBalance = val; }
+    });
+    Object.defineProperty(window, 'btcLifetime', {
+        get: () => btcLifetime,
+        set: (val) => { btcLifetime = val; }
+    });
+    Object.defineProperty(window, 'btcPerSec', {
+        get: () => btcPerSec,
+        set: (val) => { btcPerSec = val; }
+    });
+    Object.defineProperty(window, 'btcPrice', {
+        get: () => btcPrice,
+        set: (val) => { btcPrice = val; }
+    });
+    Object.defineProperty(window, 'btcClickValue', {
+        get: () => btcClickValue,
+        set: (val) => { btcClickValue = val; }
+    });
+
+    Object.defineProperty(window, 'ethBalance', {
+        get: () => ethBalance,
+        set: (val) => { ethBalance = val; }
+    });
+    Object.defineProperty(window, 'ethLifetime', {
+        get: () => ethLifetime,
+        set: (val) => { ethLifetime = val; }
+    });
+    Object.defineProperty(window, 'ethPerSec', {
+        get: () => ethPerSec,
+        set: (val) => { ethPerSec = val; }
+    });
+    Object.defineProperty(window, 'ethPrice', {
+        get: () => ethPrice,
+        set: (val) => { ethPrice = val; }
+    });
+    Object.defineProperty(window, 'ethClickValue', {
+        get: () => ethClickValue,
+        set: (val) => { ethClickValue = val; }
+    });
+
+    Object.defineProperty(window, 'dogeBalance', {
+        get: () => dogeBalance,
+        set: (val) => { dogeBalance = val; }
+    });
+    Object.defineProperty(window, 'dogeLifetime', {
+        get: () => dogeLifetime,
+        set: (val) => { dogeLifetime = val; }
+    });
+    Object.defineProperty(window, 'dogePerSec', {
+        get: () => dogePerSec,
+        set: (val) => { dogePerSec = val; }
+    });
+    Object.defineProperty(window, 'dogePrice', {
+        get: () => dogePrice,
+        set: (val) => { dogePrice = val; }
+    });
+    Object.defineProperty(window, 'dogeClickValue', {
+        get: () => dogeClickValue,
+        set: (val) => { dogeClickValue = val; }
+    });
+
+    Object.defineProperty(window, 'dollarBalance', {
+        get: () => dollarBalance,
+        set: (val) => { dollarBalance = val; }
+    });
+    Object.defineProperty(window, 'hardwareEquity', {
+        get: () => hardwareEquity,
+        set: (val) => { hardwareEquity = val; }
+    });
+    Object.defineProperty(window, 'lifetimeEarnings', {
+        get: () => lifetimeEarnings,
+        set: (val) => { lifetimeEarnings = val; }
+    });
+    Object.defineProperty(window, 'sessionEarnings', {
+        get: () => sessionEarnings,
+        set: (val) => { sessionEarnings = val; }
+    });
+    Object.defineProperty(window, 'sessionStartTime', {
+        get: () => sessionStartTime,
+        set: (val) => { sessionStartTime = val; }
+    });
+    Object.defineProperty(window, 'totalPlayTime', {
+        get: () => totalPlayTime,
+        set: (val) => { totalPlayTime = val; }
+    });
+    Object.defineProperty(window, 'totalPowerAvailable', {
+        get: () => totalPowerAvailable,
+        set: (val) => { totalPowerAvailable = val; }
+    });
+    Object.defineProperty(window, 'chartHistory', {
+        get: () => chartHistory,
+        set: (val) => { chartHistory = val; }
+    });
+    Object.defineProperty(window, 'chartTimestamps', {
+        get: () => chartTimestamps,
+        set: (val) => { chartTimestamps = val; }
+    });
+    Object.defineProperty(window, 'chartStartTime', {
+        get: () => chartStartTime,
+        set: (val) => { chartStartTime = val; }
+    });
+    Object.defineProperty(window, 'autoClickerCooldownEnd', {
+        get: () => autoClickerCooldownEnd,
+        set: (val) => { autoClickerCooldownEnd = val; }
+    });
+
+    // Expose arrays/objects
+    Object.defineProperty(window, 'powerUpgrades', {
+        get: () => powerUpgrades,
+        set: (val) => { }
+    });
+    Object.defineProperty(window, 'btcUpgrades', {
+        get: () => btcUpgrades,
+        set: (val) => { }
+    });
+    Object.defineProperty(window, 'ethUpgrades', {
+        get: () => ethUpgrades,
+        set: (val) => { }
+    });
+    Object.defineProperty(window, 'dogeUpgrades', {
+        get: () => dogeUpgrades,
+        set: (val) => { }
+    });
+
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
