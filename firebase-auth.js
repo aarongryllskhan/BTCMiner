@@ -33,16 +33,38 @@ async function registerUser(email, password, username) {
             isPremium: false
         });
 
-        // Initialize empty game data
+        // Initialize empty game data with correct field names
         await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
-            btc: 0,
-            bitcoinPerSecond: 0,
-            upgrades: {},
-            skills: {},
-            achievements: [],
-            totalEarned: 0,
-            totalSpent: 0,
-            playTime: 0,
+            btcBalance: 0,
+            btcLifetime: 0,
+            btcClickValue: 0.00000250,
+            btcPerSec: 0,
+            btcPrice: 100000,
+            ethBalance: 0,
+            ethLifetime: 0,
+            ethClickValue: 0.00007143,
+            ethPerSec: 0,
+            ethPrice: 3500,
+            dogeBalance: 0,
+            dogeLifetime: 0,
+            dogeClickValue: 1.00000000,
+            dogePerSec: 0,
+            dogePrice: 0.25,
+            dollarBalance: 0,
+            hardwareEquity: 0,
+            lifetimeEarnings: 0,
+            sessionEarnings: 0,
+            autoClickerCooldownEnd: 0,
+            chartHistory: [],
+            chartTimestamps: [],
+            chartStartTime: 0,
+            totalPowerAvailable: 0,
+            powerUpgrades: [],
+            btcUpgrades: [],
+            ethUpgrades: [],
+            dogeUpgrades: [],
+            skillTree: {},
+            staking: {},
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -144,16 +166,38 @@ async function loginWithGoogle() {
                 photoURL: user.photoURL
             });
 
-            // Initialize empty game data
+            // Initialize empty game data with correct field names
             await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
-                btc: 0,
-                bitcoinPerSecond: 0,
-                upgrades: {},
-                skills: {},
-                achievements: [],
-                totalEarned: 0,
-                totalSpent: 0,
-                playTime: 0,
+                btcBalance: 0,
+                btcLifetime: 0,
+                btcClickValue: 0.00000250,
+                btcPerSec: 0,
+                btcPrice: 100000,
+                ethBalance: 0,
+                ethLifetime: 0,
+                ethClickValue: 0.00007143,
+                ethPerSec: 0,
+                ethPrice: 3500,
+                dogeBalance: 0,
+                dogeLifetime: 0,
+                dogeClickValue: 1.00000000,
+                dogePerSec: 0,
+                dogePrice: 0.25,
+                dollarBalance: 0,
+                hardwareEquity: 0,
+                lifetimeEarnings: 0,
+                sessionEarnings: 0,
+                autoClickerCooldownEnd: 0,
+                chartHistory: [],
+                chartTimestamps: [],
+                chartStartTime: 0,
+                totalPowerAvailable: 0,
+                powerUpgrades: [],
+                btcUpgrades: [],
+                ethUpgrades: [],
+                dogeUpgrades: [],
+                skillTree: {},
+                staking: {},
                 lastSaved: firebase.firestore.FieldValue.serverTimestamp()
             });
         } else {
@@ -278,16 +322,38 @@ async function playAsGuest() {
             level: 1
         });
 
-        // Initialize empty game data
+        // Initialize empty game data with correct field names
         await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
-            btc: 0,
-            bitcoinPerSecond: 0,
-            upgrades: {},
-            skills: {},
-            achievements: [],
-            totalEarned: 0,
-            totalSpent: 0,
-            playTime: 0,
+            btcBalance: 0,
+            btcLifetime: 0,
+            btcClickValue: 0.00000250,
+            btcPerSec: 0,
+            btcPrice: 100000,
+            ethBalance: 0,
+            ethLifetime: 0,
+            ethClickValue: 0.00007143,
+            ethPerSec: 0,
+            ethPrice: 3500,
+            dogeBalance: 0,
+            dogeLifetime: 0,
+            dogeClickValue: 1.00000000,
+            dogePerSec: 0,
+            dogePrice: 0.25,
+            dollarBalance: 0,
+            hardwareEquity: 0,
+            lifetimeEarnings: 0,
+            sessionEarnings: 0,
+            autoClickerCooldownEnd: 0,
+            chartHistory: [],
+            chartTimestamps: [],
+            chartStartTime: 0,
+            totalPowerAvailable: 0,
+            powerUpgrades: [],
+            btcUpgrades: [],
+            ethUpgrades: [],
+            dogeUpgrades: [],
+            skillTree: {},
+            staking: {},
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 

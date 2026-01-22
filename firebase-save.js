@@ -82,6 +82,13 @@ async function saveGameToCloud() {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         };
 
+        // Log what's being saved for debugging
+        console.log('💾 Saving game data:');
+        console.log('  btcBalance:', gameData.btcBalance);
+        console.log('  btcClickValue:', gameData.btcClickValue);
+        console.log('  btcPerSec:', gameData.btcPerSec);
+        console.log('  BTC Upgrades:', gameData.btcUpgrades ? gameData.btcUpgrades.length : 0);
+
         // ANTI-CHEAT: Server-side validation (disabled for now - causing false rejections)
         // const isValid = await validateGameData(user.uid, gameData);
         // if (!isValid) {
@@ -205,21 +212,24 @@ async function loadGameFromCloud(userId = null) {
 
         // Reset all game variables to prevent data from previous account
         resetGameVariables();
+        console.log('After reset - btcClickValue:', window.btcClickValue);
 
         // Get game data from Firestore
         const docRef = db.collection('users').doc(user.uid).collection('gameData').doc('current');
         const docSnap = await docRef.get();
 
         if (!docSnap.exists) {
-            console.log('ℹ️ No cloud save found - starting fresh game');
+            console.log('ℹ️ No cloud save found - starting fresh game for user:', user.uid);
+            console.log('  Current state - btcClickValue:', window.btcClickValue, 'btcBalance:', window.btcBalance);
             return false;
         }
 
         const cloudData = docSnap.data();
-        console.log('☁️ Cloud save found, loading into game...');
-        console.log('  BTC Balance:', cloudData.btcBalance);
-        console.log('  Dollar Balance:', cloudData.dollarBalance);
-        console.log('  Lifetime Earnings:', cloudData.lifetimeEarnings);
+        console.log('☁️ Cloud save found, loading into game for user:', user.uid);
+        console.log('  Cloud data - btcBalance:', cloudData.btcBalance);
+        console.log('  Cloud data - btcClickValue:', cloudData.btcClickValue);
+        console.log('  Cloud data - Dollar Balance:', cloudData.dollarBalance);
+        console.log('  Cloud data - Lifetime Earnings:', cloudData.lifetimeEarnings);
 
         // Apply cloud data to game variables using window accessors (these use the setters)
         // Bitcoin data
@@ -319,8 +329,11 @@ async function loadGameFromCloud(userId = null) {
         // Verify data was actually loaded
         console.log('📋 Verifying loaded data in game variables:');
         console.log('  window.btcBalance:', window.btcBalance);
+        console.log('  window.btcClickValue:', window.btcClickValue);
+        console.log('  window.btcPerSec:', window.btcPerSec);
         console.log('  window.dollarBalance:', window.dollarBalance);
         console.log('  window.lifetimeEarnings:', window.lifetimeEarnings);
+        console.log('  BTC Upgrades loaded:', window.btcUpgrades ? window.btcUpgrades.length : 0, 'upgrades');
 
         // Update UI if functions exist
         if (typeof updateDisplay === 'function') updateDisplay();
