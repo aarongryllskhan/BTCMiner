@@ -473,6 +473,12 @@ function setupAuthListener() {
                 window.startLeaderboardUpdates();
             }
 
+            // Start auto-save to cloud (every 60 seconds)
+            if (window.startAutoSave) {
+                console.log('Starting auto-save...');
+                window.startAutoSave();
+            }
+
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
             console.log('ℹ️ No user logged in - showing login screen');
@@ -480,6 +486,11 @@ function setupAuthListener() {
             // Stop leaderboard updates
             if (window.stopLeaderboardUpdates) {
                 window.stopLeaderboardUpdates();
+            }
+
+            // Stop auto-save
+            if (window.stopAutoSave) {
+                window.stopAutoSave();
             }
 
             // Show login screen for new users

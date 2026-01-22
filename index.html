@@ -20,6 +20,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idle BTC Miner | GAME</title>
+
+    <!-- Cache buster - forces fresh load on updates -->
+    <script>
+        // Check if app has been updated
+        const appVersion = '1.0.0'; // Increment this version to force cache clear
+        const storedVersion = localStorage.getItem('appVersion');
+
+        if (storedVersion !== appVersion) {
+            console.log('🔄 App updated! Clearing old cache...');
+            // Clear all app-related caches
+            localStorage.removeItem('satoshiTerminalSave');
+            localStorage.removeItem('instructionsDismissed');
+            localStorage.removeItem('appVersion');
+
+            // Clear service worker cache if it exists
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(reg => reg.unregister());
+                });
+            }
+
+            // Store new version
+            localStorage.setItem('appVersion', appVersion);
+            console.log('✅ Cache cleared! Reload the page to see the latest version.');
+        }
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="styles.css">
 

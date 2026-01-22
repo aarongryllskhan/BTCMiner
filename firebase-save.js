@@ -5,17 +5,13 @@
 
 // Save game data to Firebase Cloud
 async function saveGameToCloud() {
-    // TEMPORARILY DISABLED - causing game lockups
-    console.log('⏭️ Cloud save temporarily disabled - using local storage only');
-    return true;
-    /*
     try {
         const user = auth.currentUser;
 
         if (!user) {
             console.log('⚠️ No user logged in - skipping cloud save');
             return false;
-        }*/
+        }
 
         // Gather game data from your existing game variables (use window accessors for closure variables)
         const gameData = {
@@ -161,17 +157,13 @@ function resetGameVariables() {
 
 // Load game data from Firebase Cloud (smart merge with local save)
 async function loadGameFromCloud(userId = null) {
-    // TEMPORARILY DISABLED - causing game lockups
-    console.log('⏭️ Cloud load temporarily disabled - using local storage only');
-    return true;
-    /*
     try {
         const user = userId ? { uid: userId } : auth.currentUser;
 
         if (!user) {
             console.log('⚠️ No user logged in - using local save only');
             return false;
-        }*/
+        }
 
         // Reset all game variables to prevent data from previous account
         resetGameVariables();
