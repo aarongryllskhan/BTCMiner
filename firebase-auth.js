@@ -164,6 +164,11 @@ async function loginWithGoogle() {
         }
 
         showMessage('Welcome!', 'success');
+
+        // IMPORTANT: The onAuthStateChanged listener will handle UI updates
+        // But we can manually trigger it here to ensure immediate response
+        console.log('🔄 Google login complete, auth state should update automatically...');
+
         return user;
 
     } catch (error) {
@@ -396,18 +401,25 @@ function setupAuthListener() {
 
     // Listen for authentication state changes
     auth.onAuthStateChanged(async (user) => {
+        console.log('🔄 Auth state changed!');
+
         if (user) {
             console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
+            console.log('User UID:', user.uid);
 
             // Hide login screen
             const loginScreen = document.getElementById('login-screen');
+            console.log('Login screen element found?', !!loginScreen);
             if (loginScreen) {
+                console.log('Hiding login screen...');
                 loginScreen.style.display = 'none';
             }
 
             // Show main game layout
             const mainLayout = document.getElementById('main-layout');
+            console.log('Main layout element found?', !!mainLayout);
             if (mainLayout) {
+                console.log('Showing main game layout...');
                 mainLayout.style.display = 'flex';
             }
 
@@ -423,9 +435,20 @@ function setupAuthListener() {
             }
 
             // Load user's game data (smart merge with local save)
+            console.log('loadGameFromCloud function available?', typeof window.loadGameFromCloud);
             if (window.loadGameFromCloud) {
-                await window.loadGameFromCloud(user.uid);
+                console.log('Loading game data from cloud...');
+                try {
+                    await window.loadGameFromCloud(user.uid);
+                    console.log('✅ Game data loaded successfully');
+                } catch (error) {
+                    console.error('❌ Failed to load game data:', error);
+                }
+            } else {
+                console.warn('⚠️ loadGameFromCloud function not available');
             }
+
+            console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
             console.log('ℹ️ No user logged in - showing login screen');
 

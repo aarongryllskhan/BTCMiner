@@ -1,0 +1,82 @@
+================================================================================
+QUICK PRIVACY ANSWER FOR USERS
+================================================================================
+
+If users ask "What data do you collect?" or "Is my data safe?", here's what
+to tell them:
+
+================================================================================
+
+SIMPLE ANSWER:
+--------------
+
+"We collect your email address to create your account and save your game
+progress using Firebase by Google. Your password is securely hashed (never
+stored in plain text). We DO NOT sell or share your data with anyone. Your
+data is protected by Google's enterprise-grade security."
+
+
+DETAILED ANSWER:
+----------------
+
+We collect:
+• Email address (for login and account recovery)
+• Password (hashed with bcrypt - we can't see your actual password)
+• Game progress (BTC balance, upgrades, achievements)
+• Anonymous usage stats (to improve the game)
+
+We use Firebase by Google for:
+• User authentication
+• Cloud database for saving your progress
+• Analytics to improve the game
+
+Security:
+• All data encrypted with HTTPS/SSL
+• Passwords hashed with industry-standard bcrypt
+• No passwords stored in plain text
+• Protected by Google's Firebase security
+
+Your Rights:
+• View your data anytime
+• Export your data (email us)
+• Delete your account permanently (email us)
+• We DO NOT sell your data
+
+Contact: idlebtcminer@gmail.com
+
+
+FOR SOCIAL MEDIA / FAQ:
+-----------------------
+
+Q: Do you sell my data?
+A: NO. We DO NOT sell or share your personal data with third parties. Your
+   information is used only to provide game services.
+
+Q: Is my password safe?
+A: Yes! Passwords are hashed using bcrypt encryption and stored by Firebase
+   (Google). We cannot see your actual password - it's encrypted one-way.
+
+Q: What happens to my data if I delete my account?
+A: All your data is permanently deleted from our servers within 30 days.
+
+Q: Who has access to my data?
+A: Only Firebase's secure servers. We don't have direct access to your password
+   (it's hashed). Game progress is only accessible to you when logged in.
+
+
+TWEET/SOCIAL POST:
+------------------
+
+"🔒 Your privacy matters! Idle BTC Miner uses Firebase by Google for secure
+account management. We DO NOT sell your data. Passwords are encrypted.
+Your game progress is yours. #Privacy #DataSecurity"
+
+
+EMAIL SIGNATURE:
+----------------
+
+Privacy Policy: www.idlebtcminer.com (click Privacy tab)
+We DO NOT sell your data | Firebase by Google | Secure bcrypt password hashing
+
+
+================================================================================

@@ -378,9 +378,18 @@
             const password = document.getElementById('login-password').value;
 
             try {
+                console.log('🔑 Attempting login...');
+                console.log('Parent window loginUser exists?', typeof window.parent.loginUser);
+
+                if (typeof window.parent.loginUser !== 'function') {
+                    alert('Error: Login function not found. Please refresh the page.');
+                    return;
+                }
+
                 await window.parent.loginUser(email, password);
             } catch (error) {
                 console.error('Login failed:', error);
+                alert('Login failed: ' + error.message);
             }
         }
 
@@ -399,27 +408,54 @@
             }
 
             try {
+                console.log('📝 Attempting registration...');
+                console.log('Parent window registerUser exists?', typeof window.parent.registerUser);
+
+                if (typeof window.parent.registerUser !== 'function') {
+                    alert('Error: Registration function not found. Please refresh the page.');
+                    return;
+                }
+
                 await window.parent.registerUser(email, password, username);
             } catch (error) {
                 console.error('Registration failed:', error);
+                alert('Registration failed: ' + error.message);
             }
         }
 
         // Handle Google login
         async function handleGoogleLogin() {
             try {
+                console.log('🔍 Attempting Google login...');
+                console.log('Parent window loginWithGoogle exists?', typeof window.parent.loginWithGoogle);
+
+                if (typeof window.parent.loginWithGoogle !== 'function') {
+                    alert('Error: Google login function not found. Please refresh the page.');
+                    return;
+                }
+
                 await window.parent.loginWithGoogle();
             } catch (error) {
                 console.error('Google login failed:', error);
+                alert('Google login failed: ' + error.message);
             }
         }
 
         // Handle guest login
         async function handleGuestLogin() {
             try {
+                console.log('👤 Attempting guest login...');
+                console.log('Parent window playAsGuest exists?', typeof window.parent.playAsGuest);
+
+                if (typeof window.parent.playAsGuest !== 'function') {
+                    alert('Error: Guest login function not found. Please refresh the page.');
+                    return;
+                }
+
                 await window.parent.playAsGuest();
             } catch (error) {
                 console.error('Guest login failed:', error);
+                alert('Guest login failed: ' + error.message);
             }
         }
 
