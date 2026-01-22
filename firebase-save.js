@@ -96,9 +96,14 @@ async function saveGameToCloud() {
 
         // Update user profile stats
         await db.collection('users').doc(user.uid).update({
-            totalBTC: gameData.btc,
+            totalBTC: gameData.btcBalance,
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        // Update leaderboard with current lifetime earnings
+        if (typeof window.updateLeaderboard === 'function') {
+            await window.updateLeaderboard();
+        }
 
         console.log('✅ Game saved to cloud successfully');
 
@@ -124,76 +129,56 @@ async function loadGameFromCloud(userId = null) {
             return false;
         }
 
-        // Get local save data (from localStorage via game.js)
-        const hasLocalSave = localStorage.getItem('satoshiTerminalSave') !== null;
-        const localData = hasLocalSave ? JSON.parse(localStorage.getItem('satoshiTerminalSave')) : null;
-
         // Get game data from Firestore
         const docRef = db.collection('users').doc(user.uid).collection('gameData').doc('current');
         const docSnap = await docRef.get();
 
         if (!docSnap.exists) {
-            console.log('ℹ️ No cloud save found');
-
-            // If we have local progress, upload it to cloud
-            if (hasLocalSave && localData) {
-                console.log('📤 Uploading local progress to cloud...');
-                await saveGameToCloud();
-                showMessage('Local progress uploaded to cloud!', 'success');
-            } else {
-                console.log('Starting fresh game');
-            }
+            console.log('ℹ️ No cloud save found - starting fresh game');
             return false;
         }
 
         const cloudData = docSnap.data();
         console.log('☁️ Cloud save found:', cloudData);
 
-        // Always use cloud data for this account (don't compare with other accounts' local saves)
-        // Local save comparison is only relevant for guest->account conversion,
-        // and in that case the user would have the same localStorage from being a guest
-        let useCloudData = true;
+        // Apply cloud data to game variables
+        // Bitcoin data
+        if (typeof btcBalance !== 'undefined') btcBalance = cloudData.btcBalance || 0;
+        if (typeof btcLifetime !== 'undefined') btcLifetime = cloudData.btcLifetime || 0;
+        if (typeof btcClickValue !== 'undefined') btcClickValue = cloudData.btcClickValue || 0;
+        if (typeof btcPerSec !== 'undefined') btcPerSec = cloudData.btcPerSec || 0;
+        if (typeof btcPrice !== 'undefined') btcPrice = cloudData.btcPrice || 100000;
+        // Ethereum data
+        if (typeof ethBalance !== 'undefined') ethBalance = cloudData.ethBalance || 0;
+        if (typeof ethLifetime !== 'undefined') ethLifetime = cloudData.ethLifetime || 0;
+        if (typeof ethClickValue !== 'undefined') ethClickValue = cloudData.ethClickValue || 0;
+        if (typeof ethPerSec !== 'undefined') ethPerSec = cloudData.ethPerSec || 0;
+        if (typeof ethPrice !== 'undefined') ethPrice = cloudData.ethPrice || 3500;
+        // Dogecoin data
+        if (typeof dogeBalance !== 'undefined') dogeBalance = cloudData.dogeBalance || 0;
+        if (typeof dogeLifetime !== 'undefined') dogeLifetime = cloudData.dogeLifetime || 0;
+        if (typeof dogeClickValue !== 'undefined') dogeClickValue = cloudData.dogeClickValue || 0;
+        if (typeof dogePerSec !== 'undefined') dogePerSec = cloudData.dogePerSec || 0;
+        if (typeof dogePrice !== 'undefined') dogePrice = cloudData.dogePrice || 0.25;
+        // General data
+        if (typeof dollarBalance !== 'undefined') dollarBalance = cloudData.dollarBalance || 0;
+        if (typeof hardwareEquity !== 'undefined') hardwareEquity = cloudData.hardwareEquity || 0;
+        if (typeof autoClickerCooldownEnd !== 'undefined') autoClickerCooldownEnd = cloudData.autoClickerCooldownEnd || 0;
+        if (typeof lifetimeEarnings !== 'undefined') lifetimeEarnings = cloudData.lifetimeEarnings || 0;
+        if (typeof sessionEarnings !== 'undefined') sessionEarnings = cloudData.sessionEarnings || 0;
+        if (typeof sessionStartTime !== 'undefined') sessionStartTime = cloudData.sessionStartTime || 0;
+        if (typeof chartHistory !== 'undefined') chartHistory = cloudData.chartHistory || [];
+        if (typeof chartTimestamps !== 'undefined') chartTimestamps = cloudData.chartTimestamps || [];
+        if (typeof chartStartTime !== 'undefined') chartStartTime = cloudData.chartStartTime || 0;
+        if (typeof totalPowerAvailable !== 'undefined') totalPowerAvailable = cloudData.totalPowerAvailable || 0;
 
-        // Only apply cloud data if it's better than local
-        if (useCloudData) {
-            // Apply cloud data to game variables
-            // Bitcoin data
-            if (typeof btcBalance !== 'undefined') btcBalance = cloudData.btcBalance || 0;
-            if (typeof btcLifetime !== 'undefined') btcLifetime = cloudData.btcLifetime || 0;
-            if (typeof btcClickValue !== 'undefined') btcClickValue = cloudData.btcClickValue || 0;
-            if (typeof btcPerSec !== 'undefined') btcPerSec = cloudData.btcPerSec || 0;
-            if (typeof btcPrice !== 'undefined') btcPrice = cloudData.btcPrice || 100000;
-            // Ethereum data
-            if (typeof ethBalance !== 'undefined') ethBalance = cloudData.ethBalance || 0;
-            if (typeof ethLifetime !== 'undefined') ethLifetime = cloudData.ethLifetime || 0;
-            if (typeof ethClickValue !== 'undefined') ethClickValue = cloudData.ethClickValue || 0;
-            if (typeof ethPerSec !== 'undefined') ethPerSec = cloudData.ethPerSec || 0;
-            if (typeof ethPrice !== 'undefined') ethPrice = cloudData.ethPrice || 3500;
-            // Dogecoin data
-            if (typeof dogeBalance !== 'undefined') dogeBalance = cloudData.dogeBalance || 0;
-            if (typeof dogeLifetime !== 'undefined') dogeLifetime = cloudData.dogeLifetime || 0;
-            if (typeof dogeClickValue !== 'undefined') dogeClickValue = cloudData.dogeClickValue || 0;
-            if (typeof dogePerSec !== 'undefined') dogePerSec = cloudData.dogePerSec || 0;
-            if (typeof dogePrice !== 'undefined') dogePrice = cloudData.dogePrice || 0.25;
-            // General data
-            if (typeof dollarBalance !== 'undefined') dollarBalance = cloudData.dollarBalance || 0;
-            if (typeof hardwareEquity !== 'undefined') hardwareEquity = cloudData.hardwareEquity || 0;
-            if (typeof autoClickerCooldownEnd !== 'undefined') autoClickerCooldownEnd = cloudData.autoClickerCooldownEnd || 0;
-            if (typeof lifetimeEarnings !== 'undefined') lifetimeEarnings = cloudData.lifetimeEarnings || 0;
-            if (typeof sessionEarnings !== 'undefined') sessionEarnings = cloudData.sessionEarnings || 0;
-            if (typeof sessionStartTime !== 'undefined') sessionStartTime = cloudData.sessionStartTime || 0;
-            if (typeof chartHistory !== 'undefined') chartHistory = cloudData.chartHistory || [];
-            if (typeof chartTimestamps !== 'undefined') chartTimestamps = cloudData.chartTimestamps || [];
-            if (typeof chartStartTime !== 'undefined') chartStartTime = cloudData.chartStartTime || 0;
-            if (typeof totalPowerAvailable !== 'undefined') totalPowerAvailable = cloudData.totalPowerAvailable || 0;
+        // Update UI if functions exist
+        if (typeof updateDisplay === 'function') updateDisplay();
+        if (typeof updateUpgradeUI === 'function') updateUpgradeUI();
+        if (typeof updateSkillTree === 'function') updateSkillTree();
 
-            // Update UI if functions exist
-            if (typeof updateDisplay === 'function') updateDisplay();
-            if (typeof updateUpgradeUI === 'function') updateUpgradeUI();
-            if (typeof updateSkillTree === 'function') updateSkillTree();
-
-            showMessage('Progress loaded from cloud!', 'success');
-        }
+        console.log('✅ Progress loaded from cloud successfully');
+        showMessage('Progress loaded from cloud!', 'success');
 
         return true;
 

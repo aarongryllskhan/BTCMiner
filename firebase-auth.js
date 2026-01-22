@@ -457,9 +457,19 @@ function setupAuthListener() {
                 console.warn('⚠️ loadGameFromCloud function not available');
             }
 
+            // Start leaderboard updates
+            if (window.startLeaderboardUpdates) {
+                window.startLeaderboardUpdates();
+            }
+
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
             console.log('ℹ️ No user logged in - showing login screen');
+
+            // Stop leaderboard updates
+            if (window.stopLeaderboardUpdates) {
+                window.stopLeaderboardUpdates();
+            }
 
             // Show login screen for new users
             // They can login, register, or skip to play offline
