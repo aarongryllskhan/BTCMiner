@@ -91,8 +91,8 @@ async function loadGameFromCloud(userId = null) {
         }
 
         // Get local save data (from localStorage via game.js)
-        const hasLocalSave = localStorage.getItem('gameData') !== null;
-        const localData = hasLocalSave ? JSON.parse(localStorage.getItem('gameData')) : null;
+        const hasLocalSave = localStorage.getItem('satoshiTerminalSave') !== null;
+        const localData = hasLocalSave ? JSON.parse(localStorage.getItem('satoshiTerminalSave')) : null;
 
         // Get game data from Firestore
         const docRef = db.collection('users').doc(user.uid).collection('gameData').doc('current');
