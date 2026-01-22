@@ -119,6 +119,41 @@ async function saveGameToCloud() {
     }
 }
 
+// Reset all game variables to default state
+function resetGameVariables() {
+    try {
+        // Bitcoin
+        if (typeof btcBalance !== 'undefined') btcBalance = 0;
+        if (typeof btcLifetime !== 'undefined') btcLifetime = 0;
+        if (typeof btcPerSec !== 'undefined') btcPerSec = 0;
+        if (typeof btcPrice !== 'undefined') btcPrice = 100000;
+
+        // Ethereum
+        if (typeof ethBalance !== 'undefined') ethBalance = 0;
+        if (typeof ethLifetime !== 'undefined') ethLifetime = 0;
+        if (typeof ethPerSec !== 'undefined') ethPerSec = 0;
+        if (typeof ethPrice !== 'undefined') ethPrice = 3500;
+
+        // Dogecoin
+        if (typeof dogeBalance !== 'undefined') dogeBalance = 0;
+        if (typeof dogeLifetime !== 'undefined') dogeLifetime = 0;
+        if (typeof dogePerSec !== 'undefined') dogePerSec = 0;
+        if (typeof dogePrice !== 'undefined') dogePrice = 0.25;
+
+        // General
+        if (typeof dollarBalance !== 'undefined') dollarBalance = 0;
+        if (typeof hardwareEquity !== 'undefined') hardwareEquity = 0;
+        if (typeof lifetimeEarnings !== 'undefined') lifetimeEarnings = 0;
+        if (typeof sessionEarnings !== 'undefined') sessionEarnings = 0;
+        if (typeof totalPlayTime !== 'undefined') totalPlayTime = 0;
+        if (typeof totalPowerAvailable !== 'undefined') totalPowerAvailable = 0;
+
+        console.log('✅ Game variables reset to defaults');
+    } catch (error) {
+        console.error('Error resetting variables:', error);
+    }
+}
+
 // Load game data from Firebase Cloud (smart merge with local save)
 async function loadGameFromCloud(userId = null) {
     try {
@@ -128,6 +163,9 @@ async function loadGameFromCloud(userId = null) {
             console.log('⚠️ No user logged in - using local save only');
             return false;
         }
+
+        // Reset all game variables to prevent data from previous account
+        resetGameVariables();
 
         // Get game data from Firestore
         const docRef = db.collection('users').doc(user.uid).collection('gameData').doc('current');

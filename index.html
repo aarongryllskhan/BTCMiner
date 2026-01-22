@@ -778,6 +778,11 @@
         }
     });
 
+    // Clear localStorage on page load to prevent loading other account's data
+    // This ensures each account starts fresh until they login
+    console.log('🔄 Page loaded - clearing previous session data');
+    localStorage.clear();
+
     // Save game before user closes/refreshes page
     window.addEventListener('beforeunload', (e) => {
         if (typeof auth !== 'undefined' && auth && auth.currentUser) {
