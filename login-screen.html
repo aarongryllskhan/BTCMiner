@@ -235,6 +235,9 @@
 </head>
 <body>
     <div class="login-container">
+        <button onclick="window.parent.document.getElementById('login-screen').style.display='none'" style="position: absolute; top: 10px; right: 10px; background: transparent; border: 2px solid #f7931a; color: #f7931a; cursor: pointer; font-size: 1.2rem; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.2s;">
+            ×
+        </button>
         <div class="logo">
             <h1>🪙 IDLE BTC MINER</h1>
             <p>Start Mining Virtual Bitcoin</p>
@@ -273,8 +276,14 @@
             </button>
 
             <button class="btn btn-guest" onclick="handleGuestLogin()">
-                👤 Play as Guest
+                👤 Continue as Guest
             </button>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
+                    Skip and play offline →
+                </a>
+            </div>
         </div>
 
         <!-- REGISTER FORM -->
@@ -311,8 +320,14 @@
             </button>
 
             <button class="btn btn-guest" onclick="handleGuestLogin()">
-                👤 Play as Guest
+                👤 Continue as Guest
             </button>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
+                    Skip and play offline →
+                </a>
+            </div>
         </div>
 
         <!-- DISCLAIMER -->

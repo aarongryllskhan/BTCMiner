@@ -262,7 +262,7 @@ async function playAsGuest() {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        showMessage('Playing as guest. Create an account to save your progress!', 'info');
+        showMessage('Playing as guest. Click "☁️ Save to Cloud" to create an account and save your progress!', 'info');
         return user;
 
     } catch (error) {
@@ -384,14 +384,20 @@ window.resetPassword = resetPassword;
 window.playAsGuest = playAsGuest;
 window.linkGuestToEmail = linkGuestToEmail;
 
-// Check authentication state on page load
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔍 Checking authentication state...');
+// Setup authentication state listener
+// This will be called after Firebase initializes
+function setupAuthListener() {
+    console.log('🔍 Setting up authentication listener...');
+
+    if (!auth) {
+        console.error('❌ Auth not initialized!');
+        return;
+    }
 
     // Listen for authentication state changes
     auth.onAuthStateChanged(async (user) => {
         if (user) {
-            console.log('✅ User is logged in:', user.email || 'Guest User');
+            console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
 
             // Hide login screen
             const loginScreen = document.getElementById('login-screen');
@@ -399,18 +405,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 loginScreen.style.display = 'none';
             }
 
-            // Load user's game data
-            if (window.loadGameData) {
-                await window.loadGameData(user.uid);
+            // Show main game layout
+            const mainLayout = document.getElementById('main-layout');
+            if (mainLayout) {
+                mainLayout.style.display = 'flex';
+            }
+
+            // Update user UI with login info (shows username)
+            if (window.updateUserUI) {
+                window.updateUserUI(user);
+            }
+
+            // Hide the login button since user is logged in
+            const loginBtn = document.getElementById('login-btn');
+            if (loginBtn) {
+                loginBtn.style.display = 'none';
+            }
+
+            // Load user's game data (smart merge with local save)
+            if (window.loadGameFromCloud) {
+                await window.loadGameFromCloud(user.uid);
             }
         } else {
-            console.log('❌ No user logged in - showing login screen');
+            console.log('ℹ️ No user logged in - showing login screen');
 
-            // Show login screen
+            // Show login screen for new users
+            // They can login, register, or skip to play offline
             const loginScreen = document.getElementById('login-screen');
             if (loginScreen) {
                 loginScreen.style.display = 'flex';
             }
+
+            // Show the login button (for users who skipped)
+            const loginBtn = document.getElementById('login-btn');
+            if (loginBtn) {
+                loginBtn.style.display = 'inline-block';
+            }
         }
     });
-});
+}
+
+// Make it globally available
+window.setupAuthListener = setupAuthListener;

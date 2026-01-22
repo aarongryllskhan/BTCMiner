@@ -15,8 +15,11 @@ async function saveGameToCloud() {
 
         // Gather game data from your existing game variables
         const gameData = {
-            // Core game stats
+            // Core game stats - all crypto balances
             btc: typeof btc !== 'undefined' ? btc : 0,
+            eth: typeof eth !== 'undefined' ? eth : 0,
+            doge: typeof doge !== 'undefined' ? doge : 0,
+            dollarBalance: typeof dollarBalance !== 'undefined' ? dollarBalance : 0,
             bitcoinPerSecond: typeof bitcoinPerSecond !== 'undefined' ? bitcoinPerSecond : 0,
 
             // Upgrades
@@ -30,12 +33,14 @@ async function saveGameToCloud() {
             achievements: typeof achievements !== 'undefined' ? achievements : [],
 
             // Statistics
-            totalEarned: typeof totalEarned !== 'undefined' ? totalEarned : 0,
+            totalEarned: typeof lifetimeEarnings !== 'undefined' ? lifetimeEarnings : (typeof totalEarned !== 'undefined' ? totalEarned : 0),
             totalSpent: typeof totalSpent !== 'undefined' ? totalSpent : 0,
             totalClicks: typeof totalClicks !== 'undefined' ? totalClicks : 0,
 
-            // Staking (if you have it)
+            // Staking
             stakedBTC: typeof stakedBTC !== 'undefined' ? stakedBTC : 0,
+            stakedETH: typeof stakedETH !== 'undefined' ? stakedETH : 0,
+            stakedDOGE: typeof stakedDOGE !== 'undefined' ? stakedDOGE : 0,
             stakingRewards: typeof stakingRewards !== 'undefined' ? stakingRewards : 0,
 
             // Timestamps
@@ -75,48 +80,91 @@ async function saveGameToCloud() {
     }
 }
 
-// Load game data from Firebase Cloud
+// Load game data from Firebase Cloud (smart merge with local save)
 async function loadGameFromCloud(userId = null) {
     try {
         const user = userId ? { uid: userId } : auth.currentUser;
 
         if (!user) {
-            console.log('⚠️ No user logged in - loading local save');
+            console.log('⚠️ No user logged in - using local save only');
             return false;
         }
+
+        // Get local save data (from localStorage via game.js)
+        const hasLocalSave = localStorage.getItem('gameData') !== null;
+        const localData = hasLocalSave ? JSON.parse(localStorage.getItem('gameData')) : null;
 
         // Get game data from Firestore
         const docRef = db.collection('users').doc(user.uid).collection('gameData').doc('current');
         const docSnap = await docRef.get();
 
         if (!docSnap.exists) {
-            console.log('ℹ️ No cloud save found - starting new game');
+            console.log('ℹ️ No cloud save found');
+
+            // If we have local progress, upload it to cloud
+            if (hasLocalSave && localData) {
+                console.log('📤 Uploading local progress to cloud...');
+                await saveGameToCloud();
+                showMessage('Local progress uploaded to cloud!', 'success');
+            } else {
+                console.log('Starting fresh game');
+            }
             return false;
         }
 
         const cloudData = docSnap.data();
-        console.log('✅ Game data loaded from cloud:', cloudData);
+        console.log('☁️ Cloud save found:', cloudData);
 
-        // Apply cloud data to game variables
-        if (typeof btc !== 'undefined') btc = cloudData.btc || 0;
-        if (typeof bitcoinPerSecond !== 'undefined') bitcoinPerSecond = cloudData.bitcoinPerSecond || 0;
-        if (typeof upgrades !== 'undefined') upgrades = cloudData.upgrades || {};
-        if (typeof skills !== 'undefined') skills = cloudData.skills || {};
-        if (typeof skillTokens !== 'undefined') skillTokens = cloudData.skillTokens || 0;
-        if (typeof achievements !== 'undefined') achievements = cloudData.achievements || [];
-        if (typeof totalEarned !== 'undefined') totalEarned = cloudData.totalEarned || 0;
-        if (typeof totalSpent !== 'undefined') totalSpent = cloudData.totalSpent || 0;
-        if (typeof totalClicks !== 'undefined') totalClicks = cloudData.totalClicks || 0;
-        if (typeof stakedBTC !== 'undefined') stakedBTC = cloudData.stakedBTC || 0;
-        if (typeof stakingRewards !== 'undefined') stakingRewards = cloudData.stakingRewards || 0;
-        if (typeof totalPlayTime !== 'undefined') totalPlayTime = cloudData.playTime || 0;
+        // Compare cloud vs local progress (use whichever has more total earnings)
+        let useCloudData = true;
 
-        // Update UI if functions exist
-        if (typeof updateDisplay === 'function') updateDisplay();
-        if (typeof updateUpgradeUI === 'function') updateUpgradeUI();
-        if (typeof updateSkillTree === 'function') updateSkillTree();
+        if (hasLocalSave && localData) {
+            const localEarnings = localData.lifetimeEarnings || localData.totalEarned || 0;
+            const cloudEarnings = cloudData.totalEarned || 0;
 
-        showMessage('Progress loaded from cloud!', 'success');
+            console.log(`📊 Comparing saves - Local: $${localEarnings}, Cloud: $${cloudEarnings}`);
+
+            if (localEarnings > cloudEarnings) {
+                console.log('✅ Local save is better - keeping local progress');
+                useCloudData = false;
+
+                // Upload the better local save to cloud
+                await saveGameToCloud();
+                showMessage('Local progress was better - uploaded to cloud!', 'info');
+            } else {
+                console.log('☁️ Cloud save is better - loading from cloud');
+            }
+        }
+
+        // Only apply cloud data if it's better than local
+        if (useCloudData) {
+            // Apply cloud data to game variables
+            if (typeof btc !== 'undefined') btc = cloudData.btc || 0;
+            if (typeof eth !== 'undefined') eth = cloudData.eth || 0;
+            if (typeof doge !== 'undefined') doge = cloudData.doge || 0;
+            if (typeof dollarBalance !== 'undefined') dollarBalance = cloudData.dollarBalance || 0;
+            if (typeof bitcoinPerSecond !== 'undefined') bitcoinPerSecond = cloudData.bitcoinPerSecond || 0;
+            if (typeof upgrades !== 'undefined') upgrades = cloudData.upgrades || {};
+            if (typeof skills !== 'undefined') skills = cloudData.skills || {};
+            if (typeof skillTokens !== 'undefined') skillTokens = cloudData.skillTokens || 0;
+            if (typeof achievements !== 'undefined') achievements = cloudData.achievements || [];
+            if (typeof lifetimeEarnings !== 'undefined') lifetimeEarnings = cloudData.totalEarned || 0;
+            if (typeof totalEarned !== 'undefined') totalEarned = cloudData.totalEarned || 0;
+            if (typeof totalSpent !== 'undefined') totalSpent = cloudData.totalSpent || 0;
+            if (typeof totalClicks !== 'undefined') totalClicks = cloudData.totalClicks || 0;
+            if (typeof stakedBTC !== 'undefined') stakedBTC = cloudData.stakedBTC || 0;
+            if (typeof stakedETH !== 'undefined') stakedETH = cloudData.stakedETH || 0;
+            if (typeof stakedDOGE !== 'undefined') stakedDOGE = cloudData.stakedDOGE || 0;
+            if (typeof totalPlayTime !== 'undefined') totalPlayTime = cloudData.playTime || 0;
+
+            // Update UI if functions exist
+            if (typeof updateDisplay === 'function') updateDisplay();
+            if (typeof updateUpgradeUI === 'function') updateUpgradeUI();
+            if (typeof updateSkillTree === 'function') updateSkillTree();
+
+            showMessage('Progress loaded from cloud!', 'success');
+        }
+
         return true;
 
     } catch (error) {
@@ -271,47 +319,10 @@ function showSaveIndicator() {
     }, 2000);
 }
 
-// Manual sync button
+// Manual sync button (integrated into user info)
 function createSyncButton() {
-    const syncBtn = document.createElement('button');
-    syncBtn.innerHTML = '☁️ Save';
-    syncBtn.style.cssText = `
-        position: fixed;
-        bottom: 60px;
-        right: 20px;
-        background: #f7931a;
-        color: #000;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-        z-index: 9998;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    `;
-
-    syncBtn.onclick = async () => {
-        syncBtn.disabled = true;
-        syncBtn.innerHTML = '☁️ Saving...';
-
-        const success = await saveGameToCloud();
-
-        if (success) {
-            syncBtn.innerHTML = '✓ Saved!';
-            setTimeout(() => {
-                syncBtn.innerHTML = '☁️ Save';
-                syncBtn.disabled = false;
-            }, 2000);
-        } else {
-            syncBtn.innerHTML = '✗ Failed';
-            setTimeout(() => {
-                syncBtn.innerHTML = '☁️ Save';
-                syncBtn.disabled = false;
-            }, 2000);
-        }
-    };
-
-    document.body.appendChild(syncBtn);
+    // Don't create a separate button - it will be part of updateUserUI
+    console.log('✅ Manual save button available in user menu');
 }
 
 // Export functions for global use
