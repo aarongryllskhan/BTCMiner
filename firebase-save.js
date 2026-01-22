@@ -99,9 +99,11 @@ async function saveGameToCloud() {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Update leaderboard with current lifetime earnings
+        // Update leaderboard with current lifetime earnings (async - don't wait for it)
         if (typeof window.updateLeaderboard === 'function') {
-            await window.updateLeaderboard();
+            window.updateLeaderboard().catch(err => {
+                console.warn('⚠️ Leaderboard update failed (non-critical):', err);
+            });
         }
 
         console.log('✅ Game saved to cloud successfully');
