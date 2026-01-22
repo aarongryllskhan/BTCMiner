@@ -1,3 +1,4 @@
+(function() {
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
@@ -490,6 +491,9 @@
             } else {
                 console.error('✗ SAVE FAILED - Could not verify in localStorage');
             }
+
+            // Sync to cloud if user is logged in (async - don't block game)
+            // Removed: was causing issues. Cloud sync happens via auto-save and beforeunload instead
         } catch (error) {
             console.error('✗ ERROR saving game to localStorage:', error);
             alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
@@ -1444,6 +1448,7 @@ function loadGame() {
     }
 
 function manualHash() {
+    console.log('🔨 MANUAL HASH CLICKED - btcClickValue:', btcClickValue, 'btcBalance before:', btcBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = btcClickValue * clickBonus;
@@ -1470,10 +1475,12 @@ function manualHash() {
     playClickSound();
 
     // This refreshes the screen so you see the numbers go up
+    console.log('✅ MANUAL HASH COMPLETE - btcBalance after:', btcBalance, 'lifetimeEarnings:', lifetimeEarnings);
     updateUI();
 }
 
 function manualEthHash() {
+    console.log('🔨 MANUAL ETH HASH CLICKED - ethClickValue:', ethClickValue, 'ethBalance before:', ethBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = ethClickValue * clickBonus;
@@ -1498,10 +1505,12 @@ function manualEthHash() {
     playClickSound();
 
     // Refresh the screen
+    console.log('✅ MANUAL ETH HASH COMPLETE - ethBalance after:', ethBalance);
     updateUI();
 }
 
 function manualDogeHash() {
+    console.log('🔨 MANUAL DOGE HASH CLICKED - dogeClickValue:', dogeClickValue, 'dogeBalance before:', dogeBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = dogeClickValue * clickBonus;
@@ -1526,6 +1535,7 @@ function manualDogeHash() {
     playClickSound();
 
     // Refresh the screen
+    console.log('✅ MANUAL DOGE HASH COMPLETE - dogeBalance after:', dogeBalance);
     updateUI();
 }
 
@@ -2962,17 +2972,177 @@ dogeUpgrades.forEach(u => {
     }
 
     // Make functions available globally
+    window.manualHash = manualHash;
+    window.manualEthHash = manualEthHash;
+    window.manualDogeHash = manualDogeHash;
     window.acceptAgeDisclaimer = acceptAgeDisclaimer;
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;
+
+    // Verify functions are accessible
+    console.log('✅ GAME.JS LOADED - Functions exported to window:');
+    console.log('  manualHash:', typeof window.manualHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  manualEthHash:', typeof window.manualEthHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  manualDogeHash:', typeof window.manualDogeHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+
+    // Expose game variables globally for Firebase save/load
+    // This creates a getter/setter interface so firebase-save.js can access the closure variables
+    Object.defineProperty(window, 'btcBalance', {
+        get: () => btcBalance,
+        set: (val) => { btcBalance = val; }
+    });
+    Object.defineProperty(window, 'btcLifetime', {
+        get: () => btcLifetime,
+        set: (val) => { btcLifetime = val; }
+    });
+    Object.defineProperty(window, 'btcPerSec', {
+        get: () => btcPerSec,
+        set: (val) => { btcPerSec = val; }
+    });
+    Object.defineProperty(window, 'btcPrice', {
+        get: () => btcPrice,
+        set: (val) => { btcPrice = val; }
+    });
+    Object.defineProperty(window, 'btcClickValue', {
+        get: () => btcClickValue,
+        set: (val) => { btcClickValue = val; }
+    });
+
+    Object.defineProperty(window, 'ethBalance', {
+        get: () => ethBalance,
+        set: (val) => { ethBalance = val; }
+    });
+    Object.defineProperty(window, 'ethLifetime', {
+        get: () => ethLifetime,
+        set: (val) => { ethLifetime = val; }
+    });
+    Object.defineProperty(window, 'ethPerSec', {
+        get: () => ethPerSec,
+        set: (val) => { ethPerSec = val; }
+    });
+    Object.defineProperty(window, 'ethPrice', {
+        get: () => ethPrice,
+        set: (val) => { ethPrice = val; }
+    });
+    Object.defineProperty(window, 'ethClickValue', {
+        get: () => ethClickValue,
+        set: (val) => { ethClickValue = val; }
+    });
+
+    Object.defineProperty(window, 'dogeBalance', {
+        get: () => dogeBalance,
+        set: (val) => { dogeBalance = val; }
+    });
+    Object.defineProperty(window, 'dogeLifetime', {
+        get: () => dogeLifetime,
+        set: (val) => { dogeLifetime = val; }
+    });
+    Object.defineProperty(window, 'dogePerSec', {
+        get: () => dogePerSec,
+        set: (val) => { dogePerSec = val; }
+    });
+    Object.defineProperty(window, 'dogePrice', {
+        get: () => dogePrice,
+        set: (val) => { dogePrice = val; }
+    });
+    Object.defineProperty(window, 'dogeClickValue', {
+        get: () => dogeClickValue,
+        set: (val) => { dogeClickValue = val; }
+    });
+
+    Object.defineProperty(window, 'dollarBalance', {
+        get: () => dollarBalance,
+        set: (val) => { dollarBalance = val; }
+    });
+    Object.defineProperty(window, 'hardwareEquity', {
+        get: () => hardwareEquity,
+        set: (val) => { hardwareEquity = val; }
+    });
+    Object.defineProperty(window, 'lifetimeEarnings', {
+        get: () => lifetimeEarnings,
+        set: (val) => { lifetimeEarnings = val; }
+    });
+    Object.defineProperty(window, 'sessionEarnings', {
+        get: () => sessionEarnings,
+        set: (val) => { sessionEarnings = val; }
+    });
+    Object.defineProperty(window, 'sessionStartTime', {
+        get: () => sessionStartTime,
+        set: (val) => { sessionStartTime = val; }
+    });
+    Object.defineProperty(window, 'totalPlayTime', {
+        get: () => totalPlayTime,
+        set: (val) => { totalPlayTime = val; }
+    });
+    Object.defineProperty(window, 'totalPowerAvailable', {
+        get: () => totalPowerAvailable,
+        set: (val) => { totalPowerAvailable = val; }
+    });
+    Object.defineProperty(window, 'chartHistory', {
+        get: () => chartHistory,
+        set: (val) => { chartHistory = val; }
+    });
+    Object.defineProperty(window, 'chartTimestamps', {
+        get: () => chartTimestamps,
+        set: (val) => { chartTimestamps = val; }
+    });
+    Object.defineProperty(window, 'chartStartTime', {
+        get: () => chartStartTime,
+        set: (val) => { chartStartTime = val; }
+    });
+    Object.defineProperty(window, 'autoClickerCooldownEnd', {
+        get: () => autoClickerCooldownEnd,
+        set: (val) => { autoClickerCooldownEnd = val; }
+    });
+
+    // Expose arrays/objects
+    Object.defineProperty(window, 'powerUpgrades', {
+        get: () => powerUpgrades,
+        set: (val) => { }
+    });
+    Object.defineProperty(window, 'btcUpgrades', {
+        get: () => btcUpgrades,
+        set: (val) => { }
+    });
+    Object.defineProperty(window, 'ethUpgrades', {
+        get: () => ethUpgrades,
+        set: (val) => { }
+    });
+    Object.defineProperty(window, 'dogeUpgrades', {
+        get: () => dogeUpgrades,
+        set: (val) => { }
+    });
 
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             checkAgeDisclaimer();
             initializeGame();
+            // Test manual hash buttons after DOM is ready
+            setTimeout(() => {
+                const btcBtn = document.querySelector('button.mine-btn[onclick*="manualHash"]');
+                const ethBtn = document.querySelector('button.mine-btn[onclick*="manualEthHash"]');
+                const dogeBtn = document.querySelector('button.mine-btn[onclick*="manualDogeHash"]');
+                console.log('🔘 Button elements found:');
+                console.log('  BTC button:', btcBtn ? 'EXISTS ✓' : 'MISSING ✗');
+                console.log('  ETH button:', ethBtn ? 'EXISTS ✓' : 'MISSING ✗');
+                console.log('  DOGE button:', dogeBtn ? 'EXISTS ✓' : 'MISSING ✗');
+                if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
+            }, 500);
         });
     } else {
         checkAgeDisclaimer();
         initializeGame();
+        // Test manual hash buttons after initialization
+        setTimeout(() => {
+            const btcBtn = document.querySelector('button.mine-btn[onclick*="manualHash"]');
+            const ethBtn = document.querySelector('button.mine-btn[onclick*="manualEthHash"]');
+            const dogeBtn = document.querySelector('button.mine-btn[onclick*="manualDogeHash"]');
+            console.log('🔘 Button elements found:');
+            console.log('  BTC button:', btcBtn ? 'EXISTS ✓' : 'MISSING ✗');
+            console.log('  ETH button:', ethBtn ? 'EXISTS ✓' : 'MISSING ✗');
+            console.log('  DOGE button:', dogeBtn ? 'EXISTS ✓' : 'MISSING ✗');
+            if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
+        }, 500);
     }
+})();

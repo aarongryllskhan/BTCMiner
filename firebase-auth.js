@@ -33,16 +33,38 @@ async function registerUser(email, password, username) {
             isPremium: false
         });
 
-        // Initialize empty game data
+        // Initialize empty game data with correct field names
         await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
-            btc: 0,
-            bitcoinPerSecond: 0,
-            upgrades: {},
-            skills: {},
-            achievements: [],
-            totalEarned: 0,
-            totalSpent: 0,
-            playTime: 0,
+            btcBalance: 0,
+            btcLifetime: 0,
+            btcClickValue: 0.00000250,
+            btcPerSec: 0,
+            btcPrice: 100000,
+            ethBalance: 0,
+            ethLifetime: 0,
+            ethClickValue: 0.00007143,
+            ethPerSec: 0,
+            ethPrice: 3500,
+            dogeBalance: 0,
+            dogeLifetime: 0,
+            dogeClickValue: 1.00000000,
+            dogePerSec: 0,
+            dogePrice: 0.25,
+            dollarBalance: 0,
+            hardwareEquity: 0,
+            lifetimeEarnings: 0,
+            sessionEarnings: 0,
+            autoClickerCooldownEnd: 0,
+            chartHistory: [],
+            chartTimestamps: [],
+            chartStartTime: 0,
+            totalPowerAvailable: 0,
+            powerUpgrades: [],
+            btcUpgrades: [],
+            ethUpgrades: [],
+            dogeUpgrades: [],
+            skillTree: {},
+            staking: {},
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -144,16 +166,38 @@ async function loginWithGoogle() {
                 photoURL: user.photoURL
             });
 
-            // Initialize empty game data
+            // Initialize empty game data with correct field names
             await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
-                btc: 0,
-                bitcoinPerSecond: 0,
-                upgrades: {},
-                skills: {},
-                achievements: [],
-                totalEarned: 0,
-                totalSpent: 0,
-                playTime: 0,
+                btcBalance: 0,
+                btcLifetime: 0,
+                btcClickValue: 0.00000250,
+                btcPerSec: 0,
+                btcPrice: 100000,
+                ethBalance: 0,
+                ethLifetime: 0,
+                ethClickValue: 0.00007143,
+                ethPerSec: 0,
+                ethPrice: 3500,
+                dogeBalance: 0,
+                dogeLifetime: 0,
+                dogeClickValue: 1.00000000,
+                dogePerSec: 0,
+                dogePrice: 0.25,
+                dollarBalance: 0,
+                hardwareEquity: 0,
+                lifetimeEarnings: 0,
+                sessionEarnings: 0,
+                autoClickerCooldownEnd: 0,
+                chartHistory: [],
+                chartTimestamps: [],
+                chartStartTime: 0,
+                totalPowerAvailable: 0,
+                powerUpgrades: [],
+                btcUpgrades: [],
+                ethUpgrades: [],
+                dogeUpgrades: [],
+                skillTree: {},
+                staking: {},
                 lastSaved: firebase.firestore.FieldValue.serverTimestamp()
             });
         } else {
@@ -187,27 +231,42 @@ async function loginWithGoogle() {
 // Logout user
 async function logoutUser() {
     try {
+        console.log('🔓 Starting logout process...');
+
         // Save game before logging out
-        if (auth.currentUser) {
-            await saveGameToCloud();
+        if (auth.currentUser && typeof window.saveGameToCloud === 'function') {
+            console.log('💾 Saving game before logout...');
+            try {
+                await window.saveGameToCloud();
+                console.log('✅ Game saved');
+            } catch (saveError) {
+                console.warn('⚠️ Failed to save before logout (non-critical):', saveError);
+            }
         }
 
+        console.log('🔐 Signing out from Firebase...');
         await auth.signOut();
-        console.log('✅ User logged out');
+        console.log('✅ Signed out from Firebase - auth.currentUser should now be null');
+
         showMessage('Logged out successfully', 'success');
 
         // Clear local game data
         // Clear localStorage to prevent data leaking to next user
+        console.log('🗑️ Clearing localStorage...');
         localStorage.clear();
+        console.log('✅ localStorage cleared');
 
         // Reset login iframe to clear form state
         const loginScreenDiv = document.getElementById('login-screen');
         if (loginScreenDiv) {
             const iframe = loginScreenDiv.querySelector('iframe');
             if (iframe) {
+                console.log('🔄 Reloading login iframe...');
                 iframe.src = iframe.src; // Reload iframe to reset form
             }
         }
+
+        console.log('✅ Logout complete - auth state listener should trigger UI update');
 
     } catch (error) {
         console.error('❌ Logout error:', error);
@@ -263,16 +322,38 @@ async function playAsGuest() {
             level: 1
         });
 
-        // Initialize empty game data
+        // Initialize empty game data with correct field names
         await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
-            btc: 0,
-            bitcoinPerSecond: 0,
-            upgrades: {},
-            skills: {},
-            achievements: [],
-            totalEarned: 0,
-            totalSpent: 0,
-            playTime: 0,
+            btcBalance: 0,
+            btcLifetime: 0,
+            btcClickValue: 0.00000250,
+            btcPerSec: 0,
+            btcPrice: 100000,
+            ethBalance: 0,
+            ethLifetime: 0,
+            ethClickValue: 0.00007143,
+            ethPerSec: 0,
+            ethPrice: 3500,
+            dogeBalance: 0,
+            dogeLifetime: 0,
+            dogeClickValue: 1.00000000,
+            dogePerSec: 0,
+            dogePrice: 0.25,
+            dollarBalance: 0,
+            hardwareEquity: 0,
+            lifetimeEarnings: 0,
+            sessionEarnings: 0,
+            autoClickerCooldownEnd: 0,
+            chartHistory: [],
+            chartTimestamps: [],
+            chartStartTime: 0,
+            totalPowerAvailable: 0,
+            powerUpgrades: [],
+            btcUpgrades: [],
+            ethUpgrades: [],
+            dogeUpgrades: [],
+            skillTree: {},
+            staking: {},
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -457,9 +538,30 @@ function setupAuthListener() {
                 console.warn('⚠️ loadGameFromCloud function not available');
             }
 
+            // Start leaderboard updates
+            if (window.startLeaderboardUpdates) {
+                window.startLeaderboardUpdates();
+            }
+
+            // Start auto-save to cloud (every 60 seconds)
+            if (window.startAutoSave) {
+                console.log('Starting auto-save...');
+                window.startAutoSave();
+            }
+
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
             console.log('ℹ️ No user logged in - showing login screen');
+
+            // Stop leaderboard updates
+            if (window.stopLeaderboardUpdates) {
+                window.stopLeaderboardUpdates();
+            }
+
+            // Stop auto-save
+            if (window.stopAutoSave) {
+                window.stopAutoSave();
+            }
 
             // Show login screen for new users
             // They can login, register, or skip to play offline
