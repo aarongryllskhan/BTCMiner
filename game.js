@@ -1,3 +1,4 @@
+(function() {
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
@@ -3144,3 +3145,4 @@ dogeUpgrades.forEach(u => {
             if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
         }, 500);
     }
+})();
