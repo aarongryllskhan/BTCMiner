@@ -7,6 +7,9 @@
         debugger;
       }, 100);
     </script> -->
+    <!-- Termly Consent Management -->
+    <script src="https://app.termly.io/resource-blocker/0e244e2d-50af-4f83-9bc6-bbd9d9d73cc0?autoBlock=on"></script>
+
     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2H559N5J64"></script>
 <script>
@@ -24,6 +27,68 @@
 </head>
 <body>
 
+    <!-- Age Disclaimer Modal -->
+    <div id="age-disclaimer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center;">
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 500px; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
+            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem;">⚠️ Age Requirement</h2>
+            <p style="color: #fff; font-size: 1.1rem; margin-bottom: 20px; line-height: 1.6;">
+                This game is intended for users <strong style="color: #f7931a;">18 years or older</strong>.
+            </p>
+            <p style="color: #aaa; font-size: 0.95rem; margin-bottom: 30px; line-height: 1.5;">
+                This is a <strong>simulation game</strong> with <strong>no real cryptocurrency or monetary value</strong>. All currency and assets are virtual and for entertainment purposes only.
+            </p>
+            <button onclick="acceptAgeDisclaimer()" style="background: #f7931a; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
+                I AM 18+ & UNDERSTAND
+            </button>
+        </div>
+    </div>
+
+    <!-- Terms and Conditions Acceptance Modal -->
+    <div id="terms-acceptance-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10001; justify-content: center; align-items: center; overflow: auto;">
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 600px; max-height: 90vh; overflow-y: auto; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5); margin: 20px;">
+            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 1.8rem;">📋 Terms & Conditions</h2>
+            <p style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.6;">
+                Please read and accept our Terms and Conditions to continue using Idle BTC Miner.
+            </p>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid #f7931a; border-radius: 8px; padding: 20px; margin-bottom: 30px; max-height: 300px; overflow-y: auto; text-align: left;">
+                <iframe id="terms-preview" src="terms.html" style="width: 100%; height: 280px; border: none; background: transparent;"></iframe>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="acceptTerms()" style="background: #f7931a; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
+                    ✓ I ACCEPT
+                </button>
+                <button onclick="declineTerms()" style="background: #333; color: #f7931a; border: 2px solid #f7931a; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s;">
+                    ✗ DECLINE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy & Cookie Policy Modal -->
+    <div id="privacy-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; overflow: auto;">
+        <div style="background: #fff; padding: 20px; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; margin: 20px; position: relative; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
+            <button onclick="closePrivacyModal()" style="position: absolute; top: 15px; right: 15px; background: #f7931a; color: #000; border: none; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s; z-index: 1;">
+                CLOSE
+            </button>
+            <!-- Policy Tabs -->
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid #f7931a;">
+                <button id="policy-tab-privacy" onclick="switchPolicyTab('privacy')" style="padding: 10px 20px; background: #f7931a; color: #000; border: none; font-weight: 800; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 0.95rem;">
+                    PRIVACY POLICY
+                </button>
+                <button id="policy-tab-cookies" onclick="switchPolicyTab('cookies')" style="padding: 10px 20px; background: #ddd; color: #000; border: none; font-weight: 800; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 0.95rem;">
+                    COOKIE POLICY
+                </button>
+                <button id="policy-tab-terms" onclick="switchPolicyTab('terms')" style="padding: 10px 20px; background: #ddd; color: #000; border: none; font-weight: 800; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 0.95rem;">
+                    TERMS & CONDITIONS
+                </button>
+                <button id="policy-tab-contact" onclick="switchPolicyTab('contact')" style="padding: 10px 20px; background: #ddd; color: #000; border: none; font-weight: 800; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 0.95rem;">
+                    CONTACT
+                </button>
+            </div>
+            <iframe id="privacy-iframe" src="privacy.html" style="width: 100%; height: 80vh; border: none;"></iframe>
+        </div>
+    </div>
+
     <div id="main-layout">
         <div class="panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
@@ -33,7 +98,6 @@
                     <button style="background: #4CAF50; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="document.getElementById('game-instructions').style.display='block'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetGame()">RESET SAVE</button>
-                    <span style="font-size: 0.6rem; color: #555;">Idle BTC Miner™ 2026 - Aaron Khan</span>
                 </div>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
@@ -411,6 +475,197 @@
         </div>
     </div>
 </div>
+
+<!-- Footer Disclaimer -->
+<div style="position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.9); padding: 8px; text-align: center; border-top: 1px solid #333; z-index: 9999;">
+    <p style="margin: 0; font-size: 0.7rem; color: #888;">
+        <strong style="color: #f7931a;">18+ Only</strong> | This is a simulation game with <strong>NO real cryptocurrency or monetary value</strong>. All assets are virtual and for entertainment only.
+        <span style="margin: 0 8px;">|</span>
+        <a href="#" onclick="openPrivacyModal(); switchPolicyTab('privacy'); return false;" style="color: #f7931a; text-decoration: underline; cursor: pointer;">Privacy Policy</a>
+        <span style="margin: 0 8px;">|</span>
+        <a href="#" onclick="openPrivacyModal(); switchPolicyTab('cookies'); return false;" style="color: #f7931a; text-decoration: underline; cursor: pointer;">Cookie Policy</a>
+        <span style="margin: 0 8px;">|</span>
+        <a href="#" onclick="openPrivacyModal(); switchPolicyTab('terms'); return false;" style="color: #f7931a; text-decoration: underline; cursor: pointer;">Terms & Conditions</a>
+        <span style="margin: 0 8px;">|</span>
+        <a href="#" class="termly-display-preferences" style="color: #f7931a; text-decoration: underline; cursor: pointer;">Consent Preferences</a>
+        <span style="margin: 0 8px;">|</span>
+        <a href="#" onclick="openPrivacyModal(); switchPolicyTab('contact'); return false;" style="color: #f7931a; text-decoration: underline; cursor: pointer;">Contact</a>
+        <span style="margin: 0 8px;">|</span>
+        <span style="color: #666;">Idle BTC Miner™ 2026 - Aaron Khan</span>
+    </p>
+</div>
+
+<!-- Inline Policy Tab Switching Functions -->
+<script>
+    function switchPolicyTab(tab) {
+        const iframe = document.getElementById('privacy-iframe');
+        const privacyTab = document.getElementById('policy-tab-privacy');
+        const cookiesTab = document.getElementById('policy-tab-cookies');
+        const termsTab = document.getElementById('policy-tab-terms');
+        const contactTab = document.getElementById('policy-tab-contact');
+
+        // Reset all tabs to inactive state
+        privacyTab.style.background = '#ddd';
+        privacyTab.style.color = '#000';
+        cookiesTab.style.background = '#ddd';
+        cookiesTab.style.color = '#000';
+        termsTab.style.background = '#ddd';
+        termsTab.style.color = '#000';
+        contactTab.style.background = '#ddd';
+        contactTab.style.color = '#000';
+
+        if (tab === 'privacy') {
+            iframe.src = 'privacy.html';
+            privacyTab.style.background = '#f7931a';
+            privacyTab.style.color = '#000';
+        } else if (tab === 'cookies') {
+            iframe.src = 'cookies.html';
+            cookiesTab.style.background = '#f7931a';
+            cookiesTab.style.color = '#000';
+        } else if (tab === 'terms') {
+            iframe.src = 'terms.html';
+            termsTab.style.background = '#f7931a';
+            termsTab.style.color = '#000';
+        } else if (tab === 'contact') {
+            iframe.src = 'contact.html';
+            contactTab.style.background = '#f7931a';
+            contactTab.style.color = '#000';
+        }
+    }
+
+    function openTermsModal() {
+        document.getElementById('terms-acceptance-modal').style.display = 'flex';
+    }
+
+    function acceptTerms() {
+        localStorage.setItem('termsAccepted', 'true');
+        document.getElementById('terms-acceptance-modal').style.display = 'none';
+    }
+
+    function declineTerms() {
+        alert('You must accept the Terms and Conditions to use this service.');
+        // Optionally redirect or disable access
+    }
+
+    // Check if terms have been accepted on page load
+    window.addEventListener('load', function() {
+        if (!localStorage.getItem('termsAccepted')) {
+            openTermsModal();
+        }
+    });
+</script>
+
+<!-- Cookie Consent Banner -->
+<div id="cookie-consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 20px; border-top: 3px solid #f7931a; z-index: 99999; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+        <div style="flex: 1; min-width: 300px;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 2rem; margin-right: 10px;">🍪</span>
+                <h3 style="color: #f7931a; margin: 0; font-size: 1.3rem;">Cookie Consent</h3>
+            </div>
+            <p style="color: #ccc; margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                We use cookies to enhance your experience, analyze site traffic, and for analytics purposes. By clicking "Accept All", you consent to our use of cookies. You can manage your preferences or decline non-essential cookies.
+            </p>
+            <p style="color: #888; margin: 10px 0 0 0; font-size: 0.8rem;">
+                <a href="#" onclick="openPrivacyModal(); switchPolicyTab('cookies'); return false;" style="color: #f7931a; text-decoration: underline;">View Cookie Policy</a>
+                <span style="margin: 0 5px;">|</span>
+                <a href="#" onclick="openPrivacyModal(); switchPolicyTab('privacy'); return false;" style="color: #f7931a; text-decoration: underline;">Privacy Policy</a>
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <button onclick="acceptAllCookies()" style="background: #f7931a; color: #000; border: none; padding: 12px 30px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4); white-space: nowrap;">
+                ✓ Accept All
+            </button>
+            <button onclick="acceptEssentialOnly()" style="background: #555; color: #fff; border: 1px solid #777; padding: 12px 25px; font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; white-space: nowrap;">
+                Essential Only
+            </button>
+            <button onclick="openCookieSettings()" style="background: transparent; color: #f7931a; border: 1px solid #f7931a; padding: 12px 25px; font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; white-space: nowrap;">
+                ⚙️ Manage Preferences
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Cookie Consent JavaScript -->
+<script>
+    // Check if user has already made a cookie choice
+    function checkCookieConsent() {
+        const consent = localStorage.getItem('cookieConsent');
+        if (!consent) {
+            // Show banner after a short delay (after age/terms modals)
+            setTimeout(() => {
+                const banner = document.getElementById('cookie-consent-banner');
+                if (banner) {
+                    banner.style.display = 'block';
+                }
+            }, 2000);
+        }
+    }
+
+    // Accept all cookies
+    function acceptAllCookies() {
+        localStorage.setItem('cookieConsent', 'all');
+        localStorage.setItem('cookieConsentDate', new Date().toISOString());
+
+        // Enable Google Analytics and other tracking
+        window['ga-disable-G-2H559N5J64'] = false;
+
+        // Hide banner
+        document.getElementById('cookie-consent-banner').style.display = 'none';
+
+        // Optional: Trigger Termly consent if available
+        if (typeof window.termlyConsent !== 'undefined') {
+            window.termlyConsent('accept');
+        }
+
+        console.log('All cookies accepted');
+    }
+
+    // Accept essential cookies only
+    function acceptEssentialOnly() {
+        localStorage.setItem('cookieConsent', 'essential');
+        localStorage.setItem('cookieConsentDate', new Date().toISOString());
+
+        // Disable Google Analytics
+        window['ga-disable-G-2H559N5J64'] = true;
+
+        // Hide banner
+        document.getElementById('cookie-consent-banner').style.display = 'none';
+
+        // Optional: Trigger Termly essential only if available
+        if (typeof window.termlyConsent !== 'undefined') {
+            window.termlyConsent('essential');
+        }
+
+        console.log('Essential cookies only');
+    }
+
+    // Open Termly cookie settings or custom preferences
+    function openCookieSettings() {
+        // Try to trigger Termly settings if available
+        const termlyButton = document.querySelector('.termly-display-preferences');
+        if (termlyButton) {
+            termlyButton.click();
+        } else {
+            // Fallback: show custom settings or just accept essential
+            if (confirm('Would you like to accept all cookies?\n\nClick OK to accept all cookies.\nClick Cancel to use essential cookies only.')) {
+                acceptAllCookies();
+            } else {
+                acceptEssentialOnly();
+            }
+        }
+    }
+
+    // Revoke consent (for testing or user preference changes)
+    function revokeCookieConsent() {
+        localStorage.removeItem('cookieConsent');
+        localStorage.removeItem('cookieConsentDate');
+        document.getElementById('cookie-consent-banner').style.display = 'block';
+    }
+
+    // Check consent on page load
+    window.addEventListener('DOMContentLoaded', checkCookieConsent);
+</script>
 
 <!-- Load skill tree system first so its functions are available to game.js -->
 <script src="skilltree.js"></script>

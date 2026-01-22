@@ -751,7 +751,7 @@ function loadGame() {
     } catch (error) {
         console.error('✗ ERROR loading game from localStorage:', error);
         console.error('Error stack:', error.stack);
-        alert('Failed to load saved game! Starting fresh. Error: ' + error.message);
+        // Silently start fresh without showing alert
     }
 }
     // --- SAVE SYSTEM END ---
@@ -2939,9 +2939,40 @@ dogeUpgrades.forEach(u => {
         }
     });
 
+    // Age disclaimer modal handling
+    function acceptAgeDisclaimer() {
+        localStorage.setItem('ageDisclaimerAccepted', 'true');
+        document.getElementById('age-disclaimer-modal').style.display = 'none';
+    }
+
+    function checkAgeDisclaimer() {
+        const accepted = localStorage.getItem('ageDisclaimerAccepted');
+        if (!accepted) {
+            document.getElementById('age-disclaimer-modal').style.display = 'flex';
+        }
+    }
+
+    // Privacy policy modal handling
+    function openPrivacyModal() {
+        document.getElementById('privacy-modal').style.display = 'flex';
+    }
+
+    function closePrivacyModal() {
+        document.getElementById('privacy-modal').style.display = 'none';
+    }
+
+    // Make functions available globally
+    window.acceptAgeDisclaimer = acceptAgeDisclaimer;
+    window.openPrivacyModal = openPrivacyModal;
+    window.closePrivacyModal = closePrivacyModal;
+
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeGame);
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAgeDisclaimer();
+            initializeGame();
+        });
     } else {
+        checkAgeDisclaimer();
         initializeGame();
     }
