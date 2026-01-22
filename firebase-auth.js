@@ -190,10 +190,14 @@ async function logoutUser() {
         console.log('🔓 Starting logout process...');
 
         // Save game before logging out
-        if (auth.currentUser) {
+        if (auth.currentUser && typeof window.saveGameToCloud === 'function') {
             console.log('💾 Saving game before logout...');
-            await saveGameToCloud();
-            console.log('✅ Game saved');
+            try {
+                await window.saveGameToCloud();
+                console.log('✅ Game saved');
+            } catch (saveError) {
+                console.warn('⚠️ Failed to save before logout (non-critical):', saveError);
+            }
         }
 
         console.log('🔐 Signing out from Firebase...');
