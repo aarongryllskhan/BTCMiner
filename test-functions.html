@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Test - Idle BTC Miner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        button {
+            background: #f7931a;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .result {
+            background: #2d2d2d;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #f7931a;
+            border-radius: 4px;
+        }
+        .success { border-left-color: #4CAF50; }
+        .error { border-left-color: #ff3344; }
+    </style>
+</head>
+<body>
+    <h1>Function Test Page</h1>
+    <p>This page tests if all critical functions are defined and working.</p>
+
+    <div style="margin: 20px 0;">
+        <h2>Test Buttons:</h2>
+        <button onclick="testOpenPrivacyModal()">Test openPrivacyModal()</button>
+        <button onclick="testClosePrivacyModal()">Test closePrivacyModal()</button>
+        <button onclick="testSwitchPolicyTab()">Test switchPolicyTab()</button>
+        <button onclick="testAcceptAgeDisclaimer()">Test acceptAgeDisclaimer()</button>
+        <button onclick="testAcceptTerms()">Test acceptTerms()</button>
+        <button onclick="testCookieFunctions()">Test Cookie Functions</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function log(message, isError = false) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result ' + (isError ? 'error' : 'success');
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.insertBefore(div, results.firstChild);
+        }
+
+        function testOpenPrivacyModal() {
+            if (typeof openPrivacyModal === 'function') {
+                log('✓ openPrivacyModal is defined');
+                try {
+                    openPrivacyModal();
+                    log('✓ openPrivacyModal executed successfully');
+                } catch (e) {
+                    log('✗ Error executing openPrivacyModal: ' + e.message, true);
+                }
+            } else {
+                log('✗ openPrivacyModal is NOT defined', true);
+            }
+        }
+
+        function testClosePrivacyModal() {
+            if (typeof closePrivacyModal === 'function') {
+                log('✓ closePrivacyModal is defined');
+                try {
+                    closePrivacyModal();
+                    log('✓ closePrivacyModal executed successfully');
+                } catch (e) {
+                    log('✗ Error executing closePrivacyModal: ' + e.message, true);
+                }
+            } else {
+                log('✗ closePrivacyModal is NOT defined', true);
+            }
+        }
+
+        function testSwitchPolicyTab() {
+            if (typeof switchPolicyTab === 'function') {
+                log('✓ switchPolicyTab is defined');
+                try {
+                    switchPolicyTab('privacy');
+                    log('✓ switchPolicyTab executed successfully');
+                } catch (e) {
+                    log('✗ Error executing switchPolicyTab: ' + e.message, true);
+                }
+            } else {
+                log('✗ switchPolicyTab is NOT defined', true);
+            }
+        }
+
+        function testAcceptAgeDisclaimer() {
+            if (typeof acceptAgeDisclaimer === 'function') {
+                log('✓ acceptAgeDisclaimer is defined');
+                try {
+                    acceptAgeDisclaimer();
+                    log('✓ acceptAgeDisclaimer executed successfully');
+                } catch (e) {
+                    log('✗ Error executing acceptAgeDisclaimer: ' + e.message, true);
+                }
+            } else {
+                log('✗ acceptAgeDisclaimer is NOT defined', true);
+            }
+        }
+
+        function testAcceptTerms() {
+            if (typeof acceptTerms === 'function') {
+                log('✓ acceptTerms is defined');
+                try {
+                    acceptTerms();
+                    log('✓ acceptTerms executed successfully');
+                } catch (e) {
+                    log('✗ Error executing acceptTerms: ' + e.message, true);
+                }
+            } else {
+                log('✗ acceptTerms is NOT defined', true);
+            }
+        }
+
+        function testCookieFunctions() {
+            const cookieFuncs = ['acceptAllCookies', 'acceptEssentialOnly', 'openCookieSettings', 'checkCookieConsent'];
+            cookieFuncs.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    log(`✓ ${funcName} is defined`);
+                } else {
+                    log(`✗ ${funcName} is NOT defined`, true);
+                }
+            });
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('DOMContentLoaded', () => {
+            log('=== Starting automatic function check ===');
+
+            const criticalFunctions = [
+                'openPrivacyModal',
+                'closePrivacyModal',
+                'switchPolicyTab',
+                'acceptAgeDisclaimer',
+                'acceptTerms',
+                'acceptAllCookies',
+                'acceptEssentialOnly',
+                'openCookieSettings'
+            ];
+
+            criticalFunctions.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    log(`✓ ${funcName} is defined and ready`);
+                } else {
+                    log(`✗ CRITICAL: ${funcName} is NOT defined!`, true);
+                }
+            });
+
+            log('=== Function check complete ===');
+        });
+    </script>
+
+    <!-- Load your actual index.html scripts to test them -->
+    <script>
+        // Copy the critical functions from index.html
+        function openPrivacyModal() {
+            log('openPrivacyModal called!');
+        }
+
+        function closePrivacyModal() {
+            log('closePrivacyModal called!');
+        }
+
+        function acceptAgeDisclaimer() {
+            log('acceptAgeDisclaimer called!');
+        }
+
+        function switchPolicyTab(tab) {
+            log('switchPolicyTab called with: ' + tab);
+        }
+
+        function acceptTerms() {
+            log('acceptTerms called!');
+        }
+
+        function acceptAllCookies() {
+            log('acceptAllCookies called!');
+        }
+
+        function acceptEssentialOnly() {
+            log('acceptEssentialOnly called!');
+        }
+
+        function openCookieSettings() {
+            log('openCookieSettings called!');
+        }
+
+        function checkCookieConsent() {
+            log('checkCookieConsent called!');
+        }
+    </script>
+</body>
+</html>

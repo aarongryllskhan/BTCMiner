@@ -497,6 +497,21 @@
 
 <!-- Inline Policy Tab Switching Functions -->
 <script>
+    // Privacy modal functions - defined early so footer links work
+    function openPrivacyModal() {
+        document.getElementById('privacy-modal').style.display = 'flex';
+    }
+
+    function closePrivacyModal() {
+        document.getElementById('privacy-modal').style.display = 'none';
+    }
+
+    // Age disclaimer function - defined early so modal button works
+    function acceptAgeDisclaimer() {
+        localStorage.setItem('ageDisclaimerAccepted', 'true');
+        document.getElementById('age-disclaimer-modal').style.display = 'none';
+    }
+
     function switchPolicyTab(tab) {
         const iframe = document.getElementById('privacy-iframe');
         const privacyTab = document.getElementById('policy-tab-privacy');
