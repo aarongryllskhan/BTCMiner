@@ -383,3 +383,34 @@ window.logoutUser = logoutUser;
 window.resetPassword = resetPassword;
 window.playAsGuest = playAsGuest;
 window.linkGuestToEmail = linkGuestToEmail;
+
+// Check authentication state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 Checking authentication state...');
+
+    // Listen for authentication state changes
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log('✅ User is logged in:', user.email || 'Guest User');
+
+            // Hide login screen
+            const loginScreen = document.getElementById('login-screen');
+            if (loginScreen) {
+                loginScreen.style.display = 'none';
+            }
+
+            // Load user's game data
+            if (window.loadGameData) {
+                await window.loadGameData(user.uid);
+            }
+        } else {
+            console.log('❌ No user logged in - showing login screen');
+
+            // Show login screen
+            const loginScreen = document.getElementById('login-screen');
+            if (loginScreen) {
+                loginScreen.style.display = 'flex';
+            }
+        }
+    });
+});

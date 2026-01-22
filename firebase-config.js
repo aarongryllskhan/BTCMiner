@@ -3,32 +3,16 @@
  * Copyright © 2026 Aaron Khan. All Rights Reserved.
  */
 
-// Import Firebase modules (using CDN version for simplicity)
-// These will be loaded from the HTML file
-
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBRKOx0sCWbgxjOy2l2M4inQo8CJdY6iwU",
-    authDomain: "idle-btc-miner-39d27.firebaseapp.com",
-    projectId: "idle-btc-miner-39d27",
-    storageBucket: "idle-btc-miner-39d27.firebasestorage.app",
-    messagingSenderId: "1019206255931",
-    appId: "1:1019206255931:web:967367f9a1831c7e87231e",
-    measurementId: "G-02GKDK0M26"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBRKOx0sCWbgxjOy2l2M4inQo8CJdY6iwU",
+  authDomain: "idle-btc-miner-39d27.firebaseapp.com",
+  projectId: "idle-btc-miner-39d27",
+  storageBucket: "idle-btc-miner-39d27.firebasestorage.app",
+  messagingSenderId: "1019206255931",
+  appId: "1:1019206255931:web:967367f9a1831c7e87231e",
+  measurementId: "G-02GKDK0M26"
+};
 
 // Initialize Firebase
 let app;
@@ -47,17 +31,6 @@ function initializeFirebase() {
         db = firebase.firestore();
 
         console.log('✅ Firebase initialized successfully!');
-
-        // Set up auth state listener
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                console.log('✅ User logged in:', user.email);
-                onUserLogin(user);
-            } else {
-                console.log('ℹ️ No user logged in');
-                onUserLogout();
-            }
-        });
 
         return true;
     } catch (error) {
@@ -78,7 +51,9 @@ function onUserLogin(user) {
     }
 
     // Load game data from cloud
-    loadGameFromCloud(user.uid);
+    if (window.loadGameFromCloud) {
+        loadGameFromCloud(user.uid);
+    }
 
     // Update UI with user info
     updateUserUI(user);
@@ -117,9 +92,4 @@ function updateUserUI(user) {
             </button>
         </div>
     `;
-}
-
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { initializeFirebase, auth, db };
 }
