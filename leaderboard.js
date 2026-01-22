@@ -12,10 +12,10 @@ async function updateLeaderboard() {
         }
 
         const user = auth.currentUser;
-        const username = user.displayName || user.email.split('@')[0] || 'Anonymous';
+        const username = user.displayName || (user.email ? user.email.split('@')[0] : null) || 'Anonymous';
 
-        // Get current lifetime earnings
-        const lifetime = typeof lifetimeEarnings !== 'undefined' ? lifetimeEarnings : 0;
+        // Get current lifetime earnings (use window accessor for closure variable)
+        const lifetime = typeof window.lifetimeEarnings !== 'undefined' ? window.lifetimeEarnings : 0;
 
         // Update user's leaderboard entry
         await db.collection('leaderboard').doc(user.uid).set({

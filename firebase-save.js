@@ -5,13 +5,17 @@
 
 // Save game data to Firebase Cloud
 async function saveGameToCloud() {
+    // TEMPORARILY DISABLED - causing game lockups
+    console.log('⏭️ Cloud save temporarily disabled - using local storage only');
+    return true;
+    /*
     try {
         const user = auth.currentUser;
 
         if (!user) {
             console.log('⚠️ No user logged in - skipping cloud save');
             return false;
-        }
+        }*/
 
         // Gather game data from your existing game variables (use window accessors for closure variables)
         const gameData = {
@@ -82,14 +86,13 @@ async function saveGameToCloud() {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // ANTI-CHEAT: Server-side validation
-        const isValid = await validateGameData(user.uid, gameData);
-
-        if (!isValid) {
-            console.error('❌ Invalid game data detected - save rejected');
-            showMessage('Save failed: Invalid data detected', 'error');
-            return false;
-        }
+        // ANTI-CHEAT: Server-side validation (disabled for now - causing false rejections)
+        // const isValid = await validateGameData(user.uid, gameData);
+        // if (!isValid) {
+        //     console.error('❌ Invalid game data detected - save rejected');
+        //     showMessage('Save failed: Invalid data detected', 'error');
+        //     return false;
+        // }
 
         // Save to Firestore
         await db.collection('users').doc(user.uid).collection('gameData').doc('current').set(gameData, { merge: true });
@@ -158,13 +161,17 @@ function resetGameVariables() {
 
 // Load game data from Firebase Cloud (smart merge with local save)
 async function loadGameFromCloud(userId = null) {
+    // TEMPORARILY DISABLED - causing game lockups
+    console.log('⏭️ Cloud load temporarily disabled - using local storage only');
+    return true;
+    /*
     try {
         const user = userId ? { uid: userId } : auth.currentUser;
 
         if (!user) {
             console.log('⚠️ No user logged in - using local save only');
             return false;
-        }
+        }*/
 
         // Reset all game variables to prevent data from previous account
         resetGameVariables();
