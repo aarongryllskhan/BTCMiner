@@ -491,17 +491,8 @@
                 console.error('✗ SAVE FAILED - Could not verify in localStorage');
             }
 
-            // Sync to cloud if user is logged in
-            if (typeof window.saveGameToCloud === 'function') {
-                try {
-                    if (typeof auth !== 'undefined' && auth && auth.currentUser) {
-                        console.log('📤 Syncing to cloud...');
-                        window.saveGameToCloud().catch(err => console.error('Cloud sync failed:', err));
-                    }
-                } catch (syncError) {
-                    console.warn('Cloud sync check failed (user not logged in):', syncError.message);
-                }
-            }
+            // Sync to cloud if user is logged in (async - don't block game)
+            // Removed: was causing issues. Cloud sync happens via auto-save and beforeunload instead
         } catch (error) {
             console.error('✗ ERROR saving game to localStorage:', error);
             alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
@@ -1456,6 +1447,7 @@ function loadGame() {
     }
 
 function manualHash() {
+    console.log('🔨 MANUAL HASH CLICKED - btcClickValue:', btcClickValue, 'btcBalance before:', btcBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = btcClickValue * clickBonus;
@@ -1482,10 +1474,12 @@ function manualHash() {
     playClickSound();
 
     // This refreshes the screen so you see the numbers go up
+    console.log('✅ MANUAL HASH COMPLETE - btcBalance after:', btcBalance, 'lifetimeEarnings:', lifetimeEarnings);
     updateUI();
 }
 
 function manualEthHash() {
+    console.log('🔨 MANUAL ETH HASH CLICKED - ethClickValue:', ethClickValue, 'ethBalance before:', ethBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = ethClickValue * clickBonus;
@@ -1510,10 +1504,12 @@ function manualEthHash() {
     playClickSound();
 
     // Refresh the screen
+    console.log('✅ MANUAL ETH HASH COMPLETE - ethBalance after:', ethBalance);
     updateUI();
 }
 
 function manualDogeHash() {
+    console.log('🔨 MANUAL DOGE HASH CLICKED - dogeClickValue:', dogeClickValue, 'dogeBalance before:', dogeBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = dogeClickValue * clickBonus;
@@ -1538,6 +1534,7 @@ function manualDogeHash() {
     playClickSound();
 
     // Refresh the screen
+    console.log('✅ MANUAL DOGE HASH COMPLETE - dogeBalance after:', dogeBalance);
     updateUI();
 }
 

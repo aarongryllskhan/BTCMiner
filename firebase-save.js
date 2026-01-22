@@ -122,31 +122,33 @@ async function saveGameToCloud() {
 // Reset all game variables to default state
 function resetGameVariables() {
     try {
-        // Bitcoin
-        if (typeof btcBalance !== 'undefined') btcBalance = 0;
-        if (typeof btcLifetime !== 'undefined') btcLifetime = 0;
-        if (typeof btcPerSec !== 'undefined') btcPerSec = 0;
-        if (typeof btcPrice !== 'undefined') btcPrice = 100000;
+        // Use window object to access variables (they're exposed via Object.defineProperty in game.js)
+        window.btcBalance = 0;
+        window.btcLifetime = 0;
+        window.btcPerSec = 0;
+        window.btcPrice = 100000;
+        window.btcClickValue = 0.00000250;
 
-        // Ethereum
-        if (typeof ethBalance !== 'undefined') ethBalance = 0;
-        if (typeof ethLifetime !== 'undefined') ethLifetime = 0;
-        if (typeof ethPerSec !== 'undefined') ethPerSec = 0;
-        if (typeof ethPrice !== 'undefined') ethPrice = 3500;
+        window.ethBalance = 0;
+        window.ethLifetime = 0;
+        window.ethPerSec = 0;
+        window.ethPrice = 3500;
+        window.ethClickValue = 0.00007143;
 
-        // Dogecoin
-        if (typeof dogeBalance !== 'undefined') dogeBalance = 0;
-        if (typeof dogeLifetime !== 'undefined') dogeLifetime = 0;
-        if (typeof dogePerSec !== 'undefined') dogePerSec = 0;
-        if (typeof dogePrice !== 'undefined') dogePrice = 0.25;
+        window.dogeBalance = 0;
+        window.dogeLifetime = 0;
+        window.dogePerSec = 0;
+        window.dogePrice = 0.25;
+        window.dogeClickValue = 1.00000000;
 
-        // General
-        if (typeof dollarBalance !== 'undefined') dollarBalance = 0;
-        if (typeof hardwareEquity !== 'undefined') hardwareEquity = 0;
-        if (typeof lifetimeEarnings !== 'undefined') lifetimeEarnings = 0;
-        if (typeof sessionEarnings !== 'undefined') sessionEarnings = 0;
-        if (typeof totalPlayTime !== 'undefined') totalPlayTime = 0;
-        if (typeof totalPowerAvailable !== 'undefined') totalPowerAvailable = 0;
+        window.dollarBalance = 0;
+        window.hardwareEquity = 0;
+        window.lifetimeEarnings = 0;
+        window.sessionEarnings = 0;
+        window.totalPlayTime = 0;
+        window.totalPowerAvailable = 0;
+        window.autoClickerCooldownEnd = 0;
+        window.sessionStartTime = Date.now();
 
         console.log('✅ Game variables reset to defaults');
     } catch (error) {
