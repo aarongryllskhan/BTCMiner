@@ -403,7 +403,7 @@
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Keep reference to btcUpgrades as upgrades for backward compatibility
-    const upgrades = btcUpgrades;
+    let upgrades = btcUpgrades;
 
     // --- SAVE SYSTEM START ---
     function saveGame() {

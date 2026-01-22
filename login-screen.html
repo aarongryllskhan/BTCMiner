@@ -376,6 +376,14 @@
 
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Disable button to prevent spam-clicking
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'LOGGING IN...';
 
             try {
                 console.log('🔑 Attempting login...');
@@ -390,6 +398,12 @@
             } catch (error) {
                 console.error('Login failed:', error);
                 alert('Login failed: ' + error.message);
+
+                // Re-enable button on error
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                submitBtn.textContent = originalText;
             }
         }
 
@@ -407,12 +421,25 @@
                 return;
             }
 
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Disable button to prevent spam-clicking
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'CREATING ACCOUNT...';
+
             try {
                 console.log('📝 Attempting registration...');
                 console.log('Parent window registerUser exists?', typeof window.parent.registerUser);
 
                 if (typeof window.parent.registerUser !== 'function') {
                     alert('Error: Registration function not found. Please refresh the page.');
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                    submitBtn.textContent = originalText;
                     return;
                 }
 
@@ -420,6 +447,12 @@
             } catch (error) {
                 console.error('Registration failed:', error);
                 alert('Registration failed: ' + error.message);
+
+                // Re-enable button on error
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'pointer';
+                submitBtn.textContent = originalText;
             }
         }
 
@@ -480,12 +513,26 @@
             e.preventDefault();
 
             const email = document.getElementById('reset-email').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Disable button to prevent spam-clicking
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'SENDING...';
 
             try {
                 await window.parent.resetPassword(email);
                 hideResetPassword();
             } catch (error) {
                 console.error('Password reset failed:', error);
+
+                // Re-enable button on error
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                submitBtn.textContent = originalText;
             }
         }
     </script>

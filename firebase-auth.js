@@ -197,8 +197,8 @@ async function logoutUser() {
         showMessage('Logged out successfully', 'success');
 
         // Clear local game data
-        // (Optional - uncomment if you want to clear on logout)
-        // localStorage.clear();
+        // Clear localStorage to prevent data leaking to next user
+        localStorage.clear();
 
     } catch (error) {
         console.error('❌ Logout error:', error);
