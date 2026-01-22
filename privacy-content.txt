@@ -1,0 +1,2 @@
+Please manually create privacy.html with the full HTML content you provided.
+The file should contain all the privacy policy sections from your Termly privacy policy.
