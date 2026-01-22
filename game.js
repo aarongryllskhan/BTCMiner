@@ -503,13 +503,6 @@
 function loadGame() {
     console.log('=== LOAD GAME CALLED ===');
     try {
-        // CRITICAL: Don't load from localStorage if a user is logged in
-        // Cloud data will be loaded via loadGameFromCloud() instead
-        if (typeof auth !== 'undefined' && auth && auth.currentUser) {
-            console.log('⚠️ User is logged in - skipping localStorage load (cloud data will be used instead)');
-            return;
-        }
-
         const savedData = localStorage.getItem('satoshiTerminalSave');
         console.log('localStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
 
@@ -2639,17 +2632,7 @@ dogeUpgrades.forEach(u => {
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
-
-        // CRITICAL: Only load from localStorage if no user is logged in
-        // If user is logged in, cloud data will be loaded via loadGameFromCloud()
-        if (!auth || !auth.currentUser) {
-            console.log('No logged-in user - loading from localStorage');
-            loadGame(); // This calls updateUI() internally
-        } else {
-            console.log('User is logged in - skipping localStorage load, cloud data will load instead');
-            updateUI(); // Just refresh UI with current variables
-        }
-
+        loadGame(); // This calls updateUI() internally
         updateAutoClickerButtonState(); // Update button state immediately after loading
         setBuyQuantity(1); // Highlight the 1x button on page load
 
@@ -2939,6 +2922,21 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on beforeunload');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on beforeunload...');
+                try {
+                    // Use synchronous approach with fetch API to ensure save completes
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on beforeunload');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on beforeunload (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on beforeunload:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on beforeunload:', err);
         }
@@ -2950,6 +2948,20 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on pagehide');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on pagehide...');
+                try {
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on pagehide');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on pagehide (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on pagehide:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on pagehide:', err);
         }
@@ -2961,6 +2973,20 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on freeze');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on freeze...');
+                try {
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on freeze');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on freeze (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on freeze:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on freeze:', err);
         }

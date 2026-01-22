@@ -194,6 +194,17 @@ function resetGameVariables() {
             });
         }
 
+        // CRITICAL: Also overwrite localStorage with empty/reset data
+        // This prevents old account data from bleeding through when a new account logs in
+        if (typeof localStorage !== 'undefined' && typeof window.saveGame === 'function') {
+            try {
+                console.log('💾 Saving reset state to localStorage to prevent data bleed');
+                window.saveGame(); // This will save all the reset variables to localStorage
+            } catch (saveError) {
+                console.warn('⚠️ Could not save reset state to localStorage:', saveError);
+            }
+        }
+
         console.log('✅ Game variables reset to defaults');
     } catch (error) {
         console.error('Error resetting variables:', error);
@@ -445,14 +456,14 @@ function startAutoSave() {
         clearInterval(autoSaveInterval);
     }
 
-    // Save every 60 seconds
+    // Save every 10 seconds when user is logged in
     autoSaveInterval = setInterval(async () => {
         if (auth.currentUser) {
             await saveGameToCloud();
         }
-    }, 60000); // 60 seconds
+    }, 10000); // 10 seconds
 
-    console.log('✅ Auto-save started (every 60 seconds)');
+    console.log('✅ Auto-save started (every 10 seconds)');
 }
 
 function stopAutoSave() {
