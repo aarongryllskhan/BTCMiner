@@ -503,6 +503,13 @@
 function loadGame() {
     console.log('=== LOAD GAME CALLED ===');
     try {
+        // CRITICAL: Don't load from localStorage if a user is logged in
+        // Cloud data will be loaded via loadGameFromCloud() instead
+        if (typeof auth !== 'undefined' && auth && auth.currentUser) {
+            console.log('⚠️ User is logged in - skipping localStorage load (cloud data will be used instead)');
+            return;
+        }
+
         const savedData = localStorage.getItem('satoshiTerminalSave');
         console.log('localStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
 
@@ -2632,7 +2639,17 @@ dogeUpgrades.forEach(u => {
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
-        loadGame(); // This calls updateUI() internally
+
+        // CRITICAL: Only load from localStorage if no user is logged in
+        // If user is logged in, cloud data will be loaded via loadGameFromCloud()
+        if (!auth || !auth.currentUser) {
+            console.log('No logged-in user - loading from localStorage');
+            loadGame(); // This calls updateUI() internally
+        } else {
+            console.log('User is logged in - skipping localStorage load, cloud data will load instead');
+            updateUI(); // Just refresh UI with current variables
+        }
+
         updateAutoClickerButtonState(); // Update button state immediately after loading
         setBuyQuantity(1); // Highlight the 1x button on page load
 
