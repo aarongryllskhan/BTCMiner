@@ -280,7 +280,7 @@
             </button>
 
             <div style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
+                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; window.parent.document.getElementById('main-layout').style.display='grid'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
                     Skip and play offline →
                 </a>
             </div>
@@ -324,7 +324,7 @@
             </button>
 
             <div style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
+                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; window.parent.document.getElementById('main-layout').style.display='grid'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
                     Skip and play offline →
                 </a>
             </div>
@@ -445,14 +445,20 @@
         async function handleGuestLogin() {
             try {
                 console.log('👤 Attempting guest login...');
-                console.log('Parent window playAsGuest exists?', typeof window.parent.playAsGuest);
 
-                if (typeof window.parent.playAsGuest !== 'function') {
-                    alert('Error: Guest login function not found. Please refresh the page.');
-                    return;
+                // Try to access parent function
+                try {
+                    if (window.parent && window.parent.playAsGuest) {
+                        await window.parent.playAsGuest();
+                        return;
+                    }
+                } catch (e) {
+                    console.log('Cross-origin restriction, using postMessage instead');
                 }
 
-                await window.parent.playAsGuest();
+                // Fallback: use postMessage for cross-origin communication
+                window.parent.postMessage({ action: 'playAsGuest' }, '*');
+
             } catch (error) {
                 console.error('Guest login failed:', error);
                 alert('Guest login failed: ' + error.message);

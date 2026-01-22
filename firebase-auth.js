@@ -420,7 +420,7 @@ function setupAuthListener() {
             console.log('Main layout element found?', !!mainLayout);
             if (mainLayout) {
                 console.log('Showing main game layout...');
-                mainLayout.style.display = 'flex';
+                mainLayout.style.display = 'grid';
             }
 
             // Update user UI with login info (shows username)
@@ -470,3 +470,15 @@ function setupAuthListener() {
 
 // Make it globally available
 window.setupAuthListener = setupAuthListener;
+
+// Listen for messages from iframe (for cross-origin guest login)
+window.addEventListener('message', async function(event) {
+    if (event.data && event.data.action === 'playAsGuest') {
+        console.log('📨 Received playAsGuest message from iframe');
+        try {
+            await playAsGuest();
+        } catch (error) {
+            console.error('❌ Failed to play as guest:', error);
+        }
+    }
+});
