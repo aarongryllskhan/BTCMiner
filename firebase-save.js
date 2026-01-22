@@ -509,3 +509,4 @@ window.loadGameFromCloud = loadGameFromCloud;
 window.startAutoSave = startAutoSave;
 window.stopAutoSave = stopAutoSave;
 window.createSyncButton = createSyncButton;
+window.resetGameVariables = resetGameVariables;
