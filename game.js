@@ -490,6 +490,12 @@
             } else {
                 console.error('✗ SAVE FAILED - Could not verify in localStorage');
             }
+
+            // Sync to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('📤 Syncing to cloud...');
+                window.saveGameToCloud().catch(err => console.error('Cloud sync failed:', err));
+            }
         } catch (error) {
             console.error('✗ ERROR saving game to localStorage:', error);
             alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
