@@ -151,6 +151,42 @@ function resetGameVariables() {
         window.autoClickerCooldownEnd = 0;
         window.sessionStartTime = Date.now();
 
+        // Reset upgrade arrays to default state (level 0)
+        if (window.powerUpgrades && Array.isArray(window.powerUpgrades)) {
+            window.powerUpgrades.forEach(u => {
+                u.level = 0;
+                u.currentUsd = u.baseUsd;
+                u.currentPower = 0;
+            });
+        }
+
+        if (window.btcUpgrades && Array.isArray(window.btcUpgrades)) {
+            window.btcUpgrades.forEach(u => {
+                u.level = 0;
+                u.currentUsd = u.baseUsd;
+                u.currentYield = 0;
+                u.boostLevel = 0;
+            });
+        }
+
+        if (window.ethUpgrades && Array.isArray(window.ethUpgrades)) {
+            window.ethUpgrades.forEach(u => {
+                u.level = 0;
+                u.currentUsd = u.baseUsd;
+                u.currentYield = 0;
+                u.boostLevel = 0;
+            });
+        }
+
+        if (window.dogeUpgrades && Array.isArray(window.dogeUpgrades)) {
+            window.dogeUpgrades.forEach(u => {
+                u.level = 0;
+                u.currentUsd = u.baseUsd;
+                u.currentYield = 0;
+                u.boostLevel = 0;
+            });
+        }
+
         console.log('✅ Game variables reset to defaults');
     } catch (error) {
         console.error('Error resetting variables:', error);
@@ -189,19 +225,19 @@ async function loadGameFromCloud(userId = null) {
         // Bitcoin data
         window.btcBalance = cloudData.btcBalance || 0;
         window.btcLifetime = cloudData.btcLifetime || 0;
-        window.btcClickValue = cloudData.btcClickValue || 0;
+        window.btcClickValue = cloudData.btcClickValue || 0.00000250;
         window.btcPerSec = cloudData.btcPerSec || 0;
         window.btcPrice = cloudData.btcPrice || 100000;
         // Ethereum data
         window.ethBalance = cloudData.ethBalance || 0;
         window.ethLifetime = cloudData.ethLifetime || 0;
-        window.ethClickValue = cloudData.ethClickValue || 0;
+        window.ethClickValue = cloudData.ethClickValue || 0.00007143;
         window.ethPerSec = cloudData.ethPerSec || 0;
         window.ethPrice = cloudData.ethPrice || 3500;
         // Dogecoin data
         window.dogeBalance = cloudData.dogeBalance || 0;
         window.dogeLifetime = cloudData.dogeLifetime || 0;
-        window.dogeClickValue = cloudData.dogeClickValue || 0;
+        window.dogeClickValue = cloudData.dogeClickValue || 1.00000000;
         window.dogePerSec = cloudData.dogePerSec || 0;
         window.dogePrice = cloudData.dogePrice || 0.25;
         // General data
@@ -215,6 +251,70 @@ async function loadGameFromCloud(userId = null) {
         window.chartTimestamps = cloudData.chartTimestamps || [];
         window.chartStartTime = cloudData.chartStartTime || 0;
         window.totalPowerAvailable = cloudData.totalPowerAvailable || 0;
+
+        // Restore upgrades from cloud data
+        if (cloudData.powerUpgrades && Array.isArray(cloudData.powerUpgrades)) {
+            cloudData.powerUpgrades.forEach((cloudUpgrade, index) => {
+                if (window.powerUpgrades[index]) {
+                    window.powerUpgrades[index].level = cloudUpgrade.level || 0;
+                    window.powerUpgrades[index].currentUsd = cloudUpgrade.currentUsd || window.powerUpgrades[index].baseUsd;
+                    window.powerUpgrades[index].currentPower = cloudUpgrade.currentPower || 0;
+                }
+            });
+        }
+
+        if (cloudData.btcUpgrades && Array.isArray(cloudData.btcUpgrades)) {
+            cloudData.btcUpgrades.forEach((cloudUpgrade, index) => {
+                if (window.btcUpgrades[index]) {
+                    window.btcUpgrades[index].level = cloudUpgrade.level || 0;
+                    window.btcUpgrades[index].currentUsd = cloudUpgrade.currentUsd || window.btcUpgrades[index].baseUsd;
+                    window.btcUpgrades[index].currentYield = cloudUpgrade.currentYield || 0;
+                    window.btcUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
+                }
+            });
+        }
+
+        if (cloudData.ethUpgrades && Array.isArray(cloudData.ethUpgrades)) {
+            cloudData.ethUpgrades.forEach((cloudUpgrade, index) => {
+                if (window.ethUpgrades[index]) {
+                    window.ethUpgrades[index].level = cloudUpgrade.level || 0;
+                    window.ethUpgrades[index].currentUsd = cloudUpgrade.currentUsd || window.ethUpgrades[index].baseUsd;
+                    window.ethUpgrades[index].currentYield = cloudUpgrade.currentYield || 0;
+                    window.ethUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
+                }
+            });
+        }
+
+        if (cloudData.dogeUpgrades && Array.isArray(cloudData.dogeUpgrades)) {
+            cloudData.dogeUpgrades.forEach((cloudUpgrade, index) => {
+                if (window.dogeUpgrades[index]) {
+                    window.dogeUpgrades[index].level = cloudUpgrade.level || 0;
+                    window.dogeUpgrades[index].currentUsd = cloudUpgrade.currentUsd || window.dogeUpgrades[index].baseUsd;
+                    window.dogeUpgrades[index].currentYield = cloudUpgrade.currentYield || 0;
+                    window.dogeUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
+                }
+            });
+        }
+
+        // Restore skill tree data if function exists
+        if (cloudData.skillTree && typeof window.setSkillTreeData === 'function') {
+            try {
+                window.setSkillTreeData(cloudData.skillTree);
+                console.log('✅ Skill tree data restored');
+            } catch (error) {
+                console.warn('⚠️ Failed to restore skill tree data:', error);
+            }
+        }
+
+        // Restore staking data if function exists
+        if (cloudData.staking && typeof window.setStakingData === 'function') {
+            try {
+                window.setStakingData(cloudData.staking);
+                console.log('✅ Staking data restored');
+            } catch (error) {
+                console.warn('⚠️ Failed to restore staking data:', error);
+            }
+        }
 
         // Verify data was actually loaded
         console.log('📋 Verifying loaded data in game variables:');
