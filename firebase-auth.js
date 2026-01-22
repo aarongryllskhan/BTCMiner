@@ -245,8 +245,18 @@ async function logoutUser() {
         }
 
         console.log('🔐 Signing out from Firebase...');
-        await auth.signOut();
-        console.log('✅ Signed out from Firebase - auth.currentUser should now be null');
+
+        // Sign out with a timeout in case Firebase is blocked
+        try {
+            await Promise.race([
+                auth.signOut(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+            ]);
+            console.log('✅ Signed out from Firebase - auth.currentUser should now be null');
+        } catch (signOutError) {
+            console.warn('⚠️ Firebase signOut encountered an issue (may be due to network blocking):', signOutError.message);
+            // Continue with logout process anyway
+        }
 
         showMessage('Logged out successfully', 'success');
 
@@ -531,6 +541,22 @@ function setupAuthListener() {
                 try {
                     await window.loadGameFromCloud(user.uid);
                     console.log('✅ Game data loaded successfully');
+
+                    // Re-initialize the game UI after loading
+                    if (typeof window.initializeGame === 'function') {
+                        console.log('Re-initializing game shops and UI...');
+                        try {
+                            // Initialize shops and UI elements
+                            if (typeof window.initBtcShop === 'function') window.initBtcShop();
+                            if (typeof window.initEthShop === 'function') window.initEthShop();
+                            if (typeof window.initDogeShop === 'function') window.initDogeShop();
+                            if (typeof window.initPowerShop === 'function') window.initPowerShop();
+                            if (typeof window.updateAutoClickerButtonState === 'function') window.updateAutoClickerButtonState();
+                            console.log('✅ Game shops re-initialized');
+                        } catch (initError) {
+                            console.error('⚠️ Error re-initializing shops:', initError);
+                        }
+                    }
                 } catch (error) {
                     console.error('❌ Failed to load game data:', error);
                 }

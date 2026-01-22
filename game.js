@@ -2978,6 +2978,14 @@ dogeUpgrades.forEach(u => {
     window.acceptAgeDisclaimer = acceptAgeDisclaimer;
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;
+    window.initBtcShop = initBtcShop;
+    window.initEthShop = initEthShop;
+    window.initDogeShop = initDogeShop;
+    window.initPowerShop = initPowerShop;
+    window.updateAutoClickerButtonState = updateAutoClickerButtonState;
+    window.updateDisplay = updateDisplay;
+    window.updateUpgradeUI = updateUpgradeUI;
+    window.updateUI = updateUI;
 
     // Verify functions are accessible
     console.log('✅ GAME.JS LOADED - Functions exported to window:');
