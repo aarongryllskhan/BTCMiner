@@ -149,26 +149,10 @@ async function loadGameFromCloud(userId = null) {
         const cloudData = docSnap.data();
         console.log('☁️ Cloud save found:', cloudData);
 
-        // Compare cloud vs local progress (use whichever has more total earnings)
+        // Always use cloud data for this account (don't compare with other accounts' local saves)
+        // Local save comparison is only relevant for guest->account conversion,
+        // and in that case the user would have the same localStorage from being a guest
         let useCloudData = true;
-
-        if (hasLocalSave && localData) {
-            const localEarnings = localData.lifetimeEarnings || 0;
-            const cloudEarnings = cloudData.lifetimeEarnings || 0;
-
-            console.log(`📊 Comparing saves - Local: $${localEarnings}, Cloud: $${cloudEarnings}`);
-
-            if (localEarnings > cloudEarnings) {
-                console.log('✅ Local save is better - keeping local progress');
-                useCloudData = false;
-
-                // Upload the better local save to cloud
-                await saveGameToCloud();
-                showMessage('Local progress was better - uploaded to cloud!', 'info');
-            } else {
-                console.log('☁️ Cloud save is better - loading from cloud');
-            }
-        }
 
         // Only apply cloud data if it's better than local
         if (useCloudData) {

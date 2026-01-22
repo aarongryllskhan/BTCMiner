@@ -200,6 +200,15 @@ async function logoutUser() {
         // Clear localStorage to prevent data leaking to next user
         localStorage.clear();
 
+        // Reset login iframe to clear form state
+        const loginScreenDiv = document.getElementById('login-screen');
+        if (loginScreenDiv) {
+            const iframe = loginScreenDiv.querySelector('iframe');
+            if (iframe) {
+                iframe.src = iframe.src; // Reload iframe to reset form
+            }
+        }
+
     } catch (error) {
         console.error('❌ Logout error:', error);
         showMessage('Logout failed: ' + error.message, 'error');
