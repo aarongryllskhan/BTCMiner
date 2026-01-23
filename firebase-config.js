@@ -326,3 +326,21 @@ window.showLinkAccountModal = showLinkAccountModal;
 window.hideLinkAccountModal = hideLinkAccountModal;
 window.handleLinkAccount = handleLinkAccount;
 window.updateUserUI = updateUserUI;
+
+// Initialize Firebase and setup auth listener
+console.log('🔧 Initializing Firebase...');
+initializeFirebase().then(success => {
+    if (success) {
+        console.log('✅ Firebase ready - setting up auth listener');
+        if (typeof window.setupAuthListener === 'function') {
+            window.setupAuthListener();
+            console.log('✅ Auth listener setup complete');
+        } else {
+            console.error('❌ setupAuthListener not available');
+        }
+    } else {
+        console.warn('⚠️ Firebase initialization failed - offline mode');
+    }
+}).catch(error => {
+    console.error('❌ Error initializing Firebase:', error);
+});
