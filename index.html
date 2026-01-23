@@ -48,6 +48,30 @@
 
     <!-- Cache buster - forces fresh load on updates -->
     <script>
+        // Debug viewport and media query detection
+        function logViewportInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            const isPortrait = width < height;
+            const isMobileResolution = width <= 768 || isPortrait;
+
+            console.log('📱 VIEWPORT INFO:');
+            console.log('  Window Width: ' + width + 'px');
+            console.log('  Window Height: ' + height + 'px');
+            console.log('  Device Pixel Ratio: ' + devicePixelRatio);
+            console.log('  Orientation: ' + (isPortrait ? 'Portrait' : 'Landscape'));
+            console.log('  Is Mobile (portrait OR <=768px): ' + isMobileResolution);
+            console.log('  Should stack to single column: ' + isMobileResolution);
+        }
+
+        // Log on load
+        window.addEventListener('DOMContentLoaded', logViewportInfo);
+        window.addEventListener('resize', logViewportInfo);
+
+        // Check immediately
+        logViewportInfo();
+
         // Check if app has been updated
         const appVersion = '1.0.3'; // Increment this version to force cache clear
 
@@ -997,6 +1021,55 @@
 
 <!-- Load leaderboard system -->
 <script src="leaderboard.js?v=20260123063136"></script>
+
+<!-- Mobile Layout Enforcer -->
+<script>
+    // Ensure mobile layout is applied correctly
+    function enforceMobileLayout() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const mainLayout = document.getElementById('main-layout');
+
+        // Modern mobile phones have high resolution (1440px+) but are in portrait mode
+        // Desktop is landscape with much wider display
+        const isPortrait = width < height;
+        const isMobileWidth = width <= 768; // Standard mobile width breakpoint
+        const shouldStackLayout = isMobileWidth || isPortrait;
+
+        if (shouldStackLayout && mainLayout) {
+            // Check current state to avoid repeated logging
+            const isAlreadyStacked = mainLayout.style.display === 'flex';
+
+            if (!isAlreadyStacked) {
+                console.log('📱 ENFORCING MOBILE LAYOUT:');
+                console.log('  Window: ' + width + 'x' + height + 'px');
+                console.log('  Orientation: ' + (isPortrait ? 'Portrait' : 'Landscape'));
+                console.log('  Mobile Width (<=768px): ' + isMobileWidth);
+            }
+
+            mainLayout.style.gridTemplateColumns = '1fr';
+            mainLayout.style.display = 'flex';
+            mainLayout.style.flexDirection = 'column';
+            mainLayout.style.height = 'auto';
+            mainLayout.style.maxWidth = '100%';
+            mainLayout.style.width = '100%';
+        } else if (mainLayout && mainLayout.style.display === 'flex') {
+            console.log('🖥️ SWITCHING TO DESKTOP LAYOUT:');
+            console.log('  Window: ' + width + 'x' + height + 'px');
+            // Reset to default desktop layout
+            mainLayout.style.gridTemplateColumns = '7fr 3fr';
+            mainLayout.style.display = 'grid';
+            mainLayout.style.flexDirection = '';
+            mainLayout.style.height = 'calc(100vh - calc(var(--base-padding) * 2))';
+        }
+    }
+
+    // Run on load and resize
+    window.addEventListener('DOMContentLoaded', enforceMobileLayout);
+    window.addEventListener('resize', enforceMobileLayout);
+    // Also run immediately
+    setTimeout(enforceMobileLayout, 0);
+</script>
 
 <!-- Initialize Firebase -->
 <script>

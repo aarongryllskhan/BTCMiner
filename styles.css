@@ -43,6 +43,8 @@
             box-sizing: border-box;
             position: relative;
             z-index: 1;
+            width: 100%;
+            max-width: 100%;
         }
 
         .panel {
@@ -58,19 +60,23 @@
             min-height: 0;
         }
 
-        /* Fluid breakpoint: Tablet and below (when width drops below ~1024px) */
-        @media (max-aspect-ratio: 3/2) {
+        /* Mobile/Tablet: Stack columns vertically below 1024px */
+        @media (max-width: 1024px) {
             #main-layout {
-                grid-template-columns: 1fr;
-                display: flex;
-                flex-direction: column;
-                height: auto;
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+                gap: var(--gap-size) !important;
+                width: 100% !important;
+                max-width: 100% !important;
             }
 
             .panel {
-                width: 100%;
-                min-width: 0;
-                overflow-x: hidden;
+                width: 100% !important;
+                min-width: 0 !important;
+                overflow-x: hidden !important;
+                margin: 0 !important;
             }
 
             .stat-box {
@@ -86,8 +92,88 @@
             #hashrate-display {
                 flex-wrap: wrap !important;
                 justify-content: flex-start !important;
-                width: 100%;
-                box-sizing: border-box;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+        }
+
+        /* High-resolution phones: Galaxy S20+, S21+, S22, Pixel 6/7, iPhone 12/13/14 Pro Max */
+        @media (max-width: 1440px) {
+            #main-layout {
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+        }
+
+        /* Premium tablets and large phones */
+        @media (max-width: 1200px) {
+            #main-layout {
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+        }
+
+        /* iPad and large tablets (portrait) */
+        @media (max-width: 820px) {
+            #main-layout {
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+        }
+
+        /* Standard phones: iPhone 11, 12, 13, Pixel 5, Galaxy S10 */
+        @media (max-width: 768px) {
+            #main-layout {
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+        }
+
+        /* Regular mobile phones: Galaxy S9, iPhone X, Pixel 4 */
+        @media (max-width: 720px) {
+            #main-layout {
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+        }
+
+        /* Compact phones and standard sizes */
+        @media (max-width: 640px) {
+            #main-layout {
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+        }
+
+        /* Small phones: iPhone SE, iPhone 8, compact Android phones */
+        @media (max-width: 480px) {
+            #main-layout {
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+            }
+        }
+
+        /* Very small/old devices */
+        @media (max-width: 360px) {
+            #main-layout {
+                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
             }
         }
 
