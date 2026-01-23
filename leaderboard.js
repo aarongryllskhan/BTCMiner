@@ -16,6 +16,61 @@ let leaderboardCache = null;
 let leaderboardCacheTimestamp = 0;
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds (more real-time)
 
+// Prompt user to create username if they don't have one
+async function promptForUsername(user) {
+    let username = null;
+    let usernameValid = false;
+
+    while (!usernameValid) {
+        username = prompt('To appear on the leaderboard, please choose a username (3-20 characters, letters, numbers, _ and - only):');
+
+        if (!username) {
+            // User cancelled - use email prefix as fallback
+            return user.email ? user.email.split('@')[0] : 'Anonymous';
+        }
+
+        username = username.trim();
+
+        // Validate username format
+        if (username.length < 3 || username.length > 20) {
+            alert('Username must be between 3 and 20 characters');
+            continue;
+        }
+
+        if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+            alert('Username can only contain letters, numbers, underscores, and hyphens');
+            continue;
+        }
+
+        // Check if username is already taken
+        try {
+            const usernameQuery = await db.collection('users').where('username', '==', username).get();
+            if (!usernameQuery.empty) {
+                alert('Username "' + username + '" is already taken. Please choose another one.');
+                continue;
+            }
+        } catch (error) {
+            console.error('Error checking username:', error);
+            alert('Error checking username availability. Please try again.');
+            continue;
+        }
+
+        usernameValid = true;
+    }
+
+    // Save username to Firestore
+    try {
+        await db.collection('users').doc(user.uid).update({
+            username: username
+        });
+        console.log('✅ Username saved to Firestore:', username);
+    } catch (error) {
+        console.error('Error saving username:', error);
+    }
+
+    return username;
+}
+
 // Update player's leaderboard entry
 async function updateLeaderboard() {
     try {
@@ -45,18 +100,14 @@ async function updateLeaderboard() {
             if (userDoc.exists && userDoc.data().username) {
                 username = userDoc.data().username;
                 console.log('✅ Using Firestore username:', username);
-            } else if (user.email) {
-                // Use email prefix as fallback (not full displayName)
-                username = user.email.split('@')[0];
-                console.log('⚠️ No Firestore username, using email prefix:', username);
-            } else if (user.displayName) {
-                // Last resort: use display name
-                username = user.displayName;
-                console.log('⚠️ Using displayName as last resort:', username);
+            } else {
+                // No username set - prompt user to create one
+                console.log('⚠️ No username found for user, prompting to create one...');
+                username = await promptForUsername(user);
             }
         } catch (error) {
             console.error('Failed to fetch username for leaderboard:', error);
-            // Fallback to email prefix, not full displayName
+            // Fallback to email prefix
             username = user.email ? user.email.split('@')[0] : 'Anonymous';
         }
 
