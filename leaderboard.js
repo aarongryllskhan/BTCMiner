@@ -393,6 +393,13 @@ function stopLeaderboardUpdates() {
 async function refreshLeaderboardNow() {
     try {
         console.log('🔄 Forcing leaderboard refresh...');
+
+        // Update current user's leaderboard entry first
+        if (auth.currentUser && !auth.currentUser.isAnonymous) {
+            console.log('🔄 Updating your leaderboard entry with current username...');
+            await updateLeaderboard();
+        }
+
         await fetchLeaderboard(10, true); // Force refresh
         await openLeaderboardModal(); // Reopen with fresh data
         console.log('✅ Leaderboard refreshed');
