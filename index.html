@@ -584,7 +584,6 @@
         const cookiesTab = document.getElementById('policy-tab-cookies');
         const termsTab = document.getElementById('policy-tab-terms');
         const contactTab = document.getElementById('policy-tab-contact');
-        const firebaseTab = document.getElementById('policy-tab-firebase');
 
         // Reset all tabs to inactive state
         privacyTab.style.background = '#ddd';
@@ -595,8 +594,6 @@
         termsTab.style.color = '#000';
         contactTab.style.background = '#ddd';
         contactTab.style.color = '#000';
-        firebaseTab.style.background = '#ddd';
-        firebaseTab.style.color = '#000';
 
         if (tab === 'privacy') {
             iframe.src = 'privacy.html';
@@ -614,10 +611,6 @@
             iframe.src = 'contact.html';
             contactTab.style.background = '#f7931a';
             contactTab.style.color = '#000';
-        } else if (tab === 'firebase') {
-            iframe.src = 'privacy-modal.html';
-            firebaseTab.style.background = '#f7931a';
-            firebaseTab.style.color = '#000';
         }
     }
 
