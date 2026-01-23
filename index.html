@@ -70,7 +70,7 @@
 <body>
 
     <!-- Login Screen (Firebase) -->
-    <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); z-index: 100000; overflow: auto;">
+    <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100000; overflow: auto;">
         <iframe src="login-screen.html" style="width: 100%; height: 100%; border: none;"></iframe>
     </div>
 
@@ -836,13 +836,20 @@
 
             // Show login screen first on initial load
             // User must login or play as guest
+            // Show game in background (blurred and disabled)
             document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('main-layout').style.display = 'none';
+            const mainLayout = document.getElementById('main-layout');
+            mainLayout.style.display = 'grid'; // Show as background
+            mainLayout.style.pointerEvents = 'none'; // Disable interaction
+            mainLayout.style.userSelect = 'none'; // Disable text selection
         } else {
             console.warn('⚠️ Firebase not initialized - running in offline mode');
             // Allow game to run without Firebase in offline mode
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-layout').style.display = 'flex';
+            const mainLayout = document.getElementById('main-layout');
+            mainLayout.style.display = 'grid';
+            mainLayout.style.pointerEvents = 'auto'; // Enable interaction
+            mainLayout.style.userSelect = 'auto'; // Enable text selection
         }
     });
 

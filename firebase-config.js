@@ -42,12 +42,15 @@ function initializeFirebase() {
 
 // Called when user logs in
 function onUserLogin(user) {
-    // Hide login screen, show game
+    // Hide login screen, show game (and enable interaction)
     if (document.getElementById('login-screen')) {
         document.getElementById('login-screen').style.display = 'none';
     }
-    if (document.getElementById('main-layout')) {
-        document.getElementById('main-layout').style.display = 'flex';
+    const mainLayout = document.getElementById('main-layout');
+    if (mainLayout) {
+        mainLayout.style.display = 'grid';
+        mainLayout.style.pointerEvents = 'auto'; // Re-enable interaction
+        mainLayout.style.userSelect = 'auto'; // Re-enable text selection
     }
 
     // Load game data from cloud
@@ -61,12 +64,15 @@ function onUserLogin(user) {
 
 // Called when user logs out
 function onUserLogout() {
-    // Show login screen, hide game
+    // Show login screen, keep game visible as background
     if (document.getElementById('login-screen')) {
         document.getElementById('login-screen').style.display = 'flex';
     }
-    if (document.getElementById('main-layout')) {
-        document.getElementById('main-layout').style.display = 'none';
+    const mainLayout = document.getElementById('main-layout');
+    if (mainLayout) {
+        mainLayout.style.display = 'grid'; // Keep visible as background
+        mainLayout.style.pointerEvents = 'none'; // Disable interaction
+        mainLayout.style.userSelect = 'none'; // Disable text selection
     }
 }
 

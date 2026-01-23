@@ -452,7 +452,9 @@ async function logoutUser() {
         }
         const mainLayout = document.getElementById('main-layout');
         if (mainLayout) {
-            mainLayout.style.display = 'none';
+            mainLayout.style.display = 'grid'; // Keep visible as background
+            mainLayout.style.pointerEvents = 'none'; // Disable interaction
+            mainLayout.style.userSelect = 'none'; // Disable text selection
         }
 
         console.log('✅ Logout complete - auth state listener should trigger UI update');
@@ -726,12 +728,14 @@ function setupAuthListener() {
                 loginScreen.style.display = 'none';
             }
 
-            // Show main game layout
+            // Show main game layout (and enable interactions)
             const mainLayout = document.getElementById('main-layout');
             console.log('Main layout element found?', !!mainLayout);
             if (mainLayout) {
                 console.log('Showing main game layout...');
                 mainLayout.style.display = 'grid';
+                mainLayout.style.pointerEvents = 'auto'; // Re-enable interaction
+                mainLayout.style.userSelect = 'auto'; // Re-enable text selection
             }
 
             // Update user UI with login info (shows username)
@@ -811,10 +815,12 @@ function setupAuthListener() {
                 window.stopAutoSave();
             }
 
-            // Hide main game layout
+            // Show main game layout in background (disabled)
             const mainLayout = document.getElementById('main-layout');
             if (mainLayout) {
-                mainLayout.style.display = 'none';
+                mainLayout.style.display = 'grid';
+                mainLayout.style.pointerEvents = 'none'; // Disable interaction
+                mainLayout.style.userSelect = 'none'; // Disable text selection
             }
 
             // Show login screen for new users
