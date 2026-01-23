@@ -101,9 +101,10 @@ async function updateLeaderboard() {
                 username = userDoc.data().username;
                 console.log('✅ Using Firestore username:', username);
             } else {
-                // No username set - prompt user to create one
-                console.log('⚠️ No username found for user, prompting to create one...');
-                username = await promptForUsername(user);
+                // No username set - skip leaderboard update for now
+                // Username should be set during registration, don't prompt here to avoid double-prompt
+                console.log('⚠️ No username found for user, skipping leaderboard update');
+                return false;
             }
         } catch (error) {
             console.error('Failed to fetch username for leaderboard:', error);
