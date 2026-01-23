@@ -92,17 +92,17 @@ async function updateLeaderboard() {
         try {
             let userDoc = await db.collection('users').doc(user.uid).get();
             let retries = 0;
-            const maxRetries = user.isAnonymous ? 5 : 0;
+            const maxRetries = user.isAnonymous ? 20 : 0; // Increased to 20 retries (10 seconds total)
 
             // Retry for guest users to wait for username to be created
-            while ((!userDoc.exists || !userDoc.data().username) && retries < maxRetries) {
+            while ((!userDoc.exists || !userDoc.data()?.username) && retries < maxRetries) {
                 console.log(`⏳ Waiting for guest username for leaderboard... (attempt ${retries + 1}/${maxRetries})`);
-                await new Promise(resolve => setTimeout(resolve, 400)); // Wait 400ms
+                await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
                 userDoc = await db.collection('users').doc(user.uid).get();
                 retries++;
             }
 
-            if (userDoc.exists && userDoc.data().username) {
+            if (userDoc.exists && userDoc.data()?.username) {
                 username = userDoc.data().username;
                 console.log('✅ Using Firestore username:', username);
             } else if (!user.isAnonymous) {
@@ -110,9 +110,9 @@ async function updateLeaderboard() {
                 username = user.email ? user.email.split('@')[0] : 'Anonymous';
                 console.log('⚠️ Using email fallback username:', username);
             } else {
-                // Guest user but no username found after retries - skip for now
-                console.log('⚠️ No guest username found after retries, skipping leaderboard update');
-                return false;
+                // Guest user but no username found after retries - use fallback
+                username = `guest${Date.now() % 10000}`;
+                console.log('⚠️ No guest username found after retries, using fallback:', username);
             }
         } catch (error) {
             console.error('Failed to fetch username for leaderboard:', error);
@@ -120,7 +120,7 @@ async function updateLeaderboard() {
             if (!user.isAnonymous) {
                 username = user.email ? user.email.split('@')[0] : 'Anonymous';
             } else {
-                return false;
+                username = `guest${Date.now() % 10000}`;
             }
         }
 
@@ -387,13 +387,14 @@ function formatCurrency(value) {
 let leaderboardUpdateInterval;
 
 function startLeaderboardUpdates() {
-    // Only update leaderboard for registered users (not guests)
-    if (auth.currentUser && !auth.currentUser.isAnonymous) {
+    // Update leaderboard for all logged-in users (including guests)
+    if (auth.currentUser) {
         // Update leaderboard immediately on login (includes capped offline earnings)
         updateLeaderboard();
-        console.log('✅ Leaderboard updated on login (offline earnings capped at 6 hours)');
+        const isGuest = auth.currentUser.isAnonymous;
+        console.log(`✅ Leaderboard updated on login${isGuest ? ' (guest user)' : ''} (offline earnings capped at 6 hours)`);
     } else {
-        console.log('ℹ️ Guest user - leaderboard updates disabled');
+        console.log('ℹ️ No user logged in - leaderboard updates disabled');
     }
 }
 
@@ -410,8 +411,8 @@ async function refreshLeaderboardNow() {
     try {
         console.log('🔄 Forcing leaderboard refresh...');
 
-        // Update current user's leaderboard entry first
-        if (auth.currentUser && !auth.currentUser.isAnonymous) {
+        // Update current user's leaderboard entry first (including guests)
+        if (auth.currentUser) {
             console.log('🔄 Updating your leaderboard entry with current username...');
             await updateLeaderboard();
         }

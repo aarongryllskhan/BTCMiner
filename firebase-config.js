@@ -19,13 +19,17 @@ let app;
 let auth;
 let db;
 
-function initializeFirebase() {
+async function initializeFirebase() {
     try {
         // Initialize Firebase App
         app = firebase.initializeApp(firebaseConfig);
 
         // Initialize Firebase Authentication
         auth = firebase.auth();
+
+        // Enable auth persistence so guest users stay logged in across page refreshes
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        console.log('✅ Firebase auth persistence enabled (LOCAL)');
 
         // Initialize Firestore Database
         db = firebase.firestore();
@@ -97,21 +101,22 @@ async function updateUserUI(user) {
     const isGuest = user.isAnonymous;
 
     // Fetch username from Firestore with retry for guest users
-    let displayName = 'Guest Player';
+    // Guest users need more retries because Firestore document may still be creating
+    let displayName = isGuest ? 'Loading...' : 'User';
     try {
-        // For guest users, retry a few times to wait for the username to be created
+        // For guest users, retry multiple times to wait for the username to be created
         let userDoc = await db.collection('users').doc(userId).get();
         let retries = 0;
-        const maxRetries = isGuest ? 5 : 0;
+        const maxRetries = isGuest ? 20 : 0; // Increased to 20 retries (10 seconds total)
 
-        while ((!userDoc.exists || !userDoc.data().username) && retries < maxRetries) {
+        while ((!userDoc.exists || !userDoc.data()?.username) && retries < maxRetries) {
             console.log(`⏳ Waiting for guest username to be created... (attempt ${retries + 1}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, 300)); // Wait 300ms
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
             userDoc = await db.collection('users').doc(userId).get();
             retries++;
         }
 
-        if (userDoc.exists && userDoc.data().username) {
+        if (userDoc.exists && userDoc.data()?.username) {
             displayName = userDoc.data().username;
             console.log('✅ Username fetched from Firestore:', displayName);
         } else if (!isGuest) {
@@ -124,7 +129,10 @@ async function updateUserUI(user) {
                 displayName = user.email.split('@')[0];
             }
         } else {
-            console.warn('⚠️ Guest username not found after retries, using default');
+            // Guest user but username still not found - this shouldn't happen
+            // but we need a fallback
+            console.warn('⚠️ Guest username not found after retries, generating fallback...');
+            displayName = `guest${Date.now() % 10000}`; // Temporary fallback
         }
     } catch (error) {
         console.error('Failed to fetch username:', error);
@@ -135,6 +143,8 @@ async function updateUserUI(user) {
             } else if (user.email) {
                 displayName = user.email.split('@')[0];
             }
+        } else {
+            displayName = `guest${Date.now() % 10000}`; // Fallback for guests on error
         }
     }
 
@@ -143,6 +153,12 @@ async function updateUserUI(user) {
     if (loginBtn) {
         loginBtn.style.display = isGuest ? 'inline-block' : 'none';
         loginBtn.textContent = '🔗 LINK ACCOUNT';
+        // Update onclick handler for guest users
+        if (isGuest) {
+            loginBtn.onclick = () => showLinkAccountModal();
+        } else {
+            loginBtn.onclick = () => showLoginScreen();
+        }
     }
 
     // Create or get user info display - insert it next to login button

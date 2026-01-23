@@ -555,7 +555,7 @@ async function logSuspiciousActivity(userId, type, data) {
     }
 }
 
-// Auto-save to cloud every 20 minutes for registered users
+// Auto-save to cloud every 20 minutes for all logged-in users (including guests)
 // Local saves still happen automatically every second via saveGame() in game.js
 let autoSaveInterval;
 
@@ -571,19 +571,23 @@ function startAutoSave() {
         clearInterval(autoSaveInterval);
     }
 
-    // Only auto-save for registered users (not guests)
-    if (auth.currentUser && !auth.currentUser.isAnonymous) {
-        // Save every 20 minutes (1,200,000 milliseconds)
+    // Auto-save for all logged-in users (including guests)
+    if (auth.currentUser) {
+        // Save every 5 minutes for guests (more frequent to prevent progress loss)
+        // Save every 20 minutes for registered users
+        const isGuest = auth.currentUser.isAnonymous;
+        const saveInterval = isGuest ? 300000 : 1200000; // 5 min for guests, 20 min for registered
+
         autoSaveInterval = setInterval(async () => {
-            if (auth.currentUser && !auth.currentUser.isAnonymous && !window.isOfflineMode) {
-                console.log('🔄 Auto-saving to cloud (20 min interval)...');
+            if (auth.currentUser && !window.isOfflineMode) {
+                console.log(`🔄 Auto-saving to cloud (${isGuest ? '5 min guest' : '20 min'} interval)...`);
                 await saveGameToCloud(false); // false = not manual save, skip cooldown
             }
-        }, 1200000); // 20 minutes
+        }, saveInterval);
 
-        console.log('✅ Auto cloud save started (every 20 minutes)');
+        console.log(`✅ Auto cloud save started (every ${isGuest ? '5 minutes - guest' : '20 minutes'})`);
     } else {
-        console.log('ℹ️ Guest user - cloud auto-save disabled');
+        console.log('ℹ️ No user logged in - cloud auto-save disabled');
     }
 }
 
@@ -708,6 +712,52 @@ function createSyncButton() {
     // Don't create a separate button - it will be part of updateUserUI
     console.log('✅ Manual save button available in user menu');
 }
+
+// Save on page unload (especially important for guest users)
+// Note: This is a best-effort save - some browsers may not complete async operations on unload
+function setupUnloadSave() {
+    window.addEventListener('beforeunload', async (event) => {
+        // Only save for logged-in users
+        if (auth && auth.currentUser && !window.isOfflineMode) {
+            console.log('🔄 Page unloading - attempting final save...');
+
+            // Use synchronous storage as a backup since async may not complete
+            try {
+                // The local save (via saveGame in game.js) should already be up-to-date
+                // But we'll try a cloud save for good measure
+
+                // For modern browsers, we can use sendBeacon for a more reliable save
+                // But Firestore doesn't support sendBeacon, so we just try regular save
+                // This may or may not complete depending on browser
+
+                // Note: Don't await here as it may block page close
+                saveGameToCloud(false).catch(err => {
+                    console.warn('Final cloud save may not have completed:', err);
+                });
+            } catch (e) {
+                console.warn('Error during unload save:', e);
+            }
+        }
+    });
+
+    // Also listen for visibility change to save when tab is hidden
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'hidden' && auth && auth.currentUser && !window.isOfflineMode) {
+            console.log('📱 Tab hidden - saving progress...');
+            try {
+                await saveGameToCloud(false);
+                console.log('✅ Tab hidden save complete');
+            } catch (e) {
+                console.warn('Tab hidden save failed:', e);
+            }
+        }
+    });
+
+    console.log('✅ Unload and visibility save handlers set up');
+}
+
+// Initialize unload save handler
+setupUnloadSave();
 
 // Export functions for global use
 window.saveGameToCloud = saveGameToCloud;

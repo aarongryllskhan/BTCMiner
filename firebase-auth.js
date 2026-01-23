@@ -401,8 +401,8 @@ async function logoutUser() {
     try {
         console.log('🔓 Starting logout process...');
 
-        // Update leaderboard before logout (for registered users only)
-        if (auth.currentUser && !auth.currentUser.isAnonymous && typeof window.updateLeaderboard === 'function') {
+        // Update leaderboard before logout (for all users including guests)
+        if (auth.currentUser && typeof window.updateLeaderboard === 'function') {
             console.log('🏆 Updating leaderboard before logout...');
             try {
                 await window.updateLeaderboard();
@@ -637,6 +637,18 @@ async function playAsGuest() {
             staking: {},
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        console.log('✅ Guest profile and game data created successfully');
+
+        // Update UI immediately to show the correct guest username
+        // This is needed because onAuthStateChanged may have already fired before the username was created
+        if (typeof window.updateUserUI === 'function') {
+            console.log('🔄 Updating UI with guest username:', guestUsername);
+            await window.updateUserUI(user);
+        }
+
+        // Show success message with the assigned username
+        showMessage(`Welcome, ${guestUsername}! Your progress saves automatically.`, 'success');
 
         return user;
 
@@ -993,10 +1005,24 @@ function setupAuthListener() {
                 window.startLeaderboardUpdates();
             }
 
-            // Start auto-save to cloud (every 60 seconds)
+            // Start auto-save to cloud
             if (window.startAutoSave) {
                 console.log('Starting auto-save...');
                 window.startAutoSave();
+            }
+
+            // For guest users, do an initial save after a short delay to ensure progress isn't lost
+            // This is important because guests don't have a linked account and might lose progress on refresh
+            if (user.isAnonymous && window.saveGameToCloud) {
+                setTimeout(async () => {
+                    console.log('💾 Initial save for guest user (30 second delay)...');
+                    try {
+                        await window.saveGameToCloud(false);
+                        console.log('✅ Guest initial save complete');
+                    } catch (saveError) {
+                        console.warn('⚠️ Guest initial save failed:', saveError);
+                    }
+                }, 30000); // Save after 30 seconds to capture early progress
             }
 
             console.log('🎮 Auth state handling complete - game should be visible now');

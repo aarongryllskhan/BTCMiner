@@ -1098,11 +1098,11 @@
     window.showLoginScreen = showLoginScreen;
 
     // Initialize Firebase when page loads
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
         console.log('🚀 Initializing Firebase...');
 
         // Initialize Firebase
-        const firebaseReady = initializeFirebase();
+        const firebaseReady = await initializeFirebase();
 
         if (firebaseReady) {
             console.log('✅ Firebase ready!');
