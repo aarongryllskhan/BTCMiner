@@ -312,9 +312,12 @@ async function handleLinkAccount(e) {
 
     try {
         await linkGuestToEmail(email, password, username);
+        // Close the modal on success
         hideLinkAccountModal();
+        console.log('✅ Account created and modal closed');
     } catch (error) {
         console.error('Account linking failed:', error);
+        // Modal stays open so user can try again
     }
 }
 

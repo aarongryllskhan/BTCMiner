@@ -398,6 +398,8 @@ async function loginWithGoogle() {
 
 // Show warning modal when guest tries to logout
 function showGuestLogoutWarning(guestUsername, onContinue) {
+    console.log('🚨 Showing guest logout warning modal for user:', guestUsername);
+
     // Create modal
     const modal = document.createElement('div');
     modal.id = 'guest-logout-warning-modal';
@@ -442,7 +444,7 @@ function showGuestLogoutWarning(guestUsername, onContinue) {
                 </p>
             </div>
             <div style="display: flex; gap: 15px; justify-content: center;">
-                <button onclick="document.getElementById('guest-logout-warning-modal')?.remove()" style="
+                <button id="continue-playing-btn" style="
                     background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
                     color: #fff;
                     border: none;
@@ -455,7 +457,7 @@ function showGuestLogoutWarning(guestUsername, onContinue) {
                 " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     ✓ Continue Playing
                 </button>
-                <button onclick="window._confirmGuestLogout();" style="
+                <button id="logout-anyway-btn" style="
                     background: linear-gradient(135deg, #ff3344 0%, #cc0000 100%);
                     color: #fff;
                     border: none;
@@ -473,12 +475,26 @@ function showGuestLogoutWarning(guestUsername, onContinue) {
     `;
 
     document.body.appendChild(modal);
+    console.log('✅ Modal added to DOM');
 
-    // Store the function to be called if logout is confirmed
-    window._confirmGuestLogout = () => {
-        modal.remove();
-        performLogout();
-    };
+    // Add click handlers
+    const continueBtn = document.getElementById('continue-playing-btn');
+    const logoutBtn = document.getElementById('logout-anyway-btn');
+
+    if (continueBtn) {
+        continueBtn.addEventListener('click', () => {
+            console.log('Continue button clicked');
+            modal.remove();
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            console.log('Logout anyway button clicked - proceeding with logout');
+            modal.remove();
+            performLogout();
+        });
+    }
 }
 
 // Logout user - shows warning if guest
@@ -895,79 +911,100 @@ async function linkGuestToEmail(email, password, username) {
         console.log('📝 Creating new account with email/password...');
 
         // Step 1: Create a new account with email/password
-        const newUserCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const newUser = newUserCredential.user;
-        console.log('✅ New account created with UID:', newUser.uid);
+        let newUser = null;
+        try {
+            const newUserCredential = await auth.createUserWithEmailAndPassword(email, password);
+            newUser = newUserCredential.user;
+            console.log('✅ New account created with UID:', newUser.uid);
+        } catch (authError) {
+            console.error('❌ Failed to create Firebase account:', authError);
+            if (authError.code === 'auth/email-already-in-use') {
+                showMessage('This email is already in use. Please use a different email.', 'error');
+            } else if (authError.code === 'auth/invalid-email') {
+                showMessage('Please enter a valid email address.', 'error');
+            } else if (authError.code === 'auth/weak-password') {
+                showMessage('Password must be at least 6 characters.', 'error');
+            } else if (authError.code === 'auth/operation-not-allowed') {
+                showMessage('Email/password authentication is not enabled. Please contact support.', 'error');
+            } else {
+                showMessage('Failed to create account: ' + authError.message, 'error');
+            }
+            throw authError;
+        }
 
         // Step 2: Copy guest account data to new account
         console.log('📋 Copying guest progress to new account...');
+        try {
+            // Get guest's Firestore user document
+            const guestDoc = await db.collection('users').doc(guestUid).get();
+            if (guestDoc.exists) {
+                const guestData = guestDoc.data();
 
-        // Get guest's Firestore user document
-        const guestDoc = await db.collection('users').doc(guestUid).get();
-        if (guestDoc.exists) {
-            const guestData = guestDoc.data();
+                // Create new user document with guest's progress
+                await db.collection('users').doc(newUser.uid).set({
+                    email: email,
+                    username: cleanUsername,
+                    isGuest: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                    linkedFromGuest: guestUid,
+                    linkedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    // Copy relevant data from guest account
+                    totalBTC: guestData.totalBTC || 0,
+                    level: guestData.level || 1,
+                    isPremium: guestData.isPremium || false
+                });
 
-            // Create new user document with guest's progress
-            await db.collection('users').doc(newUser.uid).set({
-                email: email,
-                username: cleanUsername,
-                isGuest: false,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                linkedFromGuest: guestUid,
-                linkedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                // Copy relevant data from guest account
-                totalBTC: guestData.totalBTC || 0,
-                level: guestData.level || 1,
-                isPremium: guestData.isPremium || false
-            });
+                // Copy game data subcollection
+                const gameDataDocs = await db.collection('users').doc(guestUid).collection('gameData').get();
+                for (const doc of gameDataDocs.docs) {
+                    await db.collection('users').doc(newUser.uid).collection('gameData').doc(doc.id).set(doc.data());
+                }
 
-            // Copy game data subcollection
-            const gameDataDocs = await db.collection('users').doc(guestUid).collection('gameData').get();
-            for (const doc of gameDataDocs.docs) {
-                await db.collection('users').doc(newUser.uid).collection('gameData').doc(doc.id).set(doc.data());
+                console.log('✅ Guest progress copied to new account');
+
+                // Step 3: Try to delete the old guest account from Firestore
+                // This is non-critical, so we don't throw if it fails
+                try {
+                    console.log('🗑️ Removing guest account...');
+                    await db.collection('users').doc(guestUid).delete();
+                    console.log('✅ Guest account removed');
+                } catch (deleteError) {
+                    console.warn('⚠️ Could not delete old guest account (non-critical):', deleteError);
+                    // Don't throw - account is already converted, this is just cleanup
+                }
             }
-
-            console.log('✅ Guest progress copied to new account');
-
-            // Step 3: Delete the old guest account from Firestore
-            console.log('🗑️ Removing guest account...');
-            await db.collection('users').doc(guestUid).delete();
-            console.log('✅ Guest account removed');
+        } catch (firestoreError) {
+            console.error('❌ Failed to copy guest progress:', firestoreError);
+            showMessage('Account created but failed to copy progress. Please contact support.', 'error');
+            throw firestoreError;
         }
 
         // Step 4: Sign out the guest and sign in as the new user
         console.log('🔄 Signing in with new account...');
-        await auth.signOut();
+        try {
+            await auth.signOut();
 
-        // Sign in with the new email/password
-        const signInResult = await auth.signInWithEmailAndPassword(email, password);
-        console.log('✅ Signed in as new account:', email);
+            // Sign in with the new email/password
+            const signInResult = await auth.signInWithEmailAndPassword(email, password);
+            console.log('✅ Signed in as new account:', email);
 
-        // Clear guest credentials from localStorage since they're no longer needed
-        localStorage.removeItem('guestUserUid');
-        localStorage.removeItem('guestUsername');
+            // Clear guest credentials from localStorage since they're no longer needed
+            localStorage.removeItem('guestUserUid');
+            localStorage.removeItem('guestUsername');
 
-        showMessage('Account created successfully! Your progress has been saved.', 'success');
+            showMessage('Account created successfully! Your progress has been saved.', 'success');
 
-        return signInResult.user;
-
-    } catch (error) {
-        console.error('❌ Account creation/linking error:', error);
-
-        // Provide helpful error messages for common issues
-        if (error.code === 'auth/email-already-in-use') {
-            showMessage('This email is already in use. Please use a different email.', 'error');
-        } else if (error.code === 'auth/invalid-email') {
-            showMessage('Please enter a valid email address.', 'error');
-        } else if (error.code === 'auth/weak-password') {
-            showMessage('Password must be at least 6 characters.', 'error');
-        } else if (error.code === 'auth/operation-not-allowed') {
-            showMessage('Email/password authentication is not enabled. Please contact support.', 'error');
-        } else {
-            showMessage('Failed to create account: ' + error.message, 'error');
+            return signInResult.user;
+        } catch (signInError) {
+            console.error('❌ Failed to sign in after account creation:', signInError);
+            showMessage('Account created but sign-in failed. Please try logging in manually.', 'error');
+            throw signInError;
         }
 
+    } catch (error) {
+        console.error('❌ Account creation/linking error (outer catch):', error);
+        // Error message already shown in inner catch blocks
         throw error;
     }
 }
