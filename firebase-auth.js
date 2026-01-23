@@ -273,8 +273,12 @@ async function loginWithGoogle() {
                 username = prompt('Welcome! Please choose a username (3-20 characters, letters, numbers, _ and - only):');
 
                 if (!username) {
-                    // User cancelled - delete the auth account and abort
-                    await user.delete();
+                    // User cancelled - sign out and abort
+                    try {
+                        await auth.signOut();
+                    } catch (e) {
+                        console.error('Error signing out:', e);
+                    }
                     throw new Error('Username is required to create an account');
                 }
 

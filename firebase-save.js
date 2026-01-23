@@ -24,6 +24,18 @@ async function saveGameToCloud(isManualSave = false) {
             return false;
         }
 
+        // Check if user document exists in Firestore
+        try {
+            const userDocCheck = await db.collection('users').doc(user.uid).get();
+            if (!userDocCheck.exists) {
+                console.log('⚠️ User document does not exist yet - skipping cloud save');
+                return false;
+            }
+        } catch (checkError) {
+            console.error('Error checking user document:', checkError);
+            return false;
+        }
+
         // Check cooldown for manual saves only (auto-saves bypass this)
         if (isManualSave) {
             const now = Date.now();
