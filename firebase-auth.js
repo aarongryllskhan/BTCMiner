@@ -106,10 +106,66 @@ async function loginUser(email, password) {
 
         console.log('✅ User logged in:', user.email);
 
-        // Update last login time
-        await db.collection('users').doc(user.uid).update({
-            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        // Check if user document exists in Firestore
+        const userDoc = await db.collection('users').doc(user.uid).get();
+
+        if (!userDoc.exists) {
+            // User exists in Auth but not in Firestore - create the document
+            console.log('⚠️ User document missing in Firestore, creating now...');
+
+            await db.collection('users').doc(user.uid).set({
+                email: user.email,
+                username: user.email.split('@')[0],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                totalBTC: 0,
+                level: 1,
+                achievements: [],
+                isPremium: false
+            });
+
+            // Initialize empty game data
+            await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
+                btcBalance: 0,
+                btcLifetime: 0,
+                btcClickValue: 0.00000250,
+                btcPerSec: 0,
+                btcPrice: 100000,
+                ethBalance: 0,
+                ethLifetime: 0,
+                ethClickValue: 0.00007143,
+                ethPerSec: 0,
+                ethPrice: 3500,
+                dogeBalance: 0,
+                dogeLifetime: 0,
+                dogeClickValue: 1.00000000,
+                dogePerSec: 0,
+                dogePrice: 0.25,
+                dollarBalance: 0,
+                hardwareEquity: 0,
+                lifetimeEarnings: 0,
+                sessionEarnings: 0,
+                autoClickerCooldownEnd: 0,
+                chartHistory: [],
+                chartTimestamps: [],
+                chartStartTime: 0,
+                totalPowerAvailable: 0,
+                powerUpgrades: [],
+                btcUpgrades: [],
+                ethUpgrades: [],
+                dogeUpgrades: [],
+                skillTree: {},
+                staking: {},
+                lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log('✅ User document created in Firestore');
+        } else {
+            // Update last login time for existing users
+            await db.collection('users').doc(user.uid).update({
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
 
         showMessage('Welcome back!', 'success');
         return user;
