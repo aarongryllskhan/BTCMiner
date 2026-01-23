@@ -55,7 +55,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260123042921">
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -63,9 +63,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <!-- Firebase Configuration, Save/Load, and Authentication -->
-    <script src="firebase-config.js"></script>
-    <script src="firebase-save.js"></script>
-    <script src="firebase-auth.js"></script>
+    <script src="firebase-config.js?v=20260123040255"></script>
+    <script src="firebase-save.js?v=20260123040920"></script>
+    <script src="firebase-auth.js?v=20260123044550"></script>
 </head>
 <body>
 
@@ -779,10 +779,10 @@
 </script>
 
 <!-- Load skill tree system first so its functions are available to game.js -->
-<script src="skilltree.js?v=1.0.1"></script>
+<script src="skilltree.js?v=20260123012223"></script>
 
 <!-- Load main game after skill tree functions are defined -->
-<script src="game.js?v=1.0.1"></script>
+<script src="game.js?v=20260123060902"></script>
 <script>
     // Debug: Verify switchTab is loaded
     console.log('DEBUG: After game.js load, switchTab type:', typeof window.switchTab);
@@ -798,10 +798,10 @@
 </script>
 
 <!-- Load staking system after main game variables are defined -->
-<script src="staking.js?v=1.0.1"></script>
+<script src="staking.js?v=20260123012223"></script>
 
 <!-- Load leaderboard system -->
-<script src="leaderboard.js?v=1.0.1"></script>
+<script src="leaderboard.js?v=20260123061450"></script>
 
 <!-- Initialize Firebase -->
 <script>
