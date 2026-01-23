@@ -2823,10 +2823,16 @@ dogeUpgrades.forEach(u => {
         let chartInitialized = false;
 
         const tryInitChart = () => {
+            // Don't try to initialize if already successful
+            if (chartInitialized) {
+                console.log('⚠️ Chart already initialized, skipping duplicate initialization');
+                return;
+            }
+
             nwChart = initChart();
             if (nwChart) {
                 chartInitialized = true;
-                console.log('Chart successfully initialized');
+                console.log('✅ Chart successfully initialized');
             }
         };
 
@@ -2837,11 +2843,11 @@ dogeUpgrades.forEach(u => {
             // Retry with delays (especially important for mobile)
             if (!chartInitialized) {
                 console.log('Chart init failed, retrying with delays...');
-                setTimeout(tryInitChart, 200);
-                setTimeout(tryInitChart, 500);
-                setTimeout(tryInitChart, 1000);
-                setTimeout(tryInitChart, 2000); // Extra retry for slow mobile devices
-                setTimeout(tryInitChart, 3000); // Final attempt
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 200);
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 500);
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 1000);
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 2000); // Extra retry for slow mobile devices
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 3000); // Final attempt
             }
         }, 100); // Small initial delay to ensure DOM is fully rendered
 

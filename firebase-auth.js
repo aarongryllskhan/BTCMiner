@@ -180,6 +180,14 @@ async function loginUser(email, password) {
                 isPremium: false
             });
 
+            console.log('✅ Username set in Firestore:', username);
+
+            // Update UI immediately to show the new username
+            if (typeof window.updateUserUI === 'function') {
+                await updateUserUI(user);
+                console.log('✅ UI updated with username after Google login');
+            }
+
             // Initialize empty game data
             await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
                 btcBalance: 0,
@@ -317,6 +325,14 @@ async function loginWithGoogle() {
                 isPremium: false,
                 photoURL: user.photoURL
             });
+
+            console.log('✅ Username set in Firestore:', username);
+
+            // Update UI immediately to show the new username
+            if (typeof window.updateUserUI === 'function') {
+                await updateUserUI(user);
+                console.log('✅ UI updated with username after email/password registration');
+            }
 
             // Initialize empty game data with correct field names
             await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({

@@ -58,6 +58,13 @@ async function updateLeaderboard() {
         // Get current lifetime earnings (use window accessor for closure variable)
         const lifetime = typeof window.lifetimeEarnings !== 'undefined' ? window.lifetimeEarnings : 0;
 
+        console.log('📊 Updating leaderboard with:', {
+            uid: user.uid,
+            username: username,
+            lifetime: lifetime,
+            lifetimeEarningsExists: typeof window.lifetimeEarnings !== 'undefined'
+        });
+
         // Update user's leaderboard entry
         await db.collection('leaderboard').doc(user.uid).set({
             username: username,
@@ -66,7 +73,7 @@ async function updateLeaderboard() {
             photoURL: user.photoURL || null
         }, { merge: true });
 
-        console.log('✅ Leaderboard updated:', { username, lifetime });
+        console.log('✅ Leaderboard updated successfully:', { username, lifetime });
         return true;
 
     } catch (error) {
@@ -102,15 +109,25 @@ async function fetchLeaderboard(limit = 10, forceRefresh = false) {
 
         const leaderboard = [];
         snapshot.forEach((doc, index) => {
+            const data = doc.data();
+            console.log(`📊 Leaderboard entry ${index + 1}:`, {
+                uid: doc.id,
+                username: data.username,
+                lifetimeEarnings: data.lifetimeEarnings,
+                lastUpdated: data.lastUpdated
+            });
+
             leaderboard.push({
                 rank: index + 1,
                 uid: doc.id,
-                username: doc.data().username,
-                lifetimeEarnings: doc.data().lifetimeEarnings,
-                lastUpdated: doc.data().lastUpdated,
-                photoURL: doc.data().photoURL
+                username: data.username,
+                lifetimeEarnings: data.lifetimeEarnings,
+                lastUpdated: data.lastUpdated,
+                photoURL: data.photoURL
             });
         });
+
+        console.log('📊 Total leaderboard entries fetched:', leaderboard.length);
 
         // Update cache
         leaderboardCache = leaderboard;
@@ -162,8 +179,11 @@ async function getPlayerRank(userId = null) {
 // Display leaderboard modal
 async function openLeaderboardModal() {
     try {
+        console.log('📊 Opening leaderboard modal...');
         const leaderboard = await fetchLeaderboard(10); // Top 10 only (optimized for free tier)
+        console.log('📊 Fetched leaderboard data:', leaderboard);
         const playerRank = await getPlayerRank();
+        console.log('📊 Player rank:', playerRank);
 
         const modal = document.getElementById('leaderboard-modal');
         if (!modal) {

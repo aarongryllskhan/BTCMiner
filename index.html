@@ -793,6 +793,31 @@
             console.log('Fallback switchTab called with:', tab);
         };
     }
+
+    // Fix event listeners after DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔧 Attaching event listeners...');
+
+        // Fix mute button - attach programmatically instead of inline onclick
+        const muteBtn = document.getElementById('mute-btn');
+        if (muteBtn) {
+            // Remove inline onclick to prevent conflicts
+            muteBtn.removeAttribute('onclick');
+
+            muteBtn.addEventListener('click', function() {
+                console.log('🔊 Mute button clicked!');
+                if (typeof window.toggleMute === 'function') {
+                    window.toggleMute();
+                    console.log('✅ toggleMute called successfully');
+                } else {
+                    console.error('❌ toggleMute function not available!');
+                }
+            });
+            console.log('✅ Mute button listener attached');
+        } else {
+            console.error('❌ Mute button not found in DOM');
+        }
+    });
 </script>
 
 <!-- Load staking system after main game variables are defined -->
