@@ -38,7 +38,22 @@ async function updateLeaderboard() {
             return false;
         }
 
-        const username = user.displayName || (user.email ? user.email.split('@')[0] : null) || 'Anonymous';
+        // Fetch username from Firestore
+        let username = 'Anonymous';
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists && userDoc.data().username) {
+                username = userDoc.data().username;
+            } else if (user.displayName) {
+                username = user.displayName;
+            } else if (user.email) {
+                username = user.email.split('@')[0];
+            }
+        } catch (error) {
+            console.error('Failed to fetch username for leaderboard:', error);
+            // Fallback to displayName or email
+            username = user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous');
+        }
 
         // Get current lifetime earnings (use window accessor for closure variable)
         const lifetime = typeof window.lifetimeEarnings !== 'undefined' ? window.lifetimeEarnings : 0;
@@ -47,7 +62,6 @@ async function updateLeaderboard() {
         await db.collection('leaderboard').doc(user.uid).set({
             username: username,
             lifetimeEarnings: lifetime,
-            email: user.email,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
             photoURL: user.photoURL || null
         }, { merge: true });

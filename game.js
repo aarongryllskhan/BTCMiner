@@ -3087,6 +3087,7 @@ dogeUpgrades.forEach(u => {
     window.switchTab = switchTab;
     window.setBuyQuantity = setBuyQuantity;
     window.startAutoClicker = startAutoClicker;
+    window.toggleMute = toggleMute;
     window.sellBTC = sellBTC;
     window.sellAllBTC = sellAllBTC;
     window.sellETH = sellETH;
