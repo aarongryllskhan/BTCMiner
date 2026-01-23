@@ -728,28 +728,24 @@
             onboardingModal.classList.remove('show');
         }
 
-        // Ensure main layout is visible and interactive with all CSS resets
+        // Ensure main layout is visible and interactive
         const mainLayout = document.getElementById('main-layout');
         if (mainLayout) {
-            // Clear all inline styles that might be interfering
-            mainLayout.style.cssText = '';
-
-            // Reset to default grid layout
-            mainLayout.style.display = 'grid';
-            mainLayout.style.gridTemplateColumns = '7fr 3fr';
-            mainLayout.style.gap = '20px';
-            mainLayout.style.height = 'calc(100vh - 40px)';
-            mainLayout.style.boxSizing = 'border-box';
-            mainLayout.style.position = 'relative';
-            mainLayout.style.zIndex = '1';
+            // Enable interaction
             mainLayout.style.pointerEvents = 'auto';
             mainLayout.style.userSelect = 'auto';
             mainLayout.style.visibility = 'visible';
             mainLayout.style.opacity = '1';
+            mainLayout.style.zIndex = '1';
 
             // Force layout recalculation
             void mainLayout.offsetHeight;
             void mainLayout.offsetWidth;
+
+            // Re-apply responsive mobile layout if needed
+            if (typeof enforceMobileLayout === 'function') {
+                enforceMobileLayout();
+            }
         }
 
         // Refresh all panels
@@ -1131,26 +1127,35 @@
                 // Show game in background (blurred and disabled)
                 document.getElementById('login-screen').style.display = 'flex';
                 const mainLayout = document.getElementById('main-layout');
-                mainLayout.style.display = 'grid'; // Show as background
                 mainLayout.style.pointerEvents = 'none'; // Disable interaction
                 mainLayout.style.userSelect = 'none'; // Disable text selection
+                // Apply responsive mobile layout
+                if (typeof enforceMobileLayout === 'function') {
+                    enforceMobileLayout();
+                }
             } else {
                 console.log('User already logged in - enabling game');
                 // User is already logged in, enable the game
                 document.getElementById('login-screen').style.display = 'none';
                 const mainLayout = document.getElementById('main-layout');
-                mainLayout.style.display = 'grid';
                 mainLayout.style.pointerEvents = 'auto'; // Enable interaction
                 mainLayout.style.userSelect = 'auto'; // Enable text selection
+                // Apply responsive mobile layout
+                if (typeof enforceMobileLayout === 'function') {
+                    enforceMobileLayout();
+                }
             }
         } else {
             console.warn('⚠️ Firebase not initialized - running in offline mode');
             // Allow game to run without Firebase in offline mode
             document.getElementById('login-screen').style.display = 'none';
             const mainLayout = document.getElementById('main-layout');
-            mainLayout.style.display = 'grid';
             mainLayout.style.pointerEvents = 'auto'; // Enable interaction
             mainLayout.style.userSelect = 'auto'; // Enable text selection
+            // Apply responsive mobile layout
+            if (typeof enforceMobileLayout === 'function') {
+                enforceMobileLayout();
+            }
         }
     });
 

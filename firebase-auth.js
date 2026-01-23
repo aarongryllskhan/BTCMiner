@@ -871,11 +871,7 @@ function setupAuthListener() {
             console.log('Main layout element found?', !!mainLayout);
             if (mainLayout) {
                 console.log('Showing main game layout...');
-                // Reset CSS to ensure proper grid layout
-                mainLayout.style.display = 'grid';
-                mainLayout.style.gridTemplateColumns = '7fr 3fr';
-                mainLayout.style.gap = '20px';
-                mainLayout.style.height = 'calc(100vh - 40px)';
+                // Enable interaction
                 mainLayout.style.pointerEvents = 'auto'; // Re-enable interaction
                 mainLayout.style.userSelect = 'auto'; // Re-enable text selection
                 mainLayout.style.visibility = 'visible'; // Ensure visibility
@@ -883,6 +879,11 @@ function setupAuthListener() {
 
                 // Force layout recalculation
                 mainLayout.offsetHeight;
+
+                // Re-apply responsive mobile layout if needed
+                if (typeof enforceMobileLayout === 'function') {
+                    enforceMobileLayout();
+                }
             }
 
             // Show onboarding modal if not accepted (age + terms)
@@ -974,9 +975,13 @@ function setupAuthListener() {
             // Show main game layout in background (disabled)
             const mainLayout = document.getElementById('main-layout');
             if (mainLayout) {
-                mainLayout.style.display = 'grid';
                 mainLayout.style.pointerEvents = 'none'; // Disable interaction
                 mainLayout.style.userSelect = 'none'; // Disable text selection
+
+                // Re-apply responsive mobile layout
+                if (typeof enforceMobileLayout === 'function') {
+                    enforceMobileLayout();
+                }
             }
 
             // Show login screen for new users
