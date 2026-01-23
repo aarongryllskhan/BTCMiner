@@ -316,31 +316,36 @@ async function loadGameFromCloud(userId = null) {
             console.log('🔄 Loading cloud data due to account switch');
             resetGameVariables();
         } else {
-            // Same account - compare timestamps to load the most recent save
-            const cloudSaveTime = cloudData.lastSaved ? new Date(cloudData.lastSaved).getTime() : 0;
-            let localSaveTime = 0;
-            let localSaveData = null;
+            // Same account - compare progress to load the better save
+            // Local save might have more recent progress than cloud (which auto-saves every 20 mins)
+            const cloudLifetime = cloudData.lifetimeEarnings || 0;
+            const cloudBtcBalance = cloudData.btcBalance || 0;
 
+            let localLifetime = 0;
+            let localBtcBalance = 0;
             try {
                 const savedGame = localStorage.getItem('satoshiTerminalSave');
                 if (savedGame) {
-                    localSaveData = JSON.parse(savedGame);
-                    localSaveTime = localSaveData.lastSaveTime || 0;
+                    const localSaveData = JSON.parse(savedGame);
+                    localLifetime = localSaveData.lifetimeEarnings || 0;
+                    localBtcBalance = localSaveData.btcBalance || 0;
                 }
             } catch (e) {
                 console.warn('Could not parse localStorage save:', e);
             }
 
-            console.log('⏰ Local save time:', new Date(localSaveTime).toLocaleString());
-            console.log('☁️ Cloud save time:', new Date(cloudSaveTime).toLocaleString());
+            console.log('📊 Comparing saves:');
+            console.log('  📦 Local: lifetimeEarnings=' + localLifetime + ', btcBalance=' + localBtcBalance);
+            console.log('  ☁️  Cloud: lifetimeEarnings=' + cloudLifetime + ', btcBalance=' + cloudBtcBalance);
 
-            if (localSaveTime > cloudSaveTime) {
-                console.log('🏠 Local save is newer - keeping local cache');
-                showMessage('Local save loaded (more recent than cloud)', 'info');
+            // Load local if it has significantly better progress (more lifetime earnings)
+            if (localLifetime > cloudLifetime) {
+                console.log('🏠 Local save has better progress - keeping local cache (you earned more recently)');
+                showMessage('Loaded local progress (more recent than cloud save)', 'success');
                 return false;
             }
 
-            console.log('☁️ Cloud save is newer or equal - loading from cloud');
+            console.log('☁️ Cloud save has equal or better progress - loading from cloud');
             resetGameVariables();
         }
 
