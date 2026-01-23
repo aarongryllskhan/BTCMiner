@@ -100,51 +100,57 @@ async function updateUserUI(user) {
     const userId = user.uid;
     const isGuest = user.isAnonymous;
 
-    // Fetch username from Firestore with retry for guest users
-    // Guest users need more retries because Firestore document may still be creating
-    let displayName = isGuest ? 'Loading...' : 'User';
+    // Fetch username from Firestore
+    let displayName = isGuest ? 'Guest' : 'User';
     try {
-        // For guest users, retry multiple times to wait for the username to be created
+        // First attempt - get the document immediately
         let userDoc = await db.collection('users').doc(userId).get();
-        let retries = 0;
-        const maxRetries = isGuest ? 20 : 0; // Increased to 20 retries (10 seconds total)
+        console.log('📋 User doc fetch - exists:', userDoc.exists, 'username:', userDoc.data()?.username);
 
-        while ((!userDoc.exists || !userDoc.data()?.username) && retries < maxRetries) {
-            console.log(`⏳ Waiting for guest username to be created... (attempt ${retries + 1}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
-            userDoc = await db.collection('users').doc(userId).get();
-            retries++;
-        }
-
+        // If document exists and has username, use it immediately (returning user)
         if (userDoc.exists && userDoc.data()?.username) {
             displayName = userDoc.data().username;
-            console.log('✅ Username fetched from Firestore:', displayName);
-        } else if (!isGuest) {
-            // For non-guest users, try other fallbacks
-            if (user.displayName) {
-                // Fallback to Google displayName
-                displayName = user.displayName;
-            } else if (user.email) {
-                // Last resort: extract from email
-                displayName = user.email.split('@')[0];
+            console.log('✅ Username fetched immediately from Firestore:', displayName);
+        } else if (isGuest) {
+            // For NEW guest users, retry a few times (document may still be creating)
+            // But use shorter retries - only 5 attempts × 300ms = 1.5 seconds max
+            let retries = 0;
+            const maxRetries = 5;
+
+            while ((!userDoc.exists || !userDoc.data()?.username) && retries < maxRetries) {
+                console.log(`⏳ Waiting for guest username... (attempt ${retries + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 300)); // Wait 300ms
+                userDoc = await db.collection('users').doc(userId).get();
+                retries++;
+
+                if (userDoc.exists && userDoc.data()?.username) {
+                    displayName = userDoc.data().username;
+                    console.log('✅ Username fetched from Firestore after retry:', displayName);
+                    break;
+                }
+            }
+
+            // If still no username after retries, use fallback
+            if (!userDoc.exists || !userDoc.data()?.username) {
+                console.warn('⚠️ Guest username not found, using fallback');
+                displayName = `guest${Date.now() % 10000}`;
             }
         } else {
-            // Guest user but username still not found - this shouldn't happen
-            // but we need a fallback
-            console.warn('⚠️ Guest username not found after retries, generating fallback...');
-            displayName = `guest${Date.now() % 10000}`; // Temporary fallback
+            // For non-guest users without username, try other fallbacks
+            if (user.displayName) {
+                displayName = user.displayName;
+            } else if (user.email) {
+                displayName = user.email.split('@')[0];
+            }
         }
     } catch (error) {
         console.error('Failed to fetch username:', error);
-        // Fallback to displayName or email for non-guest users
-        if (!isGuest) {
-            if (user.displayName) {
-                displayName = user.displayName;
-            } else if (user.email) {
-                displayName = user.email.split('@')[0];
-            }
-        } else {
-            displayName = `guest${Date.now() % 10000}`; // Fallback for guests on error
+        if (isGuest) {
+            displayName = `guest${Date.now() % 10000}`;
+        } else if (user.displayName) {
+            displayName = user.displayName;
+        } else if (user.email) {
+            displayName = user.email.split('@')[0];
         }
     }
 

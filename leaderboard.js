@@ -87,40 +87,49 @@ async function updateLeaderboard() {
 
         const user = auth.currentUser;
 
-        // Fetch username from Firestore (including guest users) with retry
+        // Fetch username from Firestore (including guest users)
         let username = 'Anonymous';
         try {
             let userDoc = await db.collection('users').doc(user.uid).get();
-            let retries = 0;
-            const maxRetries = user.isAnonymous ? 20 : 0; // Increased to 20 retries (10 seconds total)
+            console.log('📋 Leaderboard user doc - exists:', userDoc.exists, 'username:', userDoc.data()?.username);
 
-            // Retry for guest users to wait for username to be created
-            while ((!userDoc.exists || !userDoc.data()?.username) && retries < maxRetries) {
-                console.log(`⏳ Waiting for guest username for leaderboard... (attempt ${retries + 1}/${maxRetries})`);
-                await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
-                userDoc = await db.collection('users').doc(user.uid).get();
-                retries++;
-            }
-
+            // If document exists and has username, use it immediately
             if (userDoc.exists && userDoc.data()?.username) {
                 username = userDoc.data().username;
                 console.log('✅ Using Firestore username:', username);
-            } else if (!user.isAnonymous) {
+            } else if (user.isAnonymous) {
+                // For NEW guests, short retry (document may still be creating)
+                let retries = 0;
+                const maxRetries = 5; // 5 retries × 300ms = 1.5 seconds max
+
+                while ((!userDoc.exists || !userDoc.data()?.username) && retries < maxRetries) {
+                    console.log(`⏳ Waiting for guest username for leaderboard... (attempt ${retries + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    userDoc = await db.collection('users').doc(user.uid).get();
+                    retries++;
+
+                    if (userDoc.exists && userDoc.data()?.username) {
+                        username = userDoc.data().username;
+                        console.log('✅ Using Firestore username after retry:', username);
+                        break;
+                    }
+                }
+
+                if (!userDoc.exists || !userDoc.data()?.username) {
+                    username = `guest${Date.now() % 10000}`;
+                    console.log('⚠️ No guest username found, using fallback:', username);
+                }
+            } else {
                 // For non-guest users, fallback to email prefix
                 username = user.email ? user.email.split('@')[0] : 'Anonymous';
                 console.log('⚠️ Using email fallback username:', username);
-            } else {
-                // Guest user but no username found after retries - use fallback
-                username = `guest${Date.now() % 10000}`;
-                console.log('⚠️ No guest username found after retries, using fallback:', username);
             }
         } catch (error) {
             console.error('Failed to fetch username for leaderboard:', error);
-            // Fallback to email prefix for non-guest users
-            if (!user.isAnonymous) {
-                username = user.email ? user.email.split('@')[0] : 'Anonymous';
-            } else {
+            if (user.isAnonymous) {
                 username = `guest${Date.now() % 10000}`;
+            } else {
+                username = user.email ? user.email.split('@')[0] : 'Anonymous';
             }
         }
 
