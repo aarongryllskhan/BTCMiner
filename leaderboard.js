@@ -1,32 +1,152 @@
 /**
  * Leaderboard System for Idle BTC Miner
  * Tracks top players by lifetime earnings
+ *
+ * Update Policy:
+ * - Updates on login (includes offline earnings, capped at 6 hours)
+ * - Updates on logout
+ * - Updates when returning to tab after being away for 6+ hours
+ * - Guest users are included with numbered usernames (guest01, guest02, etc.)
+ * - Leaderboard cache: 2 minutes (refreshes automatically when opened)
+ * - Leaderboard reflects actual earnings with offline cap applied
  */
+
+// Cache management for leaderboard (reduces Firebase reads)
+let leaderboardCache = null;
+let leaderboardCacheTimestamp = 0;
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds (more real-time)
+
+// Prompt user to create username if they don't have one
+async function promptForUsername(user) {
+    let username = null;
+    let usernameValid = false;
+
+    while (!usernameValid) {
+        username = prompt('To appear on the leaderboard, please choose a username (3-20 characters, letters, numbers, _ and - only):');
+
+        if (!username) {
+            // User cancelled - use email prefix as fallback
+            return user.email ? user.email.split('@')[0] : 'Anonymous';
+        }
+
+        username = username.trim();
+
+        // Validate username format
+        if (username.length < 3 || username.length > 20) {
+            alert('Username must be between 3 and 20 characters');
+            continue;
+        }
+
+        if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+            alert('Username can only contain letters, numbers, underscores, and hyphens');
+            continue;
+        }
+
+        // Check if username is already taken
+        try {
+            const usernameQuery = await db.collection('users').where('username', '==', username).get();
+            if (!usernameQuery.empty) {
+                alert('Username "' + username + '" is already taken. Please choose another one.');
+                continue;
+            }
+        } catch (error) {
+            console.error('Error checking username:', error);
+            alert('Error checking username availability. Please try again.');
+            continue;
+        }
+
+        usernameValid = true;
+    }
+
+    // Save username to Firestore
+    try {
+        await db.collection('users').doc(user.uid).update({
+            username: username
+        });
+        console.log('✅ Username saved to Firestore:', username);
+    } catch (error) {
+        console.error('Error saving username:', error);
+    }
+
+    return username;
+}
 
 // Update player's leaderboard entry
 async function updateLeaderboard() {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - skipping leaderboard update');
+            return false;
+        }
+
         if (!auth.currentUser) {
             console.log('⚠️ No user logged in - skipping leaderboard update');
             return false;
         }
 
         const user = auth.currentUser;
-        const username = user.displayName || (user.email ? user.email.split('@')[0] : null) || 'Anonymous';
+
+        // Fetch username from Firestore (including guest users) - no retries, single fetch
+        let username = 'Anonymous';
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            console.log('📋 Leaderboard user doc - exists:', userDoc.exists, 'username:', userDoc.data()?.username);
+
+            if (userDoc.exists && userDoc.data()?.username) {
+                username = userDoc.data().username;
+                console.log('✅ Using Firestore username:', username);
+            } else if (user.isAnonymous) {
+                // Try localStorage fallback for guests
+                const savedUsername = localStorage.getItem('guestUsername');
+                if (savedUsername) {
+                    username = savedUsername;
+                    console.log('✅ Using localStorage guest username:', username);
+                } else {
+                    username = `guest${Date.now() % 10000}`;
+                    console.log('⚠️ No guest username found, using fallback:', username);
+                }
+            } else {
+                // For non-guest users, fallback to email prefix
+                username = user.email ? user.email.split('@')[0] : 'Anonymous';
+                console.log('⚠️ Using email fallback username:', username);
+            }
+        } catch (error) {
+            console.error('Failed to fetch username for leaderboard:', error);
+            if (user.isAnonymous) {
+                const savedUsername = localStorage.getItem('guestUsername');
+                username = savedUsername || `guest${Date.now() % 10000}`;
+            } else {
+                username = user.email ? user.email.split('@')[0] : 'Anonymous';
+            }
+        }
 
         // Get current lifetime earnings (use window accessor for closure variable)
         const lifetime = typeof window.lifetimeEarnings !== 'undefined' ? window.lifetimeEarnings : 0;
 
-        // Update user's leaderboard entry
-        await db.collection('leaderboard').doc(user.uid).set({
+        console.log('📊 Updating leaderboard with:', {
+            uid: user.uid,
             username: username,
-            lifetimeEarnings: lifetime,
-            email: user.email,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-            photoURL: user.photoURL || null
-        }, { merge: true });
+            lifetime: lifetime,
+            lifetimeEarningsExists: typeof window.lifetimeEarnings !== 'undefined',
+            isAnonymous: user.isAnonymous
+        });
 
-        console.log('✅ Leaderboard updated:', { username, lifetime });
+        // Update user's leaderboard entry
+        try {
+            await db.collection('leaderboard').doc(user.uid).set({
+                username: username,
+                lifetimeEarnings: lifetime,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                photoURL: user.photoURL || null
+            }, { merge: true });
+            console.log('✅ Leaderboard entry written to Firestore successfully');
+        } catch (writeError) {
+            console.error('❌ Failed to write leaderboard entry to Firestore:', writeError);
+            throw writeError;
+        }
+
+        console.log('✅ Leaderboard updated successfully:', { username, lifetime });
         return true;
 
     } catch (error) {
@@ -35,38 +155,78 @@ async function updateLeaderboard() {
     }
 }
 
-// Fetch top 50 players
-async function fetchLeaderboard(limit = 50) {
+// Fetch top 10 players (optimized for free tier with caching)
+async function fetchLeaderboard(limit = 10, forceRefresh = false) {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - leaderboard not available');
+            return [];
+        }
+
+        // Check if we have valid cached data (less than 5 minutes old)
+        const now = Date.now();
+        const cacheAge = now - leaderboardCacheTimestamp;
+
+        if (!forceRefresh && leaderboardCache && cacheAge < CACHE_DURATION) {
+            console.log('📊 Using cached leaderboard (age: ' + Math.floor(cacheAge / 1000) + 's)');
+            return leaderboardCache;
+        }
+
+        // Cache is stale or doesn't exist, fetch fresh data
+        console.log('📡 Fetching fresh leaderboard from Firebase...');
         const snapshot = await db.collection('leaderboard')
             .orderBy('lifetimeEarnings', 'desc')
             .limit(limit)
             .get();
 
         const leaderboard = [];
-        snapshot.forEach((doc, index) => {
-            leaderboard.push({
-                rank: index + 1,
+        let rankIndex = 0;
+        snapshot.forEach((doc) => {
+            rankIndex++;
+            const data = doc.data();
+            console.log(`📊 Leaderboard entry ${rankIndex}:`, {
                 uid: doc.id,
-                username: doc.data().username,
-                lifetimeEarnings: doc.data().lifetimeEarnings,
-                lastUpdated: doc.data().lastUpdated,
-                photoURL: doc.data().photoURL
+                username: data.username,
+                lifetimeEarnings: data.lifetimeEarnings,
+                lastUpdated: data.lastUpdated
+            });
+
+            leaderboard.push({
+                rank: rankIndex,
+                uid: doc.id,
+                username: data.username,
+                lifetimeEarnings: data.lifetimeEarnings,
+                lastUpdated: data.lastUpdated,
+                photoURL: data.photoURL
             });
         });
 
-        console.log('📊 Fetched leaderboard:', leaderboard);
+        console.log('📊 Total leaderboard entries fetched:', leaderboard.length);
+
+        // Update cache
+        leaderboardCache = leaderboard;
+        leaderboardCacheTimestamp = now;
+
+        console.log('✅ Leaderboard cached (valid for ' + (CACHE_DURATION / 60000) + ' minutes)');
         return leaderboard;
 
     } catch (error) {
         console.error('❌ Leaderboard fetch error:', error);
-        return [];
+        // Return cached data if available, even if stale
+        return leaderboardCache || [];
     }
 }
 
 // Get player's current rank
 async function getPlayerRank(userId = null) {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - player rank not available');
+            return null;
+        }
+
         const uid = userId || auth.currentUser?.uid;
         if (!uid) return null;
 
@@ -76,9 +236,11 @@ async function getPlayerRank(userId = null) {
 
         let rank = null;
         let playerData = null;
-        snapshot.forEach((doc, index) => {
+        let currentIndex = 0;
+        snapshot.forEach((doc) => {
+            currentIndex++;
             if (doc.id === uid) {
-                rank = index + 1;
+                rank = currentIndex;
                 playerData = doc.data();
             }
         });
@@ -94,13 +256,31 @@ async function getPlayerRank(userId = null) {
 // Display leaderboard modal
 async function openLeaderboardModal() {
     try {
-        const leaderboard = await fetchLeaderboard(50);
+        console.log('📊 Opening leaderboard modal...');
+        const leaderboard = await fetchLeaderboard(10); // Top 10 only (optimized for free tier)
+        console.log('📊 Fetched leaderboard data:', leaderboard);
         const playerRank = await getPlayerRank();
+        console.log('📊 Player rank:', playerRank);
 
         const modal = document.getElementById('leaderboard-modal');
         if (!modal) {
             console.error('Leaderboard modal not found');
             return;
+        }
+
+        // Update refresh info
+        const refreshInfo = document.getElementById('leaderboard-refresh-info');
+        if (refreshInfo) {
+            const cacheAge = Math.floor((Date.now() - leaderboardCacheTimestamp) / 1000);
+            const cacheMinutes = Math.floor(cacheAge / 60);
+            const cacheSeconds = cacheAge % 60;
+            const cacheStatus = leaderboardCache ? `Last updated: ${cacheMinutes}m ${cacheSeconds}s ago` : 'Fetching fresh data...';
+            refreshInfo.innerHTML = `
+                ${cacheStatus} | Auto-syncs every 20 min
+                <button onclick="refreshLeaderboardNow()" style="margin-left: 10px; background: #00ff88; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 700;">
+                    🔄 Refresh Now
+                </button>
+            `;
         }
 
         // Build leaderboard HTML
@@ -117,29 +297,42 @@ async function openLeaderboardModal() {
                     <tbody>
         `;
 
-        leaderboard.forEach(player => {
-            const isCurrentPlayer = auth.currentUser?.uid === player.uid;
-            const rowStyle = isCurrentPlayer
-                ? 'background: rgba(247, 147, 26, 0.3); border: 1px solid #f7931a;'
-                : 'border-bottom: 1px solid #333;';
-
-            const earningsFormatted = formatCurrency(player.lifetimeEarnings);
-            const rankEmoji = player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : '';
-
+        // Check if leaderboard is empty
+        if (leaderboard.length === 0) {
             leaderboardHTML += `
-                <tr style="${rowStyle} hover: background: rgba(255, 255, 255, 0.05);">
-                    <td style="padding: 10px; text-align: left; font-weight: bold; color: #f7931a;">
-                        ${rankEmoji} #${player.rank}
-                    </td>
-                    <td style="padding: 10px; text-align: left; ${isCurrentPlayer ? 'color: #f7931a; font-weight: bold;' : ''}">
-                        ${player.username}${isCurrentPlayer ? ' (YOU)' : ''}
-                    </td>
-                    <td style="padding: 10px; text-align: right; ${isCurrentPlayer ? 'color: #00ff88; font-weight: bold;' : 'color: #00ff88;'}">
-                        $${earningsFormatted}
+                <tr>
+                    <td colspan="3" style="padding: 40px; text-align: center; color: #888;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🏆</div>
+                        <div style="font-size: 1.2rem; color: #f7931a; margin-bottom: 10px;">Be the First!</div>
+                        <div style="font-size: 0.9rem;">Start mining to claim your spot on the leaderboard.</div>
                     </td>
                 </tr>
             `;
-        });
+        } else {
+            leaderboard.forEach(player => {
+                const isCurrentPlayer = auth.currentUser?.uid === player.uid;
+                const rowStyle = isCurrentPlayer
+                    ? 'background: rgba(247, 147, 26, 0.3); border: 1px solid #f7931a;'
+                    : 'border-bottom: 1px solid #333;';
+
+                const earningsFormatted = formatCurrency(player.lifetimeEarnings);
+                const rankEmoji = player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : '';
+
+                leaderboardHTML += `
+                    <tr style="${rowStyle} hover: background: rgba(255, 255, 255, 0.05);">
+                        <td style="padding: 10px; text-align: left; font-weight: bold; color: #f7931a;">
+                            ${rankEmoji} #${player.rank}
+                        </td>
+                        <td style="padding: 10px; text-align: left; ${isCurrentPlayer ? 'color: #f7931a; font-weight: bold;' : ''}">
+                            ${player.username}${isCurrentPlayer ? ' (YOU)' : ''}
+                        </td>
+                        <td style="padding: 10px; text-align: right; ${isCurrentPlayer ? 'color: #00ff88; font-weight: bold;' : 'color: #00ff88;'}">
+                            $${earningsFormatted}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
         leaderboardHTML += `
                     </tbody>
@@ -154,8 +347,7 @@ async function openLeaderboardModal() {
                     <div style="text-align: center;">
                         <div style="font-size: 0.9rem; color: #888; margin-bottom: 5px;">YOUR RANKING</div>
                         <div style="font-size: 2rem; color: #f7931a; font-weight: bold;">
-                            ${playerRank.rank === 1 ? '🥇' : playerRank.rank === 2 ? '🥈' : playerRank.rank === 3 ? '🥉' : '#' + playerRank.rank}
-                            #${playerRank.rank}
+                            ${playerRank.rank === 1 ? '🥇 1st' : playerRank.rank === 2 ? '🥈 2nd' : playerRank.rank === 3 ? '🥉 3rd' : '#' + playerRank.rank}
                         </div>
                         <div style="font-size: 1rem; color: #00ff88; margin-top: 5px;">
                             $${formatCurrency(playerRank.lifetimeEarnings)}
@@ -170,7 +362,7 @@ async function openLeaderboardModal() {
             contentDiv.innerHTML = leaderboardHTML;
         }
 
-        modal.style.display = 'flex';
+        modal.classList.add('show');
 
     } catch (error) {
         console.error('❌ Open leaderboard error:', error);
@@ -182,7 +374,7 @@ async function openLeaderboardModal() {
 function closeLeaderboardModal() {
     const modal = document.getElementById('leaderboard-modal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
 }
 
@@ -195,21 +387,19 @@ function formatCurrency(value) {
     return value.toFixed(0);
 }
 
-// Auto-update leaderboard every 5 minutes
+// Leaderboard updates only on: login, logout, or when returning after 6+ hours away
 let leaderboardUpdateInterval;
 
 function startLeaderboardUpdates() {
-    // Update immediately
-    updateLeaderboard();
-
-    // Then update every 5 minutes
-    leaderboardUpdateInterval = setInterval(() => {
-        if (auth.currentUser) {
-            updateLeaderboard();
-        }
-    }, 300000); // 5 minutes
-
-    console.log('✅ Leaderboard auto-updates started');
+    // Update leaderboard for all logged-in users (including guests)
+    if (auth.currentUser) {
+        // Update leaderboard immediately on login (includes capped offline earnings)
+        updateLeaderboard();
+        const isGuest = auth.currentUser.isAnonymous;
+        console.log(`✅ Leaderboard updated on login${isGuest ? ' (guest user)' : ''} (offline earnings capped at 6 hours)`);
+    } else {
+        console.log('ℹ️ No user logged in - leaderboard updates disabled');
+    }
 }
 
 function stopLeaderboardUpdates() {
@@ -220,11 +410,34 @@ function stopLeaderboardUpdates() {
     }
 }
 
+// Force refresh leaderboard (bypass cache)
+async function refreshLeaderboardNow() {
+    try {
+        console.log('🔄 Forcing leaderboard refresh...');
+
+        // Update current user's leaderboard entry first (including guests)
+        if (auth.currentUser) {
+            console.log('🔄 Updating your leaderboard entry with current username...');
+            await updateLeaderboard();
+        }
+
+        await fetchLeaderboard(10, true); // Force refresh
+        await openLeaderboardModal(); // Reopen with fresh data
+        console.log('✅ Leaderboard refreshed');
+    } catch (error) {
+        console.error('❌ Error refreshing leaderboard:', error);
+    }
+}
+
 // Export functions
+window.updateLeaderboard = updateLeaderboard;
+window.fetchLeaderboard = fetchLeaderboard;
+window.getPlayerRank = getPlayerRank;
 window.updateLeaderboard = updateLeaderboard;
 window.fetchLeaderboard = fetchLeaderboard;
 window.getPlayerRank = getPlayerRank;
 window.openLeaderboardModal = openLeaderboardModal;
 window.closeLeaderboardModal = closeLeaderboardModal;
+window.refreshLeaderboardNow = refreshLeaderboardNow;
 window.startLeaderboardUpdates = startLeaderboardUpdates;
 window.stopLeaderboardUpdates = stopLeaderboardUpdates;

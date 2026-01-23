@@ -19,13 +19,17 @@ let app;
 let auth;
 let db;
 
-function initializeFirebase() {
+async function initializeFirebase() {
     try {
         // Initialize Firebase App
         app = firebase.initializeApp(firebaseConfig);
 
         // Initialize Firebase Authentication
         auth = firebase.auth();
+
+        // Enable auth persistence so guest users stay logged in across page refreshes
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        console.log('✅ Firebase auth persistence enabled (LOCAL)');
 
         // Initialize Firestore Database
         db = firebase.firestore();
@@ -42,12 +46,15 @@ function initializeFirebase() {
 
 // Called when user logs in
 function onUserLogin(user) {
-    // Hide login screen, show game
+    // Hide login screen, show game (and enable interaction)
     if (document.getElementById('login-screen')) {
         document.getElementById('login-screen').style.display = 'none';
     }
-    if (document.getElementById('main-layout')) {
-        document.getElementById('main-layout').style.display = 'flex';
+    const mainLayout = document.getElementById('main-layout');
+    if (mainLayout) {
+        mainLayout.style.display = 'grid';
+        mainLayout.style.pointerEvents = 'auto'; // Re-enable interaction
+        mainLayout.style.userSelect = 'auto'; // Re-enable text selection
     }
 
     // Load game data from cloud
@@ -57,65 +64,126 @@ function onUserLogin(user) {
 
     // Update UI with user info
     updateUserUI(user);
+
+    // Check if onboarding (age + terms) has been accepted
+    setTimeout(() => {
+        const ageAccepted = window.safeStorage.getItem('ageDisclaimerAccepted');
+        const termsAccepted = window.safeStorage.getItem('termsAccepted');
+        const bothAccepted = ageAccepted && termsAccepted;
+
+        if (!bothAccepted) {
+            console.log('📋 Showing onboarding modal after login');
+            const onboardingModal = document.getElementById('onboarding-modal');
+            if (onboardingModal) {
+                onboardingModal.classList.add('show');
+            }
+        }
+    }, 300);
 }
 
 // Called when user logs out
 function onUserLogout() {
-    // Show login screen, hide game
+    // Show login screen, keep game visible as background
     if (document.getElementById('login-screen')) {
         document.getElementById('login-screen').style.display = 'flex';
     }
-    if (document.getElementById('main-layout')) {
-        document.getElementById('main-layout').style.display = 'none';
+    const mainLayout = document.getElementById('main-layout');
+    if (mainLayout) {
+        mainLayout.style.display = 'grid'; // Keep visible as background
+        mainLayout.style.pointerEvents = 'none'; // Disable interaction
+        mainLayout.style.userSelect = 'none'; // Disable text selection
     }
 }
 
 // Update UI with user information
-function updateUserUI(user) {
+async function updateUserUI(user) {
     const userId = user.uid;
     const isGuest = user.isAnonymous;
 
-    // Display username or email (prioritize displayName from Google/username)
-    let displayName = 'Guest Player';
-    if (!isGuest) {
-        if (user.displayName) {
-            // Google sign-in provides displayName
-            displayName = user.displayName;
-        } else if (user.email) {
-            // Extract username from email (before @)
-            displayName = user.email.split('@')[0];
+    console.log('🔄 updateUserUI called for', isGuest ? 'guest' : 'registered', 'user:', userId);
+
+    // Fetch username from Firestore - single attempt, no retries
+    // Retries cause delays; if doc doesn't exist yet, playAsGuest will call us again
+    let displayName = isGuest ? 'Guest' : 'User';
+    try {
+        const userDoc = await db.collection('users').doc(userId).get();
+        console.log('📋 User doc fetch - exists:', userDoc.exists, 'username:', userDoc.data()?.username);
+
+        if (userDoc.exists && userDoc.data()?.username) {
+            displayName = userDoc.data().username;
+            console.log('✅ Username fetched from Firestore:', displayName);
+        } else if (!isGuest) {
+            // For non-guest users without username, try other fallbacks
+            if (user.displayName) {
+                displayName = user.displayName;
+            } else if (user.email) {
+                displayName = user.email.split('@')[0];
+            }
+        }
+        // For guests without doc yet, just show "Guest" - playAsGuest will call us again
+    } catch (error) {
+        console.error('Failed to fetch username:', error);
+        if (!isGuest) {
+            if (user.displayName) {
+                displayName = user.displayName;
+            } else if (user.email) {
+                displayName = user.email.split('@')[0];
+            }
         }
     }
 
-    // Create user info display if it doesn't exist
+    // Show the LOGIN/SIGN UP button only for guest users
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+        loginBtn.style.display = isGuest ? 'inline-block' : 'none';
+        loginBtn.textContent = '🔗 LINK ACCOUNT';
+        // Update onclick handler for guest users
+        if (isGuest) {
+            loginBtn.onclick = () => showLinkAccountModal();
+        } else {
+            loginBtn.onclick = () => showLoginScreen();
+        }
+    }
+
+    // Create or get user info display - insert it next to login button
     let userInfoDiv = document.getElementById('user-info-display');
     if (!userInfoDiv) {
         userInfoDiv = document.createElement('div');
         userInfoDiv.id = 'user-info-display';
-        userInfoDiv.style.cssText = 'position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; border: 1px solid #f7931a; z-index: 9998;';
-        document.body.appendChild(userInfoDiv);
+        // Insert after login button in the button row
+        if (loginBtn && loginBtn.parentNode) {
+            loginBtn.parentNode.insertBefore(userInfoDiv, loginBtn.nextSibling);
+        } else {
+            document.body.appendChild(userInfoDiv);
+        }
     }
 
-    // Show "Link Account" button for guest users, or "Manual Save" for registered users
-    const actionBtn = isGuest ? `
-        <button onclick="showLinkAccountModal()" style="margin-left: 10px; background: #4CAF50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
-            ☁️ Save to Cloud
-        </button>
-    ` : `
-        <button id="manual-save-btn" onclick="manualSaveGame()" style="margin-left: 10px; background: #f7931a; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: bold;">
-            ☁️ Save
+    userInfoDiv.style.cssText = 'display: inline-flex; align-items: center; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; border: 1px solid #f7931a;';
+
+    userInfoDiv.innerHTML = `
+        <span style="color: #f7931a; font-size: 0.55rem;">👤</span>
+        <span style="color: #fff; font-size: 0.55rem; font-weight: 700; margin: 0 6px;">${displayName}</span>
+        <button id="logout-button-ui" style="background: #ff3344; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700; margin-left: 4px;">
+            Logout
         </button>
     `;
 
-    userInfoDiv.innerHTML = `
-        <div style="color: #fff; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-            <span style="color: #f7931a;">👤</span> ${displayName}
-            ${actionBtn}
-            <button onclick="logoutUser()" style="background: #ff3344; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
-                Logout
-            </button>
-        </div>
-    `;
+    // Add click handler to logout button
+    const logoutButton = document.getElementById('logout-button-ui');
+    if (logoutButton) {
+        console.log('Attaching logout handler, window.logoutUser exists?', typeof window.logoutUser);
+        logoutButton.addEventListener('click', async () => {
+            console.log('Logout button clicked!');
+            if (typeof window.logoutUser === 'function') {
+                console.log('Calling logoutUser...');
+                await window.logoutUser();
+            } else {
+                console.error('window.logoutUser is not a function!');
+            }
+        });
+    } else {
+        console.error('Logout button not found!');
+    }
 }
 
 // Manual save function
@@ -123,22 +191,22 @@ async function manualSaveGame() {
     const btn = document.getElementById('manual-save-btn');
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '☁️ Saving...';
+        btn.innerHTML = '📤 Uploading...';
     }
 
-    const success = await saveGameToCloud();
+    const success = await saveGameToCloud(true); // Pass true to indicate manual save
 
     if (btn) {
         if (success) {
-            btn.innerHTML = '✓ Saved!';
+            btn.innerHTML = '✓ Uploaded!';
             setTimeout(() => {
-                btn.innerHTML = '☁️ Save';
+                btn.innerHTML = '📤 Transfer';
                 btn.disabled = false;
             }, 2000);
         } else {
             btn.innerHTML = '✗ Failed';
             setTimeout(() => {
-                btn.innerHTML = '☁️ Save';
+                btn.innerHTML = '📤 Transfer';
                 btn.disabled = false;
             }, 2000);
         }
@@ -158,10 +226,16 @@ function showLinkAccountModal() {
 
         modal.innerHTML = `
             <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 500px; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
-                <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">☁️ Save to Cloud</h2>
-                <p style="color: #ccc; margin-bottom: 20px; text-align: center;">Create an account to save your progress to the cloud and play from any device!</p>
+                <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">☁️ Create Account</h2>
+                <p style="color: #ccc; margin-bottom: 20px; text-align: center;">Link your account to sync progress across devices. Auto-saves to cloud every 20 minutes!</p>
 
                 <form onsubmit="handleLinkAccount(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="color: #aaa; font-size: 0.9rem; display: block; margin-bottom: 5px;">Username</label>
+                        <input type="text" id="link-username" required placeholder="3-20 characters" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_-]+" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 1rem;">
+                        <small style="color: #888; font-size: 0.75rem;">Letters, numbers, _ and - only</small>
+                    </div>
+
                     <div>
                         <label style="color: #aaa; font-size: 0.9rem; display: block; margin-bottom: 5px;">Email</label>
                         <input type="email" id="link-email" required placeholder="your@email.com" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 1rem;">
@@ -188,7 +262,7 @@ function showLinkAccountModal() {
                 </form>
 
                 <p style="color: #666; font-size: 0.75rem; margin-top: 15px; text-align: center;">
-                    ☁️ Your current progress will be saved to the cloud and synced across all your devices.
+                    ☁️ Your progress syncs to the cloud every 20 minutes automatically. Play seamlessly across all your devices!
                 </p>
             </div>
         `;
@@ -211,9 +285,20 @@ function hideLinkAccountModal() {
 async function handleLinkAccount(e) {
     e.preventDefault();
 
+    const username = document.getElementById('link-username').value.trim();
     const email = document.getElementById('link-email').value;
     const password = document.getElementById('link-password').value;
     const confirmPassword = document.getElementById('link-password-confirm').value;
+
+    if (username.length < 3 || username.length > 20) {
+        alert('Username must be between 3 and 20 characters!');
+        return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        alert('Username can only contain letters, numbers, underscores, and hyphens!');
+        return;
+    }
 
     if (password !== confirmPassword) {
         alert('Passwords do not match!');
@@ -226,10 +311,13 @@ async function handleLinkAccount(e) {
     }
 
     try {
-        await linkGuestToEmail(email, password);
+        await linkGuestToEmail(email, password, username);
+        // Close the modal on success
         hideLinkAccountModal();
+        console.log('✅ Account created and modal closed');
     } catch (error) {
         console.error('Account linking failed:', error);
+        // Modal stays open so user can try again
     }
 }
 
@@ -237,3 +325,4 @@ async function handleLinkAccount(e) {
 window.showLinkAccountModal = showLinkAccountModal;
 window.hideLinkAccountModal = hideLinkAccountModal;
 window.handleLinkAccount = handleLinkAccount;
+window.updateUserUI = updateUserUI;

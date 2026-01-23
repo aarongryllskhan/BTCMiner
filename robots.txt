@@ -1,0 +1,13 @@
+# Robots.txt for Idle BTC Miner
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /private
+
+# Sitemap location
+Sitemap: https://www.idlebtcminer.com/sitemap.xml
+
+# Crawl delay (optional - time between requests in seconds)
+Crawl-delay: 1

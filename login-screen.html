@@ -13,12 +13,22 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            background: transparent;
             color: #fff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            overflow: hidden;
+            width: 100%;
         }
 
         .login-container {
@@ -231,16 +241,109 @@
         .login-container {
             animation: fadeIn 0.5s ease-out;
         }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+                min-height: 100vh;
+            }
+
+            .login-container {
+                max-width: 100%;
+                width: 100%;
+                padding: 20px;
+                border-radius: 10px;
+            }
+
+            .logo h1 {
+                font-size: 1.8rem;
+                margin-bottom: 8px;
+            }
+
+            .logo h1 img {
+                width: 30px !important;
+                height: 30px !important;
+                margin-right: 8px;
+            }
+
+            .logo p {
+                font-size: 0.8rem;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            label {
+                font-size: 0.85rem;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="password"],
+            button {
+                font-size: 1rem;
+                padding: 10px;
+            }
+
+            .disclaimer {
+                margin-top: 20px;
+                padding: 10px;
+                font-size: 0.7rem;
+            }
+
+            .tabs {
+                margin-bottom: 20px;
+            }
+
+            .tab {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .login-container {
+                padding: 15px;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+
+            .logo h1 img {
+                width: 25px !important;
+                height: 25px !important;
+            }
+
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            label {
+                font-size: 0.8rem;
+                margin-bottom: 5px;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="password"] {
+                padding: 8px;
+                font-size: 0.95rem;
+            }
+
+            button {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <button onclick="window.parent.document.getElementById('login-screen').style.display='none'" style="position: absolute; top: 10px; right: 10px; background: transparent; border: 2px solid #f7931a; color: #f7931a; cursor: pointer; font-size: 1.2rem; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.2s;">
-            ×
-        </button>
         <div class="logo">
-            <h1>🪙 IDLE BTC MINER</h1>
-            <p>Start Mining Virtual Bitcoin</p>
+            <h1><img src="favicon-32x32.png" alt="Bitcoin" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px; filter: drop-shadow(0 0 10px rgba(247, 147, 26, 0.6));">IDLE BTC MINER</h1>
+            <p>Start Mining Virtual Crypto!</p>
         </div>
 
         <div class="tabs">
@@ -278,20 +381,14 @@
             <button class="btn btn-guest" onclick="handleGuestLogin()">
                 👤 Continue as Guest
             </button>
-
-            <div style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; window.parent.document.getElementById('main-layout').style.display='grid'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
-                    Skip and play offline →
-                </a>
-            </div>
         </div>
 
         <!-- REGISTER FORM -->
         <div id="register-form" class="form-content">
             <form onsubmit="handleRegister(event)">
                 <div class="form-group">
-                    <label for="register-username">Username (Optional)</label>
-                    <input type="text" id="register-username" placeholder="CryptoMiner99">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" required placeholder="CryptoMiner99" minlength="3" maxlength="20">
                 </div>
 
                 <div class="form-group">
@@ -322,12 +419,6 @@
             <button class="btn btn-guest" onclick="handleGuestLogin()">
                 👤 Continue as Guest
             </button>
-
-            <div style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; window.parent.document.getElementById('main-layout').style.display='grid'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
-                    Skip and play offline →
-                </a>
-            </div>
         </div>
 
         <!-- DISCLAIMER -->
@@ -411,10 +502,27 @@
         async function handleRegister(e) {
             e.preventDefault();
 
-            const username = document.getElementById('register-username').value;
+            const username = document.getElementById('register-username').value.trim();
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
             const confirmPassword = document.getElementById('register-password-confirm').value;
+
+            // Validate username
+            if (!username || username.length < 3) {
+                alert('Username must be at least 3 characters long!');
+                return;
+            }
+
+            if (username.length > 20) {
+                alert('Username must be 20 characters or less!');
+                return;
+            }
+
+            // Username can only contain letters, numbers, underscores, and hyphens
+            if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+                alert('Username can only contain letters, numbers, underscores, and hyphens!');
+                return;
+            }
 
             if (password !== confirmPassword) {
                 alert('Passwords do not match!');
@@ -495,6 +603,86 @@
             } catch (error) {
                 console.error('Guest login failed:', error);
                 alert('Guest login failed: ' + error.message);
+            }
+        }
+
+        // Handle offline mode (no Firebase at all)
+        function handleOfflineMode() {
+            try {
+                console.log('📴 Entering offline mode...');
+
+                // Sign out from Firebase first to clear any cached auth state
+                if (window.parent.auth) {
+                    console.log('🔓 Signing out from Firebase before offline mode...');
+                    window.parent.auth.signOut().then(() => {
+                        console.log('✅ Firebase auth cleared');
+                    }).catch(err => {
+                        console.warn('⚠️ Could not sign out from Firebase:', err);
+                    });
+                }
+
+                // Set offline mode flag in parent
+                if (window.parent) {
+                    window.parent.isOfflineMode = true;
+
+                    // Hide login screen and show game
+                    window.parent.document.getElementById('login-screen').style.display = 'none';
+                    const mainLayout = window.parent.document.getElementById('main-layout');
+                    if (mainLayout) {
+                        // Reset CSS to ensure proper grid layout
+                        mainLayout.style.display = 'grid';
+                        mainLayout.style.gridTemplateColumns = '7fr 3fr';
+                        mainLayout.style.gap = '20px';
+                        mainLayout.style.height = 'calc(100vh - 40px)';
+                        mainLayout.style.boxSizing = 'border-box';
+                        mainLayout.style.position = 'relative';
+                        mainLayout.style.zIndex = '1';
+                        // RE-ENABLE INTERACTION on main layout
+                        mainLayout.style.pointerEvents = 'auto';
+                        mainLayout.style.userSelect = 'auto';
+                        mainLayout.style.visibility = 'visible';
+                        mainLayout.style.opacity = '1';
+
+                        // Force layout recalculation
+                        mainLayout.offsetHeight;
+                    }
+
+                    // Show LOGIN/SIGN UP button for offline users
+                    const loginBtn = window.parent.document.getElementById('login-btn');
+                    if (loginBtn) {
+                        loginBtn.style.display = 'inline-block';
+                        loginBtn.textContent = 'LOGIN / SIGN UP';
+                    }
+
+                    // Ensure panels are visible
+                    setTimeout(() => {
+                        const panels = window.parent.document.querySelectorAll('.panel');
+                        panels.forEach(panel => {
+                            panel.style.visibility = 'visible';
+                        });
+
+                        // Reset game variables to ensure fresh start
+                        if (typeof window.parent.resetGameVariables === 'function') {
+                            console.log('🔄 Resetting game variables for offline mode...');
+                            window.parent.resetGameVariables();
+                        }
+
+                        // Check if onboarding needs to be shown
+                        const ageAccepted = window.parent.safeStorage.getItem('ageDisclaimerAccepted');
+                        const termsAccepted = window.parent.safeStorage.getItem('termsAccepted');
+                        const bothAccepted = ageAccepted && termsAccepted;
+
+                        if (!bothAccepted) {
+                            console.log('📋 Showing onboarding modal after offline mode');
+                            const onboardingModal = window.parent.document.getElementById('onboarding-modal');
+                            if (onboardingModal) {
+                                onboardingModal.classList.add('show');
+                            }
+                        }
+                    }, 50);
+                }
+            } catch (error) {
+                console.error('Failed to enter offline mode:', error);
             }
         }
 

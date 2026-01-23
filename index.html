@@ -19,36 +19,171 @@
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Idle BTC Miner | GAME</title>
+    <title>Idle BTC Miner - Play Free Crypto Idle Game | Bitcoin, Ethereum & Dogecoin Mining</title>
+    <meta name="description" content="Start mining virtual Bitcoin, Ethereum, and Dogecoin today! Play Idle BTC Miner - our free idle crypto mining game. Earn virtual cryptocurrency through manual hashing, automated miners, and strategic upgrades. No real money involved - pure entertainment.">
+    <meta name="keywords" content="idle BTC miner, idle game, bitcoin game, crypto game, ethereum mining, dogecoin mining, idle mining game, cryptocurrency game, free crypto game, bitcoin idle game, ethereum idle game, money game, clicker game, incremental game">
+    <meta name="author" content="Aaron Khan">
+    <meta name="theme-color" content="#f7931a">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.idlebtcminer.com">
+    <meta property="og:title" content="Idle BTC Miner - Free Crypto Mining Game">
+    <meta property="og:description" content="Start mining virtual Bitcoin, Ethereum, and Dogecoin today! Play Idle BTC Miner - our free idle crypto mining game with automated miners and strategic upgrades.">
+    <meta property="og:image" content="https://www.idlebtcminer.com/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.idlebtcminer.com">
+    <meta property="twitter:title" content="Idle BTC Miner - Free Crypto Mining Game">
+    <meta property="twitter:description" content="Start mining virtual Bitcoin, Ethereum, and Dogecoin today! Play Idle BTC Miner - our free idle crypto mining game.">
+    <meta property="twitter:image" content="https://www.idlebtcminer.com/og-image.png">
+
+    <!-- Additional SEO -->
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+    <link rel="canonical" href="https://www.idlebtcminer.com">
+    <link rel="sitemap" type="application/xml" href="https://www.idlebtcminer.com/sitemap.xml">
 
     <!-- Cache buster - forces fresh load on updates -->
     <script>
+        // Debug viewport and media query detection
+        function logViewportInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            const isPortrait = width < height;
+            const isMobileResolution = width <= 768 || isPortrait;
+
+            console.log('📱 VIEWPORT INFO:');
+            console.log('  Window Width: ' + width + 'px');
+            console.log('  Window Height: ' + height + 'px');
+            console.log('  Device Pixel Ratio: ' + devicePixelRatio);
+            console.log('  Orientation: ' + (isPortrait ? 'Portrait' : 'Landscape'));
+            console.log('  Is Mobile (portrait OR <=768px): ' + isMobileResolution);
+            console.log('  Should stack to single column: ' + isMobileResolution);
+        }
+
+        // Log on load
+        window.addEventListener('DOMContentLoaded', logViewportInfo);
+        window.addEventListener('resize', logViewportInfo);
+
+        // Check immediately
+        logViewportInfo();
+
         // Check if app has been updated
-        const appVersion = '1.0.0'; // Increment this version to force cache clear
-        const storedVersion = localStorage.getItem('appVersion');
+        const appVersion = '1.0.4'; // Increment this version to force cache clear
 
-        if (storedVersion !== appVersion) {
-            console.log('🔄 App updated! Clearing old cache...');
-            // Clear all app-related caches
-            localStorage.removeItem('satoshiTerminalSave');
-            localStorage.removeItem('instructionsDismissed');
-            localStorage.removeItem('appVersion');
+        try {
+            const storedVersion = localStorage.getItem('appVersion');
 
-            // Clear service worker cache if it exists
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    registrations.forEach(reg => reg.unregister());
-                });
+            if (storedVersion !== appVersion) {
+                console.log('🔄 App updated! Clearing old cache...');
+
+                // Clear all app-related caches
+                localStorage.removeItem('satoshiTerminalSave');
+                localStorage.removeItem('instructionsDismissed');
+
+                // Clear service worker cache if it exists
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(reg => reg.unregister());
+                    });
+                }
+
+                // Store new version BEFORE reload to prevent infinite loop
+                localStorage.setItem('appVersion', appVersion);
+
+                console.log('✅ Cache cleared! Forcing hard reload...');
+
+                // Force a hard reload to clear browser cache
+                // This bypasses the HTTP cache and forces fresh JS/CSS files
+                setTimeout(() => {
+                    window.location.reload(true); // Hard reload
+                }, 100);
             }
-
-            // Store new version
-            localStorage.setItem('appVersion', appVersion);
-            console.log('✅ Cache cleared! Reload the page to see the latest version.');
+        } catch (e) {
+            // localStorage not available (incognito mode, etc.)
+            console.warn('⚠️ localStorage not available (incognito mode?). Continuing without local cache...');
         }
     </script>
 
+    <!-- Safe Storage Wrapper for Incognito/Private Mode Support -->
+    <script>
+        // Create a safe storage object that works in incognito mode
+        window.safeStorage = {
+            _storage: {},
+            _isAvailable: false,
+
+            init: function() {
+                try {
+                    localStorage.setItem('_test_', 'test');
+                    localStorage.removeItem('_test_');
+                    this._isAvailable = true;
+                    console.log('✅ localStorage is available');
+                } catch (e) {
+                    this._isAvailable = false;
+                    console.warn('⚠️ localStorage unavailable - using memory storage instead');
+                }
+            },
+
+            setItem: function(key, value) {
+                try {
+                    if (this._isAvailable) {
+                        localStorage.setItem(key, value);
+                        console.log('✓ Saved to localStorage:', key);
+                    } else {
+                        this._storage[key] = value;
+                        console.log('✓ Saved to memory storage:', key);
+                    }
+                } catch (e) {
+                    this._storage[key] = value;
+                    console.log('✓ Saved to memory storage (fallback):', key);
+                }
+            },
+
+            getItem: function(key) {
+                try {
+                    if (this._isAvailable) {
+                        const value = localStorage.getItem(key);
+                        console.log('✓ Retrieved from localStorage:', key, '=', value ? 'EXISTS' : 'NULL');
+                        return value;
+                    } else {
+                        const value = this._storage[key] || null;
+                        console.log('✓ Retrieved from memory storage:', key, '=', value ? 'EXISTS' : 'NULL');
+                        return value;
+                    }
+                } catch (e) {
+                    const value = this._storage[key] || null;
+                    console.log('✓ Retrieved from memory storage (fallback):', key, '=', value ? 'EXISTS' : 'NULL');
+                    return value;
+                }
+            },
+
+            removeItem: function(key) {
+                try {
+                    if (this._isAvailable) {
+                        localStorage.removeItem(key);
+                        console.log('✓ Removed from localStorage:', key);
+                    } else {
+                        delete this._storage[key];
+                        console.log('✓ Removed from memory storage:', key);
+                    }
+                } catch (e) {
+                    delete this._storage[key];
+                    console.log('✓ Removed from memory storage (fallback):', key);
+                }
+            }
+        };
+
+        // Initialize safe storage immediately
+        window.safeStorage.init();
+        console.log('🔧 safeStorage initialized - _isAvailable:', window.safeStorage._isAvailable);
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260123065000">
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -56,48 +191,52 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <!-- Firebase Configuration, Save/Load, and Authentication -->
-    <script src="firebase-config.js"></script>
-    <script src="firebase-save.js"></script>
-    <script src="firebase-auth.js"></script>
+    <script src="firebase-config.js?v=20260123074001"></script>
+    <script src="firebase-save.js?v=20260123074002"></script>
+    <script src="firebase-auth.js?v=20260123074003"></script>
 </head>
 <body>
 
     <!-- Login Screen (Firebase) -->
-    <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); z-index: 100000; overflow: auto;">
-        <iframe src="login-screen.html" style="width: 100%; height: 100%; border: none;"></iframe>
-    </div>
-
-    <!-- Age Disclaimer Modal -->
-    <div id="age-disclaimer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center;">
-        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 500px; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
-            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem;">⚠️ Age Requirement</h2>
-            <p style="color: #fff; font-size: 1.1rem; margin-bottom: 20px; line-height: 1.6;">
-                This game is intended for users <strong style="color: #f7931a;">18 years or older</strong>.
-            </p>
-            <p style="color: #aaa; font-size: 0.95rem; margin-bottom: 30px; line-height: 1.5;">
-                This is a <strong>simulation game</strong> with <strong>no real cryptocurrency or monetary value</strong>. All currency and assets are virtual and for entertainment purposes only.
-            </p>
-            <button onclick="acceptAgeDisclaimer()" style="background: #f7931a; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
-                I AM 18+ & UNDERSTAND
-            </button>
+    <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 100000; overflow: auto; display: flex; justify-content: center; align-items: center;">
+        <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative;">
+            <iframe src="login-screen.html?v=20260123065003" style="width: 100%; height: 100%; border: none; max-width: 100%; max-height: 100%;"></iframe>
         </div>
     </div>
 
-    <!-- Terms and Conditions Acceptance Modal -->
-    <div id="terms-acceptance-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10001; justify-content: center; align-items: center; overflow: auto;">
-        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 600px; max-height: 90vh; overflow-y: auto; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5); margin: 20px;">
-            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 1.8rem;">📋 Terms & Conditions</h2>
-            <p style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.6;">
-                Please read and accept our Terms and Conditions to continue using Idle BTC Miner.
-            </p>
-            <div style="background: rgba(255,255,255,0.05); border: 1px solid #f7931a; border-radius: 8px; padding: 20px; margin-bottom: 30px; max-height: 300px; overflow-y: auto; text-align: left;">
-                <iframe id="terms-preview" src="terms.html" style="width: 100%; height: 280px; border: none; background: transparent;"></iframe>
+    <!-- Consolidated Onboarding Modal (Age + Terms) -->
+    <div id="onboarding-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; overflow: auto;">
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 650px; max-height: 90vh; overflow-y: auto; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5); margin: 20px;">
+            <h2 style="color: #f7931a; margin-bottom: 10px; font-size: 2rem;">⚠️ Welcome to Idle BTC Miner</h2>
+            <p style="color: #888; font-size: 0.85rem; margin-bottom: 25px;">Please review the following before continuing</p>
+
+            <!-- Age Requirement Section -->
+            <div style="background: rgba(247,147,26,0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: left;">
+                <h3 style="color: #f7931a; margin: 0 0 10px 0; font-size: 1.2rem;">18+ Age Requirement</h3>
+                <p style="color: #fff; font-size: 1rem; margin: 0 0 10px 0; line-height: 1.5;">
+                    This game is intended for users <strong>18 years or older</strong>.
+                </p>
+                <p style="color: #aaa; font-size: 0.9rem; margin: 0; line-height: 1.4;">
+                    This is a <strong>simulation game</strong> with <strong>no real cryptocurrency or monetary value</strong>. All currency and assets are virtual and for entertainment purposes only.
+                </p>
             </div>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <button onclick="acceptTerms()" style="background: #f7931a; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
-                    ✓ I ACCEPT
+
+            <!-- Terms & Conditions Section -->
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid #f7931a; border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: left;">
+                <h3 style="color: #f7931a; margin: 0 0 10px 0; font-size: 1.2rem;">📋 Terms & Conditions</h3>
+                <p style="color: #aaa; font-size: 0.85rem; margin: 0 0 12px 0;">
+                    By continuing, you agree to our Terms & Conditions. <a href="#" onclick="openPrivacyModal(); switchPolicyTab('terms'); return false;" style="color: #f7931a; text-decoration: underline;">Read full terms</a>
+                </p>
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 6px; padding: 12px; max-height: 180px; overflow-y: auto; text-align: left;">
+                    <iframe id="terms-preview" src="terms.html?v=20260123065001" style="width: 100%; height: 160px; border: none; background: transparent;"></iframe>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="acceptOnboarding()" style="background: #f7931a; color: #000; border: none; padding: 12px 35px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4); position: relative; z-index: 1; pointer-events: auto;">
+                    ✓ I ACCEPT & CONTINUE
                 </button>
-                <button onclick="declineTerms()" style="background: #333; color: #f7931a; border: 2px solid #f7931a; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s;">
+                <button onclick="declineOnboarding()" style="background: #333; color: #f7931a; border: 2px solid #f7931a; padding: 12px 35px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; position: relative; z-index: 1; pointer-events: auto;">
                     ✗ DECLINE
                 </button>
             </div>
@@ -110,7 +249,10 @@
             <button onclick="closeLeaderboardModal()" style="position: absolute; top: 15px; right: 15px; background: #f7931a; color: #000; border: none; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s; z-index: 1;">
                 CLOSE
             </button>
-            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">🏆 LEADERBOARD</h2>
+            <h2 style="color: #f7931a; margin-bottom: 10px; font-size: 2rem; text-align: center;">🏆 LEADERBOARD</h2>
+            <div id="leaderboard-refresh-info" style="text-align: center; color: #888; font-size: 0.75rem; margin-bottom: 15px; font-family: monospace;">
+                Updates on login/logout or when returning after 6+ hours away
+            </div>
             <div class="leaderboard-content" style="color: #fff;">
                 <div style="text-align: center; color: #888;">Loading leaderboard...</div>
             </div>
@@ -118,7 +260,7 @@
     </div>
 
     <!-- Privacy & Cookie Policy Modal -->
-    <div id="privacy-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; overflow: auto;">
+    <div id="privacy-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000000; justify-content: center; align-items: center; overflow: auto;">
         <div style="background: #fff; padding: 20px; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; margin: 20px; position: relative; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
             <button onclick="closePrivacyModal()" style="position: absolute; top: 15px; right: 15px; background: #f7931a; color: #000; border: none; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s; z-index: 1;">
                 CLOSE
@@ -137,25 +279,22 @@
                 <button id="policy-tab-contact" onclick="switchPolicyTab('contact')" style="padding: 10px 20px; background: #ddd; color: #000; border: none; font-weight: 800; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 0.95rem;">
                     CONTACT
                 </button>
-                <button id="policy-tab-firebase" onclick="switchPolicyTab('firebase')" style="padding: 10px 20px; background: #ddd; color: #000; border: none; font-weight: 800; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 0.95rem;">
-                    🔒 FIREBASE
-                </button>
             </div>
-            <iframe id="privacy-iframe" src="privacy.html" style="width: 100%; height: 80vh; border: none;"></iframe>
+            <iframe id="privacy-iframe" src="privacy.html?v=20260123065001" style="width: 100%; height: 80vh; border: none;"></iframe>
         </div>
     </div>
 
     <div id="main-layout">
         <div class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
                 <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important;">Crypto Portfolio Valuation</span>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button id="login-btn" style="background: #f7931a; color: #000; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="showLoginScreen()">LOGIN / SIGN UP</button>
-                    <button style="background: #FFD700; color: #000; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="openLeaderboardModal()">🏆 LEADERBOARD</button>
-                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="toggleMute()">SOUND ON</button>
-                    <button style="background: #4CAF50; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="document.getElementById('game-instructions').style.display='block'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
-                    <button style="background: #ffa500; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetEarningsStats()">RESET EARNINGS</button>
-                    <button style="background: #ff3344; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetGame()">RESET SAVE</button>
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                    <button id="login-btn" style="background: #f7931a; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="showLoginScreen()">LOGIN / SIGN UP</button>
+                    <button style="background: #FFD700; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openLeaderboardModal()">🏆 LEADERBOARD</button>
+                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
+                    <button style="background: #4CAF50; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').classList.add('show'); window.safeStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
+                    <button style="background: #ffa500; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
+                    <button style="background: #ff3344; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
                 </div>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
@@ -180,10 +319,11 @@
                 🌟 SKILL TREE
             </button>
 
-            <!-- Game Instructions -->
-            <div id="game-instructions" style="margin: 12px auto; padding: 8px 16px; background: rgba(255, 193, 7, 0.08); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 4px; max-width: 600px; text-align: center; position: relative;">
-                <button onclick="dismissInstructions()" style="position: absolute; top: 4px; right: 4px; background: rgba(255, 255, 255, 0.1); border: none; color: #888; cursor: pointer; font-size: 0.8rem; padding: 2px 6px; border-radius: 3px; font-weight: bold; line-height: 1;">×</button>
-                <div style="font-size: 0.715rem; color: #ccc; line-height: 1.5;">
+            <!-- Game Instructions (Floating Overlay) -->
+            <div id="game-instructions" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 16px 24px; background: rgba(255, 193, 7, 0.15); border: 2px solid rgba(255, 193, 7, 0.6); border-radius: 8px; max-width: 600px; text-align: center; z-index: 50000; box-shadow: 0 4px 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
+                <button onclick="dismissInstructions()" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 255, 255, 0.2); border: none; color: #fff; cursor: pointer; font-size: 1.2rem; padding: 4px 10px; border-radius: 4px; font-weight: bold; line-height: 1; transition: 0.2s;">×</button>
+                <div style="font-size: 0.85rem; color: #fff; line-height: 1.6; padding: 8px 0;">
+                    <strong style="color: #f7931a; font-size: 1rem; display: block; margin-bottom: 8px;">🎮 HOW TO PLAY</strong>
                     Begin by <strong>Manually Hashing BTC, ETH or Doge</strong>. Sell or Stake your Crypto at the Exchange.<br>
                     You will find Miners in the BTC, ETH and DOGE tabs. <strong style="color: #ff3344;">DON'T FORGET ABOUT POWER!</strong>
                 </div>
@@ -275,24 +415,24 @@
                             <div id="power-bar-fill" style="height: 100%; background: #00ff88; border-radius: 3px; width: 0%;"></div>
                         </div>
                     </div>
-                    <button class="tab-btn" onclick="switchTab('power')" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">UPGRADE POWER SUPPLY</button>
+                    <button class="tab-btn" onclick="switchTab('power', event)" title="Upgrade your power supply to support more mining equipment" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">UPGRADE POWER SUPPLY</button>
                 </div>
             </div>
 
             <!-- Dollar Balance Display -->
-            <div style="padding: 6px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 8px; text-align: center;">
+            <div title="Your USD earned from selling crypto. Game saves locally every second. Cloud saves every 10 min for multi-device access." style="padding: 6px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 8px; text-align: center; cursor: help;">
                 <span style="font-size: 0.6rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Cash Balance</span>
                 <b style="color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
             </div>
 
             <!-- Tab Buttons -->
             <div class="tab-buttons" style="margin-bottom: 6px;">
-                <button class="tab-btn active" onclick="switchTab('btc-mining')" style="border-color: #f7931a; color: #f7931a;">BTC</button>
-                <button class="tab-btn" onclick="switchTab('eth-mining')" style="border-color: #627eea; color: #627eea;">ETH</button>
-                <button class="tab-btn" onclick="switchTab('doge-mining')" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
+                <button class="tab-btn active" onclick="switchTab('btc-mining', event)" title="Mine Bitcoin - Click to earn, buy miners & upgrades" style="border-color: #f7931a; color: #f7931a;">BTC</button>
+                <button class="tab-btn" onclick="switchTab('eth-mining', event)" title="Mine Ethereum - Click to earn, buy miners & upgrades" style="border-color: #627eea; color: #627eea;">ETH</button>
+                <button class="tab-btn" onclick="switchTab('doge-mining', event)" title="Mine Dogecoin - Click to earn, buy miners & upgrades" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
             </div>
             <div class="tab-buttons">
-                <button class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
+                <button class="tab-btn" onclick="switchTab('market', event)" title="Sell crypto for cash, stake coins to earn passive income" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
             </div>
 
             <!-- BTC Mining Tab -->
@@ -564,10 +704,89 @@
         document.getElementById('privacy-modal').style.display = 'none';
     }
 
-    // Age disclaimer function - defined early so modal button works
-    function acceptAgeDisclaimer() {
-        localStorage.setItem('ageDisclaimerAccepted', 'true');
-        document.getElementById('age-disclaimer-modal').style.display = 'none';
+    // Onboarding modal functions
+    async function acceptOnboarding() {
+        window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
+        window.safeStorage.setItem('termsAccepted', 'true');
+
+        // Save consent to Firebase if user is logged in
+        if (window.auth && window.auth.currentUser) {
+            console.log('💾 Saving onboarding consent to Firebase...');
+            if (typeof window.saveConsentToFirebase === 'function') {
+                try {
+                    await window.saveConsentToFirebase(window.auth.currentUser.uid);
+                    console.log('✅ Onboarding consent saved to Firebase');
+                } catch (error) {
+                    console.error('❌ Failed to save consent:', error);
+                }
+            }
+        }
+
+        // Hide onboarding modal
+        const onboardingModal = document.getElementById('onboarding-modal');
+        if (onboardingModal) {
+            onboardingModal.classList.remove('show');
+        }
+
+        // Ensure main layout is visible and interactive
+        const mainLayout = document.getElementById('main-layout');
+        if (mainLayout) {
+            // Enable interaction
+            mainLayout.style.pointerEvents = 'auto';
+            mainLayout.style.userSelect = 'auto';
+            mainLayout.style.visibility = 'visible';
+            mainLayout.style.opacity = '1';
+            mainLayout.style.zIndex = '1';
+
+            // Force layout recalculation
+            void mainLayout.offsetHeight;
+            void mainLayout.offsetWidth;
+
+            // Re-apply responsive mobile layout if needed
+            if (typeof enforceMobileLayout === 'function') {
+                enforceMobileLayout();
+            }
+        }
+
+        // Refresh all panels
+        setTimeout(() => {
+            const panels = document.querySelectorAll('.panel');
+            panels.forEach(panel => {
+                // Reset panel styles
+                panel.style.visibility = 'visible';
+                panel.style.display = 'flex';
+                panel.style.flexDirection = 'column';
+                panel.style.opacity = '1';
+
+                // Force reflow
+                void panel.offsetHeight;
+            });
+
+            // Trigger chart resize if it exists
+            if (window.nwChartInstance && typeof window.nwChartInstance.resize === 'function') {
+                try {
+                    window.nwChartInstance.resize();
+                } catch (e) {
+                    console.warn('Chart resize failed:', e);
+                }
+            }
+
+            // Update display if function exists
+            if (typeof window.updateDisplay === 'function') {
+                try {
+                    window.updateDisplay();
+                } catch (e) {
+                    console.warn('updateDisplay failed:', e);
+                }
+            }
+        }, 50);
+
+        // NOTE: Cookie consent will be checked automatically if needed
+        // Don't call it here as it's already been checked on page load
+    }
+
+    function declineOnboarding() {
+        alert('You must accept the Age Requirement and Terms & Conditions to use this service.');
     }
 
     function switchPolicyTab(tab) {
@@ -576,7 +795,6 @@
         const cookiesTab = document.getElementById('policy-tab-cookies');
         const termsTab = document.getElementById('policy-tab-terms');
         const contactTab = document.getElementById('policy-tab-contact');
-        const firebaseTab = document.getElementById('policy-tab-firebase');
 
         // Reset all tabs to inactive state
         privacyTab.style.background = '#ddd';
@@ -587,80 +805,73 @@
         termsTab.style.color = '#000';
         contactTab.style.background = '#ddd';
         contactTab.style.color = '#000';
-        firebaseTab.style.background = '#ddd';
-        firebaseTab.style.color = '#000';
 
         if (tab === 'privacy') {
-            iframe.src = 'privacy.html';
+            iframe.src = 'privacy.html?v=20260123065001';
             privacyTab.style.background = '#f7931a';
             privacyTab.style.color = '#000';
         } else if (tab === 'cookies') {
-            iframe.src = 'cookies.html';
+            iframe.src = 'cookies.html?v=20260123065001';
             cookiesTab.style.background = '#f7931a';
             cookiesTab.style.color = '#000';
         } else if (tab === 'terms') {
-            iframe.src = 'terms.html';
+            iframe.src = 'terms.html?v=20260123065001';
             termsTab.style.background = '#f7931a';
             termsTab.style.color = '#000';
         } else if (tab === 'contact') {
-            iframe.src = 'contact.html';
+            iframe.src = 'contact.html?v=20260123065001';
             contactTab.style.background = '#f7931a';
             contactTab.style.color = '#000';
-        } else if (tab === 'firebase') {
-            iframe.src = 'privacy-modal.html';
-            firebaseTab.style.background = '#f7931a';
-            firebaseTab.style.color = '#000';
         }
     }
 
-    function openTermsModal() {
-        document.getElementById('terms-acceptance-modal').style.display = 'flex';
-    }
-
-    function acceptTerms() {
-        localStorage.setItem('termsAccepted', 'true');
-        document.getElementById('terms-acceptance-modal').style.display = 'none';
-    }
-
-    function declineTerms() {
-        alert('You must accept the Terms and Conditions to use this service.');
-        // Optionally redirect or disable access
-    }
-
-    // Check if terms have been accepted on page load
+    // Check if onboarding (age + terms) has been accepted on page load
     window.addEventListener('load', function() {
-        if (!localStorage.getItem('termsAccepted')) {
-            openTermsModal();
+        const ageAccepted = window.safeStorage.getItem('ageDisclaimerAccepted');
+        const termsAccepted = window.safeStorage.getItem('termsAccepted');
+        const bothAccepted = ageAccepted && termsAccepted;
+
+        console.log('🔍 Onboarding check on load:', { ageAccepted, termsAccepted, bothAccepted });
+
+        // ONLY show if EITHER age OR terms is missing (i.e., NOT both accepted)
+        if (!bothAccepted) {
+            // Only show onboarding modal if login screen is not visible
+            // (don't show during login/register, only after sign in)
+            setTimeout(() => {
+                const loginScreen = document.getElementById('login-screen');
+                const isLoginVisible = loginScreen && loginScreen.style.display !== 'none';
+
+                // If login screen is visible, don't show onboarding yet
+                if (!isLoginVisible) {
+                    console.log('📋 Showing onboarding modal (not both accepted yet)');
+                    document.getElementById('onboarding-modal').classList.add('show');
+                } else {
+                    console.log('📋 Skipping onboarding modal (login screen visible)');
+                }
+            }, 500);
+        } else {
+            console.log('✅ Onboarding already complete - not showing modal');
+            // Make sure modal is hidden
+            document.getElementById('onboarding-modal').classList.remove('show');
         }
     });
 </script>
 
-<!-- Cookie Consent Banner -->
-<div id="cookie-consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 20px; border-top: 3px solid #f7931a; z-index: 99999; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);">
-    <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
-        <div style="flex: 1; min-width: 300px;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 2rem; margin-right: 10px;">🍪</span>
-                <h3 style="color: #f7931a; margin: 0; font-size: 1.3rem;">Cookie Consent</h3>
-            </div>
-            <p style="color: #ccc; margin: 0; font-size: 0.9rem; line-height: 1.5;">
-                We use cookies to enhance your experience, analyze site traffic, and for analytics purposes. By clicking "Accept All", you consent to our use of cookies. You can manage your preferences or decline non-essential cookies.
-            </p>
-            <p style="color: #888; margin: 10px 0 0 0; font-size: 0.8rem;">
-                <a href="#" onclick="openPrivacyModal(); switchPolicyTab('cookies'); return false;" style="color: #f7931a; text-decoration: underline;">View Cookie Policy</a>
-                <span style="margin: 0 5px;">|</span>
-                <a href="#" onclick="openPrivacyModal(); switchPolicyTab('privacy'); return false;" style="color: #f7931a; text-decoration: underline;">Privacy Policy</a>
+<!-- Cookie Consent Bottom Banner -->
+<div id="cookie-consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-top: 2px solid #f7931a; padding: 12px 20px; z-index: 10001; box-shadow: 0 -2px 15px rgba(247,147,26,0.3);">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+            <p style="color: #fff; font-size: 0.85rem; margin: 0 0 6px 0; line-height: 1.3;">
+                <strong style="color: #f7931a;">🍪 Cookies:</strong> We use cookies for analytics and to improve your experience.
+                <a href="#" onclick="openPrivacyModal(); switchPolicyTab('cookies'); return false;" style="color: #f7931a; text-decoration: underline; margin-left: 5px;">Learn more</a>
             </p>
         </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-            <button onclick="acceptAllCookies()" style="background: #f7931a; color: #000; border: none; padding: 12px 30px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4); white-space: nowrap;">
-                ✓ Accept All
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="acceptAllCookies()" style="background: #f7931a; color: #000; border: none; padding: 6px 14px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; white-space: nowrap; position: relative; z-index: 1; pointer-events: auto;">
+                Accept All
             </button>
-            <button onclick="acceptEssentialOnly()" style="background: #555; color: #fff; border: 1px solid #777; padding: 12px 25px; font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; white-space: nowrap;">
+            <button onclick="acceptEssentialOnly()" style="background: #555; color: #fff; border: none; padding: 6px 14px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; white-space: nowrap; position: relative; z-index: 1; pointer-events: auto;">
                 Essential Only
-            </button>
-            <button onclick="openCookieSettings()" style="background: transparent; color: #f7931a; border: 1px solid #f7931a; padding: 12px 25px; font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; white-space: nowrap;">
-                ⚙️ Manage Preferences
             </button>
         </div>
     </div>
@@ -670,27 +881,38 @@
 <script>
     // Check if user has already made a cookie choice
     function checkCookieConsent() {
-        const consent = localStorage.getItem('cookieConsent');
+        const consent = window.safeStorage.getItem('cookieConsent');
+        // Only show if user hasn't made a choice previously
         if (!consent) {
-            // Show banner after a short delay (after age/terms modals)
+            // Show banner after age disclaimer and terms acceptance
+            // Wait for those modals to be accepted first
             setTimeout(() => {
-                const banner = document.getElementById('cookie-consent-banner');
-                if (banner) {
-                    banner.style.display = 'block';
+                const ageAccepted = window.safeStorage.getItem('ageDisclaimerAccepted');
+                const termsAccepted = window.safeStorage.getItem('termsAccepted');
+
+                // Only show cookie modal if age and terms have been accepted
+                if (ageAccepted && termsAccepted) {
+                    const banner = document.getElementById('cookie-consent-banner');
+                    if (banner) {
+                        banner.style.display = 'flex';
+                    }
+                } else {
+                    // Check again in 1 second if they haven't accepted yet
+                    setTimeout(checkCookieConsent, 1000);
                 }
-            }, 2000);
+            }, 500);
         }
     }
 
     // Accept all cookies
-    function acceptAllCookies() {
-        localStorage.setItem('cookieConsent', 'all');
-        localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    async function acceptAllCookies() {
+        window.safeStorage.setItem('cookieConsent', 'all');
+        window.safeStorage.setItem('cookieConsentDate', new Date().toISOString());
 
         // Enable Google Analytics and other tracking
         window['ga-disable-G-2H559N5J64'] = false;
 
-        // Hide banner
+        // Hide modal
         document.getElementById('cookie-consent-banner').style.display = 'none';
 
         // Optional: Trigger Termly consent if available
@@ -698,13 +920,26 @@
             window.termlyConsent('accept');
         }
 
+        // Save consent to Firebase if user is logged in
+        if (window.auth && window.auth.currentUser) {
+            console.log('💾 Saving cookie consent to Firebase...');
+            if (typeof window.saveConsentToFirebase === 'function') {
+                try {
+                    await window.saveConsentToFirebase(window.auth.currentUser.uid);
+                    console.log('✅ Cookie consent saved to Firebase');
+                } catch (error) {
+                    console.error('❌ Failed to save consent:', error);
+                }
+            }
+        }
+
         console.log('All cookies accepted');
     }
 
     // Accept essential cookies only
-    function acceptEssentialOnly() {
-        localStorage.setItem('cookieConsent', 'essential');
-        localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    async function acceptEssentialOnly() {
+        window.safeStorage.setItem('cookieConsent', 'essential');
+        window.safeStorage.setItem('cookieConsentDate', new Date().toISOString());
 
         // Disable Google Analytics
         window['ga-disable-G-2H559N5J64'] = true;
@@ -715,6 +950,19 @@
         // Optional: Trigger Termly essential only if available
         if (typeof window.termlyConsent !== 'undefined') {
             window.termlyConsent('essential');
+        }
+
+        // Save consent to Firebase if user is logged in
+        if (window.auth && window.auth.currentUser) {
+            console.log('💾 Saving cookie consent to Firebase...');
+            if (typeof window.saveConsentToFirebase === 'function') {
+                try {
+                    await window.saveConsentToFirebase(window.auth.currentUser.uid);
+                    console.log('✅ Cookie consent saved to Firebase');
+                } catch (error) {
+                    console.error('❌ Failed to save consent:', error);
+                }
+            }
         }
 
         console.log('Essential cookies only');
@@ -740,7 +988,7 @@
     function revokeCookieConsent() {
         localStorage.removeItem('cookieConsent');
         localStorage.removeItem('cookieConsentDate');
-        document.getElementById('cookie-consent-banner').style.display = 'block';
+        document.getElementById('cookie-consent-banner').style.display = 'flex';
     }
 
     // Check consent on page load
@@ -748,16 +996,93 @@
 </script>
 
 <!-- Load skill tree system first so its functions are available to game.js -->
-<script src="skilltree.js"></script>
+<script src="skilltree.js?v=20260123065005"></script>
 
 <!-- Load main game after skill tree functions are defined -->
-<script src="game.js"></script>
+<script src="game.js?v=20260123065004"></script>
+<script>
+    // Debug: Verify switchTab is loaded
+    console.log('DEBUG: After game.js load, switchTab type:', typeof window.switchTab);
+    if (typeof window.switchTab !== 'function') {
+        console.error('ERROR: switchTab not loaded! Creating fallback...');
+        // Temporary fallback for debugging
+        window.switchTab = function(tab, event) {
+            console.log('Fallback switchTab called with:', tab);
+        };
+    }
+
+    // Mute button now uses inline onclick with safety check
+</script>
 
 <!-- Load staking system after main game variables are defined -->
-<script src="staking.js"></script>
+<script src="staking.js?v=20260123065005"></script>
 
 <!-- Load leaderboard system -->
-<script src="leaderboard.js"></script>
+<script src="leaderboard.js?v=20260123073006"></script>
+
+<!-- Mobile Layout Enforcer - Portrait = Mobile, Landscape = Desktop -->
+<script>
+    function enforceMobileLayout() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const isPortrait = width < height;  // Portrait = Mobile (most phones)
+        const isLandscape = width > height;  // Landscape = Desktop
+        const mainLayout = document.getElementById('main-layout');
+
+        if (!mainLayout) return;
+
+        // Detailed logging to distinguish mobile vs desktop
+        const orientation = isPortrait ? '📱 PORTRAIT (MOBILE)' : '🖥️ LANDSCAPE (DESKTOP)';
+        const size = width + 'x' + height + 'px';
+        console.log('📊 LAYOUT DETECTION: ' + orientation + ' | ' + size);
+
+        // PRIMARY RULE: Portrait orientation = Mobile (single column)
+        // Portrait is the key indicator since most phones are used in portrait mode
+        if (isPortrait) {
+            console.log('✅ PORTRAIT MODE DETECTED → Single-Column Mobile Layout');
+            mainLayout.style.setProperty('display', 'flex', 'important');
+            mainLayout.style.setProperty('flex-direction', 'column', 'important');
+            mainLayout.style.setProperty('height', 'auto', 'important');
+            mainLayout.style.setProperty('grid-template-columns', 'unset', 'important');
+            mainLayout.style.setProperty('width', '100%', 'important');
+            mainLayout.style.setProperty('max-width', '100%', 'important');
+        }
+        // SECONDARY RULE: Landscape + NOT wide enough = still mobile
+        // Most mobile resolutions are below 2000px width, so use that as threshold
+        else if (isLandscape && width < 2000) {
+            console.log('✅ LANDSCAPE BUT NARROW (<2000px) → Single-Column Mobile Layout');
+            mainLayout.style.setProperty('display', 'flex', 'important');
+            mainLayout.style.setProperty('flex-direction', 'column', 'important');
+            mainLayout.style.setProperty('height', 'auto', 'important');
+            mainLayout.style.setProperty('grid-template-columns', 'unset', 'important');
+            mainLayout.style.setProperty('width', '100%', 'important');
+            mainLayout.style.setProperty('max-width', '100%', 'important');
+        }
+        // DESKTOP RULE: Landscape + Wide (2000px+) = 2-column grid
+        else if (isLandscape && width >= 2000) {
+            console.log('✅ LANDSCAPE & WIDE (≥2000px) → Two-Column Desktop Layout');
+            mainLayout.style.setProperty('display', 'grid', 'important');
+            mainLayout.style.setProperty('grid-template-columns', '7fr 3fr', 'important');
+            mainLayout.style.setProperty('height', 'calc(100vh - calc(var(--base-padding) * 2))', 'important');
+        }
+    }
+
+    // Apply on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', enforceMobileLayout);
+    } else {
+        enforceMobileLayout();
+    }
+
+    // Apply on window resize
+    window.addEventListener('resize', enforceMobileLayout);
+
+    // Critical for mobile: respond to orientation changes
+    window.addEventListener('orientationchange', function() {
+        console.log('🔄 Orientation changed, re-applying layout...');
+        setTimeout(enforceMobileLayout, 100);
+    });
+</script>
 
 <!-- Initialize Firebase -->
 <script>
@@ -773,11 +1098,11 @@
     window.showLoginScreen = showLoginScreen;
 
     // Initialize Firebase when page loads
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
         console.log('🚀 Initializing Firebase...');
 
         // Initialize Firebase
-        const firebaseReady = initializeFirebase();
+        const firebaseReady = await initializeFirebase();
 
         if (firebaseReady) {
             console.log('✅ Firebase ready!');
@@ -793,15 +1118,44 @@
             // Note: Manual sync button is now integrated into user UI
             console.log('✅ Manual save integrated into user menu');
 
-            // Show login screen first on initial load
-            // User must login or play as guest
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('main-layout').style.display = 'none';
+            // Check if user is already logged in (Firebase persists auth state)
+            // If not logged in, show login screen
+            if (!auth.currentUser) {
+                console.log('No user logged in - showing login screen');
+                // Show login screen first on initial load
+                // User must login or play as guest
+                // Show game in background (blurred and disabled)
+                document.getElementById('login-screen').style.display = 'flex';
+                const mainLayout = document.getElementById('main-layout');
+                mainLayout.style.pointerEvents = 'none'; // Disable interaction
+                mainLayout.style.userSelect = 'none'; // Disable text selection
+                // Apply responsive mobile layout
+                if (typeof enforceMobileLayout === 'function') {
+                    enforceMobileLayout();
+                }
+            } else {
+                console.log('User already logged in - enabling game');
+                // User is already logged in, enable the game
+                document.getElementById('login-screen').style.display = 'none';
+                const mainLayout = document.getElementById('main-layout');
+                mainLayout.style.pointerEvents = 'auto'; // Enable interaction
+                mainLayout.style.userSelect = 'auto'; // Enable text selection
+                // Apply responsive mobile layout
+                if (typeof enforceMobileLayout === 'function') {
+                    enforceMobileLayout();
+                }
+            }
         } else {
             console.warn('⚠️ Firebase not initialized - running in offline mode');
             // Allow game to run without Firebase in offline mode
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-layout').style.display = 'flex';
+            const mainLayout = document.getElementById('main-layout');
+            mainLayout.style.pointerEvents = 'auto'; // Enable interaction
+            mainLayout.style.userSelect = 'auto'; // Enable text selection
+            // Apply responsive mobile layout
+            if (typeof enforceMobileLayout === 'function') {
+                enforceMobileLayout();
+            }
         }
     });
 

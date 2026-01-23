@@ -8,96 +8,96 @@ let skillTokens = 0;
 let milestoneLevel = 0;
 let lastMilestoneChecked = 0;
 
-// Milestone requirements (cumulative lifetime earnings)
+// Milestone requirements (cumulative lifetime earnings) - Rebalanced for slower progression
 const MILESTONES = [
-    // Milestone 1
+    // Milestone 1 - Early game
     {
         level: 1,
         btc: 0.5,
         eth: 15,
         doge: 35000,
-        reward: 5,
+        reward: 2,
         name: "First Steps"
     },
-    // Milestone 2 (25% more than milestone 1)
+    // Milestone 2 (50% more than milestone 1)
     {
         level: 2,
-        btc: 0.625,
-        eth: 18.75,
-        doge: 43750,
-        reward: 5,
+        btc: 0.75,
+        eth: 22.5,
+        doge: 52500,
+        reward: 2,
         name: "Getting Started"
     },
-    // Milestone 3 (25% more than milestone 2)
+    // Milestone 3 (50% more)
     {
         level: 3,
-        btc: 0.78125,
-        eth: 23.4375,
-        doge: 54687.5,
-        reward: 7,
+        btc: 1.125,
+        eth: 33.75,
+        doge: 78750,
+        reward: 3,
         name: "Novice Miner"
     },
     // Milestone 4
     {
         level: 4,
-        btc: 0.9765625,
-        eth: 29.296875,
-        doge: 68359.375,
-        reward: 7,
+        btc: 1.6875,
+        eth: 50.625,
+        doge: 118125,
+        reward: 3,
         name: "Apprentice"
     },
     // Milestone 5
     {
         level: 5,
-        btc: 1.220703125,
-        eth: 36.62109375,
-        doge: 85449.21875,
-        reward: 10,
+        btc: 2.53125,
+        eth: 75.9375,
+        doge: 177187.5,
+        reward: 4,
         name: "Skilled Miner"
     },
     // Milestone 6
     {
         level: 6,
-        btc: 1.52587890625,
-        eth: 45.7763671875,
-        doge: 106811.5234375,
-        reward: 10,
+        btc: 3.796875,
+        eth: 113.90625,
+        doge: 265781.25,
+        reward: 4,
         name: "Expert"
     },
     // Milestone 7
     {
         level: 7,
-        btc: 1.9073486328125,
-        eth: 57.220458984375,
-        doge: 133514.404296875,
-        reward: 15,
+        btc: 5.6953125,
+        eth: 170.859375,
+        doge: 398671.875,
+        reward: 5,
         name: "Master Miner"
     },
     // Milestone 8
     {
         level: 8,
-        btc: 2.384185791015625,
-        eth: 71.52557373046875,
-        doge: 166893.00537109375,
-        reward: 15,
+        btc: 8.54296875,
+        eth: 256.2890625,
+        doge: 598007.8125,
+        reward: 5,
         name: "Legendary"
     },
     // Milestone 9
     {
         level: 9,
-        btc: 2.98023223876953125,
-        eth: 89.4069671630859375,
-        doge: 208616.2567138671875,
-        reward: 20,
+        btc: 12.814453125,
+        eth: 384.43359375,
+        doge: 897011.71875,
+        reward: 6,
         name: "Crypto Tycoon"
     },
     // Milestone 10
     {
         level: 10,
-        btc: 3.7252902984619140625,
-        eth: 111.758708953857421875,
-        doge: 260770.320892333984375,
-        reward: 25,
+        btc: 19.2216796875,
+        eth: 576.650390625,
+        doge: 1345517.578125,
+        reward: 8,
         name: "Mining Mogul"
     }
 ];
@@ -685,10 +685,16 @@ function renderSkillTree() {
         if (skill.position.col > maxCol) maxCol = skill.position.col;
     });
 
+    // Responsive sizing based on screen width
+    const isMobile = window.innerWidth <= 768;
+    const rowHeight = isMobile ? '70px' : '100px';
+    const gap = isMobile ? '10px' : '20px';
+    const padding = isMobile ? '10px' : '20px';
+
     // Create a wrapper with SVG that stays within the modal
-    let html = '<div style="position: relative; width: 100%; height: 100%;">';
+    let html = '<div style="position: relative; width: 100%;">';
     html += '<svg id="skill-connections-svg" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 0; width: 100%; height: 100%;"></svg>';
-    html += '<div class="skill-tree-grid" style="display: grid; grid-template-rows: repeat(' + maxRow + ', 100px); grid-template-columns: repeat(' + maxCol + ', 1fr); gap: 20px; position: relative; padding: 20px; min-height: 600px; z-index: 1;">';
+    html += '<div class="skill-tree-grid" style="display: grid; grid-template-rows: repeat(' + maxRow + ', ' + rowHeight + '); grid-template-columns: repeat(' + maxCol + ', 1fr); gap: ' + gap + '; position: relative; padding: ' + padding + '; z-index: 1;">';
 
     skillTreeNodes.forEach(skill => {
         const isLocked = !skill.purchased && (
@@ -731,7 +737,7 @@ function renderSkillTree() {
 function openSkillTreeModal() {
     const modal = document.getElementById('skill-tree-modal');
     if (modal) {
-        modal.style.display = 'flex';
+        modal.classList.add('show');
         renderSkillTree();
         updateSkillTreeUI();
     }
@@ -743,7 +749,7 @@ function openSkillTreeModal() {
 function closeSkillTreeModal() {
     const modal = document.getElementById('skill-tree-modal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
 }
 

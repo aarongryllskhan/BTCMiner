@@ -1,4 +1,5 @@
 (function() {
+    console.log('🚀 GAME.JS IIFE STARTED');
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
@@ -41,6 +42,7 @@
     let sessionStartNetWorth = 0;
     let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
     let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
+    let totalPlayTime = 0; // Total accumulated play time in seconds
 
     // Buy quantity setting
     let buyQuantity = 1;
@@ -408,6 +410,12 @@
 
     // --- SAVE SYSTEM START ---
     function saveGame() {
+        // Check if safeStorage is available
+        if (!window.safeStorage) {
+            console.error('❌ CRITICAL: window.safeStorage is not available!');
+            return;
+        }
+
         const gameState = {
             // Bitcoin data
             btcBalance,
@@ -481,21 +489,23 @@
             console.log('BTC Balance:', btcBalance);
             console.log('Dollar Balance:', dollarBalance);
             console.log('Save string length:', saveString.length, 'bytes');
+            console.log('safeStorage._isAvailable:', window.safeStorage._isAvailable);
 
-            localStorage.setItem('satoshiTerminalSave', saveString);
+            // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
+            window.safeStorage.setItem('satoshiTerminalSave', saveString);
 
             // Verify save worked
-            const testLoad = localStorage.getItem('satoshiTerminalSave');
+            const testLoad = window.safeStorage.getItem('satoshiTerminalSave');
             if (testLoad && testLoad.length > 0) {
-                console.log('✓ SAVE SUCCESSFUL - Verified in localStorage');
+                console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage (Length: ' + testLoad.length + ')');
             } else {
-                console.error('✗ SAVE FAILED - Could not verify in localStorage');
+                console.error('✗ SAVE FAILED - Could not verify in safeStorage');
             }
 
             // Sync to cloud if user is logged in (async - don't block game)
             // Removed: was causing issues. Cloud sync happens via auto-save and beforeunload instead
         } catch (error) {
-            console.error('✗ ERROR saving game to localStorage:', error);
+            console.error('✗ ERROR saving game to storage:', error);
             alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
         }
     }
@@ -503,8 +513,17 @@
 function loadGame() {
     console.log('=== LOAD GAME CALLED ===');
     try {
-        const savedData = localStorage.getItem('satoshiTerminalSave');
-        console.log('localStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
+        // Verify safeStorage is available
+        if (!window.safeStorage) {
+            console.error('❌ CRITICAL: window.safeStorage is not available!');
+            return;
+        }
+
+        console.log('✓ safeStorage available, _isAvailable:', window.safeStorage._isAvailable);
+
+        // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
+        const savedData = window.safeStorage.getItem('satoshiTerminalSave');
+        console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND (length: ' + savedData.length + ')' : 'NULL/UNDEFINED');
 
         if (!savedData) {
             console.log('✗ No saved game found, starting fresh');
@@ -814,8 +833,8 @@ function loadGame() {
     function dismissInstructions() {
         const instructionsEl = document.getElementById('game-instructions');
         if (instructionsEl) {
-            instructionsEl.style.display = 'none';
-            localStorage.setItem('instructionsDismissed', 'true');
+            instructionsEl.classList.remove('show');
+            window.safeStorage.setItem('instructionsDismissed', 'true');
         }
     }
 
@@ -832,8 +851,8 @@ function loadGame() {
 
     function resetGame() {
         if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
-            localStorage.removeItem('satoshiTerminalSave');
-            localStorage.removeItem('instructionsDismissed');
+            window.safeStorage.removeItem('satoshiTerminalSave');
+            window.safeStorage.removeItem('instructionsDismissed');
             // Reset all variables to defaults
             btcBalance = 0;
             btcLifetime = 0;
@@ -1053,7 +1072,13 @@ function loadGame() {
     }
 
     function initBtcShop() {
+        console.log('initBtcShop called');
         const container = document.getElementById('btc-shop');
+        if (!container) {
+            console.error('ERROR: btc-shop container not found!');
+            return;
+        }
+        console.log('btc-shop container found, btcUpgrades length:', btcUpgrades.length);
         container.innerHTML = '';
 
         btcUpgrades.forEach((u, i) => {
@@ -1239,13 +1264,15 @@ function loadGame() {
         });
     }
 
-    function switchTab(tab) {
+    function switchTab(tab, event) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
         const tabElement = document.getElementById(tab + '-tab');
         tabElement.classList.add('active');
-        event.target.classList.add('active');
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
 
         // Reset purchase quantity to 1x when switching tabs
         setBuyQuantity(1);
@@ -1361,8 +1388,8 @@ function loadGame() {
             u.currentPower = u.basePower * u.level;
             totalPowerAvailable += u.basePower;
 
-            // Update price with 1.2x multiplier
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.2, u.level));
+            // Update price with 1.1x multiplier
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
 
             updateUI();
             saveGame();
@@ -1435,7 +1462,7 @@ function loadGame() {
                     canAfford++;
                     nextLevel++;
                     // Power upgrades: 1.2x multiplier
-                    nextCost = u.baseUsd * Math.pow(1.2, nextLevel);
+                    nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
                 }
 
                 affordEl.innerText = `x${canAfford}`;
@@ -1564,14 +1591,14 @@ function buyLevel(i) {
             btcClickValue *= 1.10;
 
             // FASTER PRICE SCALE: % increase per level
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
 
             // Update the main orange button text to show new click value
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
             // ALL OTHER MINERS: Standard 15% increase
             u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
         }
 
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
@@ -1611,10 +1638,10 @@ function buyLevelMultiple(i, quantity) {
         // Update price and yield based on upgrade type
         if (u.id === 0 || u.isClickUpgrade) {
             btcClickValue *= 1.10;
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
         } else {
             u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
         }
 
         purchased++;
@@ -1751,12 +1778,12 @@ function buyDogeBoost(i) {
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
                 ethClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
                 // Update the ETH button text to show new click value
                 document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
             } else {
                 u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
             }
 
             purchased++;
@@ -1800,12 +1827,12 @@ function buyDogeBoost(i) {
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
                 dogeClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
                 // Update the DOGE button text to show new click value
                 document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
             } else {
                 u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
             }
 
             purchased++;
@@ -1983,9 +2010,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2018,10 +2045,10 @@ function buyDogeBoost(i) {
             // Calculate next cost based on upgrade type
             if (u.isClickUpgrade) {
                 // Manual hash: 1.75x multiplier
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             } else {
                 // Other miners: 1.15x multiplier
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             }
         }
 
@@ -2037,9 +2064,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2207,9 +2234,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2238,9 +2265,9 @@ ethUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             }
         }
 
@@ -2256,9 +2283,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2405,9 +2432,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2436,9 +2463,9 @@ dogeUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             }
         }
 
@@ -2454,9 +2481,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2614,6 +2641,7 @@ dogeUpgrades.forEach(u => {
 
     // Initialize all shops after DOM is ready
     function initializeGame() {
+        console.log('🎮 initializeGame() STARTED');
         // Test localStorage availability
         try {
             localStorage.setItem('test', 'test');
@@ -2625,10 +2653,15 @@ dogeUpgrades.forEach(u => {
         }
 
         try {
+            console.log('🛒 Initializing shops...');
             initBtcShop();
+            console.log('✓ BTC shop done');
             initEthShop();
+            console.log('✓ ETH shop done');
             initDogeShop();
+            console.log('✓ DOGE shop done');
             initPowerShop();
+            console.log('✓ Power shop done');
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
@@ -2641,7 +2674,7 @@ dogeUpgrades.forEach(u => {
         updateStakingUI();
 
         // Check if instructions were dismissed
-        if (localStorage.getItem('instructionsDismissed') === 'true') {
+        if (window.safeStorage.getItem('instructionsDismissed') === 'true') {
             const instructionsEl = document.getElementById('game-instructions');
             if (instructionsEl) {
                 instructionsEl.style.display = 'none';
@@ -2683,6 +2716,17 @@ dogeUpgrades.forEach(u => {
 
         // Function to initialize the chart
         const initChart = () => {
+            // Destroy existing chart instance if it exists
+            if (window.nwChartInstance) {
+                try {
+                    window.nwChartInstance.destroy();
+                    console.log('Destroyed existing chart instance');
+                } catch (e) {
+                    console.error('Error destroying chart:', e);
+                }
+                window.nwChartInstance = null;
+            }
+
             const ctx = canvasElement.getContext('2d');
             console.log('Canvas context:', ctx);
 
@@ -2739,6 +2783,14 @@ dogeUpgrades.forEach(u => {
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
+                    layout: {
+                        padding: {
+                            left: 5,
+                            right: 5,
+                            top: 10,
+                            bottom: 20
+                        }
+                    },
                     scales: {
                         x: {
                             display: false,
@@ -2785,6 +2837,9 @@ dogeUpgrades.forEach(u => {
                 console.log('Chart object created:', nwChart);
                 console.log('Chart initialized with data:', chartHistory);
 
+                // Store globally so we can destroy it later
+                window.nwChartInstance = nwChart;
+
                 // Force an immediate render
                 try {
                     nwChart.update();
@@ -2806,10 +2861,16 @@ dogeUpgrades.forEach(u => {
         let chartInitialized = false;
 
         const tryInitChart = () => {
+            // Don't try to initialize if already successful
+            if (chartInitialized) {
+                console.log('⚠️ Chart already initialized, skipping duplicate initialization');
+                return;
+            }
+
             nwChart = initChart();
             if (nwChart) {
                 chartInitialized = true;
-                console.log('Chart successfully initialized');
+                console.log('✅ Chart successfully initialized');
             }
         };
 
@@ -2820,11 +2881,11 @@ dogeUpgrades.forEach(u => {
             // Retry with delays (especially important for mobile)
             if (!chartInitialized) {
                 console.log('Chart init failed, retrying with delays...');
-                setTimeout(tryInitChart, 200);
-                setTimeout(tryInitChart, 500);
-                setTimeout(tryInitChart, 1000);
-                setTimeout(tryInitChart, 2000); // Extra retry for slow mobile devices
-                setTimeout(tryInitChart, 3000); // Final attempt
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 200);
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 500);
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 1000);
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 2000); // Extra retry for slow mobile devices
+                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 3000); // Final attempt
             }
         }, 100); // Small initial delay to ensure DOM is fully rendered
 
@@ -2841,6 +2902,26 @@ dogeUpgrades.forEach(u => {
                 }
             }, 300);
         });
+
+        // Expose function to reinitialize chart (called when switching accounts)
+        window.reinitializeChart = function() {
+            console.log('🔄 Reinitializing chart for account switch...');
+            if (nwChart) {
+                try {
+                    nwChart.destroy();
+                    console.log('✅ Old chart destroyed');
+                } catch (e) {
+                    console.warn('⚠️ Error destroying old chart:', e);
+                }
+                nwChart = null;
+            }
+            chartInitialized = false;
+            // Small delay to ensure clean state
+            setTimeout(() => {
+                tryInitChart();
+                console.log('✅ Chart reinitialized with new data');
+            }, 100);
+        };
 
         let updateCount = 0;
         setInterval(() => {
@@ -2896,9 +2977,11 @@ dogeUpgrades.forEach(u => {
     }
 
     // Save game when page becomes hidden (mobile browser close, tab switch, etc.)
+    let pageHiddenTime = null;
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             console.log('Page hidden - saving game state');
+            pageHiddenTime = Date.now();
             try {
                 saveGame();
                 console.log('Save successful on visibility change');
@@ -2907,12 +2990,28 @@ dogeUpgrades.forEach(u => {
             }
         } else {
             console.log('Page visible - checking saved data exists');
-            const testSave = localStorage.getItem('satoshiTerminalSave');
+            const testSave = window.safeStorage.getItem('satoshiTerminalSave');
             if (testSave) {
-                console.log('Save data confirmed in localStorage');
+                console.log('Save data confirmed in storage');
             } else {
-                console.error('WARNING: No save data found in localStorage!');
+                console.error('WARNING: No save data found in storage!');
             }
+
+            // Update leaderboard only if user was away for 6+ hours
+            if (typeof window.updateLeaderboard === 'function' && auth && auth.currentUser && !auth.currentUser.isAnonymous) {
+                const timeAway = pageHiddenTime ? (Date.now() - pageHiddenTime) / 1000 : 0;
+                const SIX_HOURS = 6 * 60 * 60; // 6 hours in seconds
+
+                if (timeAway >= SIX_HOURS) {
+                    console.log('🏆 Updating leaderboard (user was away for ' + Math.floor(timeAway / 3600) + ' hours)');
+                    window.updateLeaderboard().catch(err => {
+                        console.warn('⚠️ Leaderboard update failed:', err);
+                    });
+                } else {
+                    console.log('ℹ️ Skipping leaderboard update (only updates after 6+ hours away, login, or logout)');
+                }
+            }
+            pageHiddenTime = null;
         }
     });
 
@@ -2922,6 +3021,21 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on beforeunload');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on beforeunload...');
+                try {
+                    // Use synchronous approach with fetch API to ensure save completes
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on beforeunload');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on beforeunload (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on beforeunload:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on beforeunload:', err);
         }
@@ -2933,6 +3047,20 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on pagehide');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on pagehide...');
+                try {
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on pagehide');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on pagehide (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on pagehide:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on pagehide:', err);
         }
@@ -2944,6 +3072,20 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on freeze');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on freeze...');
+                try {
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on freeze');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on freeze (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on freeze:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on freeze:', err);
         }
@@ -2951,12 +3093,12 @@ dogeUpgrades.forEach(u => {
 
     // Age disclaimer modal handling
     function acceptAgeDisclaimer() {
-        localStorage.setItem('ageDisclaimerAccepted', 'true');
+        window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
         document.getElementById('age-disclaimer-modal').style.display = 'none';
     }
 
     function checkAgeDisclaimer() {
-        const accepted = localStorage.getItem('ageDisclaimerAccepted');
+        const accepted = window.safeStorage.getItem('ageDisclaimerAccepted');
         if (!accepted) {
             document.getElementById('age-disclaimer-modal').style.display = 'flex';
         }
@@ -2983,15 +3125,31 @@ dogeUpgrades.forEach(u => {
     window.initDogeShop = initDogeShop;
     window.initPowerShop = initPowerShop;
     window.updateAutoClickerButtonState = updateAutoClickerButtonState;
-    window.updateDisplay = updateDisplay;
-    window.updateUpgradeUI = updateUpgradeUI;
+    // window.updateDisplay = updateDisplay; // REMOVED: function doesn't exist
+    // window.updateUpgradeUI = updateUpgradeUI; // REMOVED: function doesn't exist
     window.updateUI = updateUI;
+    window.switchTab = switchTab;
+    window.setBuyQuantity = setBuyQuantity;
+    window.startAutoClicker = startAutoClicker;
+    window.toggleMute = toggleMute;
+    window.sellBTC = sellBTC;
+    window.sellAllBTC = sellAllBTC;
+    window.sellETH = sellETH;
+    window.sellAllETH = sellAllETH;
+    window.sellDOGE = sellDOGE;
+    window.sellAllDOGE = sellAllDOGE;
+    window.dismissInstructions = dismissInstructions;
+    window.resetEarningsStats = resetEarningsStats;
+    window.resetGame = resetGame;
+    window.saveGame = saveGame;
 
     // Verify functions are accessible
     console.log('✅ GAME.JS LOADED - Functions exported to window:');
     console.log('  manualHash:', typeof window.manualHash === 'function' ? 'READY ✓' : 'MISSING ✗');
     console.log('  manualEthHash:', typeof window.manualEthHash === 'function' ? 'READY ✓' : 'MISSING ✗');
     console.log('  manualDogeHash:', typeof window.manualDogeHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  switchTab:', typeof window.switchTab === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  toggleMute:', typeof window.toggleMute === 'function' ? 'READY ✓' : 'MISSING ✗');
 
     // Expose game variables globally for Firebase save/load
     // This creates a getter/setter interface so firebase-save.js can access the closure variables
