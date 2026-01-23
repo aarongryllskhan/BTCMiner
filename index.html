@@ -159,7 +159,7 @@
                 <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                     <button id="login-btn" style="background: #f7931a; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="showLoginScreen()">LOGIN / SIGN UP</button>
                     <button style="background: #FFD700; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openLeaderboardModal()">🏆 LEADERBOARD</button>
-                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
+                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;">SOUND ON</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='block'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
@@ -794,29 +794,42 @@
         };
     }
 
-    // Fix event listeners after DOM is fully loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔧 Attaching event listeners...');
-
-        // Fix mute button - attach programmatically instead of inline onclick
+    // Fix event listeners - wait for game.js to load completely
+    function attachMuteButtonListener() {
         const muteBtn = document.getElementById('mute-btn');
-        if (muteBtn) {
+        if (muteBtn && typeof window.toggleMute === 'function') {
             // Remove inline onclick to prevent conflicts
             muteBtn.removeAttribute('onclick');
 
             muteBtn.addEventListener('click', function() {
                 console.log('🔊 Mute button clicked!');
-                if (typeof window.toggleMute === 'function') {
-                    window.toggleMute();
-                    console.log('✅ toggleMute called successfully');
-                } else {
-                    console.error('❌ toggleMute function not available!');
-                }
+                window.toggleMute();
+                console.log('✅ toggleMute called successfully');
             });
             console.log('✅ Mute button listener attached');
-        } else {
-            console.error('❌ Mute button not found in DOM');
+            return true;
         }
+        return false;
+    }
+
+    // Try attaching after DOM loads with retries for game.js
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔧 Attaching event listeners...');
+
+        // Retry logic to wait for game.js to load
+        let retries = 0;
+        const maxRetries = 20; // Try for 2 seconds
+        const retryInterval = setInterval(function() {
+            if (attachMuteButtonListener()) {
+                clearInterval(retryInterval);
+            } else {
+                retries++;
+                if (retries >= maxRetries) {
+                    console.error('❌ Failed to attach mute button listener - toggleMute not available after retries');
+                    clearInterval(retryInterval);
+                }
+            }
+        }, 100);
     });
 </script>
 

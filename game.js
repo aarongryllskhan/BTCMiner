@@ -3222,6 +3222,10 @@ dogeUpgrades.forEach(u => {
         get: () => autoClickerCooldownEnd,
         set: (val) => { autoClickerCooldownEnd = val; }
     });
+    Object.defineProperty(window, 'lifetimeEarnings', {
+        get: () => lifetimeEarnings,
+        set: (val) => { lifetimeEarnings = val; }
+    });
 
     // Expose arrays/objects
     Object.defineProperty(window, 'powerUpgrades', {
