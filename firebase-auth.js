@@ -455,15 +455,37 @@ async function logoutUser() {
 
         showMessage('Logged out successfully', 'success');
 
-        // Clear local game data
-        // Clear localStorage to prevent data leaking to next user
-        console.log('🗑️ Clearing localStorage...');
+        // Clear local game data while preserving onboarding and cookie flags
+        // We keep these so users don't have to re-accept on every account switch
+        console.log('🗑️ Clearing localStorage (preserving onboarding & cookie flags)...');
         try {
+            // Save flags that should persist across account switches
+            const ageDisclaimerAccepted = localStorage.getItem('ageDisclaimerAccepted');
+            const termsAccepted = localStorage.getItem('termsAccepted');
+            const cookieConsent = localStorage.getItem('cookieConsent');
+            const cookieConsentDate = localStorage.getItem('cookieConsentDate');
+
+            // Clear all localStorage
             localStorage.clear();
+
+            // Restore flags that should persist across account switches
+            if (ageDisclaimerAccepted) {
+                localStorage.setItem('ageDisclaimerAccepted', ageDisclaimerAccepted);
+            }
+            if (termsAccepted) {
+                localStorage.setItem('termsAccepted', termsAccepted);
+            }
+            if (cookieConsent) {
+                localStorage.setItem('cookieConsent', cookieConsent);
+            }
+            if (cookieConsentDate) {
+                localStorage.setItem('cookieConsentDate', cookieConsentDate);
+            }
+
+            console.log('✅ localStorage cleared (onboarding & cookie flags preserved)');
         } catch (e) {
             console.warn('⚠️ Could not clear localStorage (may be in private mode)');
         }
-        console.log('✅ localStorage cleared');
 
         // Reset login iframe to clear form state
         const loginScreenDiv = document.getElementById('login-screen');
