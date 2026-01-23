@@ -2788,7 +2788,7 @@ dogeUpgrades.forEach(u => {
                             left: 5,
                             right: 5,
                             top: 10,
-                            bottom: 15
+                            bottom: 20
                         }
                     },
                     scales: {

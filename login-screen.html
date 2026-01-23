@@ -678,6 +678,19 @@
                             console.log('🔄 Resetting game variables for offline mode...');
                             window.parent.resetGameVariables();
                         }
+
+                        // Check if onboarding needs to be shown
+                        const ageAccepted = window.parent.safeStorage.getItem('ageDisclaimerAccepted');
+                        const termsAccepted = window.parent.safeStorage.getItem('termsAccepted');
+                        const bothAccepted = ageAccepted && termsAccepted;
+
+                        if (!bothAccepted) {
+                            console.log('📋 Showing onboarding modal after offline mode');
+                            const onboardingModal = window.parent.document.getElementById('onboarding-modal');
+                            if (onboardingModal) {
+                                onboardingModal.classList.add('show');
+                            }
+                        }
                     }, 50);
                 }
             } catch (error) {

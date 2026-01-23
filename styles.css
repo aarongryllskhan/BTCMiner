@@ -170,10 +170,10 @@
                 min-height: clamp(100px, 25vh, 200px) !important;
                 height: clamp(100px, 25vh, 200px) !important;
                 flex: 0 0 auto !important;
-                padding: clamp(4px, 1vw, 8px);
+                padding: clamp(8px, 1vw, 12px) clamp(4px, 1vw, 8px) clamp(12px, 2vw, 20px) clamp(4px, 1vw, 8px);
                 display: block !important;
                 margin-top: clamp(4px, 1vw, 8px);
-                overflow: hidden;
+                overflow: visible;
                 position: relative;
             }
 
@@ -299,7 +299,8 @@
                 flex: 0 0 auto !important;
                 display: block !important;
                 margin-top: clamp(2px, 1vw, 6px);
-                overflow: hidden;
+                padding: clamp(6px, 1vw, 10px) clamp(4px, 1vw, 8px) clamp(10px, 2vw, 15px) clamp(4px, 1vw, 8px);
+                overflow: visible;
                 position: relative;
             }
 
@@ -431,13 +432,14 @@
         .chart-wrapper {
             flex: 1;
             min-height: 200px;
+            max-height: 400px;
             background: #0a0a0a;
             border-radius: 8px;
             border: 1px solid #1a1a1a;
             position: relative;
             margin-top: 10px;
             margin-bottom: 20px;
-            padding: 15px 10px 20px 10px;
+            padding: 15px 10px 30px 10px;
         }
 
         #nwChart {

@@ -60,6 +60,21 @@ function onUserLogin(user) {
 
     // Update UI with user info
     updateUserUI(user);
+
+    // Check if onboarding (age + terms) has been accepted
+    setTimeout(() => {
+        const ageAccepted = window.safeStorage.getItem('ageDisclaimerAccepted');
+        const termsAccepted = window.safeStorage.getItem('termsAccepted');
+        const bothAccepted = ageAccepted && termsAccepted;
+
+        if (!bothAccepted) {
+            console.log('📋 Showing onboarding modal after login');
+            const onboardingModal = document.getElementById('onboarding-modal');
+            if (onboardingModal) {
+                onboardingModal.classList.add('show');
+            }
+        }
+    }, 300);
 }
 
 // Called when user logs out
