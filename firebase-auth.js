@@ -1383,39 +1383,36 @@ function setupAuthListener() {
 
                 console.log('✅ Game data loaded successfully');
 
-                    // Re-initialize the game UI after loading
-                    if (typeof window.initializeGame === 'function') {
-                        console.log('Re-initializing game shops and UI...');
-                        try {
-                            // Initialize shops and UI elements
-                            if (typeof window.initBtcShop === 'function') window.initBtcShop();
-                            if (typeof window.initEthShop === 'function') window.initEthShop();
-                            if (typeof window.initDogeShop === 'function') window.initDogeShop();
-                            if (typeof window.initPowerShop === 'function') window.initPowerShop();
-                            if (typeof window.updateAutoClickerButtonState === 'function') window.updateAutoClickerButtonState();
+                // Re-initialize the game UI after loading
+                if (typeof window.initializeGame === 'function') {
+                    console.log('Re-initializing game shops and UI...');
+                    try {
+                        // Initialize shops and UI elements
+                        if (typeof window.initBtcShop === 'function') window.initBtcShop();
+                        if (typeof window.initEthShop === 'function') window.initEthShop();
+                        if (typeof window.initDogeShop === 'function') window.initDogeShop();
+                        if (typeof window.initPowerShop === 'function') window.initPowerShop();
+                        if (typeof window.updateAutoClickerButtonState === 'function') window.updateAutoClickerButtonState();
 
-                            // Reinitialize chart with loaded data
-                            if (typeof window.reinitializeChart === 'function') {
-                                console.log('Re-initializing chart with loaded data...');
-                                window.reinitializeChart();
-                            }
-
-                            // Force display update
-                            if (typeof window.updateDisplay === 'function') {
-                                console.log('Updating display...');
-                                window.updateDisplay();
-                            }
-
-                            console.log('✅ Game shops and UI re-initialized');
-                        } catch (initError) {
-                            console.error('⚠️ Error re-initializing shops:', initError);
+                        // Reinitialize chart with loaded data
+                        if (typeof window.reinitializeChart === 'function') {
+                            console.log('Re-initializing chart with loaded data...');
+                            window.reinitializeChart();
                         }
+
+                        // Force display update
+                        if (typeof window.updateDisplay === 'function') {
+                            console.log('Updating display...');
+                            window.updateDisplay();
+                        }
+
+                        console.log('✅ Game shops and UI re-initialized');
+                    } catch (initError) {
+                        console.error('⚠️ Error re-initializing shops:', initError);
                     }
-                } catch (error) {
-                    console.error('❌ Failed to load game data:', error);
                 }
-            } else {
-                console.warn('⚠️ loadGameFromCloud function not available');
+            } catch (error) {
+                console.error('❌ Failed to load game data:', error);
             }
 
             // Start leaderboard updates
