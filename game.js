@@ -2783,6 +2783,14 @@ dogeUpgrades.forEach(u => {
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
+                    layout: {
+                        padding: {
+                            left: 5,
+                            right: 5,
+                            top: 10,
+                            bottom: 15
+                        }
+                    },
                     scales: {
                         x: {
                             display: false,
