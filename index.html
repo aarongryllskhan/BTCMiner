@@ -71,7 +71,7 @@
 
     <!-- Login Screen (Firebase) -->
     <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 100000; overflow: auto;">
-        <iframe src="login-screen.html" style="width: 100%; height: 100%; border: none;"></iframe>
+        <iframe src="login-screen.html?v=20260123044550" style="width: 100%; height: 100%; border: none;"></iframe>
     </div>
 
     <!-- Consolidated Onboarding Modal (Age + Terms) -->
@@ -98,7 +98,7 @@
                     By continuing, you agree to our Terms & Conditions. <a href="#" onclick="openPrivacyModal(); switchPolicyTab('terms'); return false;" style="color: #f7931a; text-decoration: underline;">Read full terms</a>
                 </p>
                 <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 6px; padding: 12px; max-height: 180px; overflow-y: auto; text-align: left;">
-                    <iframe id="terms-preview" src="terms.html" style="width: 100%; height: 160px; border: none; background: transparent;"></iframe>
+                    <iframe id="terms-preview" src="terms.html?v=20260123040255" style="width: 100%; height: 160px; border: none; background: transparent;"></iframe>
                 </div>
             </div>
 
@@ -150,7 +150,7 @@
                     CONTACT
                 </button>
             </div>
-            <iframe id="privacy-iframe" src="privacy.html" style="width: 100%; height: 80vh; border: none;"></iframe>
+            <iframe id="privacy-iframe" src="privacy.html?v=20260123040255" style="width: 100%; height: 80vh; border: none;"></iframe>
         </div>
     </div>
 
@@ -639,19 +639,19 @@
         contactTab.style.color = '#000';
 
         if (tab === 'privacy') {
-            iframe.src = 'privacy.html';
+            iframe.src = 'privacy.html?v=20260123040255';
             privacyTab.style.background = '#f7931a';
             privacyTab.style.color = '#000';
         } else if (tab === 'cookies') {
-            iframe.src = 'cookies.html';
+            iframe.src = 'cookies.html?v=20260123040255';
             cookiesTab.style.background = '#f7931a';
             cookiesTab.style.color = '#000';
         } else if (tab === 'terms') {
-            iframe.src = 'terms.html';
+            iframe.src = 'terms.html?v=20260123040255';
             termsTab.style.background = '#f7931a';
             termsTab.style.color = '#000';
         } else if (tab === 'contact') {
-            iframe.src = 'contact.html';
+            iframe.src = 'contact.html?v=20260123040255';
             contactTab.style.background = '#f7931a';
             contactTab.style.color = '#000';
         }
