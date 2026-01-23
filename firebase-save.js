@@ -319,7 +319,10 @@ async function loadGameFromCloud(userId = null) {
             // Same account - prefer local save if it exists
             // Local saves are more recent (they happen every action)
             // Cloud saves are less frequent (every 20 mins)
-            const localSaveExists = localStorage.getItem('satoshiTerminalSave') !== null;
+            const localSaveData = window.safeStorage ? window.safeStorage.getItem('satoshiTerminalSave') : localStorage.getItem('satoshiTerminalSave');
+            const localSaveExists = localSaveData !== null && localSaveData !== undefined;
+
+            console.log('🔍 Checking for local save: ' + (localSaveExists ? 'FOUND' : 'NOT FOUND'));
 
             if (localSaveExists) {
                 console.log('🏠 Local save found - using local save (you have unsaved progress since last auto-save)');
