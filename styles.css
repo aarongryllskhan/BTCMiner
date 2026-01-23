@@ -1,3 +1,25 @@
+        /* ================================================
+           RESPONSIVE LAYOUT SYSTEM
+           ================================================
+
+           MOBILE vs DESKTOP DETECTION:
+           Primary: Orientation (portrait = mobile, landscape = desktop)
+           Secondary: Screen width for edge cases
+
+           MOBILE LAYOUT:
+           - Portrait orientation (width < height) = Single column
+           - Landscape but <2000px wide = Single column
+           - Elements stack vertically: Graph on top, Upgrades below
+           - Includes: All phones (up to ~1440px width)
+
+           DESKTOP LAYOUT:
+           - Landscape orientation (width > height) AND 2000px+ = Two columns
+           - Left panel (graph) takes 7fr, Right panel (upgrades) takes 3fr
+           - Side-by-side display
+           - Only true desktop/large monitor widths (2000px+)
+
+           ================================================ */
+
         :root {
             --btc: #f7931a;
             --bg: #050505;
@@ -12,7 +34,7 @@
 
         html {
             width: 100%;
-            overflow-x: hidden;
+            overflow-x: hidden !important;
             font-size: clamp(12px, 2.5vw, 16px);
         }
 
@@ -20,12 +42,13 @@
             font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg);
             color: #fff;
-            margin: 0;
+            margin: 0 !important;
             padding: var(--base-padding);
             box-sizing: border-box;
-            width: 100%;
-            max-width: 100%;
-            overflow-x: hidden;
+            width: 100% !important;
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
+            overflow-y: auto;
             min-height: 100vh;
         }
 
@@ -47,21 +70,33 @@
         }
 
         #main-layout {
-            display: flex;
-            flex-direction: column;
+            display: flex !important;
+            flex-direction: column !important;
             gap: var(--gap-size);
-            height: auto;
+            height: auto !important;
             box-sizing: border-box;
             position: relative;
             z-index: 1;
-            width: 100%;
-            max-width: 100%;
+            width: 100% !important;
+            max-width: 100% !important;
+            grid-template-columns: unset !important;
         }
 
-        /* Desktop: 2-column grid layout */
-        @media (min-width: 1441px) {
+        /* Mobile: Portrait orientation ALWAYS single column */
+        @media (orientation: portrait) {
             #main-layout {
-                display: grid;
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+                grid-template-columns: unset !important;
+            }
+        }
+
+        /* Desktop: 2-column grid layout - ONLY on landscape orientation AND wide (2000px+) */
+        /* Most mobile resolutions are below 2000px, so this threshold ensures only true desktops */
+        @media (min-width: 2000px) and (orientation: landscape) {
+            #main-layout {
+                display: grid !important;
                 grid-template-columns: 7fr 3fr;
                 height: calc(100vh - calc(var(--base-padding) * 2));
             }
@@ -76,10 +111,12 @@
             padding: var(--base-padding);
             position: relative;
             overflow-y: auto;
-            overflow-x: hidden;
+            overflow-x: hidden !important;
             min-height: 0;
-            width: 100%;
-            margin: 0;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            box-sizing: border-box;
         }
 
         /* Stat box sizing for all mobile/tablet sizes */

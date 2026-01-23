@@ -1024,25 +1024,50 @@
 <!-- Load leaderboard system -->
 <script src="leaderboard.js?v=20260123063136"></script>
 
-<!-- Mobile Layout Enforcer - Minimal intervention, CSS-first approach -->
+<!-- Mobile Layout Enforcer - Portrait = Mobile, Landscape = Desktop -->
 <script>
     function enforceMobileLayout() {
         const width = window.innerWidth;
+        const height = window.innerHeight;
+        const isPortrait = width < height;  // Portrait = Mobile (most phones)
+        const isLandscape = width > height;  // Landscape = Desktop
         const mainLayout = document.getElementById('main-layout');
 
         if (!mainLayout) return;
 
-        // Log viewport for debugging
-        console.log('📱 Viewport: ' + width + 'px');
+        // Detailed logging to distinguish mobile vs desktop
+        const orientation = isPortrait ? '📱 PORTRAIT (MOBILE)' : '🖥️ LANDSCAPE (DESKTOP)';
+        const size = width + 'x' + height + 'px';
+        console.log('📊 LAYOUT DETECTION: ' + orientation + ' | ' + size);
 
-        // Only clear inline styles that might override CSS media queries
-        // CSS media queries will handle the actual layout
-        if (width <= 1440) {
-            // Mobile: ensure no inline styles are forcing grid
-            mainLayout.style.gridTemplateColumns = '';
-            mainLayout.style.display = '';
-            mainLayout.style.height = '';
-            mainLayout.style.flexDirection = '';
+        // PRIMARY RULE: Portrait orientation = Mobile (single column)
+        // Portrait is the key indicator since most phones are used in portrait mode
+        if (isPortrait) {
+            console.log('✅ PORTRAIT MODE DETECTED → Single-Column Mobile Layout');
+            mainLayout.style.setProperty('display', 'flex', 'important');
+            mainLayout.style.setProperty('flex-direction', 'column', 'important');
+            mainLayout.style.setProperty('height', 'auto', 'important');
+            mainLayout.style.setProperty('grid-template-columns', 'unset', 'important');
+            mainLayout.style.setProperty('width', '100%', 'important');
+            mainLayout.style.setProperty('max-width', '100%', 'important');
+        }
+        // SECONDARY RULE: Landscape + NOT wide enough = still mobile
+        // Most mobile resolutions are below 2000px width, so use that as threshold
+        else if (isLandscape && width < 2000) {
+            console.log('✅ LANDSCAPE BUT NARROW (<2000px) → Single-Column Mobile Layout');
+            mainLayout.style.setProperty('display', 'flex', 'important');
+            mainLayout.style.setProperty('flex-direction', 'column', 'important');
+            mainLayout.style.setProperty('height', 'auto', 'important');
+            mainLayout.style.setProperty('grid-template-columns', 'unset', 'important');
+            mainLayout.style.setProperty('width', '100%', 'important');
+            mainLayout.style.setProperty('max-width', '100%', 'important');
+        }
+        // DESKTOP RULE: Landscape + Wide (2000px+) = 2-column grid
+        else if (isLandscape && width >= 2000) {
+            console.log('✅ LANDSCAPE & WIDE (≥2000px) → Two-Column Desktop Layout');
+            mainLayout.style.setProperty('display', 'grid', 'important');
+            mainLayout.style.setProperty('grid-template-columns', '7fr 3fr', 'important');
+            mainLayout.style.setProperty('height', 'calc(100vh - calc(var(--base-padding) * 2))', 'important');
         }
     }
 
@@ -1055,6 +1080,12 @@
 
     // Apply on window resize
     window.addEventListener('resize', enforceMobileLayout);
+
+    // Critical for mobile: respond to orientation changes
+    window.addEventListener('orientationchange', function() {
+        console.log('🔄 Orientation changed, re-applying layout...');
+        setTimeout(enforceMobileLayout, 100);
+    });
 </script>
 
 <!-- Initialize Firebase -->
