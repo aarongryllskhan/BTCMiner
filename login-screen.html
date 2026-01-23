@@ -525,7 +525,14 @@
                     window.parent.document.getElementById('login-screen').style.display = 'none';
                     const mainLayout = window.parent.document.getElementById('main-layout');
                     if (mainLayout) {
+                        // Reset CSS to ensure proper grid layout
                         mainLayout.style.display = 'grid';
+                        mainLayout.style.gridTemplateColumns = '7fr 3fr';
+                        mainLayout.style.gap = '20px';
+                        mainLayout.style.height = 'calc(100vh - 40px)';
+                        mainLayout.style.boxSizing = 'border-box';
+                        mainLayout.style.position = 'relative';
+                        mainLayout.style.zIndex = '1';
                         // RE-ENABLE INTERACTION on main layout
                         mainLayout.style.pointerEvents = 'auto';
                         mainLayout.style.userSelect = 'auto';

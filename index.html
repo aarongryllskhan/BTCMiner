@@ -578,43 +578,74 @@
     function acceptOnboarding() {
         localStorage.setItem('ageDisclaimerAccepted', 'true');
         localStorage.setItem('termsAccepted', 'true');
-        document.getElementById('onboarding-modal').style.display = 'none';
 
-        // Ensure main layout is visible and interactive
+        // Hide onboarding modal
+        const onboardingModal = document.getElementById('onboarding-modal');
+        if (onboardingModal) {
+            onboardingModal.style.display = 'none';
+        }
+
+        // Ensure main layout is visible and interactive with all CSS resets
         const mainLayout = document.getElementById('main-layout');
         if (mainLayout) {
+            // Clear all inline styles that might be interfering
+            mainLayout.style.cssText = '';
+
+            // Reset to default grid layout
             mainLayout.style.display = 'grid';
+            mainLayout.style.gridTemplateColumns = '7fr 3fr';
+            mainLayout.style.gap = '20px';
+            mainLayout.style.height = 'calc(100vh - 40px)';
+            mainLayout.style.boxSizing = 'border-box';
+            mainLayout.style.position = 'relative';
+            mainLayout.style.zIndex = '1';
             mainLayout.style.pointerEvents = 'auto';
             mainLayout.style.userSelect = 'auto';
             mainLayout.style.visibility = 'visible';
             mainLayout.style.opacity = '1';
 
-            // Force layout recalculation by triggering reflow
-            mainLayout.offsetHeight; // This forces a reflow
+            // Force layout recalculation
+            void mainLayout.offsetHeight;
+            void mainLayout.offsetWidth;
         }
 
-        // Trigger chart redraw and panel refresh
+        // Refresh all panels
         setTimeout(() => {
-            // Redraw all panels to ensure they're visible
             const panels = document.querySelectorAll('.panel');
             panels.forEach(panel => {
+                // Reset panel styles
                 panel.style.visibility = 'visible';
-                panel.style.display = window.getComputedStyle(panel).display || 'block';
+                panel.style.display = 'flex';
+                panel.style.flexDirection = 'column';
+                panel.style.opacity = '1';
+
+                // Force reflow
+                void panel.offsetHeight;
             });
 
-            // Trigger chart redraw in case it needs refreshing
+            // Trigger chart resize if it exists
             if (window.nwChartInstance && typeof window.nwChartInstance.resize === 'function') {
-                window.nwChartInstance.resize();
+                try {
+                    window.nwChartInstance.resize();
+                } catch (e) {
+                    console.warn('Chart resize failed:', e);
+                }
             }
 
-            // Update all game displays
+            // Update display if function exists
             if (typeof window.updateDisplay === 'function') {
-                window.updateDisplay();
+                try {
+                    window.updateDisplay();
+                } catch (e) {
+                    console.warn('updateDisplay failed:', e);
+                }
             }
-        }, 100);
+        }, 50);
 
         // Show cookie consent after onboarding is accepted
-        checkCookieConsent();
+        if (typeof checkCookieConsent === 'function') {
+            checkCookieConsent();
+        }
     }
 
     function declineOnboarding() {

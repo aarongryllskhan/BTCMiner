@@ -753,11 +753,18 @@ function setupAuthListener() {
             console.log('Main layout element found?', !!mainLayout);
             if (mainLayout) {
                 console.log('Showing main game layout...');
+                // Reset CSS to ensure proper grid layout
                 mainLayout.style.display = 'grid';
+                mainLayout.style.gridTemplateColumns = '7fr 3fr';
+                mainLayout.style.gap = '20px';
+                mainLayout.style.height = 'calc(100vh - 40px)';
                 mainLayout.style.pointerEvents = 'auto'; // Re-enable interaction
                 mainLayout.style.userSelect = 'auto'; // Re-enable text selection
                 mainLayout.style.visibility = 'visible'; // Ensure visibility
                 mainLayout.style.opacity = '1'; // Ensure full opacity
+
+                // Force layout recalculation
+                mainLayout.offsetHeight;
             }
 
             // Show onboarding modal if not accepted (age + terms)
