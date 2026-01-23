@@ -44,15 +44,20 @@ async function updateLeaderboard() {
             const userDoc = await db.collection('users').doc(user.uid).get();
             if (userDoc.exists && userDoc.data().username) {
                 username = userDoc.data().username;
-            } else if (user.displayName) {
-                username = user.displayName;
+                console.log('✅ Using Firestore username:', username);
             } else if (user.email) {
+                // Use email prefix as fallback (not full displayName)
                 username = user.email.split('@')[0];
+                console.log('⚠️ No Firestore username, using email prefix:', username);
+            } else if (user.displayName) {
+                // Last resort: use display name
+                username = user.displayName;
+                console.log('⚠️ Using displayName as last resort:', username);
             }
         } catch (error) {
             console.error('Failed to fetch username for leaderboard:', error);
-            // Fallback to displayName or email
-            username = user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous');
+            // Fallback to email prefix, not full displayName
+            username = user.email ? user.email.split('@')[0] : 'Anonymous';
         }
 
         // Get current lifetime earnings (use window accessor for closure variable)
