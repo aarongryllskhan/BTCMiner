@@ -117,7 +117,10 @@
             <button onclick="closeLeaderboardModal()" style="position: absolute; top: 15px; right: 15px; background: #f7931a; color: #000; border: none; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s; z-index: 1;">
                 CLOSE
             </button>
-            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">🏆 LEADERBOARD</h2>
+            <h2 style="color: #f7931a; margin-bottom: 10px; font-size: 2rem; text-align: center;">🏆 LEADERBOARD</h2>
+            <div id="leaderboard-refresh-info" style="text-align: center; color: #888; font-size: 0.75rem; margin-bottom: 15px; font-family: monospace;">
+                Updates every 10 minutes with cloud saves
+            </div>
             <div class="leaderboard-content" style="color: #fff;">
                 <div style="text-align: center; color: #888;">Loading leaderboard...</div>
             </div>
@@ -282,24 +285,24 @@
                             <div id="power-bar-fill" style="height: 100%; background: #00ff88; border-radius: 3px; width: 0%;"></div>
                         </div>
                     </div>
-                    <button class="tab-btn" onclick="switchTab('power', event)" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">UPGRADE POWER SUPPLY</button>
+                    <button class="tab-btn" onclick="switchTab('power', event)" title="Upgrade your power supply to support more mining equipment" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">UPGRADE POWER SUPPLY</button>
                 </div>
             </div>
 
             <!-- Dollar Balance Display -->
-            <div style="padding: 6px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 8px; text-align: center;">
+            <div title="Your USD earned from selling crypto. Game saves locally every second. Cloud saves every 10 min for multi-device access." style="padding: 6px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 8px; text-align: center; cursor: help;">
                 <span style="font-size: 0.6rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Cash Balance</span>
                 <b style="color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
             </div>
 
             <!-- Tab Buttons -->
             <div class="tab-buttons" style="margin-bottom: 6px;">
-                <button class="tab-btn active" onclick="switchTab('btc-mining', event)" style="border-color: #f7931a; color: #f7931a;">BTC</button>
-                <button class="tab-btn" onclick="switchTab('eth-mining', event)" style="border-color: #627eea; color: #627eea;">ETH</button>
-                <button class="tab-btn" onclick="switchTab('doge-mining', event)" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
+                <button class="tab-btn active" onclick="switchTab('btc-mining', event)" title="Mine Bitcoin - Click to earn, buy miners & upgrades" style="border-color: #f7931a; color: #f7931a;">BTC</button>
+                <button class="tab-btn" onclick="switchTab('eth-mining', event)" title="Mine Ethereum - Click to earn, buy miners & upgrades" style="border-color: #627eea; color: #627eea;">ETH</button>
+                <button class="tab-btn" onclick="switchTab('doge-mining', event)" title="Mine Dogecoin - Click to earn, buy miners & upgrades" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
             </div>
             <div class="tab-buttons">
-                <button class="tab-btn" onclick="switchTab('market', event)" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
+                <button class="tab-btn" onclick="switchTab('market', event)" title="Sell crypto for cash, stake coins to earn passive income" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
             </div>
 
             <!-- BTC Mining Tab -->

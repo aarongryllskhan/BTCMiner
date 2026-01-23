@@ -3,6 +3,11 @@
  * Tracks top players by lifetime earnings
  */
 
+// Cache management for leaderboard (reduces Firebase reads)
+let leaderboardCache = null;
+let leaderboardCacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 // Update player's leaderboard entry
 async function updateLeaderboard() {
     try {
@@ -35,9 +40,20 @@ async function updateLeaderboard() {
     }
 }
 
-// Fetch top 50 players
-async function fetchLeaderboard(limit = 50) {
+// Fetch top 10 players (optimized for free tier with caching)
+async function fetchLeaderboard(limit = 10, forceRefresh = false) {
     try {
+        // Check if we have valid cached data (less than 5 minutes old)
+        const now = Date.now();
+        const cacheAge = now - leaderboardCacheTimestamp;
+
+        if (!forceRefresh && leaderboardCache && cacheAge < CACHE_DURATION) {
+            console.log('📊 Using cached leaderboard (age: ' + Math.floor(cacheAge / 1000) + 's)');
+            return leaderboardCache;
+        }
+
+        // Cache is stale or doesn't exist, fetch fresh data
+        console.log('📡 Fetching fresh leaderboard from Firebase...');
         const snapshot = await db.collection('leaderboard')
             .orderBy('lifetimeEarnings', 'desc')
             .limit(limit)
@@ -55,12 +71,17 @@ async function fetchLeaderboard(limit = 50) {
             });
         });
 
-        console.log('📊 Fetched leaderboard:', leaderboard);
+        // Update cache
+        leaderboardCache = leaderboard;
+        leaderboardCacheTimestamp = now;
+
+        console.log('✅ Leaderboard cached (valid for ' + (CACHE_DURATION / 60000) + ' minutes)');
         return leaderboard;
 
     } catch (error) {
         console.error('❌ Leaderboard fetch error:', error);
-        return [];
+        // Return cached data if available, even if stale
+        return leaderboardCache || [];
     }
 }
 
@@ -94,13 +115,28 @@ async function getPlayerRank(userId = null) {
 // Display leaderboard modal
 async function openLeaderboardModal() {
     try {
-        const leaderboard = await fetchLeaderboard(50);
+        const leaderboard = await fetchLeaderboard(10); // Top 10 only (optimized for free tier)
         const playerRank = await getPlayerRank();
 
         const modal = document.getElementById('leaderboard-modal');
         if (!modal) {
             console.error('Leaderboard modal not found');
             return;
+        }
+
+        // Update refresh info
+        const refreshInfo = document.getElementById('leaderboard-refresh-info');
+        if (refreshInfo) {
+            const cacheAge = Math.floor((Date.now() - leaderboardCacheTimestamp) / 1000);
+            const cacheMinutes = Math.floor(cacheAge / 60);
+            const cacheSeconds = cacheAge % 60;
+            const cacheStatus = leaderboardCache ? `Last updated: ${cacheMinutes}m ${cacheSeconds}s ago` : 'Fetching fresh data...';
+            refreshInfo.innerHTML = `
+                ${cacheStatus} | Updates every 10 min with cloud saves
+                <button onclick="refreshLeaderboardNow()" style="margin-left: 10px; background: #00ff88; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 700;">
+                    🔄 Refresh Now
+                </button>
+            `;
         }
 
         // Build leaderboard HTML
@@ -212,17 +248,14 @@ function formatCurrency(value) {
 let leaderboardUpdateInterval;
 
 function startLeaderboardUpdates() {
-    // Update immediately
+    // Update immediately on login
     updateLeaderboard();
 
-    // Then update every 5 minutes
-    leaderboardUpdateInterval = setInterval(() => {
-        if (auth.currentUser) {
-            updateLeaderboard();
-        }
-    }, 300000); // 5 minutes
+    // NOTE: Leaderboard now updates automatically with cloud saves (every 10 minutes)
+    // No need for separate interval to reduce Firebase writes
+    // Keeping this function for future flexibility but not using interval
 
-    console.log('✅ Leaderboard auto-updates started');
+    console.log('✅ Leaderboard will update with cloud saves (every 10 minutes)');
 }
 
 function stopLeaderboardUpdates() {
@@ -233,11 +266,27 @@ function stopLeaderboardUpdates() {
     }
 }
 
+// Force refresh leaderboard (bypass cache)
+async function refreshLeaderboardNow() {
+    try {
+        console.log('🔄 Forcing leaderboard refresh...');
+        await fetchLeaderboard(10, true); // Force refresh
+        await openLeaderboardModal(); // Reopen with fresh data
+        console.log('✅ Leaderboard refreshed');
+    } catch (error) {
+        console.error('❌ Error refreshing leaderboard:', error);
+    }
+}
+
 // Export functions
+window.updateLeaderboard = updateLeaderboard;
+window.fetchLeaderboard = fetchLeaderboard;
+window.getPlayerRank = getPlayerRank;
 window.updateLeaderboard = updateLeaderboard;
 window.fetchLeaderboard = fetchLeaderboard;
 window.getPlayerRank = getPlayerRank;
 window.openLeaderboardModal = openLeaderboardModal;
 window.closeLeaderboardModal = closeLeaderboardModal;
+window.refreshLeaderboardNow = refreshLeaderboardNow;
 window.startLeaderboardUpdates = startLeaderboardUpdates;
 window.stopLeaderboardUpdates = stopLeaderboardUpdates;

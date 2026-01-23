@@ -110,11 +110,15 @@ function updateUserUI(user) {
 
     // Show "Link Account" button for guest users, or "Manual Save" for registered users
     const actionBtn = isGuest ? `
-        <button onclick="showLinkAccountModal()" style="background: #4CAF50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
+        <button onclick="showLinkAccountModal()"
+                title="Save your progress to the cloud for multi-device access. Your game saves locally automatically."
+                style="background: #4CAF50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
             ☁️ Save to Cloud
         </button>
     ` : `
-        <button id="manual-save-btn" onclick="manualSaveGame()" style="background: #f7931a; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
+        <button id="manual-save-btn" onclick="manualSaveGame()"
+                title="Manually save to cloud (10 min cooldown). Auto-saves every 10 minutes. Local saves happen automatically every second."
+                style="background: #f7931a; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
             ☁️ Save
         </button>
     `;
@@ -137,7 +141,7 @@ async function manualSaveGame() {
         btn.innerHTML = '☁️ Saving...';
     }
 
-    const success = await saveGameToCloud();
+    const success = await saveGameToCloud(true); // Pass true to indicate manual save
 
     if (btn) {
         if (success) {

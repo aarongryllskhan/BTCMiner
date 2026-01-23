@@ -3,14 +3,38 @@
  * Copyright © 2026 Aaron Khan. All Rights Reserved.
  */
 
+// Track last manual save time for cooldown
+let lastManualSaveTime = 0;
+const MANUAL_SAVE_COOLDOWN = 10 * 60 * 1000; // 10 minutes in milliseconds
+
 // Save game data to Firebase Cloud
-async function saveGameToCloud() {
+async function saveGameToCloud(isManualSave = false) {
     try {
         const user = auth.currentUser;
 
         if (!user) {
             console.log('⚠️ No user logged in - skipping cloud save');
+            showSaveMessage('You must be logged in to save to cloud. Your progress is saved locally.', 'warning');
             return false;
+        }
+
+        // Check cooldown for manual saves only (auto-saves bypass this)
+        if (isManualSave) {
+            const now = Date.now();
+            const timeSinceLastSave = now - lastManualSaveTime;
+
+            if (timeSinceLastSave < MANUAL_SAVE_COOLDOWN) {
+                const remainingSeconds = Math.ceil((MANUAL_SAVE_COOLDOWN - timeSinceLastSave) / 1000);
+                const remainingMinutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                showSaveMessage(
+                    `Please wait ${remainingMinutes}m ${seconds}s before manually saving again. Auto-save is active every 10 minutes.`,
+                    'info'
+                );
+                return false;
+            }
+
+            lastManualSaveTime = now;
         }
 
         // Gather game data from your existing game variables (use window accessors for closure variables)
@@ -115,8 +139,9 @@ async function saveGameToCloud() {
 
         console.log('✅ Game saved to cloud successfully');
 
-        // Show subtle save indicator
+        // Show subtle save indicator with timestamp
         showSaveIndicator();
+        updateLastSaveTime();
 
         return true;
 
@@ -479,14 +504,19 @@ function startAutoSave() {
         clearInterval(autoSaveInterval);
     }
 
-    // Save every 10 seconds when user is logged in
+    // Save every 10 minutes when user is logged in (optimized for free tier with headroom)
+    // With 500 concurrent users:
+    // - 6 saves/hour/user × 3 writes/save = 18 writes/hour/user
+    // - 500 users × 18 = 9,000 writes/hour
+    // - If average session is 1 hour: 9,000 writes/day ✓ (45% of limit, 55% headroom)
+    // - Saves on: login, auto-save (10 min), page close, manual save button
     autoSaveInterval = setInterval(async () => {
         if (auth.currentUser) {
             await saveGameToCloud();
         }
-    }, 10000); // 10 seconds
+    }, 600000); // 10 minutes (600 seconds)
 
-    console.log('✅ Auto-save started (every 10 seconds)');
+    console.log('✅ Auto-save started (every 10 minutes)');
 }
 
 function stopAutoSave() {
@@ -529,6 +559,80 @@ function showSaveIndicator() {
     setTimeout(() => {
         indicator.style.opacity = '0';
     }, 2000);
+}
+
+// Show save messages to user
+function showSaveMessage(message, type = 'info') {
+    let messageDiv = document.getElementById('save-message');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'save-message';
+        document.body.appendChild(messageDiv);
+    }
+
+    const colors = {
+        success: '#00ff88',
+        error: '#ff3344',
+        info: '#f7931a',
+        warning: '#ff9800'
+    };
+
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.95);
+        color: ${colors[type] || colors.info};
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        z-index: 99998;
+        border: 2px solid ${colors[type] || colors.info};
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        max-width: 400px;
+        text-align: center;
+        font-family: monospace;
+    `;
+
+    messageDiv.textContent = message;
+    messageDiv.style.opacity = '1';
+
+    setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 4000);
+}
+
+// Update last save time indicator
+function updateLastSaveTime() {
+    let indicator = document.getElementById('last-save-indicator');
+
+    if (!indicator) {
+        // Create the indicator if it doesn't exist
+        indicator = document.createElement('div');
+        indicator.id = 'last-save-indicator';
+        indicator.title = 'Last cloud save time. Auto-saves every 10 minutes. Local saves happen every second automatically.';
+        indicator.style.cssText = `
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff88;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-family: monospace;
+            z-index: 9999;
+            border: 1px solid #00ff88;
+            cursor: help;
+        `;
+        document.body.appendChild(indicator);
+    }
+
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    indicator.innerHTML = `☁️ Last saved: ${timeString}`;
 }
 
 // Manual sync button (integrated into user info)
