@@ -11,8 +11,29 @@ async function registerUser(email, password, username) {
             throw new Error('Email and password are required');
         }
 
+        if (!username || username.trim().length < 3) {
+            throw new Error('Username is required and must be at least 3 characters');
+        }
+
+        if (username.trim().length > 20) {
+            throw new Error('Username must be 20 characters or less');
+        }
+
+        // Username validation
+        if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
+            throw new Error('Username can only contain letters, numbers, underscores, and hyphens');
+        }
+
         if (password.length < 6) {
             throw new Error('Password must be at least 6 characters');
+        }
+
+        const cleanUsername = username.trim();
+
+        // Check if username is already taken
+        const usernameQuery = await db.collection('users').where('username', '==', cleanUsername).get();
+        if (!usernameQuery.empty) {
+            throw new Error('Username is already taken. Please choose another one.');
         }
 
         // Create user account
@@ -24,7 +45,7 @@ async function registerUser(email, password, username) {
         // Create user profile in Firestore
         await db.collection('users').doc(user.uid).set({
             email: email,
-            username: username || email.split('@')[0],
+            username: cleanUsername,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
             totalBTC: 0,
@@ -110,12 +131,47 @@ async function loginUser(email, password) {
         const userDoc = await db.collection('users').doc(user.uid).get();
 
         if (!userDoc.exists) {
-            // User exists in Auth but not in Firestore - create the document
-            console.log('⚠️ User document missing in Firestore, creating now...');
+            // User exists in Auth but not in Firestore - prompt for username and create the document
+            console.log('⚠️ User document missing in Firestore, prompting for username...');
+
+            let username = null;
+            let usernameValid = false;
+
+            while (!usernameValid) {
+                username = prompt('Please choose a username (3-20 characters, letters, numbers, _ and - only):');
+
+                if (!username) {
+                    // User cancelled - sign them out and abort
+                    await auth.signOut();
+                    throw new Error('Username is required to complete login');
+                }
+
+                username = username.trim();
+
+                // Validate username format
+                if (username.length < 3 || username.length > 20) {
+                    alert('Username must be between 3 and 20 characters');
+                    continue;
+                }
+
+                if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+                    alert('Username can only contain letters, numbers, underscores, and hyphens');
+                    continue;
+                }
+
+                // Check if username is already taken
+                const usernameQuery = await db.collection('users').where('username', '==', username).get();
+                if (!usernameQuery.empty) {
+                    alert('Username "' + username + '" is already taken. Please choose another one.');
+                    continue;
+                }
+
+                usernameValid = true;
+            }
 
             await db.collection('users').doc(user.uid).set({
                 email: user.email,
-                username: user.email.split('@')[0],
+                username: username,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
                 totalBTC: 0,
@@ -209,10 +265,46 @@ async function loginWithGoogle() {
         const userDoc = await db.collection('users').doc(user.uid).get();
 
         if (!userDoc.exists) {
+            // New user - prompt for username
+            let username = null;
+            let usernameValid = false;
+
+            while (!usernameValid) {
+                username = prompt('Welcome! Please choose a username (3-20 characters, letters, numbers, _ and - only):');
+
+                if (!username) {
+                    // User cancelled - delete the auth account and abort
+                    await user.delete();
+                    throw new Error('Username is required to create an account');
+                }
+
+                username = username.trim();
+
+                // Validate username format
+                if (username.length < 3 || username.length > 20) {
+                    alert('Username must be between 3 and 20 characters');
+                    continue;
+                }
+
+                if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+                    alert('Username can only contain letters, numbers, underscores, and hyphens');
+                    continue;
+                }
+
+                // Check if username is already taken
+                const usernameQuery = await db.collection('users').where('username', '==', username).get();
+                if (!usernameQuery.empty) {
+                    alert('Username "' + username + '" is already taken. Please choose another one.');
+                    continue;
+                }
+
+                usernameValid = true;
+            }
+
             // Create new user profile
             await db.collection('users').doc(user.uid).set({
                 email: user.email,
-                username: user.displayName || user.email.split('@')[0],
+                username: username,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
                 totalBTC: 0,
@@ -465,12 +557,33 @@ async function playAsGuest() {
 }
 
 // Link guest account to email/password
-async function linkGuestToEmail(email, password) {
+async function linkGuestToEmail(email, password, username) {
     try {
         const user = auth.currentUser;
 
         if (!user || !user.isAnonymous) {
             throw new Error('Not a guest account');
+        }
+
+        if (!username || username.trim().length < 3) {
+            throw new Error('Username is required and must be at least 3 characters');
+        }
+
+        if (username.trim().length > 20) {
+            throw new Error('Username must be 20 characters or less');
+        }
+
+        // Username validation
+        if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
+            throw new Error('Username can only contain letters, numbers, underscores, and hyphens');
+        }
+
+        const cleanUsername = username.trim();
+
+        // Check if username is already taken
+        const usernameQuery = await db.collection('users').where('username', '==', cleanUsername).get();
+        if (!usernameQuery.empty) {
+            throw new Error('Username is already taken. Please choose another one.');
         }
 
         const credential = firebase.auth.EmailAuthProvider.credential(email, password);
@@ -479,7 +592,7 @@ async function linkGuestToEmail(email, password) {
         // Update user profile
         await db.collection('users').doc(user.uid).update({
             email: email,
-            username: email.split('@')[0],
+            username: cleanUsername,
             isGuest: false,
             linkedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
