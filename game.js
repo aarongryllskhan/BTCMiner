@@ -2919,9 +2919,11 @@ dogeUpgrades.forEach(u => {
     }
 
     // Save game when page becomes hidden (mobile browser close, tab switch, etc.)
+    let pageHiddenTime = null;
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             console.log('Page hidden - saving game state');
+            pageHiddenTime = Date.now();
             try {
                 saveGame();
                 console.log('Save successful on visibility change');
@@ -2937,14 +2939,21 @@ dogeUpgrades.forEach(u => {
                 console.error('WARNING: No save data found in localStorage!');
             }
 
-            // Update leaderboard when page becomes visible (user returned)
-            // This captures offline earnings that were just applied
+            // Update leaderboard only if user was away for 6+ hours
             if (typeof window.updateLeaderboard === 'function' && auth && auth.currentUser && !auth.currentUser.isAnonymous) {
-                console.log('🏆 Updating leaderboard with current earnings (includes offline earnings)');
-                window.updateLeaderboard().catch(err => {
-                    console.warn('⚠️ Leaderboard update failed:', err);
-                });
+                const timeAway = pageHiddenTime ? (Date.now() - pageHiddenTime) / 1000 : 0;
+                const SIX_HOURS = 6 * 60 * 60; // 6 hours in seconds
+
+                if (timeAway >= SIX_HOURS) {
+                    console.log('🏆 Updating leaderboard (user was away for ' + Math.floor(timeAway / 3600) + ' hours)');
+                    window.updateLeaderboard().catch(err => {
+                        console.warn('⚠️ Leaderboard update failed:', err);
+                    });
+                } else {
+                    console.log('ℹ️ Skipping leaderboard update (only updates after 6+ hours away, login, or logout)');
+                }
             }
+            pageHiddenTime = null;
         }
     });
 

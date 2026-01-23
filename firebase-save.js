@@ -136,12 +136,7 @@ async function saveGameToCloud(isManualSave = false) {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Update leaderboard with current lifetime earnings (async - don't wait for it)
-        if (typeof window.updateLeaderboard === 'function') {
-            window.updateLeaderboard().catch(err => {
-                console.warn('⚠️ Leaderboard update failed (non-critical):', err);
-            });
-        }
+        // Leaderboard updates are handled separately (on login/logout and when returning after 6+ hours away)
 
         console.log('✅ Progress synced to cloud successfully');
 

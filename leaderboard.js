@@ -3,9 +3,9 @@
  * Tracks top players by lifetime earnings
  *
  * Update Policy:
- * - Auto-syncs to cloud every 20 minutes for registered users
- * - Updates when users come back online (includes offline earnings, capped at 6 hours)
- * - Updates when page becomes visible (tab focus)
+ * - Updates on login (includes offline earnings, capped at 6 hours)
+ * - Updates on logout
+ * - Updates when returning to tab after being away for 6+ hours
  * - Guest users are excluded from leaderboard
  * - Leaderboard cache: 2 minutes (refreshes automatically when opened)
  * - Leaderboard reflects actual earnings with offline cap applied
@@ -277,7 +277,7 @@ function formatCurrency(value) {
     return value.toFixed(0);
 }
 
-// Auto-update leaderboard every 5 minutes
+// Leaderboard updates only on: login, logout, or when returning after 6+ hours away
 let leaderboardUpdateInterval;
 
 function startLeaderboardUpdates() {
@@ -285,7 +285,7 @@ function startLeaderboardUpdates() {
     if (auth.currentUser && !auth.currentUser.isAnonymous) {
         // Update leaderboard immediately on login (includes capped offline earnings)
         updateLeaderboard();
-        console.log('✅ Leaderboard updated with current earnings (offline earnings capped at 6 hours)');
+        console.log('✅ Leaderboard updated on login (offline earnings capped at 6 hours)');
     } else {
         console.log('ℹ️ Guest user - leaderboard updates disabled');
     }

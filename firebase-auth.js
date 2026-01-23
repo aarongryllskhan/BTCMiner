@@ -233,6 +233,17 @@ async function logoutUser() {
     try {
         console.log('🔓 Starting logout process...');
 
+        // Update leaderboard before logout (for registered users only)
+        if (auth.currentUser && !auth.currentUser.isAnonymous && typeof window.updateLeaderboard === 'function') {
+            console.log('🏆 Updating leaderboard before logout...');
+            try {
+                await window.updateLeaderboard();
+                console.log('✅ Leaderboard updated');
+            } catch (leaderboardError) {
+                console.warn('⚠️ Failed to update leaderboard before logout (non-critical):', leaderboardError);
+            }
+        }
+
         // Save game before logging out
         if (auth.currentUser && typeof window.saveGameToCloud === 'function') {
             console.log('💾 Saving game before logout...');
