@@ -570,7 +570,6 @@ async function playAsGuest() {
         console.log('📋 Previous guest UID:', previousGuestUid, 'Username:', previousGuestUsername);
 
         // Check if this is the SAME guest returning (Firebase may reuse the anonymous UID)
-        // Or if we have a previous guest session we should try to link to
         if (previousGuestUid === user.uid && previousGuestUsername) {
             console.log('✅ Same guest returning - checking if account still exists...');
             const existingDoc = await db.collection('users').doc(user.uid).get();
@@ -585,10 +584,10 @@ async function playAsGuest() {
             }
         }
 
-        // Check if user doc already exists (returning guest with same Firebase UID)
+        // Check if user doc already exists with CURRENT Firebase UID (returning guest with same Firebase UID)
         const existingUserDoc = await db.collection('users').doc(user.uid).get();
         if (existingUserDoc.exists && existingUserDoc.data()?.username) {
-            console.log('✅ Existing guest account found:', existingUserDoc.data().username);
+            console.log('✅ Existing guest account found with current UID:', existingUserDoc.data().username);
             // Save to localStorage for future sessions
             localStorage.setItem('guestUserUid', user.uid);
             localStorage.setItem('guestUsername', existingUserDoc.data().username);
@@ -598,6 +597,58 @@ async function playAsGuest() {
             }
             showMessage(`Welcome back, ${existingUserDoc.data().username}!`, 'success');
             return user;
+        }
+
+        // IMPORTANT: Check if we have a PREVIOUS guest username stored
+        // Firebase may assign a NEW anonymous UID on each guest login, so we need to find the guest by username
+        // This ensures returning guests DON'T create duplicate accounts
+        if (previousGuestUsername) {
+            console.log('🔍 Firebase assigned a new UID, but we have a previous guest username. Searching for it...');
+            try {
+                const guestQuery = await db.collection('users')
+                    .where('username', '==', previousGuestUsername)
+                    .where('isGuest', '==', true)
+                    .limit(1)
+                    .get();
+
+                if (!guestQuery.empty) {
+                    const guestDoc = guestQuery.docs[0];
+                    const previousUid = guestDoc.id;
+                    console.log('✅ Found previous guest account! Username:', previousGuestUsername, 'Old UID:', previousUid, 'New UID:', user.uid);
+
+                    // CRITICAL: We need to link the new Firebase UID to the existing guest account
+                    // Update the user doc from old UID to new UID
+                    // First, copy all data from old doc to new UID
+                    const oldDocData = guestDoc.data();
+                    await db.collection('users').doc(user.uid).set({
+                        ...oldDocData,
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Copy gameData subcollection
+                    const gameDataDocs = await db.collection('users').doc(previousUid).collection('gameData').get();
+                    for (const doc of gameDataDocs.docs) {
+                        await db.collection('users').doc(user.uid).collection('gameData').doc(doc.id).set(doc.data());
+                    }
+
+                    // Delete the old guest account (with old UID)
+                    await db.collection('users').doc(previousUid).delete();
+                    console.log('✅ Migrated guest account from old UID to new UID');
+
+                    // Update localStorage with new UID
+                    localStorage.setItem('guestUserUid', user.uid);
+                    localStorage.setItem('guestUsername', previousGuestUsername);
+
+                    if (typeof window.updateUserUI === 'function') {
+                        await window.updateUserUI(user);
+                    }
+                    showMessage(`Welcome back, ${previousGuestUsername}!`, 'success');
+                    return user;
+                }
+            } catch (searchError) {
+                console.warn('⚠️ Could not search for previous guest account:', searchError);
+                // Fall through to create new account
+            }
         }
 
         // NEW guest - create account
@@ -711,9 +762,9 @@ async function playAsGuest() {
 // Link guest account to email/password
 async function linkGuestToEmail(email, password, username) {
     try {
-        const user = auth.currentUser;
+        const guestUser = auth.currentUser;
 
-        if (!user || !user.isAnonymous) {
+        if (!guestUser || !guestUser.isAnonymous) {
             throw new Error('Not a guest account');
         }
 
@@ -738,25 +789,58 @@ async function linkGuestToEmail(email, password, username) {
             throw new Error('Username is already taken. Please choose another one.');
         }
 
-        const credential = firebase.auth.EmailAuthProvider.credential(email, password);
-        const linkedUser = await user.linkWithCredential(credential);
+        // Check if email is already in use
+        try {
+            const userByEmail = await auth.fetchSignInMethodsForEmail(email);
+            if (userByEmail && userByEmail.length > 0) {
+                throw new Error('This email is already in use. Please use a different email.');
+            }
+        } catch (emailCheckError) {
+            if (emailCheckError.code === 'auth/invalid-email') {
+                throw new Error('Please enter a valid email address.');
+            }
+            if (!emailCheckError.message.includes('already in use')) {
+                throw emailCheckError;
+            }
+        }
 
-        // Update user profile
-        await db.collection('users').doc(user.uid).update({
+        // Link the email/password credentials to the guest account
+        // This approach avoids the "verify new email" issue by using updateEmail on existing account
+        console.log('🔗 Linking email/password to guest account...');
+        const credential = firebase.auth.EmailAuthProvider.credential(email, password);
+        await guestUser.linkWithCredential(credential);
+
+        console.log('✅ Email/password linked to guest account');
+
+        // Update user profile in Firestore
+        await db.collection('users').doc(guestUser.uid).update({
             email: email,
             username: cleanUsername,
             isGuest: false,
             linkedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log('✅ Guest account linked to email:', email);
+        console.log('✅ Guest account converted to regular account. Email:', email);
         showMessage('Account created! Your progress is now saved.', 'success');
 
-        return linkedUser.user;
+        return guestUser;
 
     } catch (error) {
         console.error('❌ Account linking error:', error);
-        showMessage('Failed to link account: ' + error.message, 'error');
+
+        // Provide helpful error messages for common issues
+        if (error.code === 'auth/email-already-in-use') {
+            showMessage('This email is already in use. Please use a different email.', 'error');
+        } else if (error.code === 'auth/invalid-email') {
+            showMessage('Please enter a valid email address.', 'error');
+        } else if (error.code === 'auth/weak-password') {
+            showMessage('Password is too weak. Please use a stronger password.', 'error');
+        } else if (error.code === 'auth/operation-not-allowed') {
+            showMessage('Account linking is not currently available. Please contact support.', 'error');
+        } else {
+            showMessage('Failed to link account: ' + error.message, 'error');
+        }
+
         throw error;
     }
 }
