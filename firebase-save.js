@@ -317,14 +317,26 @@ async function loadGameFromCloud(userId = null) {
             resetGameVariables();
         } else {
             // Same account - compare cloud vs local to use better save (device transfer scenario)
-            const localData = {
-                lifetimeEarnings: window.lifetimeEarnings || 0,
-            };
-            console.log('📦 Local cache - lifetimeEarnings:', localData.lifetimeEarnings);
-            console.log('☁️ Cloud data - lifetimeEarnings:', cloudData.lifetimeEarnings);
+            // Check both window variable AND localStorage to ensure we don't lose progress
+            const windowLifetime = window.lifetimeEarnings || 0;
+            let localStorageLifetime = 0;
+            try {
+                const savedGame = localStorage.getItem('idleBtcMinerSave');
+                if (savedGame) {
+                    const parsed = JSON.parse(savedGame);
+                    localStorageLifetime = parsed.lifetimeEarnings || 0;
+                }
+            } catch (e) {
+                console.warn('Could not parse localStorage save:', e);
+            }
 
+            const localLifetime = Math.max(windowLifetime, localStorageLifetime);
             const cloudLifetime = cloudData.lifetimeEarnings || 0;
-            const localLifetime = localData.lifetimeEarnings || 0;
+
+            console.log('📦 Local cache - window.lifetimeEarnings:', windowLifetime);
+            console.log('📦 Local cache - localStorage.lifetimeEarnings:', localStorageLifetime);
+            console.log('📦 Local cache - using max:', localLifetime);
+            console.log('☁️ Cloud data - lifetimeEarnings:', cloudLifetime);
 
             if (localLifetime > cloudLifetime) {
                 console.log('🏠 Local save is better - keeping local cache');
@@ -332,7 +344,7 @@ async function loadGameFromCloud(userId = null) {
                 return false;
             }
 
-            console.log('☁️ Cloud save is better - loading from cloud');
+            console.log('☁️ Cloud save is better or equal - loading from cloud');
             resetGameVariables();
         }
 

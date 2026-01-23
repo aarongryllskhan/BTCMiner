@@ -100,42 +100,19 @@ async function updateUserUI(user) {
     const userId = user.uid;
     const isGuest = user.isAnonymous;
 
-    // Fetch username from Firestore
+    console.log('🔄 updateUserUI called for', isGuest ? 'guest' : 'registered', 'user:', userId);
+
+    // Fetch username from Firestore - single attempt, no retries
+    // Retries cause delays; if doc doesn't exist yet, playAsGuest will call us again
     let displayName = isGuest ? 'Guest' : 'User';
     try {
-        // First attempt - get the document immediately
-        let userDoc = await db.collection('users').doc(userId).get();
+        const userDoc = await db.collection('users').doc(userId).get();
         console.log('📋 User doc fetch - exists:', userDoc.exists, 'username:', userDoc.data()?.username);
 
-        // If document exists and has username, use it immediately (returning user)
         if (userDoc.exists && userDoc.data()?.username) {
             displayName = userDoc.data().username;
-            console.log('✅ Username fetched immediately from Firestore:', displayName);
-        } else if (isGuest) {
-            // For NEW guest users, retry a few times (document may still be creating)
-            // But use shorter retries - only 5 attempts × 300ms = 1.5 seconds max
-            let retries = 0;
-            const maxRetries = 5;
-
-            while ((!userDoc.exists || !userDoc.data()?.username) && retries < maxRetries) {
-                console.log(`⏳ Waiting for guest username... (attempt ${retries + 1}/${maxRetries})`);
-                await new Promise(resolve => setTimeout(resolve, 300)); // Wait 300ms
-                userDoc = await db.collection('users').doc(userId).get();
-                retries++;
-
-                if (userDoc.exists && userDoc.data()?.username) {
-                    displayName = userDoc.data().username;
-                    console.log('✅ Username fetched from Firestore after retry:', displayName);
-                    break;
-                }
-            }
-
-            // If still no username after retries, use fallback
-            if (!userDoc.exists || !userDoc.data()?.username) {
-                console.warn('⚠️ Guest username not found, using fallback');
-                displayName = `guest${Date.now() % 10000}`;
-            }
-        } else {
+            console.log('✅ Username fetched from Firestore:', displayName);
+        } else if (!isGuest) {
             // For non-guest users without username, try other fallbacks
             if (user.displayName) {
                 displayName = user.displayName;
@@ -143,14 +120,15 @@ async function updateUserUI(user) {
                 displayName = user.email.split('@')[0];
             }
         }
+        // For guests without doc yet, just show "Guest" - playAsGuest will call us again
     } catch (error) {
         console.error('Failed to fetch username:', error);
-        if (isGuest) {
-            displayName = `guest${Date.now() % 10000}`;
-        } else if (user.displayName) {
-            displayName = user.displayName;
-        } else if (user.email) {
-            displayName = user.email.split('@')[0];
+        if (!isGuest) {
+            if (user.displayName) {
+                displayName = user.displayName;
+            } else if (user.email) {
+                displayName = user.email.split('@')[0];
+            }
         }
     }
 

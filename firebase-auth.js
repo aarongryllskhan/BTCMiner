@@ -455,15 +455,17 @@ async function logoutUser() {
 
         showMessage('Logged out successfully', 'success');
 
-        // Clear local game data while preserving onboarding and cookie flags
-        // We keep these so users don't have to re-accept on every account switch
-        console.log('🗑️ Clearing localStorage (preserving onboarding & cookie flags)...');
+        // Clear local game data while preserving important flags
+        console.log('🗑️ Clearing localStorage (preserving important flags)...');
         try {
             // Save flags that should persist across account switches
             const ageDisclaimerAccepted = localStorage.getItem('ageDisclaimerAccepted');
             const termsAccepted = localStorage.getItem('termsAccepted');
             const cookieConsent = localStorage.getItem('cookieConsent');
             const cookieConsentDate = localStorage.getItem('cookieConsentDate');
+            // IMPORTANT: Preserve guest credentials so they can sign back in
+            const guestUserUid = localStorage.getItem('guestUserUid');
+            const guestUsername = localStorage.getItem('guestUsername');
 
             // Clear all localStorage
             localStorage.clear();
@@ -481,8 +483,15 @@ async function logoutUser() {
             if (cookieConsentDate) {
                 localStorage.setItem('cookieConsentDate', cookieConsentDate);
             }
+            // Restore guest credentials so they can sign back in as the same guest
+            if (guestUserUid) {
+                localStorage.setItem('guestUserUid', guestUserUid);
+            }
+            if (guestUsername) {
+                localStorage.setItem('guestUsername', guestUsername);
+            }
 
-            console.log('✅ localStorage cleared (onboarding & cookie flags preserved)');
+            console.log('✅ localStorage cleared (important flags preserved including guest credentials)');
         } catch (e) {
             console.warn('⚠️ Could not clear localStorage (may be in private mode)');
         }
@@ -550,10 +559,49 @@ async function resetPassword(email) {
 // Play as guest (anonymous login)
 async function playAsGuest() {
     try {
+        // Check if we have a previous guest UID saved - if so, try to restore that session
+        const previousGuestUid = localStorage.getItem('guestUserUid');
+        const previousGuestUsername = localStorage.getItem('guestUsername');
+
         const userCredential = await auth.signInAnonymously();
         const user = userCredential.user;
 
-        console.log('✅ Guest login successful');
+        console.log('✅ Guest login successful, UID:', user.uid);
+        console.log('📋 Previous guest UID:', previousGuestUid, 'Username:', previousGuestUsername);
+
+        // Check if this is the SAME guest returning (Firebase may reuse the anonymous UID)
+        // Or if we have a previous guest session we should try to link to
+        if (previousGuestUid === user.uid && previousGuestUsername) {
+            console.log('✅ Same guest returning - checking if account still exists...');
+            const existingDoc = await db.collection('users').doc(user.uid).get();
+            if (existingDoc.exists && existingDoc.data()?.username) {
+                console.log('✅ Guest account exists, username:', existingDoc.data().username);
+                // Account exists, just update UI and return
+                if (typeof window.updateUserUI === 'function') {
+                    await window.updateUserUI(user);
+                }
+                showMessage(`Welcome back, ${existingDoc.data().username}!`, 'success');
+                return user;
+            }
+        }
+
+        // Check if user doc already exists (returning guest with same Firebase UID)
+        const existingUserDoc = await db.collection('users').doc(user.uid).get();
+        if (existingUserDoc.exists && existingUserDoc.data()?.username) {
+            console.log('✅ Existing guest account found:', existingUserDoc.data().username);
+            // Save to localStorage for future sessions
+            localStorage.setItem('guestUserUid', user.uid);
+            localStorage.setItem('guestUsername', existingUserDoc.data().username);
+
+            if (typeof window.updateUserUI === 'function') {
+                await window.updateUserUI(user);
+            }
+            showMessage(`Welcome back, ${existingUserDoc.data().username}!`, 'success');
+            return user;
+        }
+
+        // NEW guest - create account
+        console.log('🆕 Creating new guest account...');
 
         // Get the next guest number using a counter document to avoid race conditions
         let guestNumber = 1;
@@ -641,31 +689,15 @@ async function playAsGuest() {
         console.log('✅ Guest profile and game data created successfully');
         console.log('📝 Guest username in Firestore:', guestUsername);
 
-        // Verify the document was actually written
-        try {
-            const verifyDoc = await db.collection('users').doc(user.uid).get();
-            if (verifyDoc.exists) {
-                console.log('✅ Verified user doc exists with username:', verifyDoc.data().username);
-            } else {
-                console.error('❌ User doc does not exist after write!');
-            }
-        } catch (verifyError) {
-            console.error('❌ Failed to verify user doc:', verifyError);
-        }
+        // Save guest credentials to localStorage for future sessions
+        localStorage.setItem('guestUserUid', user.uid);
+        localStorage.setItem('guestUsername', guestUsername);
+        // Mark this as a fresh guest account that needs a refresh
+        localStorage.setItem('guestNeedsRefresh', 'true');
+        console.log('💾 Guest credentials saved to localStorage');
 
-        // Update UI immediately to show the correct guest username
-        // This is needed because onAuthStateChanged may have already fired before the username was created
-        console.log('🔍 window.updateUserUI exists?', typeof window.updateUserUI === 'function');
-        if (typeof window.updateUserUI === 'function') {
-            console.log('🔄 Calling updateUserUI with guest username:', guestUsername);
-            await window.updateUserUI(user);
-            console.log('✅ updateUserUI call completed');
-        } else {
-            console.error('❌ window.updateUserUI is not a function!');
-        }
-
-        // Show success message with the assigned username
-        showMessage(`Welcome, ${guestUsername}! Your progress saves automatically.`, 'success');
+        // Show refresh modal for new guests
+        showGuestRefreshModal(guestUsername);
 
         return user;
 
@@ -809,6 +841,69 @@ async function loadConsentFromFirebase(userId) {
     }
 }
 
+// Show refresh modal for new guest users
+function showGuestRefreshModal(guestUsername) {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'guest-refresh-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 999999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.3s ease-out;
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 450px;
+            width: 90%;
+            border: 3px solid #f7931a;
+            box-shadow: 0 0 50px rgba(247, 147, 26, 0.4);
+            text-align: center;
+        ">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🎮</div>
+            <h2 style="color: #f7931a; margin-bottom: 15px; font-size: 1.8rem;">Welcome, ${guestUsername}!</h2>
+            <p style="color: #ccc; margin-bottom: 25px; font-size: 1rem; line-height: 1.5;">
+                Your guest account has been created successfully!
+                <br><br>
+                Please refresh the page to fully initialize the game and start mining.
+            </p>
+            <button onclick="location.reload()" style="
+                background: linear-gradient(135deg, #f7931a 0%, #ff6b00 100%);
+                color: #fff;
+                border: none;
+                padding: 18px 50px;
+                font-size: 1.2rem;
+                font-weight: 800;
+                border-radius: 10px;
+                cursor: pointer;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                box-shadow: 0 4px 15px rgba(247, 147, 26, 0.4);
+                transition: transform 0.2s, box-shadow 0.2s;
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(247, 147, 26, 0.6)';"
+               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(247, 147, 26, 0.4)';">
+                🔄 Refresh & Start Mining
+            </button>
+            <p style="color: #666; font-size: 0.8rem; margin-top: 20px;">
+                Your progress will be saved automatically every 5 minutes.
+            </p>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
 // Helper function to show messages
 function showMessage(message, type = 'info') {
     // Create message element if it doesn't exist
@@ -856,6 +951,11 @@ function showMessage(message, type = 'info') {
 // Add CSS animations
 const style = document.createElement('style');
 style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
     @keyframes slideDown {
         from {
             transform: translateX(-50%) translateY(-100px);
@@ -908,6 +1008,12 @@ function setupAuthListener() {
         if (user) {
             console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
             console.log('User UID:', user.uid);
+
+            // Clear the guestNeedsRefresh flag on page load (user has refreshed)
+            if (localStorage.getItem('guestNeedsRefresh')) {
+                console.log('✅ Guest has refreshed - clearing refresh flag');
+                localStorage.removeItem('guestNeedsRefresh');
+            }
 
             // Load consent from Firebase if available
             console.log('📥 Loading consent from Firebase...');
@@ -1028,18 +1134,29 @@ function setupAuthListener() {
                 window.startAutoSave();
             }
 
-            // For guest users, do an initial save after a short delay to ensure progress isn't lost
-            // This is important because guests don't have a linked account and might lose progress on refresh
+            // For guest users, do initial saves more frequently to prevent progress loss
             if (user.isAnonymous && window.saveGameToCloud) {
+                // First save after 10 seconds
                 setTimeout(async () => {
-                    console.log('💾 Initial save for guest user (30 second delay)...');
+                    console.log('💾 Initial save for guest user (10 second delay)...');
                     try {
                         await window.saveGameToCloud(false);
                         console.log('✅ Guest initial save complete');
                     } catch (saveError) {
                         console.warn('⚠️ Guest initial save failed:', saveError);
                     }
-                }, 30000); // Save after 30 seconds to capture early progress
+                }, 10000);
+
+                // Second save after 60 seconds
+                setTimeout(async () => {
+                    console.log('💾 Second save for guest user (60 second delay)...');
+                    try {
+                        await window.saveGameToCloud(false);
+                        console.log('✅ Guest second save complete');
+                    } catch (saveError) {
+                        console.warn('⚠️ Guest second save failed:', saveError);
+                    }
+                }, 60000);
             }
 
             console.log('🎮 Auth state handling complete - game should be visible now');

@@ -87,35 +87,22 @@ async function updateLeaderboard() {
 
         const user = auth.currentUser;
 
-        // Fetch username from Firestore (including guest users)
+        // Fetch username from Firestore (including guest users) - no retries, single fetch
         let username = 'Anonymous';
         try {
-            let userDoc = await db.collection('users').doc(user.uid).get();
+            const userDoc = await db.collection('users').doc(user.uid).get();
             console.log('📋 Leaderboard user doc - exists:', userDoc.exists, 'username:', userDoc.data()?.username);
 
-            // If document exists and has username, use it immediately
             if (userDoc.exists && userDoc.data()?.username) {
                 username = userDoc.data().username;
                 console.log('✅ Using Firestore username:', username);
             } else if (user.isAnonymous) {
-                // For NEW guests, short retry (document may still be creating)
-                let retries = 0;
-                const maxRetries = 5; // 5 retries × 300ms = 1.5 seconds max
-
-                while ((!userDoc.exists || !userDoc.data()?.username) && retries < maxRetries) {
-                    console.log(`⏳ Waiting for guest username for leaderboard... (attempt ${retries + 1}/${maxRetries})`);
-                    await new Promise(resolve => setTimeout(resolve, 300));
-                    userDoc = await db.collection('users').doc(user.uid).get();
-                    retries++;
-
-                    if (userDoc.exists && userDoc.data()?.username) {
-                        username = userDoc.data().username;
-                        console.log('✅ Using Firestore username after retry:', username);
-                        break;
-                    }
-                }
-
-                if (!userDoc.exists || !userDoc.data()?.username) {
+                // Try localStorage fallback for guests
+                const savedUsername = localStorage.getItem('guestUsername');
+                if (savedUsername) {
+                    username = savedUsername;
+                    console.log('✅ Using localStorage guest username:', username);
+                } else {
                     username = `guest${Date.now() % 10000}`;
                     console.log('⚠️ No guest username found, using fallback:', username);
                 }
@@ -127,7 +114,8 @@ async function updateLeaderboard() {
         } catch (error) {
             console.error('Failed to fetch username for leaderboard:', error);
             if (user.isAnonymous) {
-                username = `guest${Date.now() % 10000}`;
+                const savedUsername = localStorage.getItem('guestUsername');
+                username = savedUsername || `guest${Date.now() % 10000}`;
             } else {
                 username = user.email ? user.email.split('@')[0] : 'Anonymous';
             }
