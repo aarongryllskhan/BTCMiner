@@ -2842,6 +2842,26 @@ dogeUpgrades.forEach(u => {
             }, 300);
         });
 
+        // Expose function to reinitialize chart (called when switching accounts)
+        window.reinitializeChart = function() {
+            console.log('🔄 Reinitializing chart for account switch...');
+            if (nwChart) {
+                try {
+                    nwChart.destroy();
+                    console.log('✅ Old chart destroyed');
+                } catch (e) {
+                    console.warn('⚠️ Error destroying old chart:', e);
+                }
+                nwChart = null;
+            }
+            chartInitialized = false;
+            // Small delay to ensure clean state
+            setTimeout(() => {
+                tryInitChart();
+                console.log('✅ Chart reinitialized with new data');
+            }, 100);
+        };
+
         let updateCount = 0;
         setInterval(() => {
             if (!nwChart) {

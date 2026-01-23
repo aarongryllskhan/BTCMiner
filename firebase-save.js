@@ -158,6 +158,11 @@ function resetGameVariables() {
         window.autoClickerCooldownEnd = 0;
         window.sessionStartTime = Date.now();
 
+        // Reset chart data
+        window.chartHistory = [];
+        window.chartTimestamps = [];
+        window.chartStartTime = Date.now();
+
         // Reset upgrade arrays to default state (level 0)
         if (window.powerUpgrades && Array.isArray(window.powerUpgrades)) {
             window.powerUpgrades.forEach(u => {
@@ -172,6 +177,7 @@ function resetGameVariables() {
                 u.level = 0;
                 u.currentUsd = u.baseUsd;
                 u.currentYield = 0;
+                u.boostCost = u.baseUsd * 0.5;
                 u.boostLevel = 0;
             });
         }
@@ -181,6 +187,7 @@ function resetGameVariables() {
                 u.level = 0;
                 u.currentUsd = u.baseUsd;
                 u.currentYield = 0;
+                u.boostCost = u.baseUsd * 0.5;
                 u.boostLevel = 0;
             });
         }
@@ -190,6 +197,7 @@ function resetGameVariables() {
                 u.level = 0;
                 u.currentUsd = u.baseUsd;
                 u.currentYield = 0;
+                u.boostCost = u.baseUsd * 0.5;
                 u.boostLevel = 0;
             });
         }
@@ -232,6 +240,11 @@ async function loadGameFromCloud(userId = null) {
         if (!docSnap.exists) {
             console.log('ℹ️ No cloud save found - starting fresh game for user:', user.uid);
             console.log('  Current state - btcClickValue:', window.btcClickValue, 'btcBalance:', window.btcBalance);
+            // Reinitialize chart with fresh/empty data for new account
+            if (typeof window.reinitializeChart === 'function') {
+                console.log('🔄 Reinitializing chart for new account (no cloud data)...');
+                window.reinitializeChart();
+            }
             return false;
         }
 
@@ -290,6 +303,7 @@ async function loadGameFromCloud(userId = null) {
                     window.btcUpgrades[index].level = cloudUpgrade.level || 0;
                     window.btcUpgrades[index].currentUsd = cloudUpgrade.currentUsd || window.btcUpgrades[index].baseUsd;
                     window.btcUpgrades[index].currentYield = cloudUpgrade.currentYield || 0;
+                    window.btcUpgrades[index].boostCost = cloudUpgrade.boostCost || window.btcUpgrades[index].baseUsd * 0.5;
                     window.btcUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
                 }
             });
@@ -301,6 +315,7 @@ async function loadGameFromCloud(userId = null) {
                     window.ethUpgrades[index].level = cloudUpgrade.level || 0;
                     window.ethUpgrades[index].currentUsd = cloudUpgrade.currentUsd || window.ethUpgrades[index].baseUsd;
                     window.ethUpgrades[index].currentYield = cloudUpgrade.currentYield || 0;
+                    window.ethUpgrades[index].boostCost = cloudUpgrade.boostCost || window.ethUpgrades[index].baseUsd * 0.5;
                     window.ethUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
                 }
             });
@@ -312,6 +327,7 @@ async function loadGameFromCloud(userId = null) {
                     window.dogeUpgrades[index].level = cloudUpgrade.level || 0;
                     window.dogeUpgrades[index].currentUsd = cloudUpgrade.currentUsd || window.dogeUpgrades[index].baseUsd;
                     window.dogeUpgrades[index].currentYield = cloudUpgrade.currentYield || 0;
+                    window.dogeUpgrades[index].boostCost = cloudUpgrade.boostCost || window.dogeUpgrades[index].baseUsd * 0.5;
                     window.dogeUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
                 }
             });
@@ -350,6 +366,12 @@ async function loadGameFromCloud(userId = null) {
         if (typeof updateDisplay === 'function') updateDisplay();
         if (typeof updateUpgradeUI === 'function') updateUpgradeUI();
         if (typeof updateSkillTree === 'function') updateSkillTree();
+
+        // Reinitialize chart with new account data
+        if (typeof window.reinitializeChart === 'function') {
+            console.log('🔄 Reinitializing chart for new account...');
+            window.reinitializeChart();
+        }
 
         console.log('✅ Progress loaded from cloud successfully');
         showMessage('Progress loaded from cloud!', 'success');
