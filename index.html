@@ -73,7 +73,7 @@
         logViewportInfo();
 
         // Check if app has been updated
-        const appVersion = '1.0.3'; // Increment this version to force cache clear
+        const appVersion = '1.0.4'; // Increment this version to force cache clear
 
         try {
             const storedVersion = localStorage.getItem('appVersion');
@@ -183,7 +183,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css?v=20260123042921">
+    <link rel="stylesheet" href="styles.css?v=20260123065000">
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -191,16 +191,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <!-- Firebase Configuration, Save/Load, and Authentication -->
-    <script src="firebase-config.js?v=20260123040255"></script>
-    <script src="firebase-save.js?v=20260123040920"></script>
-    <script src="firebase-auth.js?v=20260123044550"></script>
+    <script src="firebase-config.js?v=20260123065001"></script>
+    <script src="firebase-save.js?v=20260123065002"></script>
+    <script src="firebase-auth.js?v=20260123065003"></script>
 </head>
 <body>
 
     <!-- Login Screen (Firebase) -->
     <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 100000; overflow: auto; display: flex; justify-content: center; align-items: center;">
         <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative;">
-            <iframe src="login-screen.html?v=20260123044550" style="width: 100%; height: 100%; border: none; max-width: 100%; max-height: 100%;"></iframe>
+            <iframe src="login-screen.html?v=20260123065003" style="width: 100%; height: 100%; border: none; max-width: 100%; max-height: 100%;"></iframe>
         </div>
     </div>
 
@@ -228,7 +228,7 @@
                     By continuing, you agree to our Terms & Conditions. <a href="#" onclick="openPrivacyModal(); switchPolicyTab('terms'); return false;" style="color: #f7931a; text-decoration: underline;">Read full terms</a>
                 </p>
                 <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 6px; padding: 12px; max-height: 180px; overflow-y: auto; text-align: left;">
-                    <iframe id="terms-preview" src="terms.html?v=20260123040255" style="width: 100%; height: 160px; border: none; background: transparent;"></iframe>
+                    <iframe id="terms-preview" src="terms.html?v=20260123065001" style="width: 100%; height: 160px; border: none; background: transparent;"></iframe>
                 </div>
             </div>
 
@@ -280,7 +280,7 @@
                     CONTACT
                 </button>
             </div>
-            <iframe id="privacy-iframe" src="privacy.html?v=20260123040255" style="width: 100%; height: 80vh; border: none;"></iframe>
+            <iframe id="privacy-iframe" src="privacy.html?v=20260123065001" style="width: 100%; height: 80vh; border: none;"></iframe>
         </div>
     </div>
 
@@ -807,19 +807,19 @@
         contactTab.style.color = '#000';
 
         if (tab === 'privacy') {
-            iframe.src = 'privacy.html?v=20260123040255';
+            iframe.src = 'privacy.html?v=20260123065001';
             privacyTab.style.background = '#f7931a';
             privacyTab.style.color = '#000';
         } else if (tab === 'cookies') {
-            iframe.src = 'cookies.html?v=20260123040255';
+            iframe.src = 'cookies.html?v=20260123065001';
             cookiesTab.style.background = '#f7931a';
             cookiesTab.style.color = '#000';
         } else if (tab === 'terms') {
-            iframe.src = 'terms.html?v=20260123040255';
+            iframe.src = 'terms.html?v=20260123065001';
             termsTab.style.background = '#f7931a';
             termsTab.style.color = '#000';
         } else if (tab === 'contact') {
-            iframe.src = 'contact.html?v=20260123040255';
+            iframe.src = 'contact.html?v=20260123065001';
             contactTab.style.background = '#f7931a';
             contactTab.style.color = '#000';
         }
@@ -996,10 +996,10 @@
 </script>
 
 <!-- Load skill tree system first so its functions are available to game.js -->
-<script src="skilltree.js?v=20260123012223"></script>
+<script src="skilltree.js?v=20260123065005"></script>
 
 <!-- Load main game after skill tree functions are defined -->
-<script src="game.js?v=20260123060902"></script>
+<script src="game.js?v=20260123065004"></script>
 <script>
     // Debug: Verify switchTab is loaded
     console.log('DEBUG: After game.js load, switchTab type:', typeof window.switchTab);
@@ -1015,10 +1015,10 @@
 </script>
 
 <!-- Load staking system after main game variables are defined -->
-<script src="staking.js?v=20260123012223"></script>
+<script src="staking.js?v=20260123065005"></script>
 
 <!-- Load leaderboard system -->
-<script src="leaderboard.js?v=20260123063136"></script>
+<script src="leaderboard.js?v=20260123065006"></script>
 
 <!-- Mobile Layout Enforcer - Portrait = Mobile, Landscape = Desktop -->
 <script>
