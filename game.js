@@ -42,6 +42,7 @@
     let sessionStartNetWorth = 0;
     let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
     let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
+    let totalPlayTime = 0; // Total accumulated play time in seconds
 
     // Buy quantity setting
     let buyQuantity = 1;
@@ -1054,7 +1055,13 @@ function loadGame() {
     }
 
     function initBtcShop() {
+        console.log('initBtcShop called');
         const container = document.getElementById('btc-shop');
+        if (!container) {
+            console.error('ERROR: btc-shop container not found!');
+            return;
+        }
+        console.log('btc-shop container found, btcUpgrades length:', btcUpgrades.length);
         container.innerHTML = '';
 
         btcUpgrades.forEach((u, i) => {
@@ -2617,6 +2624,7 @@ dogeUpgrades.forEach(u => {
 
     // Initialize all shops after DOM is ready
     function initializeGame() {
+        console.log('🎮 initializeGame() STARTED');
         // Test localStorage availability
         try {
             localStorage.setItem('test', 'test');
@@ -2628,10 +2636,15 @@ dogeUpgrades.forEach(u => {
         }
 
         try {
+            console.log('🛒 Initializing shops...');
             initBtcShop();
+            console.log('✓ BTC shop done');
             initEthShop();
+            console.log('✓ ETH shop done');
             initDogeShop();
+            console.log('✓ DOGE shop done');
             initPowerShop();
+            console.log('✓ Power shop done');
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
@@ -3221,10 +3234,6 @@ dogeUpgrades.forEach(u => {
     Object.defineProperty(window, 'autoClickerCooldownEnd', {
         get: () => autoClickerCooldownEnd,
         set: (val) => { autoClickerCooldownEnd = val; }
-    });
-    Object.defineProperty(window, 'lifetimeEarnings', {
-        get: () => lifetimeEarnings,
-        set: (val) => { lifetimeEarnings = val; }
     });
 
     // Expose arrays/objects
