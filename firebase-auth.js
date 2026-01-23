@@ -559,81 +559,86 @@ async function resetPassword(email) {
 // Play as guest (anonymous login)
 async function playAsGuest() {
     try {
-        // Check if we have a previous guest UID and username saved
+        // Check if we have a previous guest UID and username saved in localStorage
         const previousGuestUid = localStorage.getItem('guestUserUid');
         const previousGuestUsername = localStorage.getItem('guestUsername');
 
         console.log('👤 Attempting to load previous guest account...');
-        console.log('   Previous UID:', previousGuestUid);
-        console.log('   Previous Username:', previousGuestUsername);
+        console.log('   Previous UID from storage:', previousGuestUid);
+        console.log('   Previous Username from storage:', previousGuestUsername);
 
-        // If we have a previous guest stored, try to load that account directly
-        // WITHOUT creating a new anonymous session yet
-        if (previousGuestUid && previousGuestUsername) {
-            console.log('🔍 Checking if previous guest account still exists in Firestore...');
+        // IMPORTANT: First, always sign in anonymously to get current Firebase auth state
+        const userCredential = await auth.signInAnonymously();
+        const currentUser = userCredential.user;
+        console.log('✅ Anonymous login successful, Current UID:', currentUser.uid);
+
+        // Now check if we have a PREVIOUSLY saved guest account to restore
+        if (previousGuestUsername) {
+            console.log('🔍 Searching for previous guest account by username:', previousGuestUsername);
             try {
-                const previousDoc = await db.collection('users').doc(previousGuestUid).get();
-                if (previousDoc.exists && previousDoc.data()?.isGuest === true) {
-                    console.log('✅ Found previous guest account! Loading it now...');
+                // Try to find the previous guest account by username (not by UID, since UID might change)
+                const guestQuery = await db.collection('users')
+                    .where('username', '==', previousGuestUsername)
+                    .where('isGuest', '==', true)
+                    .limit(1)
+                    .get();
 
-                    // Try to sign in with the old guest UID
-                    // Note: We need to create a new anonymous session with the same UID (this may not work)
-                    // So instead, we'll just sign in and then load the data by UID
-                    const userCredential = await auth.signInAnonymously();
-                    const newUser = userCredential.user;
+                if (!guestQuery.empty) {
+                    const previousGuestDoc = guestQuery.docs[0];
+                    const previousUidInDb = previousGuestDoc.id; // Actual UID stored in Firestore
+                    console.log('✅ Found previous guest account! Username:', previousGuestUsername, 'UID in DB:', previousUidInDb);
 
-                    console.log('📋 Current Firebase UID:', newUser.uid, '| Previous UID:', previousGuestUid);
+                    // If the current Firebase UID is different from the previous one, migrate the account
+                    if (currentUser.uid !== previousUidInDb) {
+                        console.log('⚠️ Firebase assigned a different UID. Migrating guest account from', previousUidInDb, 'to', currentUser.uid);
 
-                    // If Firebase assigned a different UID, we need to migrate the guest account
-                    if (newUser.uid !== previousGuestUid) {
-                        console.log('⚠️ Firebase assigned a different UID. Migrating guest account...');
+                        const guestData = previousGuestDoc.data();
 
-                        // Copy the old guest account data to the new UID
-                        const oldData = previousDoc.data();
-                        await db.collection('users').doc(newUser.uid).set({
-                            ...oldData,
+                        // Copy all user data to the new UID
+                        await db.collection('users').doc(currentUser.uid).set({
+                            ...guestData,
                             lastLogin: firebase.firestore.FieldValue.serverTimestamp()
                         });
 
-                        // Copy game data
-                        const gameDataDocs = await db.collection('users').doc(previousGuestUid).collection('gameData').get();
+                        // Copy game data subcollection
+                        const gameDataDocs = await db.collection('users').doc(previousUidInDb).collection('gameData').get();
                         for (const doc of gameDataDocs.docs) {
-                            await db.collection('users').doc(newUser.uid).collection('gameData').doc(doc.id).set(doc.data());
+                            await db.collection('users').doc(currentUser.uid).collection('gameData').doc(doc.id).set(doc.data());
                         }
 
-                        // Delete the old account
-                        await db.collection('users').doc(previousGuestUid).delete();
-                        console.log('✅ Migrated guest account to new UID');
+                        // Delete the old guest account to avoid duplicates
+                        await db.collection('users').doc(previousUidInDb).delete();
+                        console.log('✅ Migrated guest account to new UID and deleted old account');
                     } else {
                         // Same UID, just update last login
-                        await db.collection('users').doc(newUser.uid).update({
+                        console.log('✅ Same UID returned. Just updating last login...');
+                        await db.collection('users').doc(currentUser.uid).update({
                             lastLogin: firebase.firestore.FieldValue.serverTimestamp()
                         });
-                        console.log('✅ Updated last login for existing guest account');
                     }
 
                     // Update localStorage with current UID
-                    localStorage.setItem('guestUserUid', newUser.uid);
+                    localStorage.setItem('guestUserUid', currentUser.uid);
                     localStorage.setItem('guestUsername', previousGuestUsername);
 
                     if (typeof window.updateUserUI === 'function') {
-                        await window.updateUserUI(newUser);
+                        await window.updateUserUI(currentUser);
                     }
                     showMessage(`Welcome back, ${previousGuestUsername}!`, 'success');
-                    return newUser;
+                    return currentUser;
+                } else {
+                    console.log('⚠️ Previous guest username not found in database. Creating new guest account.');
                 }
-            } catch (error) {
-                console.warn('⚠️ Could not load previous guest account:', error);
+            } catch (searchError) {
+                console.error('⚠️ Error searching for previous guest account:', searchError);
                 console.log('Creating new guest account instead...');
             }
         }
 
-        // No previous guest found - create a new anonymous session
-        console.log('🆕 No previous guest found. Creating new guest account...');
-        const userCredential = await auth.signInAnonymously();
-        const user = userCredential.user;
-
-        console.log('✅ Anonymous login successful, UID:', user.uid);
+        // No previous guest found or failed to load - create a BRAND NEW guest account
+        console.log('🆕 Creating brand new guest account (no previous guest found)...');
+        // Note: currentUser is already signed in from line 613 above
+        const user = currentUser;
 
         // Get the next guest number using a counter document to avoid race conditions
         let guestNumber = 1;
