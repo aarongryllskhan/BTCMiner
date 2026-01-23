@@ -131,16 +131,23 @@ async function updateLeaderboard() {
             uid: user.uid,
             username: username,
             lifetime: lifetime,
-            lifetimeEarningsExists: typeof window.lifetimeEarnings !== 'undefined'
+            lifetimeEarningsExists: typeof window.lifetimeEarnings !== 'undefined',
+            isAnonymous: user.isAnonymous
         });
 
         // Update user's leaderboard entry
-        await db.collection('leaderboard').doc(user.uid).set({
-            username: username,
-            lifetimeEarnings: lifetime,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-            photoURL: user.photoURL || null
-        }, { merge: true });
+        try {
+            await db.collection('leaderboard').doc(user.uid).set({
+                username: username,
+                lifetimeEarnings: lifetime,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                photoURL: user.photoURL || null
+            }, { merge: true });
+            console.log('✅ Leaderboard entry written to Firestore successfully');
+        } catch (writeError) {
+            console.error('❌ Failed to write leaderboard entry to Firestore:', writeError);
+            throw writeError;
+        }
 
         console.log('✅ Leaderboard updated successfully:', { username, lifetime });
         return true;

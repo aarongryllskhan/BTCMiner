@@ -338,3 +338,4 @@ async function handleLinkAccount(e) {
 window.showLinkAccountModal = showLinkAccountModal;
 window.hideLinkAccountModal = hideLinkAccountModal;
 window.handleLinkAccount = handleLinkAccount;
+window.updateUserUI = updateUserUI;

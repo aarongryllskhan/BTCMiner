@@ -639,12 +639,29 @@ async function playAsGuest() {
         });
 
         console.log('✅ Guest profile and game data created successfully');
+        console.log('📝 Guest username in Firestore:', guestUsername);
+
+        // Verify the document was actually written
+        try {
+            const verifyDoc = await db.collection('users').doc(user.uid).get();
+            if (verifyDoc.exists) {
+                console.log('✅ Verified user doc exists with username:', verifyDoc.data().username);
+            } else {
+                console.error('❌ User doc does not exist after write!');
+            }
+        } catch (verifyError) {
+            console.error('❌ Failed to verify user doc:', verifyError);
+        }
 
         // Update UI immediately to show the correct guest username
         // This is needed because onAuthStateChanged may have already fired before the username was created
+        console.log('🔍 window.updateUserUI exists?', typeof window.updateUserUI === 'function');
         if (typeof window.updateUserUI === 'function') {
-            console.log('🔄 Updating UI with guest username:', guestUsername);
+            console.log('🔄 Calling updateUserUI with guest username:', guestUsername);
             await window.updateUserUI(user);
+            console.log('✅ updateUserUI call completed');
+        } else {
+            console.error('❌ window.updateUserUI is not a function!');
         }
 
         // Show success message with the assigned username
