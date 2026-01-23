@@ -87,34 +87,45 @@ function updateUserUI(user) {
         }
     }
 
-    // Create user info display if it doesn't exist
+    // Hide the LOGIN/SIGN UP button when user is logged in (not guest)
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+        loginBtn.style.display = isGuest ? 'inline-block' : 'none';
+    }
+
+    // Create or get user info display - insert it next to login button
     let userInfoDiv = document.getElementById('user-info-display');
     if (!userInfoDiv) {
         userInfoDiv = document.createElement('div');
         userInfoDiv.id = 'user-info-display';
-        userInfoDiv.style.cssText = 'position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; border: 1px solid #f7931a; z-index: 9998;';
-        document.body.appendChild(userInfoDiv);
+        // Insert after login button in the button row
+        if (loginBtn && loginBtn.parentNode) {
+            loginBtn.parentNode.insertBefore(userInfoDiv, loginBtn.nextSibling);
+        } else {
+            document.body.appendChild(userInfoDiv);
+        }
     }
+
+    userInfoDiv.style.cssText = 'display: inline-flex; align-items: center; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; border: 1px solid #f7931a;';
 
     // Show "Link Account" button for guest users, or "Manual Save" for registered users
     const actionBtn = isGuest ? `
-        <button onclick="showLinkAccountModal()" style="margin-left: 10px; background: #4CAF50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
+        <button onclick="showLinkAccountModal()" style="background: #4CAF50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
             ☁️ Save to Cloud
         </button>
     ` : `
-        <button id="manual-save-btn" onclick="manualSaveGame()" style="margin-left: 10px; background: #f7931a; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: bold;">
+        <button id="manual-save-btn" onclick="manualSaveGame()" style="background: #f7931a; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
             ☁️ Save
         </button>
     `;
 
     userInfoDiv.innerHTML = `
-        <div style="color: #fff; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-            <span style="color: #f7931a;">👤</span> ${displayName}
-            ${actionBtn}
-            <button onclick="logoutUser()" style="background: #ff3344; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
-                Logout
-            </button>
-        </div>
+        <span style="color: #f7931a; font-size: 0.55rem;">👤</span>
+        <span style="color: #fff; font-size: 0.55rem; font-weight: 700; margin: 0 6px;">${displayName}</span>
+        ${actionBtn}
+        <button onclick="logoutUser()" style="background: #ff3344; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700; margin-left: 4px;">
+            Logout
+        </button>
     `;
 }
 

@@ -1,4 +1,5 @@
 (function() {
+    console.log('🚀 GAME.JS IIFE STARTED');
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
@@ -1239,13 +1240,15 @@ function loadGame() {
         });
     }
 
-    function switchTab(tab) {
+    function switchTab(tab, event) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
         const tabElement = document.getElementById(tab + '-tab');
         tabElement.classList.add('active');
-        event.target.classList.add('active');
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
 
         // Reset purchase quantity to 1x when switching tabs
         setBuyQuantity(1);
@@ -1361,8 +1364,8 @@ function loadGame() {
             u.currentPower = u.basePower * u.level;
             totalPowerAvailable += u.basePower;
 
-            // Update price with 1.2x multiplier
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.2, u.level));
+            // Update price with 1.1x multiplier
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
 
             updateUI();
             saveGame();
@@ -1435,7 +1438,7 @@ function loadGame() {
                     canAfford++;
                     nextLevel++;
                     // Power upgrades: 1.2x multiplier
-                    nextCost = u.baseUsd * Math.pow(1.2, nextLevel);
+                    nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
                 }
 
                 affordEl.innerText = `x${canAfford}`;
@@ -1564,14 +1567,14 @@ function buyLevel(i) {
             btcClickValue *= 1.10;
 
             // FASTER PRICE SCALE: % increase per level
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
 
             // Update the main orange button text to show new click value
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
             // ALL OTHER MINERS: Standard 15% increase
             u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
         }
 
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
@@ -1611,10 +1614,10 @@ function buyLevelMultiple(i, quantity) {
         // Update price and yield based on upgrade type
         if (u.id === 0 || u.isClickUpgrade) {
             btcClickValue *= 1.10;
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
         } else {
             u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
         }
 
         purchased++;
@@ -1751,12 +1754,12 @@ function buyDogeBoost(i) {
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
                 ethClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
                 // Update the ETH button text to show new click value
                 document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
             } else {
                 u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
             }
 
             purchased++;
@@ -1800,12 +1803,12 @@ function buyDogeBoost(i) {
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
                 dogeClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
                 // Update the DOGE button text to show new click value
                 document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
             } else {
                 u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
             }
 
             purchased++;
@@ -1983,9 +1986,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2018,10 +2021,10 @@ function buyDogeBoost(i) {
             // Calculate next cost based on upgrade type
             if (u.isClickUpgrade) {
                 // Manual hash: 1.75x multiplier
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             } else {
                 // Other miners: 1.15x multiplier
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             }
         }
 
@@ -2037,9 +2040,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2207,9 +2210,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2238,9 +2241,9 @@ ethUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             }
         }
 
@@ -2256,9 +2259,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2405,9 +2408,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2436,9 +2439,9 @@ dogeUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
             }
         }
 
@@ -2454,9 +2457,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
             }
             tempLevel++;
         }
@@ -2842,6 +2845,26 @@ dogeUpgrades.forEach(u => {
             }, 300);
         });
 
+        // Expose function to reinitialize chart (called when switching accounts)
+        window.reinitializeChart = function() {
+            console.log('🔄 Reinitializing chart for account switch...');
+            if (nwChart) {
+                try {
+                    nwChart.destroy();
+                    console.log('✅ Old chart destroyed');
+                } catch (e) {
+                    console.warn('⚠️ Error destroying old chart:', e);
+                }
+                nwChart = null;
+            }
+            chartInitialized = false;
+            // Small delay to ensure clean state
+            setTimeout(() => {
+                tryInitChart();
+                console.log('✅ Chart reinitialized with new data');
+            }, 100);
+        };
+
         let updateCount = 0;
         setInterval(() => {
             if (!nwChart) {
@@ -2922,6 +2945,21 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on beforeunload');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on beforeunload...');
+                try {
+                    // Use synchronous approach with fetch API to ensure save completes
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on beforeunload');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on beforeunload (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on beforeunload:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on beforeunload:', err);
         }
@@ -2933,6 +2971,20 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on pagehide');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on pagehide...');
+                try {
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on pagehide');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on pagehide (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on pagehide:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on pagehide:', err);
         }
@@ -2944,6 +2996,20 @@ dogeUpgrades.forEach(u => {
         try {
             saveGame();
             console.log('Save successful on freeze');
+
+            // CRITICAL: Also save to cloud if user is logged in
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('Saving to cloud on freeze...');
+                try {
+                    window.saveGameToCloud().then(() => {
+                        console.log('✅ Cloud save complete on freeze');
+                    }).catch(err => {
+                        console.warn('⚠️ Cloud save failed on freeze (non-critical):', err);
+                    });
+                } catch (cloudErr) {
+                    console.warn('⚠️ Could not save to cloud on freeze:', cloudErr);
+                }
+            }
         } catch (err) {
             console.error('Save failed on freeze:', err);
         }
@@ -2983,15 +3049,29 @@ dogeUpgrades.forEach(u => {
     window.initDogeShop = initDogeShop;
     window.initPowerShop = initPowerShop;
     window.updateAutoClickerButtonState = updateAutoClickerButtonState;
-    window.updateDisplay = updateDisplay;
-    window.updateUpgradeUI = updateUpgradeUI;
+    // window.updateDisplay = updateDisplay; // REMOVED: function doesn't exist
+    // window.updateUpgradeUI = updateUpgradeUI; // REMOVED: function doesn't exist
     window.updateUI = updateUI;
+    window.switchTab = switchTab;
+    window.setBuyQuantity = setBuyQuantity;
+    window.startAutoClicker = startAutoClicker;
+    window.sellBTC = sellBTC;
+    window.sellAllBTC = sellAllBTC;
+    window.sellETH = sellETH;
+    window.sellAllETH = sellAllETH;
+    window.sellDOGE = sellDOGE;
+    window.sellAllDOGE = sellAllDOGE;
+    window.dismissInstructions = dismissInstructions;
+    window.resetEarningsStats = resetEarningsStats;
+    window.resetGame = resetGame;
+    window.saveGame = saveGame;
 
     // Verify functions are accessible
     console.log('✅ GAME.JS LOADED - Functions exported to window:');
     console.log('  manualHash:', typeof window.manualHash === 'function' ? 'READY ✓' : 'MISSING ✗');
     console.log('  manualEthHash:', typeof window.manualEthHash === 'function' ? 'READY ✓' : 'MISSING ✗');
     console.log('  manualDogeHash:', typeof window.manualDogeHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  switchTab:', typeof window.switchTab === 'function' ? 'READY ✓' : 'MISSING ✗');
 
     // Expose game variables globally for Firebase save/load
     // This creates a getter/setter interface so firebase-save.js can access the closure variables

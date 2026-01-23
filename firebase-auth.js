@@ -258,6 +258,17 @@ async function logoutUser() {
             // Continue with logout process anyway
         }
 
+        // CRITICAL: Clear all in-memory game state immediately to prevent data leakage
+        console.log('🔄 Clearing all in-memory game state...');
+        if (typeof window.resetGameVariables === 'function') {
+            try {
+                window.resetGameVariables();
+                console.log('✅ Game variables reset');
+            } catch (resetError) {
+                console.error('Error resetting game variables:', resetError);
+            }
+        }
+
         showMessage('Logged out successfully', 'success');
 
         // Clear local game data
@@ -274,6 +285,15 @@ async function logoutUser() {
                 console.log('🔄 Reloading login iframe...');
                 iframe.src = iframe.src; // Reload iframe to reset form
             }
+        }
+
+        // Show login screen again
+        if (loginScreenDiv) {
+            loginScreenDiv.style.display = 'flex';
+        }
+        const mainLayout = document.getElementById('main-layout');
+        if (mainLayout) {
+            mainLayout.style.display = 'none';
         }
 
         console.log('✅ Logout complete - auth state listener should trigger UI update');
@@ -577,7 +597,18 @@ function setupAuthListener() {
 
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
-            console.log('ℹ️ No user logged in - showing login screen');
+            console.log('ℹ️ No user logged in - clearing game state and showing login screen');
+
+            // CRITICAL: Clear all in-memory game state when user logs out
+            console.log('🔄 Clearing all game variables on logout...');
+            if (typeof window.resetGameVariables === 'function') {
+                try {
+                    window.resetGameVariables();
+                    console.log('✅ Game variables cleared on logout');
+                } catch (resetError) {
+                    console.error('Error resetting game variables on logout:', resetError);
+                }
+            }
 
             // Stop leaderboard updates
             if (window.stopLeaderboardUpdates) {
@@ -587,6 +618,12 @@ function setupAuthListener() {
             // Stop auto-save
             if (window.stopAutoSave) {
                 window.stopAutoSave();
+            }
+
+            // Hide main game layout
+            const mainLayout = document.getElementById('main-layout');
+            if (mainLayout) {
+                mainLayout.style.display = 'none';
             }
 
             // Show login screen for new users
@@ -601,6 +638,8 @@ function setupAuthListener() {
             if (loginBtn) {
                 loginBtn.style.display = 'inline-block';
             }
+
+            console.log('✅ Logout complete - UI updated and game state cleared');
         }
     });
 }
