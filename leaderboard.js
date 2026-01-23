@@ -1,17 +1,43 @@
 /**
  * Leaderboard System for Idle BTC Miner
  * Tracks top players by lifetime earnings
+ *
+ * Update Policy:
+ * - Updates on login (includes offline earnings, capped at 6 hours)
+ * - Updates on logout
+ * - Updates when returning to tab after being away for 6+ hours
+ * - Guest users are excluded from leaderboard
+ * - Leaderboard cache: 2 minutes (refreshes automatically when opened)
+ * - Leaderboard reflects actual earnings with offline cap applied
  */
+
+// Cache management for leaderboard (reduces Firebase reads)
+let leaderboardCache = null;
+let leaderboardCacheTimestamp = 0;
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds (more real-time)
 
 // Update player's leaderboard entry
 async function updateLeaderboard() {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - skipping leaderboard update');
+            return false;
+        }
+
         if (!auth.currentUser) {
             console.log('⚠️ No user logged in - skipping leaderboard update');
             return false;
         }
 
         const user = auth.currentUser;
+
+        // Skip leaderboard updates for guest/anonymous users
+        if (user.isAnonymous) {
+            console.log('ℹ️ Guest user - skipping leaderboard update (guests not shown on leaderboard)');
+            return false;
+        }
+
         const username = user.displayName || (user.email ? user.email.split('@')[0] : null) || 'Anonymous';
 
         // Get current lifetime earnings (use window accessor for closure variable)
@@ -35,9 +61,26 @@ async function updateLeaderboard() {
     }
 }
 
-// Fetch top 50 players
-async function fetchLeaderboard(limit = 50) {
+// Fetch top 10 players (optimized for free tier with caching)
+async function fetchLeaderboard(limit = 10, forceRefresh = false) {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - leaderboard not available');
+            return [];
+        }
+
+        // Check if we have valid cached data (less than 5 minutes old)
+        const now = Date.now();
+        const cacheAge = now - leaderboardCacheTimestamp;
+
+        if (!forceRefresh && leaderboardCache && cacheAge < CACHE_DURATION) {
+            console.log('📊 Using cached leaderboard (age: ' + Math.floor(cacheAge / 1000) + 's)');
+            return leaderboardCache;
+        }
+
+        // Cache is stale or doesn't exist, fetch fresh data
+        console.log('📡 Fetching fresh leaderboard from Firebase...');
         const snapshot = await db.collection('leaderboard')
             .orderBy('lifetimeEarnings', 'desc')
             .limit(limit)
@@ -55,18 +98,29 @@ async function fetchLeaderboard(limit = 50) {
             });
         });
 
-        console.log('📊 Fetched leaderboard:', leaderboard);
+        // Update cache
+        leaderboardCache = leaderboard;
+        leaderboardCacheTimestamp = now;
+
+        console.log('✅ Leaderboard cached (valid for ' + (CACHE_DURATION / 60000) + ' minutes)');
         return leaderboard;
 
     } catch (error) {
         console.error('❌ Leaderboard fetch error:', error);
-        return [];
+        // Return cached data if available, even if stale
+        return leaderboardCache || [];
     }
 }
 
 // Get player's current rank
 async function getPlayerRank(userId = null) {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - player rank not available');
+            return null;
+        }
+
         const uid = userId || auth.currentUser?.uid;
         if (!uid) return null;
 
@@ -94,13 +148,28 @@ async function getPlayerRank(userId = null) {
 // Display leaderboard modal
 async function openLeaderboardModal() {
     try {
-        const leaderboard = await fetchLeaderboard(50);
+        const leaderboard = await fetchLeaderboard(10); // Top 10 only (optimized for free tier)
         const playerRank = await getPlayerRank();
 
         const modal = document.getElementById('leaderboard-modal');
         if (!modal) {
             console.error('Leaderboard modal not found');
             return;
+        }
+
+        // Update refresh info
+        const refreshInfo = document.getElementById('leaderboard-refresh-info');
+        if (refreshInfo) {
+            const cacheAge = Math.floor((Date.now() - leaderboardCacheTimestamp) / 1000);
+            const cacheMinutes = Math.floor(cacheAge / 60);
+            const cacheSeconds = cacheAge % 60;
+            const cacheStatus = leaderboardCache ? `Last updated: ${cacheMinutes}m ${cacheSeconds}s ago` : 'Fetching fresh data...';
+            refreshInfo.innerHTML = `
+                ${cacheStatus} | Auto-syncs every 20 min
+                <button onclick="refreshLeaderboardNow()" style="margin-left: 10px; background: #00ff88; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 700;">
+                    🔄 Refresh Now
+                </button>
+            `;
         }
 
         // Build leaderboard HTML
@@ -117,29 +186,42 @@ async function openLeaderboardModal() {
                     <tbody>
         `;
 
-        leaderboard.forEach(player => {
-            const isCurrentPlayer = auth.currentUser?.uid === player.uid;
-            const rowStyle = isCurrentPlayer
-                ? 'background: rgba(247, 147, 26, 0.3); border: 1px solid #f7931a;'
-                : 'border-bottom: 1px solid #333;';
-
-            const earningsFormatted = formatCurrency(player.lifetimeEarnings);
-            const rankEmoji = player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : '';
-
+        // Check if leaderboard is empty
+        if (leaderboard.length === 0) {
             leaderboardHTML += `
-                <tr style="${rowStyle} hover: background: rgba(255, 255, 255, 0.05);">
-                    <td style="padding: 10px; text-align: left; font-weight: bold; color: #f7931a;">
-                        ${rankEmoji} #${player.rank}
-                    </td>
-                    <td style="padding: 10px; text-align: left; ${isCurrentPlayer ? 'color: #f7931a; font-weight: bold;' : ''}">
-                        ${player.username}${isCurrentPlayer ? ' (YOU)' : ''}
-                    </td>
-                    <td style="padding: 10px; text-align: right; ${isCurrentPlayer ? 'color: #00ff88; font-weight: bold;' : 'color: #00ff88;'}">
-                        $${earningsFormatted}
+                <tr>
+                    <td colspan="3" style="padding: 40px; text-align: center; color: #888;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🏆</div>
+                        <div style="font-size: 1.2rem; color: #f7931a; margin-bottom: 10px;">Be the First!</div>
+                        <div style="font-size: 0.9rem;">Start mining to claim your spot on the leaderboard.</div>
                     </td>
                 </tr>
             `;
-        });
+        } else {
+            leaderboard.forEach(player => {
+                const isCurrentPlayer = auth.currentUser?.uid === player.uid;
+                const rowStyle = isCurrentPlayer
+                    ? 'background: rgba(247, 147, 26, 0.3); border: 1px solid #f7931a;'
+                    : 'border-bottom: 1px solid #333;';
+
+                const earningsFormatted = formatCurrency(player.lifetimeEarnings);
+                const rankEmoji = player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : '';
+
+                leaderboardHTML += `
+                    <tr style="${rowStyle} hover: background: rgba(255, 255, 255, 0.05);">
+                        <td style="padding: 10px; text-align: left; font-weight: bold; color: #f7931a;">
+                            ${rankEmoji} #${player.rank}
+                        </td>
+                        <td style="padding: 10px; text-align: left; ${isCurrentPlayer ? 'color: #f7931a; font-weight: bold;' : ''}">
+                            ${player.username}${isCurrentPlayer ? ' (YOU)' : ''}
+                        </td>
+                        <td style="padding: 10px; text-align: right; ${isCurrentPlayer ? 'color: #00ff88; font-weight: bold;' : 'color: #00ff88;'}">
+                            $${earningsFormatted}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
         leaderboardHTML += `
                     </tbody>
@@ -195,21 +277,18 @@ function formatCurrency(value) {
     return value.toFixed(0);
 }
 
-// Auto-update leaderboard every 5 minutes
+// Leaderboard updates only on: login, logout, or when returning after 6+ hours away
 let leaderboardUpdateInterval;
 
 function startLeaderboardUpdates() {
-    // Update immediately
-    updateLeaderboard();
-
-    // Then update every 5 minutes
-    leaderboardUpdateInterval = setInterval(() => {
-        if (auth.currentUser) {
-            updateLeaderboard();
-        }
-    }, 300000); // 5 minutes
-
-    console.log('✅ Leaderboard auto-updates started');
+    // Only update leaderboard for registered users (not guests)
+    if (auth.currentUser && !auth.currentUser.isAnonymous) {
+        // Update leaderboard immediately on login (includes capped offline earnings)
+        updateLeaderboard();
+        console.log('✅ Leaderboard updated on login (offline earnings capped at 6 hours)');
+    } else {
+        console.log('ℹ️ Guest user - leaderboard updates disabled');
+    }
 }
 
 function stopLeaderboardUpdates() {
@@ -220,11 +299,27 @@ function stopLeaderboardUpdates() {
     }
 }
 
+// Force refresh leaderboard (bypass cache)
+async function refreshLeaderboardNow() {
+    try {
+        console.log('🔄 Forcing leaderboard refresh...');
+        await fetchLeaderboard(10, true); // Force refresh
+        await openLeaderboardModal(); // Reopen with fresh data
+        console.log('✅ Leaderboard refreshed');
+    } catch (error) {
+        console.error('❌ Error refreshing leaderboard:', error);
+    }
+}
+
 // Export functions
+window.updateLeaderboard = updateLeaderboard;
+window.fetchLeaderboard = fetchLeaderboard;
+window.getPlayerRank = getPlayerRank;
 window.updateLeaderboard = updateLeaderboard;
 window.fetchLeaderboard = fetchLeaderboard;
 window.getPlayerRank = getPlayerRank;
 window.openLeaderboardModal = openLeaderboardModal;
 window.closeLeaderboardModal = closeLeaderboardModal;
+window.refreshLeaderboardNow = refreshLeaderboardNow;
 window.startLeaderboardUpdates = startLeaderboardUpdates;
 window.stopLeaderboardUpdates = stopLeaderboardUpdates;

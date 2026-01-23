@@ -2,7 +2,7 @@
         body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; }
         #dollar-balance { font-size: 1.5rem; }
         
-        #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
+        #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); padding-bottom: 40px; box-sizing: border-box; position: relative; z-index: 1; }
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; }
 
         @media (max-width: 1024px) {
@@ -645,7 +645,20 @@ button:disabled:hover {
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .skill-tree-modal, .conversion-modal {
-                width: 95%;
+                width: 98%;
+                max-height: 85vh;
+            }
+
+            .skill-tree-modal .modal-body {
+                padding: 10px;
+                overflow-x: auto;
+                overflow-y: auto;
+            }
+
+            .skill-tree-modal .skill-tree-grid {
+                min-width: 500px;
+                gap: 8px !important;
+                padding: 10px !important;
             }
 
             .modal-header h2 {
@@ -653,15 +666,55 @@ button:disabled:hover {
             }
 
             .skill-node {
-                padding: 12px;
+                padding: 8px;
+                min-height: 60px !important;
             }
 
             .skill-name {
-                font-size: 1rem;
+                font-size: 0.85rem;
             }
 
             .skill-description {
-                font-size: 0.8rem;
+                font-size: 0.7rem;
+            }
+
+            .skill-cost {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .skill-tree-modal {
+                width: 100%;
+                max-height: 90vh;
+                border-radius: 0;
+            }
+
+            .skill-tree-modal .modal-body {
+                padding: 5px;
+            }
+
+            .skill-tree-modal .skill-tree-grid {
+                min-width: 450px;
+                gap: 5px !important;
+                padding: 5px !important;
+            }
+
+            .skill-node {
+                padding: 6px;
+                min-height: 50px !important;
+            }
+
+            .skill-name {
+                font-size: 0.75rem;
+            }
+
+            .skill-description {
+                font-size: 0.6rem;
+            }
+
+            .skill-cost {
+                font-size: 0.6rem;
             }
         }
 
