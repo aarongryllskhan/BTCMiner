@@ -752,6 +752,17 @@
 
 <!-- Load main game after skill tree functions are defined -->
 <script src="game.js"></script>
+<script>
+    // Debug: Verify switchTab is loaded
+    console.log('DEBUG: After game.js load, switchTab type:', typeof window.switchTab);
+    if (typeof window.switchTab !== 'function') {
+        console.error('ERROR: switchTab not loaded! Creating fallback...');
+        // Temporary fallback for debugging
+        window.switchTab = function(tab, event) {
+            console.log('Fallback switchTab called with:', tab);
+        };
+    }
+</script>
 
 <!-- Load staking system after main game variables are defined -->
 <script src="staking.js"></script>

@@ -1,4 +1,5 @@
 (function() {
+    console.log('🚀 GAME.JS IIFE STARTED');
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
@@ -3048,8 +3049,8 @@ dogeUpgrades.forEach(u => {
     window.initDogeShop = initDogeShop;
     window.initPowerShop = initPowerShop;
     window.updateAutoClickerButtonState = updateAutoClickerButtonState;
-    window.updateDisplay = updateDisplay;
-    window.updateUpgradeUI = updateUpgradeUI;
+    // window.updateDisplay = updateDisplay; // REMOVED: function doesn't exist
+    // window.updateUpgradeUI = updateUpgradeUI; // REMOVED: function doesn't exist
     window.updateUI = updateUI;
     window.switchTab = switchTab;
     window.setBuyQuantity = setBuyQuantity;
@@ -3070,6 +3071,7 @@ dogeUpgrades.forEach(u => {
     console.log('  manualHash:', typeof window.manualHash === 'function' ? 'READY ✓' : 'MISSING ✗');
     console.log('  manualEthHash:', typeof window.manualEthHash === 'function' ? 'READY ✓' : 'MISSING ✗');
     console.log('  manualDogeHash:', typeof window.manualDogeHash === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  switchTab:', typeof window.switchTab === 'function' ? 'READY ✓' : 'MISSING ✗');
 
     // Expose game variables globally for Firebase save/load
     // This creates a getter/setter interface so firebase-save.js can access the closure variables
