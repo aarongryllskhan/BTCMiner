@@ -97,6 +97,7 @@
                     localStorage.setItem('_test_', 'test');
                     localStorage.removeItem('_test_');
                     this._isAvailable = true;
+                    console.log('✅ localStorage is available');
                 } catch (e) {
                     this._isAvailable = false;
                     console.warn('⚠️ localStorage unavailable - using memory storage instead');
@@ -107,23 +108,32 @@
                 try {
                     if (this._isAvailable) {
                         localStorage.setItem(key, value);
+                        console.log('✓ Saved to localStorage:', key);
                     } else {
                         this._storage[key] = value;
+                        console.log('✓ Saved to memory storage:', key);
                     }
                 } catch (e) {
                     this._storage[key] = value;
+                    console.log('✓ Saved to memory storage (fallback):', key);
                 }
             },
 
             getItem: function(key) {
                 try {
                     if (this._isAvailable) {
-                        return localStorage.getItem(key);
+                        const value = localStorage.getItem(key);
+                        console.log('✓ Retrieved from localStorage:', key, '=', value ? 'EXISTS' : 'NULL');
+                        return value;
                     } else {
-                        return this._storage[key] || null;
+                        const value = this._storage[key] || null;
+                        console.log('✓ Retrieved from memory storage:', key, '=', value ? 'EXISTS' : 'NULL');
+                        return value;
                     }
                 } catch (e) {
-                    return this._storage[key] || null;
+                    const value = this._storage[key] || null;
+                    console.log('✓ Retrieved from memory storage (fallback):', key, '=', value ? 'EXISTS' : 'NULL');
+                    return value;
                 }
             },
 
@@ -131,17 +141,21 @@
                 try {
                     if (this._isAvailable) {
                         localStorage.removeItem(key);
+                        console.log('✓ Removed from localStorage:', key);
                     } else {
                         delete this._storage[key];
+                        console.log('✓ Removed from memory storage:', key);
                     }
                 } catch (e) {
                     delete this._storage[key];
+                    console.log('✓ Removed from memory storage (fallback):', key);
                 }
             }
         };
 
-        // Initialize safe storage
+        // Initialize safe storage immediately
         window.safeStorage.init();
+        console.log('🔧 safeStorage initialized - _isAvailable:', window.safeStorage._isAvailable);
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -410,6 +410,12 @@
 
     // --- SAVE SYSTEM START ---
     function saveGame() {
+        // Check if safeStorage is available
+        if (!window.safeStorage) {
+            console.error('❌ CRITICAL: window.safeStorage is not available!');
+            return;
+        }
+
         const gameState = {
             // Bitcoin data
             btcBalance,
@@ -483,6 +489,7 @@
             console.log('BTC Balance:', btcBalance);
             console.log('Dollar Balance:', dollarBalance);
             console.log('Save string length:', saveString.length, 'bytes');
+            console.log('safeStorage._isAvailable:', window.safeStorage._isAvailable);
 
             // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
             window.safeStorage.setItem('satoshiTerminalSave', saveString);
@@ -490,7 +497,7 @@
             // Verify save worked
             const testLoad = window.safeStorage.getItem('satoshiTerminalSave');
             if (testLoad && testLoad.length > 0) {
-                console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage');
+                console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage (Length: ' + testLoad.length + ')');
             } else {
                 console.error('✗ SAVE FAILED - Could not verify in safeStorage');
             }
@@ -506,9 +513,17 @@
 function loadGame() {
     console.log('=== LOAD GAME CALLED ===');
     try {
+        // Verify safeStorage is available
+        if (!window.safeStorage) {
+            console.error('❌ CRITICAL: window.safeStorage is not available!');
+            return;
+        }
+
+        console.log('✓ safeStorage available, _isAvailable:', window.safeStorage._isAvailable);
+
         // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
         const savedData = window.safeStorage.getItem('satoshiTerminalSave');
-        console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
+        console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND (length: ' + savedData.length + ')' : 'NULL/UNDEFINED');
 
         if (!savedData) {
             console.log('✗ No saved game found, starting fresh');

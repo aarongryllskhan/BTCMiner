@@ -19,6 +19,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            overflow: hidden;
+            width: 100%;
         }
 
         .login-container {
@@ -230,6 +240,102 @@
 
         .login-container {
             animation: fadeIn 0.5s ease-out;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+                min-height: 100vh;
+            }
+
+            .login-container {
+                max-width: 100%;
+                width: 100%;
+                padding: 20px;
+                border-radius: 10px;
+            }
+
+            .logo h1 {
+                font-size: 1.8rem;
+                margin-bottom: 8px;
+            }
+
+            .logo h1 img {
+                width: 30px !important;
+                height: 30px !important;
+                margin-right: 8px;
+            }
+
+            .logo p {
+                font-size: 0.8rem;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            label {
+                font-size: 0.85rem;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="password"],
+            button {
+                font-size: 1rem;
+                padding: 10px;
+            }
+
+            .disclaimer {
+                margin-top: 20px;
+                padding: 10px;
+                font-size: 0.7rem;
+            }
+
+            .tabs {
+                margin-bottom: 20px;
+            }
+
+            .tab {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .login-container {
+                padding: 15px;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+
+            .logo h1 img {
+                width: 25px !important;
+                height: 25px !important;
+            }
+
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            label {
+                font-size: 0.8rem;
+                margin-bottom: 5px;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="password"] {
+                padding: 8px;
+                font-size: 0.95rem;
+            }
+
+            button {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>

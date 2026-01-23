@@ -1,42 +1,168 @@
-        :root { --btc: #f7931a; --bg: #050505; --panel: #111; --green: #00ff88; --red: #ff3344; --border: #222; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; overflow-x: hidden; overflow-y: hidden; width: 100vw; max-width: 100%; }
-        #dollar-balance { font-size: 1.5rem; }
-        
-        #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); box-sizing: border-box; position: relative; z-index: 1; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow-y: auto; overflow-x: hidden; min-height: 0; }
-
-        @media (max-width: 1024px) {
-            body { padding: 6px; margin: 0; height: 100vh; overflow-y: scroll; overflow-x: hidden; width: 100vw; max-width: 100%; }
-            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; width: 100%; box-sizing: border-box; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
-            .panel:first-child { overflow: visible; flex: 0 0 auto; }
-            .panel:last-child { overflow: visible; flex: 0 0 auto; }
-            .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
-            .stat-box b { word-break: break-word; }
-            #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; width: 100%; box-sizing: border-box; }
+        :root {
+            --btc: #f7931a;
+            --bg: #050505;
+            --panel: #111;
+            --green: #00ff88;
+            --red: #ff3344;
+            --border: #222;
+            --base-padding: clamp(5px, 2vw, 20px);
+            --gap-size: clamp(5px, 1.5vw, 20px);
+            --border-radius: clamp(8px, 2vw, 12px);
         }
 
-        @media (max-width: 768px) {
-            body { padding: 6px; margin: 0; height: 100vh; overflow-y: scroll; overflow-x: hidden; width: 100vw; max-width: 100%; }
-            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; width: 100%; box-sizing: border-box; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
-            .panel:first-child { overflow: visible; flex: 0 0 auto; }
-            .panel:last-child { overflow: visible; flex: 0 0 auto; }
-            /* Center buttons on mobile */
-            .panel > div:first-child { justify-content: center !important; }
-            .panel > div:first-child > div { justify-content: center !important; flex-wrap: wrap; }
-            .upgrade-list { overflow-y: auto !important; }
-            .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; color: #555; }
-            .nw-amount { font-size: 1.6rem; margin: 2px 0; }
-            .mini-stats { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-            .stat-item span { font-size: 0.55rem; }
-            .stat-val { font-size: 1.1rem !important; }
-            .chart-wrapper { min-height: 150px !important; height: 150px !important; flex: 0 0 150px !important; padding: 6px; display: block !important; margin-top: 6px; overflow: hidden; position: relative; }
+        html {
+            width: 100%;
+            overflow-x: hidden;
+            font-size: clamp(12px, 2.5vw, 16px);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: #fff;
+            margin: 0;
+            padding: var(--base-padding);
+            overflow: hidden;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        #dollar-balance {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+        }
+
+        #main-layout {
+            display: grid;
+            grid-template-columns: 7fr 3fr;
+            gap: var(--gap-size);
+            height: calc(100vh - calc(var(--base-padding) * 2));
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            padding: var(--base-padding);
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 0;
+        }
+
+        /* Fluid breakpoint: Tablet and below (when width drops below ~1024px) */
+        @media (max-aspect-ratio: 3/2) {
+            #main-layout {
+                grid-template-columns: 1fr;
+                display: flex;
+                flex-direction: column;
+                height: auto;
+            }
+
+            .panel {
+                width: 100%;
+                min-width: 0;
+                overflow-x: hidden;
+            }
+
+            .stat-box {
+                min-width: 0 !important;
+                overflow: visible !important;
+                flex: 0 1 auto !important;
+            }
+
+            .stat-box b {
+                word-break: break-word;
+            }
+
+            #hashrate-display {
+                flex-wrap: wrap !important;
+                justify-content: flex-start !important;
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+
+        /* Tablet-sized screens: responsive typography and layouts */
+        @media (max-width: 900px) {
+            .nw-label {
+                font-size: clamp(0.55rem, 1.5vw, 0.8rem);
+                letter-spacing: 0.5px;
+                color: #555;
+            }
+
+            .nw-amount {
+                font-size: clamp(1.2rem, 4vw, 1.8rem);
+                margin: 2px 0;
+            }
+
+            .mini-stats {
+                gap: clamp(6px, 2vw, 12px);
+                flex-wrap: wrap;
+                margin-bottom: clamp(4px, 1vw, 8px);
+            }
+
+            .stat-item span {
+                font-size: clamp(0.45rem, 1.2vw, 0.65rem);
+            }
+
+            .stat-val {
+                font-size: clamp(0.85rem, 2vw, 1.2rem) !important;
+            }
+
+            .chart-wrapper {
+                min-height: clamp(100px, 25vh, 200px) !important;
+                height: clamp(100px, 25vh, 200px) !important;
+                flex: 0 0 auto !important;
+                padding: clamp(4px, 1vw, 8px);
+                display: block !important;
+                margin-top: clamp(4px, 1vw, 8px);
+                overflow: hidden;
+                position: relative;
+            }
+
             /* Keep crypto prices in a compact row on mobile */
-            #crypto-prices-flex { gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto; }
-            #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; }
-            #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
-            #crypto-prices-flex span { font-size: 0.5rem !important; }
+            #crypto-prices-flex {
+                gap: clamp(4px, 1.5vw, 8px) !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto;
+            }
+
+            #crypto-prices-flex > div {
+                flex: 0 0 auto !important;
+                min-width: auto !important;
+            }
+
+            #crypto-prices-flex .stat-val {
+                font-size: clamp(0.7rem, 1.5vw, 1rem) !important;
+            }
+
+            #crypto-prices-flex span {
+                font-size: clamp(0.4rem, 1vw, 0.6rem) !important;
+            }
+
+            /* Center buttons on mobile */
+            .panel > div:first-child {
+                justify-content: center !important;
+            }
+
+            .panel > div:first-child > div {
+                justify-content: center !important;
+                flex-wrap: wrap;
+                gap: clamp(4px, 1vw, 8px);
+            }
+
+            .upgrade-list {
+                overflow-y: auto !important;
+            }
 
             /* Professional 2-column grid layout for stat boxes on mobile */
             #hashrate-display {
@@ -103,26 +229,59 @@
             }
         }
 
-        @media (max-width: 480px) {
-            body { padding: 5px; margin: 0; height: 100vh; overflow-y: scroll; overflow-x: hidden; width: 100vw; max-width: 100%; }
-            #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; width: 100%; box-sizing: border-box; }
-            .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
-            .panel:first-child { overflow: visible; flex: 0 0 auto; }
-            .panel:last-child { overflow: visible; flex: 0 0 auto; }
-            /* Center buttons on mobile */
-            .panel > div:first-child { justify-content: center !important; }
-            .panel > div:first-child > div { justify-content: center !important; flex-wrap: wrap; }
-            .upgrade-list { overflow-y: auto !important; }
-            .nw-label { font-size: 0.6rem; color: #555; }
-            .nw-amount { font-size: 1.5rem; margin: 1px 0; }
-            .stat-val { font-size: 0.95rem !important; }
-            .chart-wrapper { min-height: 120px !important; height: 120px !important; flex: 0 0 120px !important; display: block !important; margin-top: 4px; overflow: hidden; position: relative; }
-            #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 120px !important; }
+        /* Mobile phones: Smallest screen sizes */
+        @media (max-width: 600px) {
+            .nw-label {
+                font-size: clamp(0.5rem, 1.2vw, 0.7rem);
+                color: #555;
+            }
+
+            .nw-amount {
+                font-size: clamp(1rem, 3.5vw, 1.6rem);
+                margin: clamp(1px, 0.5vw, 3px) 0;
+            }
+
+            .stat-val {
+                font-size: clamp(0.75rem, 1.8vw, 1.1rem) !important;
+            }
+
+            .chart-wrapper {
+                min-height: clamp(80px, 20vh, 150px) !important;
+                height: clamp(80px, 20vh, 150px) !important;
+                flex: 0 0 auto !important;
+                display: block !important;
+                margin-top: clamp(2px, 1vw, 6px);
+                overflow: hidden;
+                position: relative;
+            }
+
+            #nwChart {
+                width: 100% !important;
+                height: 100% !important;
+                display: block !important;
+                min-height: auto !important;
+            }
+
             /* Keep crypto prices in compact row on small phones */
-            #crypto-prices-flex { gap: 4px !important; flex-wrap: nowrap !important; overflow-x: auto; }
-            #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; padding: 3px !important; }
-            #crypto-prices-flex .stat-val { font-size: 0.7rem !important; }
-            #crypto-prices-flex span { font-size: 0.4rem !important; }
+            #crypto-prices-flex {
+                gap: clamp(3px, 1vw, 6px) !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto;
+            }
+
+            #crypto-prices-flex > div {
+                flex: 0 0 auto !important;
+                min-width: auto !important;
+                padding: clamp(2px, 0.5vw, 4px) !important;
+            }
+
+            #crypto-prices-flex .stat-val {
+                font-size: clamp(0.6rem, 1.2vw, 0.85rem) !important;
+            }
+
+            #crypto-prices-flex span {
+                font-size: clamp(0.35rem, 0.8vw, 0.55rem) !important;
+            }
 
             /* Professional 2-column grid layout for small phones */
             #hashrate-display {
@@ -160,24 +319,26 @@
                 grid-row: 3;
             }
             #hashrate-display .stat-box {
-                padding: 6px 8px !important;
+                padding: clamp(4px, 1vw, 10px) clamp(6px, 1.5vw, 12px) !important;
                 background: rgba(0,0,0,0.4) !important;
-                border-radius: 6px !important;
+                border-radius: clamp(4px, 1.5vw, 8px) !important;
                 border: 1px solid #333 !important;
                 text-align: center;
                 flex: none !important;
                 min-width: 0;
                 overflow: hidden;
             }
+
             #hashrate-display span {
-                font-size: 0.5rem !important;
-                margin-bottom: 3px !important;
+                font-size: clamp(0.4rem, 0.9vw, 0.65rem) !important;
+                margin-bottom: clamp(2px, 0.5vw, 4px) !important;
                 line-height: 1.2;
                 display: block;
                 letter-spacing: 0.3px;
             }
+
             #hashrate-display b {
-                font-size: 0.65rem !important;
+                font-size: clamp(0.55rem, 1.2vw, 0.85rem) !important;
                 line-height: 1.3;
                 display: block;
                 word-break: break-all;
@@ -722,6 +883,91 @@ button:disabled:hover {
 
             .skill-cost {
                 font-size: 0.6rem;
+            }
+        }
+
+        /* Fix modal and login screen overflow issues */
+        #login-screen {
+            overflow: hidden !important;
+        }
+
+        #login-screen iframe {
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+
+        #onboarding-modal,
+        #leaderboard-modal,
+        #policy-modal,
+        #skill-tree-modal,
+        #game-instructions {
+            overflow: hidden !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
+
+        #onboarding-modal > div,
+        #leaderboard-modal > div,
+        #policy-modal > div,
+        #skill-tree-modal > div {
+            max-width: 95vw;
+            max-height: 95vh;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        /* Mobile modal fixes */
+        @media (max-width: 768px) {
+            #onboarding-modal > div,
+            #leaderboard-modal > div,
+            #policy-modal > div,
+            #skill-tree-modal > div {
+                max-width: 100vw !important;
+                width: 95% !important;
+                margin: auto !important;
+            }
+
+            #leaderboard-modal > div {
+                max-height: calc(100vh - 40px) !important;
+            }
+
+            #policy-modal > div {
+                max-height: calc(100vh - 40px) !important;
+            }
+
+            #onboarding-modal > div {
+                max-height: calc(100vh - 40px) !important;
+                padding: 20px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #onboarding-modal > div,
+            #leaderboard-modal > div,
+            #policy-modal > div,
+            #skill-tree-modal > div {
+                max-width: 100% !important;
+                width: 90% !important;
+                margin: auto !important;
+                border-radius: 8px !important;
+            }
+
+            #onboarding-modal > div {
+                padding: 15px !important;
+            }
+
+            #leaderboard-modal > div {
+                padding: 15px !important;
+            }
+
+            #policy-modal > div {
+                padding: 15px !important;
+            }
+
+            #skill-tree-modal > div {
+                padding: 15px !important;
             }
         }
 
