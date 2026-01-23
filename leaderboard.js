@@ -218,9 +218,11 @@ async function getPlayerRank(userId = null) {
 
         let rank = null;
         let playerData = null;
-        snapshot.forEach((doc, index) => {
+        let currentIndex = 0;
+        snapshot.forEach((doc) => {
+            currentIndex++;
             if (doc.id === uid) {
-                rank = index + 1;
+                rank = currentIndex;
                 playerData = doc.data();
             }
         });
@@ -327,8 +329,7 @@ async function openLeaderboardModal() {
                     <div style="text-align: center;">
                         <div style="font-size: 0.9rem; color: #888; margin-bottom: 5px;">YOUR RANKING</div>
                         <div style="font-size: 2rem; color: #f7931a; font-weight: bold;">
-                            ${playerRank.rank === 1 ? '🥇' : playerRank.rank === 2 ? '🥈' : playerRank.rank === 3 ? '🥉' : '#' + playerRank.rank}
-                            #${playerRank.rank}
+                            ${playerRank.rank === 1 ? '🥇 1st' : playerRank.rank === 2 ? '🥈 2nd' : playerRank.rank === 3 ? '🥉 3rd' : '#' + playerRank.rank}
                         </div>
                         <div style="font-size: 1rem; color: #00ff88; margin-top: 5px;">
                             $${formatCurrency(playerRank.lifetimeEarnings)}
