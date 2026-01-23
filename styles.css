@@ -951,9 +951,16 @@ button:disabled:hover {
         #skill-tree-modal,
         #game-instructions {
             overflow: hidden !important;
-            display: flex !important;
             justify-content: center !important;
             align-items: center !important;
+        }
+
+        /* Only show modals when explicitly set to display: flex via JavaScript */
+        #leaderboard-modal[style*="display: flex"],
+        #policy-modal[style*="display: flex"],
+        #skill-tree-modal[style*="display: flex"],
+        #game-instructions[style*="display: flex"] {
+            display: flex !important;
         }
 
         #onboarding-modal > div,
