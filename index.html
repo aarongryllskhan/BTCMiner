@@ -1030,45 +1030,42 @@
         const height = window.innerHeight;
         const mainLayout = document.getElementById('main-layout');
 
-        // Modern mobile phones have high resolution (1440px+) but are in portrait mode
-        // Desktop is landscape with much wider display
+        // Breakpoint at 1440px - below this should be mobile layout
+        const isMobileWidth = width <= 1440;
         const isPortrait = width < height;
-        const isMobileWidth = width <= 768; // Standard mobile width breakpoint
         const shouldStackLayout = isMobileWidth || isPortrait;
 
-        if (shouldStackLayout && mainLayout) {
-            // Check current state to avoid repeated logging
-            const isAlreadyStacked = mainLayout.style.display === 'flex';
+        if (mainLayout) {
+            if (shouldStackLayout) {
+                // Mobile layout (single column)
+                if (mainLayout.style.display !== 'flex') {
+                    console.log('📱 ENFORCING MOBILE LAYOUT:');
+                    console.log('  Window: ' + width + 'x' + height + 'px');
+                    console.log('  Mobile Width (<=1440px or portrait): ' + true);
 
-            if (!isAlreadyStacked) {
-                console.log('📱 ENFORCING MOBILE LAYOUT:');
-                console.log('  Window: ' + width + 'x' + height + 'px');
-                console.log('  Orientation: ' + (isPortrait ? 'Portrait' : 'Landscape'));
-                console.log('  Mobile Width (<=768px): ' + isMobileWidth);
+                    // Don't override inline styles - CSS media queries handle this
+                    // Just ensure nothing is forcing grid layout
+                    mainLayout.classList.remove('desktop-layout');
+                    mainLayout.classList.add('mobile-layout');
+                }
+            } else {
+                // Desktop layout (2 columns)
+                if (mainLayout.style.display !== 'grid') {
+                    console.log('🖥️ SWITCHING TO DESKTOP LAYOUT:');
+                    console.log('  Window: ' + width + 'x' + height + 'px');
+
+                    mainLayout.classList.remove('mobile-layout');
+                    mainLayout.classList.add('desktop-layout');
+                }
             }
-
-            mainLayout.style.gridTemplateColumns = '1fr';
-            mainLayout.style.display = 'flex';
-            mainLayout.style.flexDirection = 'column';
-            mainLayout.style.height = 'auto';
-            mainLayout.style.maxWidth = '100%';
-            mainLayout.style.width = '100%';
-        } else if (mainLayout && mainLayout.style.display === 'flex') {
-            console.log('🖥️ SWITCHING TO DESKTOP LAYOUT:');
-            console.log('  Window: ' + width + 'x' + height + 'px');
-            // Reset to default desktop layout
-            mainLayout.style.gridTemplateColumns = '7fr 3fr';
-            mainLayout.style.display = 'grid';
-            mainLayout.style.flexDirection = '';
-            mainLayout.style.height = 'calc(100vh - calc(var(--base-padding) * 2))';
         }
     }
 
     // Run on load and resize
     window.addEventListener('DOMContentLoaded', enforceMobileLayout);
     window.addEventListener('resize', enforceMobileLayout);
-    // Also run immediately
-    setTimeout(enforceMobileLayout, 0);
+    // Also run immediately with minimal delay to avoid flash
+    setTimeout(enforceMobileLayout, 10);
 </script>
 
 <!-- Initialize Firebase -->
