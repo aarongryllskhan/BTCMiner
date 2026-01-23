@@ -77,19 +77,32 @@ function onUserLogout() {
 }
 
 // Update UI with user information
-function updateUserUI(user) {
+async function updateUserUI(user) {
     const userId = user.uid;
     const isGuest = user.isAnonymous;
 
-    // Display username or email (prioritize displayName from Google/username)
+    // Fetch username from Firestore
     let displayName = 'Guest Player';
     if (!isGuest) {
-        if (user.displayName) {
-            // Google sign-in provides displayName
-            displayName = user.displayName;
-        } else if (user.email) {
-            // Extract username from email (before @)
-            displayName = user.email.split('@')[0];
+        try {
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists && userDoc.data().username) {
+                displayName = userDoc.data().username;
+            } else if (user.displayName) {
+                // Fallback to Google displayName
+                displayName = user.displayName;
+            } else if (user.email) {
+                // Last resort: extract from email
+                displayName = user.email.split('@')[0];
+            }
+        } catch (error) {
+            console.error('Failed to fetch username:', error);
+            // Fallback to displayName or email
+            if (user.displayName) {
+                displayName = user.displayName;
+            } else if (user.email) {
+                displayName = user.email.split('@')[0];
+            }
         }
     }
 
@@ -118,10 +131,20 @@ function updateUserUI(user) {
     userInfoDiv.innerHTML = `
         <span style="color: #f7931a; font-size: 0.55rem;">👤</span>
         <span style="color: #fff; font-size: 0.55rem; font-weight: 700; margin: 0 6px;">${displayName}</span>
-        <button onclick="logoutUser()" style="background: #ff3344; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700; margin-left: 4px;">
+        <button id="logout-button-ui" style="background: #ff3344; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700; margin-left: 4px;">
             Logout
         </button>
     `;
+
+    // Add click handler to logout button
+    const logoutButton = document.getElementById('logout-button-ui');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            if (window.logoutUser) {
+                window.logoutUser();
+            }
+        });
+    }
 }
 
 // Manual save function
