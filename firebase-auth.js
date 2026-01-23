@@ -756,6 +756,8 @@ function setupAuthListener() {
                 mainLayout.style.display = 'grid';
                 mainLayout.style.pointerEvents = 'auto'; // Re-enable interaction
                 mainLayout.style.userSelect = 'auto'; // Re-enable text selection
+                mainLayout.style.visibility = 'visible'; // Ensure visibility
+                mainLayout.style.opacity = '1'; // Ensure full opacity
             }
 
             // Show onboarding modal if not accepted (age + terms)

@@ -529,6 +529,11 @@
                         // RE-ENABLE INTERACTION on main layout
                         mainLayout.style.pointerEvents = 'auto';
                         mainLayout.style.userSelect = 'auto';
+                        mainLayout.style.visibility = 'visible';
+                        mainLayout.style.opacity = '1';
+
+                        // Force layout recalculation
+                        mainLayout.offsetHeight;
                     }
 
                     // Show LOGIN/SIGN UP button for offline users
@@ -537,6 +542,14 @@
                         loginBtn.style.display = 'inline-block';
                         loginBtn.textContent = 'LOGIN / SIGN UP';
                     }
+
+                    // Ensure panels are visible
+                    setTimeout(() => {
+                        const panels = window.parent.document.querySelectorAll('.panel');
+                        panels.forEach(panel => {
+                            panel.style.visibility = 'visible';
+                        });
+                    }, 50);
                 }
             } catch (error) {
                 console.error('Failed to enter offline mode:', error);

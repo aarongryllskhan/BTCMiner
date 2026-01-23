@@ -579,6 +579,40 @@
         localStorage.setItem('ageDisclaimerAccepted', 'true');
         localStorage.setItem('termsAccepted', 'true');
         document.getElementById('onboarding-modal').style.display = 'none';
+
+        // Ensure main layout is visible and interactive
+        const mainLayout = document.getElementById('main-layout');
+        if (mainLayout) {
+            mainLayout.style.display = 'grid';
+            mainLayout.style.pointerEvents = 'auto';
+            mainLayout.style.userSelect = 'auto';
+            mainLayout.style.visibility = 'visible';
+            mainLayout.style.opacity = '1';
+
+            // Force layout recalculation by triggering reflow
+            mainLayout.offsetHeight; // This forces a reflow
+        }
+
+        // Trigger chart redraw and panel refresh
+        setTimeout(() => {
+            // Redraw all panels to ensure they're visible
+            const panels = document.querySelectorAll('.panel');
+            panels.forEach(panel => {
+                panel.style.visibility = 'visible';
+                panel.style.display = window.getComputedStyle(panel).display || 'block';
+            });
+
+            // Trigger chart redraw in case it needs refreshing
+            if (window.nwChartInstance && typeof window.nwChartInstance.resize === 'function') {
+                window.nwChartInstance.resize();
+            }
+
+            // Update all game displays
+            if (typeof window.updateDisplay === 'function') {
+                window.updateDisplay();
+            }
+        }, 100);
+
         // Show cookie consent after onboarding is accepted
         checkCookieConsent();
     }
