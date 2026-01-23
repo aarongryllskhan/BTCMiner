@@ -316,36 +316,19 @@ async function loadGameFromCloud(userId = null) {
             console.log('🔄 Loading cloud data due to account switch');
             resetGameVariables();
         } else {
-            // Same account - compare progress to load the better save
-            // Local save might have more recent progress than cloud (which auto-saves every 20 mins)
-            const cloudLifetime = cloudData.lifetimeEarnings || 0;
-            const cloudBtcBalance = cloudData.btcBalance || 0;
+            // Same account - prefer local save if it exists
+            // Local saves are more recent (they happen every action)
+            // Cloud saves are less frequent (every 20 mins)
+            const localSaveExists = localStorage.getItem('satoshiTerminalSave') !== null;
 
-            let localLifetime = 0;
-            let localBtcBalance = 0;
-            try {
-                const savedGame = localStorage.getItem('satoshiTerminalSave');
-                if (savedGame) {
-                    const localSaveData = JSON.parse(savedGame);
-                    localLifetime = localSaveData.lifetimeEarnings || 0;
-                    localBtcBalance = localSaveData.btcBalance || 0;
-                }
-            } catch (e) {
-                console.warn('Could not parse localStorage save:', e);
-            }
-
-            console.log('📊 Comparing saves:');
-            console.log('  📦 Local: lifetimeEarnings=' + localLifetime + ', btcBalance=' + localBtcBalance);
-            console.log('  ☁️  Cloud: lifetimeEarnings=' + cloudLifetime + ', btcBalance=' + cloudBtcBalance);
-
-            // Load local if it has significantly better progress (more lifetime earnings)
-            if (localLifetime > cloudLifetime) {
-                console.log('🏠 Local save has better progress - keeping local cache (you earned more recently)');
+            if (localSaveExists) {
+                console.log('🏠 Local save found - using local save (you have unsaved progress since last auto-save)');
                 showMessage('Loaded local progress (more recent than cloud save)', 'success');
-                return false;
+                return false; // Keep local cache, don't load cloud
             }
 
-            console.log('☁️ Cloud save has equal or better progress - loading from cloud');
+            // No local save, load from cloud
+            console.log('☁️ No local save found - loading from cloud');
             resetGameVariables();
         }
 
