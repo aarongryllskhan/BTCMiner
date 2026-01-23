@@ -14,7 +14,7 @@ async function saveGameToCloud(isManualSave = false) {
 
         if (!user) {
             console.log('⚠️ No user logged in - skipping cloud save');
-            showSaveMessage('You must be logged in to save to cloud. Your progress is saved locally.', 'warning');
+            showSaveMessage('You must be logged in to transfer progress to cloud. Your game auto-saves locally.', 'warning');
             return false;
         }
 
@@ -28,7 +28,7 @@ async function saveGameToCloud(isManualSave = false) {
                 const remainingMinutes = Math.floor(remainingSeconds / 60);
                 const seconds = remainingSeconds % 60;
                 showSaveMessage(
-                    `Please wait ${remainingMinutes}m ${seconds}s before manually saving again. Auto-save is active every 10 minutes.`,
+                    `Transfer cooldown: ${remainingMinutes}m ${seconds}s remaining. Your game is already saved locally!`,
                     'info'
                 );
                 return false;
@@ -137,11 +137,15 @@ async function saveGameToCloud(isManualSave = false) {
             });
         }
 
-        console.log('✅ Game saved to cloud successfully');
+        console.log('✅ Progress uploaded to cloud successfully');
 
         // Show subtle save indicator with timestamp
         showSaveIndicator();
         updateLastSaveTime();
+
+        if (isManualSave) {
+            showMessage('Progress uploaded to cloud! Log in on another device to continue.', 'success');
+        }
 
         return true;
 
@@ -254,31 +258,72 @@ async function loadGameFromCloud(userId = null) {
             return false;
         }
 
-        // Reset all game variables to prevent data from previous account
-        resetGameVariables();
-        console.log('After reset - btcClickValue:', window.btcClickValue);
+        // Check if this is the same user as last time (account switch detection)
+        const lastUserId = localStorage.getItem('lastLoggedInUser');
+        const isAccountSwitch = lastUserId && lastUserId !== user.uid;
+
+        if (isAccountSwitch) {
+            console.log('🔄 Account switch detected - previous user:', lastUserId, 'new user:', user.uid);
+        }
+
+        // Store current user ID for future comparisons
+        localStorage.setItem('lastLoggedInUser', user.uid);
 
         // Get game data from Firestore
         const docRef = db.collection('users').doc(user.uid).collection('gameData').doc('current');
         const docSnap = await docRef.get();
 
         if (!docSnap.exists) {
-            console.log('ℹ️ No cloud save found - starting fresh game for user:', user.uid);
-            console.log('  Current state - btcClickValue:', window.btcClickValue, 'btcBalance:', window.btcBalance);
-            // Reinitialize chart with fresh/empty data for new account
-            if (typeof window.reinitializeChart === 'function') {
-                console.log('🔄 Reinitializing chart for new account (no cloud data)...');
-                window.reinitializeChart();
+            console.log('ℹ️ No cloud save found for user:', user.uid);
+
+            if (isAccountSwitch) {
+                // Account switch with no cloud data - reset to fresh game
+                console.log('🆕 New account with no cloud save - resetting to fresh game');
+                resetGameVariables();
+                if (typeof window.reinitializeChart === 'function') {
+                    window.reinitializeChart();
+                }
+            } else {
+                // Same account, no cloud data - keep local cache (might be first login on this device)
+                console.log('📦 Keeping local cache (first login on this device)');
+                if (typeof window.reinitializeChart === 'function') {
+                    window.reinitializeChart();
+                }
             }
             return false;
         }
 
         const cloudData = docSnap.data();
-        console.log('☁️ Cloud save found, loading into game for user:', user.uid);
+        console.log('☁️ Cloud save found for user:', user.uid);
+
+        // If account switch, ALWAYS load cloud data (ignore local cache from different account)
+        if (isAccountSwitch) {
+            console.log('🔄 Loading cloud data due to account switch');
+            resetGameVariables();
+        } else {
+            // Same account - compare cloud vs local to use better save (device transfer scenario)
+            const localData = {
+                lifetimeEarnings: window.lifetimeEarnings || 0,
+            };
+            console.log('📦 Local cache - lifetimeEarnings:', localData.lifetimeEarnings);
+            console.log('☁️ Cloud data - lifetimeEarnings:', cloudData.lifetimeEarnings);
+
+            const cloudLifetime = cloudData.lifetimeEarnings || 0;
+            const localLifetime = localData.lifetimeEarnings || 0;
+
+            if (localLifetime > cloudLifetime) {
+                console.log('🏠 Local save is better - keeping local cache');
+                showMessage('Local progress kept (more advanced than cloud save)', 'success');
+                return false;
+            }
+
+            console.log('☁️ Cloud save is better - loading from cloud');
+            resetGameVariables();
+        }
+
         console.log('  Cloud data - btcBalance:', cloudData.btcBalance);
         console.log('  Cloud data - btcClickValue:', cloudData.btcClickValue);
         console.log('  Cloud data - Dollar Balance:', cloudData.dollarBalance);
-        console.log('  Cloud data - Lifetime Earnings:', cloudData.lifetimeEarnings);
 
         // Apply cloud data to game variables using window accessors (these use the setters)
         // Bitcoin data
@@ -400,7 +445,7 @@ async function loadGameFromCloud(userId = null) {
         }
 
         console.log('✅ Progress loaded from cloud successfully');
-        showMessage('Progress loaded from cloud!', 'success');
+        showMessage('Progress transferred from cloud! Welcome back.', 'success');
 
         return true;
 
@@ -495,36 +540,14 @@ async function logSuspiciousActivity(userId, type, data) {
     }
 }
 
-// Auto-save every 60 seconds
-let autoSaveInterval;
-
+// Auto-save disabled - users save manually to cloud only when needed for device transfer
+// Local saves still happen automatically every second via saveGame() in game.js
 function startAutoSave() {
-    // Clear any existing interval
-    if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-    }
-
-    // Save every 10 minutes when user is logged in (optimized for free tier with headroom)
-    // With 500 concurrent users:
-    // - 6 saves/hour/user × 3 writes/save = 18 writes/hour/user
-    // - 500 users × 18 = 9,000 writes/hour
-    // - If average session is 1 hour: 9,000 writes/day ✓ (45% of limit, 55% headroom)
-    // - Saves on: login, auto-save (10 min), page close, manual save button
-    autoSaveInterval = setInterval(async () => {
-        if (auth.currentUser) {
-            await saveGameToCloud();
-        }
-    }, 600000); // 10 minutes (600 seconds)
-
-    console.log('✅ Auto-save started (every 10 minutes)');
+    console.log('ℹ️ Auto cloud save disabled - manual save only');
 }
 
 function stopAutoSave() {
-    if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-        autoSaveInterval = null;
-        console.log('🛑 Auto-save stopped');
-    }
+    console.log('ℹ️ No auto-save to stop');
 }
 
 // Show subtle save indicator
@@ -548,7 +571,7 @@ function showSaveIndicator() {
             opacity: 0;
             transition: opacity 0.3s;
         `;
-        indicator.innerHTML = '☁️ Saved';
+        indicator.innerHTML = '📤 Uploaded to Cloud';
         document.body.appendChild(indicator);
     }
 
@@ -612,7 +635,7 @@ function updateLastSaveTime() {
         // Create the indicator if it doesn't exist
         indicator = document.createElement('div');
         indicator.id = 'last-save-indicator';
-        indicator.title = 'Last cloud save time. Auto-saves every 10 minutes. Local saves happen every second automatically.';
+        indicator.title = 'Last cloud transfer time. Used for moving progress between devices. Local saves happen automatically.';
         indicator.style.cssText = `
             position: fixed;
             bottom: 10px;
@@ -632,7 +655,7 @@ function updateLastSaveTime() {
 
     const now = new Date();
     const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    indicator.innerHTML = `☁️ Last saved: ${timeString}`;
+    indicator.innerHTML = `📤 Last transfer: ${timeString}`;
 }
 
 // Manual sync button (integrated into user info)

@@ -1,6 +1,12 @@
 /**
  * Leaderboard System for Idle BTC Miner
  * Tracks top players by lifetime earnings
+ *
+ * Update Policy:
+ * - Updates when users come back online (includes offline earnings, capped at 6 hours)
+ * - Updates when users manually transfer to cloud (📤 Transfer button)
+ * - Guest users are excluded from leaderboard
+ * - Leaderboard reflects actual earnings with offline cap applied
  */
 
 // Cache management for leaderboard (reduces Firebase reads)
@@ -17,6 +23,13 @@ async function updateLeaderboard() {
         }
 
         const user = auth.currentUser;
+
+        // Skip leaderboard updates for guest/anonymous users
+        if (user.isAnonymous) {
+            console.log('ℹ️ Guest user - skipping leaderboard update (guests not shown on leaderboard)');
+            return false;
+        }
+
         const username = user.displayName || (user.email ? user.email.split('@')[0] : null) || 'Anonymous';
 
         // Get current lifetime earnings (use window accessor for closure variable)
@@ -132,7 +145,7 @@ async function openLeaderboardModal() {
             const cacheSeconds = cacheAge % 60;
             const cacheStatus = leaderboardCache ? `Last updated: ${cacheMinutes}m ${cacheSeconds}s ago` : 'Fetching fresh data...';
             refreshInfo.innerHTML = `
-                ${cacheStatus} | Updates every 10 min with cloud saves
+                ${cacheStatus} | Updates when users transfer to cloud
                 <button onclick="refreshLeaderboardNow()" style="margin-left: 10px; background: #00ff88; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 700;">
                     🔄 Refresh Now
                 </button>
@@ -248,14 +261,14 @@ function formatCurrency(value) {
 let leaderboardUpdateInterval;
 
 function startLeaderboardUpdates() {
-    // Update immediately on login
-    updateLeaderboard();
-
-    // NOTE: Leaderboard now updates automatically with cloud saves (every 10 minutes)
-    // No need for separate interval to reduce Firebase writes
-    // Keeping this function for future flexibility but not using interval
-
-    console.log('✅ Leaderboard will update with cloud saves (every 10 minutes)');
+    // Only update leaderboard for registered users (not guests)
+    if (auth.currentUser && !auth.currentUser.isAnonymous) {
+        // Update leaderboard immediately on login (includes capped offline earnings)
+        updateLeaderboard();
+        console.log('✅ Leaderboard updated with current earnings (offline earnings capped at 6 hours)');
+    } else {
+        console.log('ℹ️ Guest user - leaderboard updates disabled');
+    }
 }
 
 function stopLeaderboardUpdates() {

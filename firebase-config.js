@@ -108,18 +108,18 @@ function updateUserUI(user) {
 
     userInfoDiv.style.cssText = 'display: inline-flex; align-items: center; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; border: 1px solid #f7931a;';
 
-    // Show "Link Account" button for guest users, or "Manual Save" for registered users
+    // Show "Link Account" button for guest users, or "Transfer Save" button for registered users
     const actionBtn = isGuest ? `
         <button onclick="showLinkAccountModal()"
-                title="Save your progress to the cloud for multi-device access. Your game saves locally automatically."
+                title="Create an account to transfer your progress to other devices. Your game auto-saves locally."
                 style="background: #4CAF50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
             ☁️ Save to Cloud
         </button>
     ` : `
         <button id="manual-save-btn" onclick="manualSaveGame()"
-                title="Manually save to cloud (10 min cooldown). Auto-saves every 10 minutes. Local saves happen automatically every second."
+                title="Upload progress to cloud for device transfer. Use before switching to mobile/desktop. (10 min cooldown)"
                 style="background: #f7931a; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
-            ☁️ Save
+            📤 Transfer
         </button>
     `;
 
@@ -138,22 +138,22 @@ async function manualSaveGame() {
     const btn = document.getElementById('manual-save-btn');
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '☁️ Saving...';
+        btn.innerHTML = '📤 Uploading...';
     }
 
     const success = await saveGameToCloud(true); // Pass true to indicate manual save
 
     if (btn) {
         if (success) {
-            btn.innerHTML = '✓ Saved!';
+            btn.innerHTML = '✓ Uploaded!';
             setTimeout(() => {
-                btn.innerHTML = '☁️ Save';
+                btn.innerHTML = '📤 Transfer';
                 btn.disabled = false;
             }, 2000);
         } else {
             btn.innerHTML = '✗ Failed';
             setTimeout(() => {
-                btn.innerHTML = '☁️ Save';
+                btn.innerHTML = '📤 Transfer';
                 btn.disabled = false;
             }, 2000);
         }
@@ -173,8 +173,8 @@ function showLinkAccountModal() {
 
         modal.innerHTML = `
             <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 500px; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
-                <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">☁️ Save to Cloud</h2>
-                <p style="color: #ccc; margin-bottom: 20px; text-align: center;">Create an account to save your progress to the cloud and play from any device!</p>
+                <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">📤 Transfer Progress to Cloud</h2>
+                <p style="color: #ccc; margin-bottom: 20px; text-align: center;">Create an account to transfer your progress between devices. Your game auto-saves locally every second!</p>
 
                 <form onsubmit="handleLinkAccount(event)" style="display: flex; flex-direction: column; gap: 15px;">
                     <div>
@@ -203,7 +203,7 @@ function showLinkAccountModal() {
                 </form>
 
                 <p style="color: #666; font-size: 0.75rem; margin-top: 15px; text-align: center;">
-                    ☁️ Your current progress will be saved to the cloud and synced across all your devices.
+                    📤 Your progress will be uploaded to the cloud so you can continue on any device. Local saves happen automatically.
                 </p>
             </div>
         `;

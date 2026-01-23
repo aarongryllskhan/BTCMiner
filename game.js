@@ -2936,6 +2936,15 @@ dogeUpgrades.forEach(u => {
             } else {
                 console.error('WARNING: No save data found in localStorage!');
             }
+
+            // Update leaderboard when page becomes visible (user returned)
+            // This captures offline earnings that were just applied
+            if (typeof window.updateLeaderboard === 'function' && auth && auth.currentUser && !auth.currentUser.isAnonymous) {
+                console.log('🏆 Updating leaderboard with current earnings (includes offline earnings)');
+                window.updateLeaderboard().catch(err => {
+                    console.warn('⚠️ Leaderboard update failed:', err);
+                });
+            }
         }
     });
 
