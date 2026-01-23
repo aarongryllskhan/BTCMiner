@@ -432,6 +432,11 @@ async function logoutUser() {
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
             ]);
             console.log('✅ Signed out from Firebase - auth.currentUser should now be null');
+
+            // Verify auth state is actually cleared
+            if (auth.currentUser) {
+                console.warn('⚠️ WARNING: auth.currentUser still exists after signOut!');
+            }
         } catch (signOutError) {
             console.warn('⚠️ Firebase signOut encountered an issue (may be due to network blocking):', signOutError.message);
             // Continue with logout process anyway

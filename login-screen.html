@@ -517,6 +517,16 @@
             try {
                 console.log('📴 Entering offline mode...');
 
+                // Sign out from Firebase first to clear any cached auth state
+                if (window.parent.auth) {
+                    console.log('🔓 Signing out from Firebase before offline mode...');
+                    window.parent.auth.signOut().then(() => {
+                        console.log('✅ Firebase auth cleared');
+                    }).catch(err => {
+                        console.warn('⚠️ Could not sign out from Firebase:', err);
+                    });
+                }
+
                 // Set offline mode flag in parent
                 if (window.parent) {
                     window.parent.isOfflineMode = true;
@@ -556,6 +566,12 @@
                         panels.forEach(panel => {
                             panel.style.visibility = 'visible';
                         });
+
+                        // Reset game variables to ensure fresh start
+                        if (typeof window.parent.resetGameVariables === 'function') {
+                            console.log('🔄 Resetting game variables for offline mode...');
+                            window.parent.resetGameVariables();
+                        }
                     }, 50);
                 }
             } catch (error) {
