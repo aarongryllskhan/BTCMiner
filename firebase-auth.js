@@ -1364,9 +1364,17 @@ function setupAuthListener() {
             // Load user's game data (smart merge with local save)
             console.log('loadGameFromCloud function available?', typeof window.loadGameFromCloud);
             if (window.loadGameFromCloud) {
-                console.log('Loading game data from cloud...');
+                console.log('Loading game data...');
                 try {
-                    await window.loadGameFromCloud(user.uid);
+                    const cloudLoaded = await window.loadGameFromCloud(user.uid);
+
+                    // If cloud load returned false, it means local save should be used
+                    // Call loadGame() to load from localStorage
+                    if (!cloudLoaded && typeof window.loadGame === 'function') {
+                        console.log('📦 Cloud load skipped - loading from local storage instead...');
+                        window.loadGame();
+                    }
+
                     console.log('✅ Game data loaded successfully');
 
                     // Re-initialize the game UI after loading
