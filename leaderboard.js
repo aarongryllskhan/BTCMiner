@@ -346,7 +346,7 @@ async function openLeaderboardModal() {
             contentDiv.innerHTML = leaderboardHTML;
         }
 
-        modal.style.display = 'flex';
+        modal.classList.add('show');
 
     } catch (error) {
         console.error('❌ Open leaderboard error:', error);
@@ -358,7 +358,7 @@ async function openLeaderboardModal() {
 function closeLeaderboardModal() {
     const modal = document.getElementById('leaderboard-modal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
 }
 

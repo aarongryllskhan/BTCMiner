@@ -946,20 +946,24 @@ button:disabled:hover {
         }
 
         #onboarding-modal,
+        /* Modal base styles - HIDDEN by default */
         #leaderboard-modal,
         #policy-modal,
         #skill-tree-modal,
         #game-instructions {
+            display: none !important;
             overflow: hidden !important;
             justify-content: center !important;
             align-items: center !important;
         }
 
-        /* Only show modals when explicitly set to display: flex via JavaScript */
-        #leaderboard-modal[style*="display: flex"],
-        #policy-modal[style*="display: flex"],
-        #skill-tree-modal[style*="display: flex"],
-        #game-instructions[style*="display: flex"] {
+        /* Show modals only when JavaScript sets display: flex */
+        /* This uses !important to ensure visibility when needed */
+        #onboarding-modal.show,
+        #leaderboard-modal.show,
+        #policy-modal.show,
+        #skill-tree-modal.show,
+        #game-instructions.show {
             display: flex !important;
         }
 

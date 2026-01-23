@@ -833,7 +833,7 @@ function loadGame() {
     function dismissInstructions() {
         const instructionsEl = document.getElementById('game-instructions');
         if (instructionsEl) {
-            instructionsEl.style.display = 'none';
+            instructionsEl.classList.remove('show');
             window.safeStorage.setItem('instructionsDismissed', 'true');
         }
     }

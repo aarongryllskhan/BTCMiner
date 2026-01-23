@@ -292,7 +292,7 @@
                     <button id="login-btn" style="background: #f7931a; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="showLoginScreen()">LOGIN / SIGN UP</button>
                     <button style="background: #FFD700; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openLeaderboardModal()">🏆 LEADERBOARD</button>
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
-                    <button style="background: #4CAF50; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='block'; window.safeStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
+                    <button style="background: #4CAF50; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').classList.add('show'); window.safeStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
                 </div>
@@ -725,7 +725,7 @@
         // Hide onboarding modal
         const onboardingModal = document.getElementById('onboarding-modal');
         if (onboardingModal) {
-            onboardingModal.style.display = 'none';
+            onboardingModal.classList.remove('show');
         }
 
         // Ensure main layout is visible and interactive with all CSS resets
@@ -848,7 +848,7 @@
                 // If login screen is visible, don't show onboarding yet
                 if (!isLoginVisible) {
                     console.log('📋 Showing onboarding modal (not both accepted yet)');
-                    document.getElementById('onboarding-modal').style.display = 'flex';
+                    document.getElementById('onboarding-modal').classList.add('show');
                 } else {
                     console.log('📋 Skipping onboarding modal (login screen visible)');
                 }
@@ -856,7 +856,7 @@
         } else {
             console.log('✅ Onboarding already complete - not showing modal');
             // Make sure modal is hidden
-            document.getElementById('onboarding-modal').style.display = 'none';
+            document.getElementById('onboarding-modal').classList.remove('show');
         }
     });
 </script>

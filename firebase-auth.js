@@ -890,7 +890,7 @@ function setupAuthListener() {
                 const onboardingModal = document.getElementById('onboarding-modal');
                 if (onboardingModal) {
                     console.log('Showing onboarding modal after login...');
-                    onboardingModal.style.display = 'flex';
+                    onboardingModal.classList.add('show');
                 }
             }
 

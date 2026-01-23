@@ -737,7 +737,7 @@ function renderSkillTree() {
 function openSkillTreeModal() {
     const modal = document.getElementById('skill-tree-modal');
     if (modal) {
-        modal.style.display = 'flex';
+        modal.classList.add('show');
         renderSkillTree();
         updateSkillTreeUI();
     }
@@ -749,7 +749,7 @@ function openSkillTreeModal() {
 function closeSkillTreeModal() {
     const modal = document.getElementById('skill-tree-modal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
 }
 
