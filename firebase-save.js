@@ -10,6 +10,12 @@ const MANUAL_SAVE_COOLDOWN = 10 * 60 * 1000; // 10 minutes in milliseconds
 // Save game data to Firebase Cloud
 async function saveGameToCloud(isManualSave = false) {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - skipping cloud save');
+            return false;
+        }
+
         const user = auth.currentUser;
 
         if (!user) {
@@ -247,6 +253,12 @@ function resetGameVariables() {
 // Load game data from Firebase Cloud (smart merge with local save)
 async function loadGameFromCloud(userId = null) {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - using local save only');
+            return false;
+        }
+
         const user = userId ? { uid: userId } : auth.currentUser;
 
         if (!user) {
@@ -541,6 +553,12 @@ async function logSuspiciousActivity(userId, type, data) {
 let autoSaveInterval;
 
 function startAutoSave() {
+    // Check if we're in offline mode (no Firebase)
+    if (window.isOfflineMode) {
+        console.log('📴 Offline mode - cloud auto-save disabled');
+        return;
+    }
+
     // Clear any existing interval
     if (autoSaveInterval) {
         clearInterval(autoSaveInterval);
@@ -550,7 +568,7 @@ function startAutoSave() {
     if (auth.currentUser && !auth.currentUser.isAnonymous) {
         // Save every 20 minutes (1,200,000 milliseconds)
         autoSaveInterval = setInterval(async () => {
-            if (auth.currentUser && !auth.currentUser.isAnonymous) {
+            if (auth.currentUser && !auth.currentUser.isAnonymous && !window.isOfflineMode) {
                 console.log('🔄 Auto-saving to cloud (20 min interval)...');
                 await saveGameToCloud(false); // false = not manual save, skip cooldown
             }

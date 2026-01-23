@@ -633,10 +633,11 @@ function setupAuthListener() {
                 loginScreen.style.display = 'flex';
             }
 
-            // Show the login button (for users who skipped)
+            // Show the login button (for users who skipped or are in offline mode)
             const loginBtn = document.getElementById('login-btn');
             if (loginBtn) {
                 loginBtn.style.display = 'inline-block';
+                loginBtn.textContent = 'LOGIN / SIGN UP';
             }
 
             console.log('✅ Logout complete - UI updated and game state cleared');

@@ -19,6 +19,12 @@ const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds (more real-ti
 // Update player's leaderboard entry
 async function updateLeaderboard() {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - skipping leaderboard update');
+            return false;
+        }
+
         if (!auth.currentUser) {
             console.log('⚠️ No user logged in - skipping leaderboard update');
             return false;
@@ -58,6 +64,12 @@ async function updateLeaderboard() {
 // Fetch top 10 players (optimized for free tier with caching)
 async function fetchLeaderboard(limit = 10, forceRefresh = false) {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - leaderboard not available');
+            return [];
+        }
+
         // Check if we have valid cached data (less than 5 minutes old)
         const now = Date.now();
         const cacheAge = now - leaderboardCacheTimestamp;
@@ -103,6 +115,12 @@ async function fetchLeaderboard(limit = 10, forceRefresh = false) {
 // Get player's current rank
 async function getPlayerRank(userId = null) {
     try {
+        // Check if we're in offline mode (no Firebase)
+        if (window.isOfflineMode) {
+            console.log('📴 Offline mode - player rank not available');
+            return null;
+        }
+
         const uid = userId || auth.currentUser?.uid;
         if (!uid) return null;
 

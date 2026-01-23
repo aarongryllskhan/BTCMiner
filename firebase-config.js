@@ -87,10 +87,11 @@ function updateUserUI(user) {
         }
     }
 
-    // Hide the LOGIN/SIGN UP button when user is logged in (not guest)
+    // Show the LOGIN/SIGN UP button only for guest users
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) {
         loginBtn.style.display = isGuest ? 'inline-block' : 'none';
+        loginBtn.textContent = '🔗 LINK ACCOUNT';
     }
 
     // Create or get user info display - insert it next to login button
@@ -108,19 +109,9 @@ function updateUserUI(user) {
 
     userInfoDiv.style.cssText = 'display: inline-flex; align-items: center; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; border: 1px solid #f7931a;';
 
-    // Show "Link Account" button for guest users only
-    const actionBtn = isGuest ? `
-        <button onclick="showLinkAccountModal()"
-                title="Create an account to save your progress across devices. Auto-syncs every 20 minutes."
-                style="background: #4CAF50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
-            ☁️ Create Account
-        </button>
-    ` : '';
-
     userInfoDiv.innerHTML = `
         <span style="color: #f7931a; font-size: 0.55rem;">👤</span>
         <span style="color: #fff; font-size: 0.55rem; font-weight: 700; margin: 0 6px;">${displayName}</span>
-        ${actionBtn}
         <button onclick="logoutUser()" style="background: #ff3344; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700; margin-left: 4px;">
             Logout
         </button>

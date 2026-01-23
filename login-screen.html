@@ -277,7 +277,7 @@
             </button>
 
             <div style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; window.parent.document.getElementById('main-layout').style.display='grid'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
+                <a href="#" onclick="handleOfflineMode(); return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
                     Skip and play offline →
                 </a>
             </div>
@@ -321,7 +321,7 @@
             </button>
 
             <div style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="window.parent.document.getElementById('login-screen').style.display='none'; window.parent.document.getElementById('main-layout').style.display='grid'; return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
+                <a href="#" onclick="handleOfflineMode(); return false;" style="color: #888; text-decoration: none; font-size: 0.85rem;">
                     Skip and play offline →
                 </a>
             </div>
@@ -492,6 +492,31 @@
             } catch (error) {
                 console.error('Guest login failed:', error);
                 alert('Guest login failed: ' + error.message);
+            }
+        }
+
+        // Handle offline mode (no Firebase at all)
+        function handleOfflineMode() {
+            try {
+                console.log('📴 Entering offline mode...');
+
+                // Set offline mode flag in parent
+                if (window.parent) {
+                    window.parent.isOfflineMode = true;
+
+                    // Hide login screen and show game
+                    window.parent.document.getElementById('login-screen').style.display = 'none';
+                    window.parent.document.getElementById('main-layout').style.display = 'grid';
+
+                    // Show LOGIN/SIGN UP button for offline users
+                    const loginBtn = window.parent.document.getElementById('login-btn');
+                    if (loginBtn) {
+                        loginBtn.style.display = 'inline-block';
+                        loginBtn.textContent = 'LOGIN / SIGN UP';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to enter offline mode:', error);
             }
         }
 
