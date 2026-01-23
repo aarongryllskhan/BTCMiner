@@ -453,7 +453,11 @@ async function logoutUser() {
         // Clear local game data
         // Clear localStorage to prevent data leaking to next user
         console.log('🗑️ Clearing localStorage...');
-        localStorage.clear();
+        try {
+            localStorage.clear();
+        } catch (e) {
+            console.warn('⚠️ Could not clear localStorage (may be in private mode)');
+        }
         console.log('✅ localStorage cleared');
 
         // Reset login iframe to clear form state
@@ -568,7 +572,6 @@ async function playAsGuest() {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        showMessage('Playing as guest. Click "🔗 LINK ACCOUNT" to create an account and save your progress!', 'info');
         return user;
 
     } catch (error) {
@@ -730,8 +733,8 @@ function setupAuthListener() {
             console.log('User UID:', user.uid);
 
             // Check age disclaimer and terms before showing game
-            const ageAccepted = localStorage.getItem('ageDisclaimerAccepted');
-            const termsAccepted = localStorage.getItem('termsAccepted');
+            const ageAccepted = window.safeStorage.getItem('ageDisclaimerAccepted');
+            const termsAccepted = window.safeStorage.getItem('termsAccepted');
 
             if (!ageAccepted) {
                 console.log('⚠️ Age disclaimer not accepted - showing age modal');

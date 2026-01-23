@@ -25,33 +25,98 @@
     <script>
         // Check if app has been updated
         const appVersion = '1.0.3'; // Increment this version to force cache clear
-        const storedVersion = localStorage.getItem('appVersion');
 
-        if (storedVersion !== appVersion) {
-            console.log('🔄 App updated! Clearing old cache...');
+        try {
+            const storedVersion = localStorage.getItem('appVersion');
 
-            // Clear all app-related caches
-            localStorage.removeItem('satoshiTerminalSave');
-            localStorage.removeItem('instructionsDismissed');
+            if (storedVersion !== appVersion) {
+                console.log('🔄 App updated! Clearing old cache...');
 
-            // Clear service worker cache if it exists
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    registrations.forEach(reg => reg.unregister());
-                });
+                // Clear all app-related caches
+                localStorage.removeItem('satoshiTerminalSave');
+                localStorage.removeItem('instructionsDismissed');
+
+                // Clear service worker cache if it exists
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(reg => reg.unregister());
+                    });
+                }
+
+                // Store new version BEFORE reload to prevent infinite loop
+                localStorage.setItem('appVersion', appVersion);
+
+                console.log('✅ Cache cleared! Forcing hard reload...');
+
+                // Force a hard reload to clear browser cache
+                // This bypasses the HTTP cache and forces fresh JS/CSS files
+                setTimeout(() => {
+                    window.location.reload(true); // Hard reload
+                }, 100);
             }
-
-            // Store new version BEFORE reload to prevent infinite loop
-            localStorage.setItem('appVersion', appVersion);
-
-            console.log('✅ Cache cleared! Forcing hard reload...');
-
-            // Force a hard reload to clear browser cache
-            // This bypasses the HTTP cache and forces fresh JS/CSS files
-            setTimeout(() => {
-                window.location.reload(true); // Hard reload
-            }, 100);
+        } catch (e) {
+            // localStorage not available (incognito mode, etc.)
+            console.warn('⚠️ localStorage not available (incognito mode?). Continuing without local cache...');
         }
+    </script>
+
+    <!-- Safe Storage Wrapper for Incognito/Private Mode Support -->
+    <script>
+        // Create a safe storage object that works in incognito mode
+        window.safeStorage = {
+            _storage: {},
+            _isAvailable: false,
+
+            init: function() {
+                try {
+                    localStorage.setItem('_test_', 'test');
+                    localStorage.removeItem('_test_');
+                    this._isAvailable = true;
+                } catch (e) {
+                    this._isAvailable = false;
+                    console.warn('⚠️ localStorage unavailable - using memory storage instead');
+                }
+            },
+
+            setItem: function(key, value) {
+                try {
+                    if (this._isAvailable) {
+                        localStorage.setItem(key, value);
+                    } else {
+                        this._storage[key] = value;
+                    }
+                } catch (e) {
+                    this._storage[key] = value;
+                }
+            },
+
+            getItem: function(key) {
+                try {
+                    if (this._isAvailable) {
+                        return localStorage.getItem(key);
+                    } else {
+                        return this._storage[key] || null;
+                    }
+                } catch (e) {
+                    return this._storage[key] || null;
+                }
+            },
+
+            removeItem: function(key) {
+                try {
+                    if (this._isAvailable) {
+                        localStorage.removeItem(key);
+                    } else {
+                        delete this._storage[key];
+                    }
+                } catch (e) {
+                    delete this._storage[key];
+                }
+            }
+        };
+
+        // Initialize safe storage
+        window.safeStorage.init();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -162,7 +227,7 @@
                     <button id="login-btn" style="background: #f7931a; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="showLoginScreen()">LOGIN / SIGN UP</button>
                     <button style="background: #FFD700; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openLeaderboardModal()">🏆 LEADERBOARD</button>
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
-                    <button style="background: #4CAF50; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='block'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
+                    <button style="background: #4CAF50; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='block'; window.safeStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
                 </div>
@@ -576,8 +641,8 @@
 
     // Onboarding modal functions
     function acceptOnboarding() {
-        localStorage.setItem('ageDisclaimerAccepted', 'true');
-        localStorage.setItem('termsAccepted', 'true');
+        window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
+        window.safeStorage.setItem('termsAccepted', 'true');
 
         // Hide onboarding modal
         const onboardingModal = document.getElementById('onboarding-modal');
@@ -690,7 +755,7 @@
 
     // Check if onboarding (age + terms) has been accepted on page load
     window.addEventListener('load', function() {
-        if (!localStorage.getItem('ageDisclaimerAccepted') || !localStorage.getItem('termsAccepted')) {
+        if (!window.safeStorage.getItem('ageDisclaimerAccepted') || !window.safeStorage.getItem('termsAccepted')) {
             // Only show onboarding modal if login screen is not visible
             // (don't show during login/register, only after sign in)
             setTimeout(() => {
@@ -730,14 +795,14 @@
 <script>
     // Check if user has already made a cookie choice
     function checkCookieConsent() {
-        const consent = localStorage.getItem('cookieConsent');
+        const consent = window.safeStorage.getItem('cookieConsent');
         // Only show if user hasn't made a choice previously
         if (!consent) {
             // Show banner after age disclaimer and terms acceptance
             // Wait for those modals to be accepted first
             setTimeout(() => {
-                const ageAccepted = localStorage.getItem('ageDisclaimerAccepted');
-                const termsAccepted = localStorage.getItem('termsAccepted');
+                const ageAccepted = window.safeStorage.getItem('ageDisclaimerAccepted');
+                const termsAccepted = window.safeStorage.getItem('termsAccepted');
 
                 // Only show cookie modal if age and terms have been accepted
                 if (ageAccepted && termsAccepted) {
@@ -755,8 +820,8 @@
 
     // Accept all cookies
     function acceptAllCookies() {
-        localStorage.setItem('cookieConsent', 'all');
-        localStorage.setItem('cookieConsentDate', new Date().toISOString());
+        window.safeStorage.setItem('cookieConsent', 'all');
+        window.safeStorage.setItem('cookieConsentDate', new Date().toISOString());
 
         // Enable Google Analytics and other tracking
         window['ga-disable-G-2H559N5J64'] = false;
@@ -774,8 +839,8 @@
 
     // Accept essential cookies only
     function acceptEssentialOnly() {
-        localStorage.setItem('cookieConsent', 'essential');
-        localStorage.setItem('cookieConsentDate', new Date().toISOString());
+        window.safeStorage.setItem('cookieConsent', 'essential');
+        window.safeStorage.setItem('cookieConsentDate', new Date().toISOString());
 
         // Disable Google Analytics
         window['ga-disable-G-2H559N5J64'] = true;
