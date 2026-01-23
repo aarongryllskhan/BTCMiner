@@ -396,8 +396,109 @@ async function loginWithGoogle() {
     }
 }
 
-// Logout user
+// Show warning modal when guest tries to logout
+function showGuestLogoutWarning(guestUsername, onContinue) {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'guest-logout-warning-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 999999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.3s ease-out;
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            border: 3px solid #ff3344;
+            box-shadow: 0 0 50px rgba(255, 51, 68, 0.4);
+            text-align: center;
+        ">
+            <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+            <h2 style="color: #ff3344; margin-bottom: 15px; font-size: 1.8rem;">Guest Account Warning</h2>
+            <p style="color: #fff; margin-bottom: 20px; font-size: 1.1rem; line-height: 1.6;">
+                You are logged in as <strong>${guestUsername}</strong> (guest account).
+            </p>
+            <p style="color: #ffcccc; margin-bottom: 30px; font-size: 1rem; line-height: 1.6;">
+                ⚠️ <strong>If you logout now, ALL your progress will be lost!</strong><br><br>
+                Guest accounts do not save progress when you log out.
+            </p>
+            <div style="background: rgba(255, 51, 68, 0.1); padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #ff3344;">
+                <p style="color: #fff; margin: 0; font-size: 0.95rem;">
+                    💡 <strong>To save your progress, create a permanent account:</strong><br>
+                    Click the <strong>"🔗 LINK ACCOUNT"</strong> button in the top-right corner.
+                </p>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="document.getElementById('guest-logout-warning-modal')?.remove()" style="
+                    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+                    color: #fff;
+                    border: none;
+                    padding: 15px 40px;
+                    font-size: 1rem;
+                    font-weight: 700;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    ✓ Continue Playing
+                </button>
+                <button onclick="window._confirmGuestLogout();" style="
+                    background: linear-gradient(135deg, #ff3344 0%, #cc0000 100%);
+                    color: #fff;
+                    border: none;
+                    padding: 15px 40px;
+                    font-size: 1rem;
+                    font-weight: 700;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    ✗ Logout Anyway
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Store the function to be called if logout is confirmed
+    window._confirmGuestLogout = () => {
+        modal.remove();
+        performLogout();
+    };
+}
+
+// Logout user - shows warning if guest
 async function logoutUser() {
+    // Check if user is a guest and show warning
+    if (auth.currentUser && auth.currentUser.isAnonymous) {
+        console.log('⚠️ Guest user attempting to logout - showing warning...');
+        const guestUsername = localStorage.getItem('guestUsername') || 'Guest';
+
+        // Show a modal warning for guest logout
+        showGuestLogoutWarning(guestUsername, window._confirmGuestLogout);
+        return; // Don't proceed with logout yet
+    }
+
+    // Not a guest, proceed with logout
+    await performLogout();
+}
+
+// Perform the actual logout (called after user confirms)
+async function performLogout() {
     try {
         console.log('🔓 Starting logout process...');
 
