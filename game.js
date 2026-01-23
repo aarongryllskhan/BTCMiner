@@ -1239,13 +1239,15 @@ function loadGame() {
         });
     }
 
-    function switchTab(tab) {
+    function switchTab(tab, event) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
         const tabElement = document.getElementById(tab + '-tab');
         tabElement.classList.add('active');
-        event.target.classList.add('active');
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
 
         // Reset purchase quantity to 1x when switching tabs
         setBuyQuantity(1);

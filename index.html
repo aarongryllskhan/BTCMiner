@@ -275,7 +275,7 @@
                             <div id="power-bar-fill" style="height: 100%; background: #00ff88; border-radius: 3px; width: 0%;"></div>
                         </div>
                     </div>
-                    <button class="tab-btn" onclick="switchTab('power')" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">UPGRADE POWER SUPPLY</button>
+                    <button class="tab-btn" onclick="switchTab('power', event)" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">UPGRADE POWER SUPPLY</button>
                 </div>
             </div>
 
@@ -287,12 +287,12 @@
 
             <!-- Tab Buttons -->
             <div class="tab-buttons" style="margin-bottom: 6px;">
-                <button class="tab-btn active" onclick="switchTab('btc-mining')" style="border-color: #f7931a; color: #f7931a;">BTC</button>
-                <button class="tab-btn" onclick="switchTab('eth-mining')" style="border-color: #627eea; color: #627eea;">ETH</button>
-                <button class="tab-btn" onclick="switchTab('doge-mining')" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
+                <button class="tab-btn active" onclick="switchTab('btc-mining', event)" style="border-color: #f7931a; color: #f7931a;">BTC</button>
+                <button class="tab-btn" onclick="switchTab('eth-mining', event)" style="border-color: #627eea; color: #627eea;">ETH</button>
+                <button class="tab-btn" onclick="switchTab('doge-mining', event)" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
             </div>
             <div class="tab-buttons">
-                <button class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
+                <button class="tab-btn" onclick="switchTab('market', event)" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
             </div>
 
             <!-- BTC Mining Tab -->
