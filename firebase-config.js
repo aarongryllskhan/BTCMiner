@@ -139,11 +139,18 @@ async function updateUserUI(user) {
     // Add click handler to logout button
     const logoutButton = document.getElementById('logout-button-ui');
     if (logoutButton) {
-        logoutButton.addEventListener('click', () => {
-            if (window.logoutUser) {
-                window.logoutUser();
+        console.log('Attaching logout handler, window.logoutUser exists?', typeof window.logoutUser);
+        logoutButton.addEventListener('click', async () => {
+            console.log('Logout button clicked!');
+            if (typeof window.logoutUser === 'function') {
+                console.log('Calling logoutUser...');
+                await window.logoutUser();
+            } else {
+                console.error('window.logoutUser is not a function!');
             }
         });
+    } else {
+        console.error('Logout button not found!');
     }
 }
 
