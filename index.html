@@ -198,8 +198,10 @@
 <body>
 
     <!-- Login Screen (Firebase) -->
-    <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 100000; overflow: auto;">
-        <iframe src="login-screen.html?v=20260123044550" style="width: 100%; height: 100%; border: none;"></iframe>
+    <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 100000; overflow: auto; display: flex; justify-content: center; align-items: center;">
+        <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative;">
+            <iframe src="login-screen.html?v=20260123044550" style="width: 100%; height: 100%; border: none; max-width: 100%; max-height: 100%;"></iframe>
+        </div>
     </div>
 
     <!-- Consolidated Onboarding Modal (Age + Terms) -->
@@ -1022,50 +1024,37 @@
 <!-- Load leaderboard system -->
 <script src="leaderboard.js?v=20260123063136"></script>
 
-<!-- Mobile Layout Enforcer -->
+<!-- Mobile Layout Enforcer - Minimal intervention, CSS-first approach -->
 <script>
-    // Ensure mobile layout is applied correctly
     function enforceMobileLayout() {
         const width = window.innerWidth;
-        const height = window.innerHeight;
         const mainLayout = document.getElementById('main-layout');
 
-        // Breakpoint at 1440px - below this should be mobile layout
-        const isMobileWidth = width <= 1440;
-        const isPortrait = width < height;
-        const shouldStackLayout = isMobileWidth || isPortrait;
+        if (!mainLayout) return;
 
-        if (mainLayout) {
-            if (shouldStackLayout) {
-                // Mobile layout (single column)
-                if (mainLayout.style.display !== 'flex') {
-                    console.log('📱 ENFORCING MOBILE LAYOUT:');
-                    console.log('  Window: ' + width + 'x' + height + 'px');
-                    console.log('  Mobile Width (<=1440px or portrait): ' + true);
+        // Log viewport for debugging
+        console.log('📱 Viewport: ' + width + 'px');
 
-                    // Don't override inline styles - CSS media queries handle this
-                    // Just ensure nothing is forcing grid layout
-                    mainLayout.classList.remove('desktop-layout');
-                    mainLayout.classList.add('mobile-layout');
-                }
-            } else {
-                // Desktop layout (2 columns)
-                if (mainLayout.style.display !== 'grid') {
-                    console.log('🖥️ SWITCHING TO DESKTOP LAYOUT:');
-                    console.log('  Window: ' + width + 'x' + height + 'px');
-
-                    mainLayout.classList.remove('mobile-layout');
-                    mainLayout.classList.add('desktop-layout');
-                }
-            }
+        // Only clear inline styles that might override CSS media queries
+        // CSS media queries will handle the actual layout
+        if (width <= 1440) {
+            // Mobile: ensure no inline styles are forcing grid
+            mainLayout.style.gridTemplateColumns = '';
+            mainLayout.style.display = '';
+            mainLayout.style.height = '';
+            mainLayout.style.flexDirection = '';
         }
     }
 
-    // Run on load and resize
-    window.addEventListener('DOMContentLoaded', enforceMobileLayout);
+    // Apply on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', enforceMobileLayout);
+    } else {
+        enforceMobileLayout();
+    }
+
+    // Apply on window resize
     window.addEventListener('resize', enforceMobileLayout);
-    // Also run immediately with minimal delay to avoid flash
-    setTimeout(enforceMobileLayout, 10);
 </script>
 
 <!-- Initialize Firebase -->
