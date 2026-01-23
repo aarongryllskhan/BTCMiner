@@ -758,6 +758,15 @@ function setupAuthListener() {
                 mainLayout.style.userSelect = 'auto'; // Re-enable text selection
             }
 
+            // Show onboarding modal if not accepted (age + terms)
+            if (!ageAccepted || !termsAccepted) {
+                const onboardingModal = document.getElementById('onboarding-modal');
+                if (onboardingModal) {
+                    console.log('Showing onboarding modal after login...');
+                    onboardingModal.style.display = 'flex';
+                }
+            }
+
             // Update user UI with login info (shows username)
             if (window.updateUserUI) {
                 window.updateUserUI(user);

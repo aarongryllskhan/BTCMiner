@@ -626,9 +626,16 @@
     // Check if onboarding (age + terms) has been accepted on page load
     window.addEventListener('load', function() {
         if (!localStorage.getItem('ageDisclaimerAccepted') || !localStorage.getItem('termsAccepted')) {
-            // Show onboarding modal if either hasn't been accepted
+            // Only show onboarding modal if login screen is not visible
+            // (don't show during login/register, only after sign in)
             setTimeout(() => {
-                document.getElementById('onboarding-modal').style.display = 'flex';
+                const loginScreen = document.getElementById('login-screen');
+                const isLoginVisible = loginScreen && loginScreen.style.display !== 'none';
+
+                // If login screen is visible, don't show onboarding yet
+                if (!isLoginVisible) {
+                    document.getElementById('onboarding-modal').style.display = 'flex';
+                }
             }, 500);
         }
     });
