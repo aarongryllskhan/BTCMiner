@@ -316,35 +316,31 @@ async function loadGameFromCloud(userId = null) {
             console.log('🔄 Loading cloud data due to account switch');
             resetGameVariables();
         } else {
-            // Same account - compare cloud vs local to use better save (device transfer scenario)
-            // Check both window variable AND localStorage to ensure we don't lose progress
-            const windowLifetime = window.lifetimeEarnings || 0;
-            let localStorageLifetime = 0;
+            // Same account - compare timestamps to load the most recent save
+            const cloudSaveTime = cloudData.lastSaved ? new Date(cloudData.lastSaved).getTime() : 0;
+            let localSaveTime = 0;
+            let localSaveData = null;
+
             try {
-                const savedGame = localStorage.getItem('idleBtcMinerSave');
+                const savedGame = localStorage.getItem('satoshiTerminalSave');
                 if (savedGame) {
-                    const parsed = JSON.parse(savedGame);
-                    localStorageLifetime = parsed.lifetimeEarnings || 0;
+                    localSaveData = JSON.parse(savedGame);
+                    localSaveTime = localSaveData.lastSaveTime || 0;
                 }
             } catch (e) {
                 console.warn('Could not parse localStorage save:', e);
             }
 
-            const localLifetime = Math.max(windowLifetime, localStorageLifetime);
-            const cloudLifetime = cloudData.lifetimeEarnings || 0;
+            console.log('⏰ Local save time:', new Date(localSaveTime).toLocaleString());
+            console.log('☁️ Cloud save time:', new Date(cloudSaveTime).toLocaleString());
 
-            console.log('📦 Local cache - window.lifetimeEarnings:', windowLifetime);
-            console.log('📦 Local cache - localStorage.lifetimeEarnings:', localStorageLifetime);
-            console.log('📦 Local cache - using max:', localLifetime);
-            console.log('☁️ Cloud data - lifetimeEarnings:', cloudLifetime);
-
-            if (localLifetime > cloudLifetime) {
-                console.log('🏠 Local save is better - keeping local cache');
-                showMessage('Local progress kept (more advanced than cloud save)', 'success');
+            if (localSaveTime > cloudSaveTime) {
+                console.log('🏠 Local save is newer - keeping local cache');
+                showMessage('Local save loaded (more recent than cloud)', 'info');
                 return false;
             }
 
-            console.log('☁️ Cloud save is better or equal - loading from cloud');
+            console.log('☁️ Cloud save is newer or equal - loading from cloud');
             resetGameVariables();
         }
 
@@ -585,19 +581,19 @@ function startAutoSave() {
 
     // Auto-save for all logged-in users (including guests)
     if (auth.currentUser) {
-        // Save every 5 minutes for guests (more frequent to prevent progress loss)
-        // Save every 20 minutes for registered users
-        const isGuest = auth.currentUser.isAnonymous;
-        const saveInterval = isGuest ? 300000 : 1200000; // 5 min for guests, 20 min for registered
+        // Save every 20 minutes for all users (both guests and registered)
+        // Local saves happen frequently during gameplay (every action)
+        // Cloud saves are less frequent to optimize Firebase free tier usage
+        const saveInterval = 1200000; // 20 minutes for all users
 
         autoSaveInterval = setInterval(async () => {
             if (auth.currentUser && !window.isOfflineMode) {
-                console.log(`🔄 Auto-saving to cloud (${isGuest ? '5 min guest' : '20 min'} interval)...`);
+                console.log('🔄 Auto-saving to cloud (20 min interval)...');
                 await saveGameToCloud(false); // false = not manual save, skip cooldown
             }
         }, saveInterval);
 
-        console.log(`✅ Auto cloud save started (every ${isGuest ? '5 minutes - guest' : '20 minutes'})`);
+        console.log('✅ Auto cloud save started (every 20 minutes for all users - local saves happen much more frequently during play)');
     } else {
         console.log('ℹ️ No user logged in - cloud auto-save disabled');
     }

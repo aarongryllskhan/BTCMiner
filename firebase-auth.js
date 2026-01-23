@@ -443,7 +443,22 @@ function showGuestLogoutWarning(guestUsername, onContinue) {
                     Click the <strong>"🔗 LINK ACCOUNT"</strong> button in the top-right corner.
                 </p>
             </div>
-            <div style="display: flex; gap: 15px; justify-content: center;">
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button id="link-account-btn-modal" style="
+                    background: linear-gradient(135deg, #f7931a 0%, #ff6b00 100%);
+                    color: #fff;
+                    border: none;
+                    padding: 15px 40px;
+                    font-size: 1rem;
+                    font-weight: 700;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                    flex: 1;
+                    min-width: 180px;
+                " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    🔗 Link Account
+                </button>
                 <button id="continue-playing-btn" style="
                     background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
                     color: #fff;
@@ -454,6 +469,8 @@ function showGuestLogoutWarning(guestUsername, onContinue) {
                     border-radius: 8px;
                     cursor: pointer;
                     transition: transform 0.2s;
+                    flex: 1;
+                    min-width: 180px;
                 " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     ✓ Continue Playing
                 </button>
@@ -467,6 +484,8 @@ function showGuestLogoutWarning(guestUsername, onContinue) {
                     border-radius: 8px;
                     cursor: pointer;
                     transition: transform 0.2s;
+                    flex: 1;
+                    min-width: 180px;
                 " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     ✗ Logout Anyway
                 </button>
@@ -478,8 +497,22 @@ function showGuestLogoutWarning(guestUsername, onContinue) {
     console.log('✅ Modal added to DOM');
 
     // Add click handlers
+    const linkAccountBtn = document.getElementById('link-account-btn-modal');
     const continueBtn = document.getElementById('continue-playing-btn');
     const logoutBtn = document.getElementById('logout-anyway-btn');
+
+    if (linkAccountBtn) {
+        linkAccountBtn.addEventListener('click', () => {
+            console.log('Link account button clicked from logout warning');
+            modal.remove();
+            // Show the link account modal
+            if (typeof window.showLinkAccountModal === 'function') {
+                window.showLinkAccountModal();
+            } else {
+                console.error('showLinkAccountModal function not available');
+            }
+        });
+    }
 
     if (continueBtn) {
         continueBtn.addEventListener('click', () => {
