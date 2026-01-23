@@ -87,23 +87,41 @@ async function updateLeaderboard() {
 
         const user = auth.currentUser;
 
-        // Fetch username from Firestore (including guest users)
+        // Fetch username from Firestore (including guest users) with retry
         let username = 'Anonymous';
         try {
-            const userDoc = await db.collection('users').doc(user.uid).get();
+            let userDoc = await db.collection('users').doc(user.uid).get();
+            let retries = 0;
+            const maxRetries = user.isAnonymous ? 5 : 0;
+
+            // Retry for guest users to wait for username to be created
+            while ((!userDoc.exists || !userDoc.data().username) && retries < maxRetries) {
+                console.log(`⏳ Waiting for guest username for leaderboard... (attempt ${retries + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 400)); // Wait 400ms
+                userDoc = await db.collection('users').doc(user.uid).get();
+                retries++;
+            }
+
             if (userDoc.exists && userDoc.data().username) {
                 username = userDoc.data().username;
                 console.log('✅ Using Firestore username:', username);
+            } else if (!user.isAnonymous) {
+                // For non-guest users, fallback to email prefix
+                username = user.email ? user.email.split('@')[0] : 'Anonymous';
+                console.log('⚠️ Using email fallback username:', username);
             } else {
-                // No username set - skip leaderboard update for now
-                // Username should be set during registration, don't prompt here to avoid double-prompt
-                console.log('⚠️ No username found for user, skipping leaderboard update');
+                // Guest user but no username found after retries - skip for now
+                console.log('⚠️ No guest username found after retries, skipping leaderboard update');
                 return false;
             }
         } catch (error) {
             console.error('Failed to fetch username for leaderboard:', error);
-            // Fallback to email prefix
-            username = user.email ? user.email.split('@')[0] : 'Anonymous';
+            // Fallback to email prefix for non-guest users
+            if (!user.isAnonymous) {
+                username = user.email ? user.email.split('@')[0] : 'Anonymous';
+            } else {
+                return false;
+            }
         }
 
         // Get current lifetime earnings (use window accessor for closure variable)

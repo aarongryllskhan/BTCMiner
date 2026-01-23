@@ -96,12 +96,24 @@ async function updateUserUI(user) {
     const userId = user.uid;
     const isGuest = user.isAnonymous;
 
-    // Fetch username from Firestore
+    // Fetch username from Firestore with retry for guest users
     let displayName = 'Guest Player';
     try {
-        const userDoc = await db.collection('users').doc(userId).get();
+        // For guest users, retry a few times to wait for the username to be created
+        let userDoc = await db.collection('users').doc(userId).get();
+        let retries = 0;
+        const maxRetries = isGuest ? 5 : 0;
+
+        while ((!userDoc.exists || !userDoc.data().username) && retries < maxRetries) {
+            console.log(`⏳ Waiting for guest username to be created... (attempt ${retries + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 300)); // Wait 300ms
+            userDoc = await db.collection('users').doc(userId).get();
+            retries++;
+        }
+
         if (userDoc.exists && userDoc.data().username) {
             displayName = userDoc.data().username;
+            console.log('✅ Username fetched from Firestore:', displayName);
         } else if (!isGuest) {
             // For non-guest users, try other fallbacks
             if (user.displayName) {
@@ -111,6 +123,8 @@ async function updateUserUI(user) {
                 // Last resort: extract from email
                 displayName = user.email.split('@')[0];
             }
+        } else {
+            console.warn('⚠️ Guest username not found after retries, using default');
         }
     } catch (error) {
         console.error('Failed to fetch username:', error);
@@ -217,6 +231,12 @@ function showLinkAccountModal() {
 
                 <form onsubmit="handleLinkAccount(event)" style="display: flex; flex-direction: column; gap: 15px;">
                     <div>
+                        <label style="color: #aaa; font-size: 0.9rem; display: block; margin-bottom: 5px;">Username</label>
+                        <input type="text" id="link-username" required placeholder="3-20 characters" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_-]+" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 1rem;">
+                        <small style="color: #888; font-size: 0.75rem;">Letters, numbers, _ and - only</small>
+                    </div>
+
+                    <div>
                         <label style="color: #aaa; font-size: 0.9rem; display: block; margin-bottom: 5px;">Email</label>
                         <input type="email" id="link-email" required placeholder="your@email.com" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 1rem;">
                     </div>
@@ -265,9 +285,20 @@ function hideLinkAccountModal() {
 async function handleLinkAccount(e) {
     e.preventDefault();
 
+    const username = document.getElementById('link-username').value.trim();
     const email = document.getElementById('link-email').value;
     const password = document.getElementById('link-password').value;
     const confirmPassword = document.getElementById('link-password-confirm').value;
+
+    if (username.length < 3 || username.length > 20) {
+        alert('Username must be between 3 and 20 characters!');
+        return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        alert('Username can only contain letters, numbers, underscores, and hyphens!');
+        return;
+    }
 
     if (password !== confirmPassword) {
         alert('Passwords do not match!');
@@ -280,7 +311,7 @@ async function handleLinkAccount(e) {
     }
 
     try {
-        await linkGuestToEmail(email, password);
+        await linkGuestToEmail(email, password, username);
         hideLinkAccountModal();
     } catch (error) {
         console.error('Account linking failed:', error);
