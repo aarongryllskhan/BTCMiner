@@ -2686,6 +2686,17 @@ dogeUpgrades.forEach(u => {
 
         // Function to initialize the chart
         const initChart = () => {
+            // Destroy existing chart instance if it exists
+            if (window.nwChartInstance) {
+                try {
+                    window.nwChartInstance.destroy();
+                    console.log('Destroyed existing chart instance');
+                } catch (e) {
+                    console.error('Error destroying chart:', e);
+                }
+                window.nwChartInstance = null;
+            }
+
             const ctx = canvasElement.getContext('2d');
             console.log('Canvas context:', ctx);
 
@@ -2787,6 +2798,9 @@ dogeUpgrades.forEach(u => {
 
                 console.log('Chart object created:', nwChart);
                 console.log('Chart initialized with data:', chartHistory);
+
+                // Store globally so we can destroy it later
+                window.nwChartInstance = nwChart;
 
                 // Force an immediate render
                 try {
