@@ -665,9 +665,22 @@
     }
 
     // Onboarding modal functions
-    function acceptOnboarding() {
+    async function acceptOnboarding() {
         window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
         window.safeStorage.setItem('termsAccepted', 'true');
+
+        // Save consent to Firebase if user is logged in
+        if (window.auth && window.auth.currentUser) {
+            console.log('💾 Saving onboarding consent to Firebase...');
+            if (typeof window.saveConsentToFirebase === 'function') {
+                try {
+                    await window.saveConsentToFirebase(window.auth.currentUser.uid);
+                    console.log('✅ Onboarding consent saved to Firebase');
+                } catch (error) {
+                    console.error('❌ Failed to save consent:', error);
+                }
+            }
+        }
 
         // Hide onboarding modal
         const onboardingModal = document.getElementById('onboarding-modal');
@@ -732,10 +745,8 @@
             }
         }, 50);
 
-        // Show cookie consent after onboarding is accepted
-        if (typeof checkCookieConsent === 'function') {
-            checkCookieConsent();
-        }
+        // NOTE: Cookie consent will be checked automatically if needed
+        // Don't call it here as it's already been checked on page load
     }
 
     function declineOnboarding() {
@@ -780,7 +791,14 @@
 
     // Check if onboarding (age + terms) has been accepted on page load
     window.addEventListener('load', function() {
-        if (!window.safeStorage.getItem('ageDisclaimerAccepted') || !window.safeStorage.getItem('termsAccepted')) {
+        const ageAccepted = window.safeStorage.getItem('ageDisclaimerAccepted');
+        const termsAccepted = window.safeStorage.getItem('termsAccepted');
+        const bothAccepted = ageAccepted && termsAccepted;
+
+        console.log('🔍 Onboarding check on load:', { ageAccepted, termsAccepted, bothAccepted });
+
+        // ONLY show if EITHER age OR terms is missing (i.e., NOT both accepted)
+        if (!bothAccepted) {
             // Only show onboarding modal if login screen is not visible
             // (don't show during login/register, only after sign in)
             setTimeout(() => {
@@ -789,9 +807,16 @@
 
                 // If login screen is visible, don't show onboarding yet
                 if (!isLoginVisible) {
+                    console.log('📋 Showing onboarding modal (not both accepted yet)');
                     document.getElementById('onboarding-modal').style.display = 'flex';
+                } else {
+                    console.log('📋 Skipping onboarding modal (login screen visible)');
                 }
             }, 500);
+        } else {
+            console.log('✅ Onboarding already complete - not showing modal');
+            // Make sure modal is hidden
+            document.getElementById('onboarding-modal').style.display = 'none';
         }
     });
 </script>
@@ -844,7 +869,7 @@
     }
 
     // Accept all cookies
-    function acceptAllCookies() {
+    async function acceptAllCookies() {
         window.safeStorage.setItem('cookieConsent', 'all');
         window.safeStorage.setItem('cookieConsentDate', new Date().toISOString());
 
@@ -859,11 +884,24 @@
             window.termlyConsent('accept');
         }
 
+        // Save consent to Firebase if user is logged in
+        if (window.auth && window.auth.currentUser) {
+            console.log('💾 Saving cookie consent to Firebase...');
+            if (typeof window.saveConsentToFirebase === 'function') {
+                try {
+                    await window.saveConsentToFirebase(window.auth.currentUser.uid);
+                    console.log('✅ Cookie consent saved to Firebase');
+                } catch (error) {
+                    console.error('❌ Failed to save consent:', error);
+                }
+            }
+        }
+
         console.log('All cookies accepted');
     }
 
     // Accept essential cookies only
-    function acceptEssentialOnly() {
+    async function acceptEssentialOnly() {
         window.safeStorage.setItem('cookieConsent', 'essential');
         window.safeStorage.setItem('cookieConsentDate', new Date().toISOString());
 
@@ -876,6 +914,19 @@
         // Optional: Trigger Termly essential only if available
         if (typeof window.termlyConsent !== 'undefined') {
             window.termlyConsent('essential');
+        }
+
+        // Save consent to Firebase if user is logged in
+        if (window.auth && window.auth.currentUser) {
+            console.log('💾 Saving cookie consent to Firebase...');
+            if (typeof window.saveConsentToFirebase === 'function') {
+                try {
+                    await window.saveConsentToFirebase(window.auth.currentUser.uid);
+                    console.log('✅ Cookie consent saved to Firebase');
+                } catch (error) {
+                    console.error('❌ Failed to save consent:', error);
+                }
+            }
         }
 
         console.log('Essential cookies only');

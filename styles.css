@@ -1,27 +1,30 @@
         :root { --btc: #f7931a; --bg: #050505; --panel: #111; --green: #00ff88; --red: #ff3344; --border: #222; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; overflow-x: hidden; overflow-y: hidden; width: 100vw; max-width: 100%; }
         #dollar-balance { font-size: 1.5rem; }
         
         #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); box-sizing: border-box; position: relative; z-index: 1; }
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow-y: auto; overflow-x: hidden; min-height: 0; }
 
         @media (max-width: 1024px) {
-            body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
+            body { padding: 6px; margin: 0; height: 100vh; overflow-y: scroll; overflow-x: hidden; width: 100vw; max-width: 100%; }
+            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; width: 100%; box-sizing: border-box; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
             .stat-box b { word-break: break-word; }
-            #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; }
+            #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; width: 100%; box-sizing: border-box; }
         }
 
         @media (max-width: 768px) {
-            body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
+            body { padding: 6px; margin: 0; height: 100vh; overflow-y: scroll; overflow-x: hidden; width: 100vw; max-width: 100%; }
+            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; width: 100%; box-sizing: border-box; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
+            /* Center buttons on mobile */
+            .panel > div:first-child { justify-content: center !important; }
+            .panel > div:first-child > div { justify-content: center !important; flex-wrap: wrap; }
             .upgrade-list { overflow-y: auto !important; }
             .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; color: #555; }
             .nw-amount { font-size: 1.6rem; margin: 2px 0; }
@@ -101,11 +104,14 @@
         }
 
         @media (max-width: 480px) {
-            body { padding: 5px; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; }
+            body { padding: 5px; margin: 0; height: 100vh; overflow-y: scroll; overflow-x: hidden; width: 100vw; max-width: 100%; }
+            #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; width: 100%; box-sizing: border-box; }
+            .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
+            /* Center buttons on mobile */
+            .panel > div:first-child { justify-content: center !important; }
+            .panel > div:first-child > div { justify-content: center !important; flex-wrap: wrap; }
             .upgrade-list { overflow-y: auto !important; }
             .nw-label { font-size: 0.6rem; color: #555; }
             .nw-amount { font-size: 1.5rem; margin: 1px 0; }

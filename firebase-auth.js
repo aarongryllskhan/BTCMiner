@@ -661,6 +661,86 @@ async function linkGuestToEmail(email, password, username) {
     }
 }
 
+// Save user consent to Firebase
+async function saveConsentToFirebase(userId) {
+    try {
+        if (!userId) {
+            console.warn('⚠️ No user ID provided for consent save');
+            return;
+        }
+
+        const consentData = {
+            ageDisclaimerAccepted: window.safeStorage.getItem('ageDisclaimerAccepted') === 'true',
+            termsAccepted: window.safeStorage.getItem('termsAccepted') === 'true',
+            cookieConsent: window.safeStorage.getItem('cookieConsent') === 'true',
+            cookieConsentDate: window.safeStorage.getItem('cookieConsentDate') || null,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('users').doc(userId).update({
+            consent: consentData
+        });
+
+        console.log('✅ Consent saved to Firebase for user:', userId);
+    } catch (error) {
+        console.error('❌ Failed to save consent to Firebase:', error);
+        // Non-critical error - don't throw
+    }
+}
+
+// Load user consent from Firebase
+async function loadConsentFromFirebase(userId) {
+    try {
+        if (!userId) {
+            console.warn('⚠️ No user ID provided for consent load');
+            return false;
+        }
+
+        const userDoc = await db.collection('users').doc(userId).get();
+
+        if (!userDoc.exists) {
+            console.warn('⚠️ User document not found in Firestore');
+            return false;
+        }
+
+        const userData = userDoc.data();
+        if (!userData.consent) {
+            console.log('ℹ️ No consent data found in Firebase for user');
+            return false;
+        }
+
+        const consent = userData.consent;
+
+        // Load consent into localStorage/safeStorage if it's already been accepted
+        if (consent.ageDisclaimerAccepted) {
+            window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
+            console.log('✅ Loaded ageDisclaimerAccepted from Firebase');
+        }
+
+        if (consent.termsAccepted) {
+            window.safeStorage.setItem('termsAccepted', 'true');
+            console.log('✅ Loaded termsAccepted from Firebase');
+        }
+
+        if (consent.cookieConsent) {
+            window.safeStorage.setItem('cookieConsent', 'true');
+            console.log('✅ Loaded cookieConsent from Firebase');
+        }
+
+        if (consent.cookieConsentDate) {
+            window.safeStorage.setItem('cookieConsentDate', consent.cookieConsentDate);
+            console.log('✅ Loaded cookieConsentDate from Firebase');
+        }
+
+        console.log('✅ All consent data loaded from Firebase');
+        return true;
+
+    } catch (error) {
+        console.error('❌ Failed to load consent from Firebase:', error);
+        return false;
+    }
+}
+
 // Helper function to show messages
 function showMessage(message, type = 'info') {
     // Create message element if it doesn't exist
@@ -740,6 +820,8 @@ window.logoutUser = logoutUser;
 window.resetPassword = resetPassword;
 window.playAsGuest = playAsGuest;
 window.linkGuestToEmail = linkGuestToEmail;
+window.saveConsentToFirebase = saveConsentToFirebase;
+window.loadConsentFromFirebase = loadConsentFromFirebase;
 
 // Setup authentication state listener
 // This will be called after Firebase initializes
@@ -759,15 +841,21 @@ function setupAuthListener() {
             console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
             console.log('User UID:', user.uid);
 
+            // Load consent from Firebase if available
+            console.log('📥 Loading consent from Firebase...');
+            await loadConsentFromFirebase(user.uid);
+
             // Check age disclaimer and terms before showing game
             const ageAccepted = window.safeStorage.getItem('ageDisclaimerAccepted');
             const termsAccepted = window.safeStorage.getItem('termsAccepted');
 
-            if (!ageAccepted) {
-                console.log('⚠️ Age disclaimer not accepted - showing age modal');
-                if (typeof window.checkAgeDisclaimer === 'function') {
-                    window.checkAgeDisclaimer();
-                }
+            // ONLY show onboarding if BOTH have not been accepted
+            // Once both are accepted, never show again
+            const bothAccepted = ageAccepted && termsAccepted;
+            if (!bothAccepted) {
+                console.log('⚠️ Onboarding not fully accepted - will show modal');
+            } else {
+                console.log('✅ Both age and terms already accepted - skipping onboarding');
             }
 
             // Hide login screen

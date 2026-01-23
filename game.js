@@ -484,20 +484,21 @@
             console.log('Dollar Balance:', dollarBalance);
             console.log('Save string length:', saveString.length, 'bytes');
 
-            localStorage.setItem('satoshiTerminalSave', saveString);
+            // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
+            window.safeStorage.setItem('satoshiTerminalSave', saveString);
 
             // Verify save worked
-            const testLoad = localStorage.getItem('satoshiTerminalSave');
+            const testLoad = window.safeStorage.getItem('satoshiTerminalSave');
             if (testLoad && testLoad.length > 0) {
-                console.log('✓ SAVE SUCCESSFUL - Verified in localStorage');
+                console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage');
             } else {
-                console.error('✗ SAVE FAILED - Could not verify in localStorage');
+                console.error('✗ SAVE FAILED - Could not verify in safeStorage');
             }
 
             // Sync to cloud if user is logged in (async - don't block game)
             // Removed: was causing issues. Cloud sync happens via auto-save and beforeunload instead
         } catch (error) {
-            console.error('✗ ERROR saving game to localStorage:', error);
+            console.error('✗ ERROR saving game to storage:', error);
             alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
         }
     }
@@ -505,8 +506,9 @@
 function loadGame() {
     console.log('=== LOAD GAME CALLED ===');
     try {
-        const savedData = localStorage.getItem('satoshiTerminalSave');
-        console.log('localStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
+        // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
+        const savedData = window.safeStorage.getItem('satoshiTerminalSave');
+        console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
 
         if (!savedData) {
             console.log('✗ No saved game found, starting fresh');
@@ -817,7 +819,7 @@ function loadGame() {
         const instructionsEl = document.getElementById('game-instructions');
         if (instructionsEl) {
             instructionsEl.style.display = 'none';
-            localStorage.setItem('instructionsDismissed', 'true');
+            window.safeStorage.setItem('instructionsDismissed', 'true');
         }
     }
 
@@ -834,8 +836,8 @@ function loadGame() {
 
     function resetGame() {
         if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
-            localStorage.removeItem('satoshiTerminalSave');
-            localStorage.removeItem('instructionsDismissed');
+            window.safeStorage.removeItem('satoshiTerminalSave');
+            window.safeStorage.removeItem('instructionsDismissed');
             // Reset all variables to defaults
             btcBalance = 0;
             btcLifetime = 0;
@@ -2657,7 +2659,7 @@ dogeUpgrades.forEach(u => {
         updateStakingUI();
 
         // Check if instructions were dismissed
-        if (localStorage.getItem('instructionsDismissed') === 'true') {
+        if (window.safeStorage.getItem('instructionsDismissed') === 'true') {
             const instructionsEl = document.getElementById('game-instructions');
             if (instructionsEl) {
                 instructionsEl.style.display = 'none';
@@ -2965,11 +2967,11 @@ dogeUpgrades.forEach(u => {
             }
         } else {
             console.log('Page visible - checking saved data exists');
-            const testSave = localStorage.getItem('satoshiTerminalSave');
+            const testSave = window.safeStorage.getItem('satoshiTerminalSave');
             if (testSave) {
-                console.log('Save data confirmed in localStorage');
+                console.log('Save data confirmed in storage');
             } else {
-                console.error('WARNING: No save data found in localStorage!');
+                console.error('WARNING: No save data found in storage!');
             }
 
             // Update leaderboard only if user was away for 6+ hours
@@ -3068,12 +3070,12 @@ dogeUpgrades.forEach(u => {
 
     // Age disclaimer modal handling
     function acceptAgeDisclaimer() {
-        localStorage.setItem('ageDisclaimerAccepted', 'true');
+        window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
         document.getElementById('age-disclaimer-modal').style.display = 'none';
     }
 
     function checkAgeDisclaimer() {
-        const accepted = localStorage.getItem('ageDisclaimerAccepted');
+        const accepted = window.safeStorage.getItem('ageDisclaimerAccepted');
         if (!accepted) {
             document.getElementById('age-disclaimer-modal').style.display = 'flex';
         }
