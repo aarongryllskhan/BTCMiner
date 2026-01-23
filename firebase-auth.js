@@ -398,7 +398,7 @@ async function playAsGuest() {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        showMessage('Playing as guest. Click "☁️ Save to Cloud" to create an account and save your progress!', 'info');
+        showMessage('Playing as guest. Click "🔗 LINK ACCOUNT" to create an account and save your progress!', 'info');
         return user;
 
     } catch (error) {
@@ -537,6 +537,17 @@ function setupAuthListener() {
         if (user) {
             console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
             console.log('User UID:', user.uid);
+
+            // Check age disclaimer and terms before showing game
+            const ageAccepted = localStorage.getItem('ageDisclaimerAccepted');
+            const termsAccepted = localStorage.getItem('termsAccepted');
+
+            if (!ageAccepted) {
+                console.log('⚠️ Age disclaimer not accepted - showing age modal');
+                if (typeof window.checkAgeDisclaimer === 'function') {
+                    window.checkAgeDisclaimer();
+                }
+            }
 
             // Hide login screen
             const loginScreen = document.getElementById('login-screen');

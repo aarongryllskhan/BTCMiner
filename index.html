@@ -24,7 +24,7 @@
     <!-- Cache buster - forces fresh load on updates -->
     <script>
         // Check if app has been updated
-        const appVersion = '1.0.1'; // Increment this version to force cache clear
+        const appVersion = '1.0.2'; // Increment this version to force cache clear
         const storedVersion = localStorage.getItem('appVersion');
 
         if (storedVersion !== appVersion) {
@@ -698,11 +698,11 @@
                 const ageAccepted = localStorage.getItem('ageDisclaimerAccepted');
                 const termsAccepted = localStorage.getItem('termsAccepted');
 
-                // Only show cookie banner if age and terms have been accepted
+                // Only show cookie modal if age and terms have been accepted
                 if (ageAccepted && termsAccepted) {
                     const banner = document.getElementById('cookie-consent-banner');
                     if (banner) {
-                        banner.style.display = 'block';
+                        banner.style.display = 'flex';
                     }
                 } else {
                     // Check again in 1 second if they haven't accepted yet
@@ -720,7 +720,7 @@
         // Enable Google Analytics and other tracking
         window['ga-disable-G-2H559N5J64'] = false;
 
-        // Hide banner
+        // Hide modal
         document.getElementById('cookie-consent-banner').style.display = 'none';
 
         // Optional: Trigger Termly consent if available
