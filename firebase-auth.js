@@ -1361,21 +1361,27 @@ function setupAuthListener() {
                 loginBtn.style.display = 'none';
             }
 
-            // Load user's game data (smart merge with local save)
-            console.log('loadGameFromCloud function available?', typeof window.loadGameFromCloud);
-            if (window.loadGameFromCloud) {
-                console.log('Loading game data...');
-                try {
-                    const cloudLoaded = await window.loadGameFromCloud(user.uid);
+            // Load user's game data - prefer LOCAL save if it exists, otherwise load CLOUD
+            console.log('Loading game data...');
+            try {
+                // STEP 1: Check if local save exists
+                const localSaveExists = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
 
-                    // If cloud load returned false, it means local save should be used
-                    // Call loadGame() to load from localStorage
-                    if (!cloudLoaded && typeof window.loadGame === 'function') {
-                        console.log('📦 Cloud load skipped - loading from local storage instead...');
+                if (localSaveExists) {
+                    console.log('✅ Local save found - loading local data (you have unsaved progress)');
+                    if (typeof window.loadGame === 'function') {
                         window.loadGame();
+                        showMessage('Loaded your most recent local progress', 'success');
                     }
+                } else {
+                    // STEP 2: No local save, load from cloud
+                    console.log('📦 No local save found - loading from cloud');
+                    if (window.loadGameFromCloud) {
+                        await window.loadGameFromCloud(user.uid);
+                    }
+                }
 
-                    console.log('✅ Game data loaded successfully');
+                console.log('✅ Game data loaded successfully');
 
                     // Re-initialize the game UI after loading
                     if (typeof window.initializeGame === 'function') {

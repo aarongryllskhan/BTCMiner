@@ -316,22 +316,9 @@ async function loadGameFromCloud(userId = null) {
             console.log('🔄 Loading cloud data due to account switch');
             resetGameVariables();
         } else {
-            // Same account - prefer local save if it exists
-            // Local saves are more recent (they happen every action)
-            // Cloud saves are less frequent (every 20 mins)
-            const localSaveData = window.safeStorage ? window.safeStorage.getItem('satoshiTerminalSave') : localStorage.getItem('satoshiTerminalSave');
-            const localSaveExists = localSaveData !== null && localSaveData !== undefined;
-
-            console.log('🔍 Checking for local save: ' + (localSaveExists ? 'FOUND' : 'NOT FOUND'));
-
-            if (localSaveExists) {
-                console.log('🏠 Local save found - using local save (you have unsaved progress since last auto-save)');
-                showMessage('Loaded local progress (more recent than cloud save)', 'success');
-                return false; // Keep local cache, don't load cloud
-            }
-
-            // No local save, load from cloud
-            console.log('☁️ No local save found - loading from cloud');
+            // Same account - load cloud data
+            // (Local vs cloud decision is now made at a higher level in firebase-auth.js)
+            console.log('☁️ Loading cloud data for same user');
             resetGameVariables();
         }
 
