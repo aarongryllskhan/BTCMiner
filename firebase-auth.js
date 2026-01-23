@@ -884,13 +884,28 @@ async function playAsGuest() {
         console.log('💾 Guest credentials saved to localStorage');
 
         // Show refresh modal for new guests
-        showGuestRefreshModal(guestUsername);
+        try {
+            showGuestRefreshModal(guestUsername);
+            console.log('✅ Guest refresh modal shown');
+        } catch (modalError) {
+            console.warn('⚠️ Could not show refresh modal:', modalError);
+            // Still continue even if modal fails
+        }
 
         return user;
 
     } catch (error) {
         console.error('❌ Guest login error:', error);
-        showMessage('Failed to start guest session: ' + error.message, 'error');
+        console.error('Error stack:', error.stack);
+        try {
+            if (typeof showMessage === 'function') {
+                showMessage('Failed to start guest session: ' + error.message, 'error');
+            } else {
+                alert('Failed to start guest session: ' + error.message);
+            }
+        } catch (msgError) {
+            console.error('Could not show error message:', msgError);
+        }
         throw error;
     }
 }
@@ -1515,9 +1530,17 @@ window.addEventListener('message', async function(event) {
     if (event.data && event.data.action === 'playAsGuest') {
         console.log('📨 Received playAsGuest message from iframe');
         try {
+            console.log('Calling playAsGuest function...');
+            console.log('playAsGuest function exists?', typeof playAsGuest);
+            console.log('auth available?', typeof auth);
+            console.log('db available?', typeof db);
             await playAsGuest();
+            console.log('✅ playAsGuest completed successfully');
         } catch (error) {
             console.error('❌ Failed to play as guest:', error);
+            console.error('Error stack:', error.stack);
+            // Send error back to iframe
+            event.source.postMessage({ action: 'guestLoginFailed', error: error.message }, event.origin);
         }
     }
 });
