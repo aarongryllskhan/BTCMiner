@@ -3105,6 +3105,7 @@ dogeUpgrades.forEach(u => {
     console.log('  manualEthHash:', typeof window.manualEthHash === 'function' ? 'READY ✓' : 'MISSING ✗');
     console.log('  manualDogeHash:', typeof window.manualDogeHash === 'function' ? 'READY ✓' : 'MISSING ✗');
     console.log('  switchTab:', typeof window.switchTab === 'function' ? 'READY ✓' : 'MISSING ✗');
+    console.log('  toggleMute:', typeof window.toggleMute === 'function' ? 'READY ✓' : 'MISSING ✗');
 
     // Expose game variables globally for Firebase save/load
     // This creates a getter/setter interface so firebase-save.js can access the closure variables
