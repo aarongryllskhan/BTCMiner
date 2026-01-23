@@ -523,7 +523,13 @@
 
                     // Hide login screen and show game
                     window.parent.document.getElementById('login-screen').style.display = 'none';
-                    window.parent.document.getElementById('main-layout').style.display = 'grid';
+                    const mainLayout = window.parent.document.getElementById('main-layout');
+                    if (mainLayout) {
+                        mainLayout.style.display = 'grid';
+                        // RE-ENABLE INTERACTION on main layout
+                        mainLayout.style.pointerEvents = 'auto';
+                        mainLayout.style.userSelect = 'auto';
+                    }
 
                     // Show LOGIN/SIGN UP button for offline users
                     const loginBtn = window.parent.document.getElementById('login-btn');

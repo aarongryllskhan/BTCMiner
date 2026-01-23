@@ -74,37 +74,39 @@
         <iframe src="login-screen.html" style="width: 100%; height: 100%; border: none;"></iframe>
     </div>
 
-    <!-- Age Disclaimer Modal -->
-    <div id="age-disclaimer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center;">
-        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 500px; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
-            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem;">⚠️ Age Requirement</h2>
-            <p style="color: #fff; font-size: 1.1rem; margin-bottom: 20px; line-height: 1.6;">
-                This game is intended for users <strong style="color: #f7931a;">18 years or older</strong>.
-            </p>
-            <p style="color: #aaa; font-size: 0.95rem; margin-bottom: 30px; line-height: 1.5;">
-                This is a <strong>simulation game</strong> with <strong>no real cryptocurrency or monetary value</strong>. All currency and assets are virtual and for entertainment purposes only.
-            </p>
-            <button onclick="acceptAgeDisclaimer()" style="background: #f7931a; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
-                I AM 18+ & UNDERSTAND
-            </button>
-        </div>
-    </div>
+    <!-- Consolidated Onboarding Modal (Age + Terms) -->
+    <div id="onboarding-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; overflow: auto;">
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 650px; max-height: 90vh; overflow-y: auto; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5); margin: 20px;">
+            <h2 style="color: #f7931a; margin-bottom: 10px; font-size: 2rem;">⚠️ Welcome to Idle BTC Miner</h2>
+            <p style="color: #888; font-size: 0.85rem; margin-bottom: 25px;">Please review the following before continuing</p>
 
-    <!-- Terms and Conditions Acceptance Modal -->
-    <div id="terms-acceptance-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10001; justify-content: center; align-items: center; overflow: auto;">
-        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 600px; max-height: 90vh; overflow-y: auto; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5); margin: 20px;">
-            <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 1.8rem;">📋 Terms & Conditions</h2>
-            <p style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.6;">
-                Please read and accept our Terms and Conditions to continue using Idle BTC Miner.
-            </p>
-            <div style="background: rgba(255,255,255,0.05); border: 1px solid #f7931a; border-radius: 8px; padding: 20px; margin-bottom: 30px; max-height: 300px; overflow-y: auto; text-align: left;">
-                <iframe id="terms-preview" src="terms.html" style="width: 100%; height: 280px; border: none; background: transparent;"></iframe>
+            <!-- Age Requirement Section -->
+            <div style="background: rgba(247,147,26,0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: left;">
+                <h3 style="color: #f7931a; margin: 0 0 10px 0; font-size: 1.2rem;">18+ Age Requirement</h3>
+                <p style="color: #fff; font-size: 1rem; margin: 0 0 10px 0; line-height: 1.5;">
+                    This game is intended for users <strong>18 years or older</strong>.
+                </p>
+                <p style="color: #aaa; font-size: 0.9rem; margin: 0; line-height: 1.4;">
+                    This is a <strong>simulation game</strong> with <strong>no real cryptocurrency or monetary value</strong>. All currency and assets are virtual and for entertainment purposes only.
+                </p>
             </div>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <button onclick="acceptTerms()" style="background: #f7931a; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
-                    ✓ I ACCEPT
+
+            <!-- Terms & Conditions Section -->
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid #f7931a; border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: left;">
+                <h3 style="color: #f7931a; margin: 0 0 10px 0; font-size: 1.2rem;">📋 Terms & Conditions</h3>
+                <p style="color: #aaa; font-size: 0.85rem; margin: 0 0 12px 0;">
+                    By continuing, you agree to our Terms & Conditions. <a href="#" onclick="openPrivacyModal(); switchPolicyTab('terms'); return false;" style="color: #f7931a; text-decoration: underline;">Read full terms</a>
+                </p>
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 6px; padding: 12px; max-height: 180px; overflow-y: auto; text-align: left;">
+                    <iframe id="terms-preview" src="terms.html" style="width: 100%; height: 160px; border: none; background: transparent;"></iframe>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="acceptOnboarding()" style="background: #f7931a; color: #000; border: none; padding: 12px 35px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
+                    ✓ I ACCEPT & CONTINUE
                 </button>
-                <button onclick="declineTerms()" style="background: #333; color: #f7931a; border: 2px solid #f7931a; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s;">
+                <button onclick="declineOnboarding()" style="background: #333; color: #f7931a; border: 2px solid #f7931a; padding: 12px 35px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s;">
                     ✗ DECLINE
                 </button>
             </div>
@@ -572,10 +574,17 @@
         document.getElementById('privacy-modal').style.display = 'none';
     }
 
-    // Age disclaimer function - defined early so modal button works
-    function acceptAgeDisclaimer() {
+    // Onboarding modal functions
+    function acceptOnboarding() {
         localStorage.setItem('ageDisclaimerAccepted', 'true');
-        document.getElementById('age-disclaimer-modal').style.display = 'none';
+        localStorage.setItem('termsAccepted', 'true');
+        document.getElementById('onboarding-modal').style.display = 'none';
+        // Show cookie consent after onboarding is accepted
+        checkCookieConsent();
+    }
+
+    function declineOnboarding() {
+        alert('You must accept the Age Requirement and Terms & Conditions to use this service.');
     }
 
     function switchPolicyTab(tab) {
@@ -614,66 +623,32 @@
         }
     }
 
-    function openTermsModal() {
-        document.getElementById('terms-acceptance-modal').style.display = 'flex';
-    }
-
-    function acceptTerms() {
-        localStorage.setItem('termsAccepted', 'true');
-        document.getElementById('terms-acceptance-modal').style.display = 'none';
-    }
-
-    function declineTerms() {
-        alert('You must accept the Terms and Conditions to use this service.');
-        // Optionally redirect or disable access
-    }
-
-    // Check if terms have been accepted on page load
-    // Wait for age disclaimer to be accepted first
+    // Check if onboarding (age + terms) has been accepted on page load
     window.addEventListener('load', function() {
-        if (!localStorage.getItem('termsAccepted')) {
-            // Wait a bit to ensure age disclaimer shows first
+        if (!localStorage.getItem('ageDisclaimerAccepted') || !localStorage.getItem('termsAccepted')) {
+            // Show onboarding modal if either hasn't been accepted
             setTimeout(() => {
-                const ageAccepted = localStorage.getItem('ageDisclaimerAccepted');
-
-                if (ageAccepted) {
-                    // Age accepted, now show terms
-                    openTermsModal();
-                } else {
-                    // Age not accepted yet, wait and check again
-                    const checkInterval = setInterval(() => {
-                        if (localStorage.getItem('ageDisclaimerAccepted')) {
-                            clearInterval(checkInterval);
-                            openTermsModal();
-                        }
-                    }, 500);
-                }
+                document.getElementById('onboarding-modal').style.display = 'flex';
             }, 500);
         }
     });
 </script>
 
-<!-- Cookie Consent Modal -->
-<div id="cookie-consent-banner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10002; justify-content: center; align-items: center;">
-    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 600px; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5); margin: 20px;">
-        <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 1.8rem;">🍪 Cookie Consent</h2>
-        <p style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.6;">
-            We use cookies to enhance your experience, analyze site traffic, and for analytics purposes. You can manage your preferences or decline non-essential cookies.
-        </p>
-        <p style="color: #888; margin: 0 0 30px 0; font-size: 0.9rem;">
-            <a href="#" onclick="openPrivacyModal(); switchPolicyTab('cookies'); return false;" style="color: #f7931a; text-decoration: underline;">View Cookie Policy</a>
-            <span style="margin: 0 5px;">|</span>
-            <a href="#" onclick="openPrivacyModal(); switchPolicyTab('privacy'); return false;" style="color: #f7931a; text-decoration: underline;">Privacy Policy</a>
-        </p>
-        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <button onclick="acceptAllCookies()" style="background: #f7931a; color: #000; border: none; padding: 15px 30px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
-                ✓ Accept All
+<!-- Cookie Consent Bottom Banner -->
+<div id="cookie-consent-banner" style="display: none; position: fixed; bottom: 50px; left: 0; width: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-top: 2px solid #f7931a; padding: 12px 20px; z-index: 10001; box-shadow: 0 -2px 15px rgba(247,147,26,0.3);">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+            <p style="color: #fff; font-size: 0.85rem; margin: 0 0 6px 0; line-height: 1.3;">
+                <strong style="color: #f7931a;">🍪 Cookies:</strong> We use cookies for analytics and to improve your experience.
+                <a href="#" onclick="openPrivacyModal(); switchPolicyTab('cookies'); return false;" style="color: #f7931a; text-decoration: underline; margin-left: 5px;">Learn more</a>
+            </p>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="acceptAllCookies()" style="background: #f7931a; color: #000; border: none; padding: 6px 14px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; white-space: nowrap;">
+                Accept All
             </button>
-            <button onclick="acceptEssentialOnly()" style="background: #555; color: #fff; border: 1px solid #777; padding: 15px 25px; font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s;">
+            <button onclick="acceptEssentialOnly()" style="background: #555; color: #fff; border: none; padding: 6px 14px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; white-space: nowrap;">
                 Essential Only
-            </button>
-            <button onclick="openCookieSettings()" style="background: #333; color: #f7931a; border: 2px solid #f7931a; padding: 15px 25px; font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s;">
-                ⚙️ Manage
             </button>
         </div>
     </div>
