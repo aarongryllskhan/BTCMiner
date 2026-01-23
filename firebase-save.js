@@ -137,15 +137,11 @@ async function saveGameToCloud(isManualSave = false) {
             });
         }
 
-        console.log('✅ Progress uploaded to cloud successfully');
+        console.log('✅ Progress synced to cloud successfully');
 
         // Show subtle save indicator with timestamp
         showSaveIndicator();
         updateLastSaveTime();
-
-        if (isManualSave) {
-            showMessage('Progress uploaded to cloud! Log in on another device to continue.', 'success');
-        }
 
         return true;
 
@@ -540,14 +536,38 @@ async function logSuspiciousActivity(userId, type, data) {
     }
 }
 
-// Auto-save disabled - users save manually to cloud only when needed for device transfer
+// Auto-save to cloud every 20 minutes for registered users
 // Local saves still happen automatically every second via saveGame() in game.js
+let autoSaveInterval;
+
 function startAutoSave() {
-    console.log('ℹ️ Auto cloud save disabled - manual save only');
+    // Clear any existing interval
+    if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+    }
+
+    // Only auto-save for registered users (not guests)
+    if (auth.currentUser && !auth.currentUser.isAnonymous) {
+        // Save every 20 minutes (1,200,000 milliseconds)
+        autoSaveInterval = setInterval(async () => {
+            if (auth.currentUser && !auth.currentUser.isAnonymous) {
+                console.log('🔄 Auto-saving to cloud (20 min interval)...');
+                await saveGameToCloud(false); // false = not manual save, skip cooldown
+            }
+        }, 1200000); // 20 minutes
+
+        console.log('✅ Auto cloud save started (every 20 minutes)');
+    } else {
+        console.log('ℹ️ Guest user - cloud auto-save disabled');
+    }
 }
 
 function stopAutoSave() {
-    console.log('ℹ️ No auto-save to stop');
+    if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+        autoSaveInterval = null;
+        console.log('🛑 Auto cloud save stopped');
+    }
 }
 
 // Show subtle save indicator
@@ -571,7 +591,7 @@ function showSaveIndicator() {
             opacity: 0;
             transition: opacity 0.3s;
         `;
-        indicator.innerHTML = '📤 Uploaded to Cloud';
+        indicator.innerHTML = '☁️ Synced to Cloud';
         document.body.appendChild(indicator);
     }
 
@@ -635,7 +655,7 @@ function updateLastSaveTime() {
         // Create the indicator if it doesn't exist
         indicator = document.createElement('div');
         indicator.id = 'last-save-indicator';
-        indicator.title = 'Last cloud transfer time. Used for moving progress between devices. Local saves happen automatically.';
+        indicator.title = 'Last cloud sync time. Auto-syncs every 20 minutes. Local saves happen automatically every second.';
         indicator.style.cssText = `
             position: fixed;
             bottom: 10px;
@@ -655,7 +675,7 @@ function updateLastSaveTime() {
 
     const now = new Date();
     const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    indicator.innerHTML = `📤 Last transfer: ${timeString}`;
+    indicator.innerHTML = `☁️ Last sync: ${timeString}`;
 }
 
 // Manual sync button (integrated into user info)

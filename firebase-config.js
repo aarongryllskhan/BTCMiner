@@ -108,20 +108,14 @@ function updateUserUI(user) {
 
     userInfoDiv.style.cssText = 'display: inline-flex; align-items: center; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 4px; border: 1px solid #f7931a;';
 
-    // Show "Link Account" button for guest users, or "Transfer Save" button for registered users
+    // Show "Link Account" button for guest users only
     const actionBtn = isGuest ? `
         <button onclick="showLinkAccountModal()"
-                title="Create an account to transfer your progress to other devices. Your game auto-saves locally."
+                title="Create an account to save your progress across devices. Auto-syncs every 20 minutes."
                 style="background: #4CAF50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
-            ☁️ Save to Cloud
+            ☁️ Create Account
         </button>
-    ` : `
-        <button id="manual-save-btn" onclick="manualSaveGame()"
-                title="Upload progress to cloud for device transfer. Use before switching to mobile/desktop. (10 min cooldown)"
-                style="background: #f7931a; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.55rem; font-weight: 700;">
-            📤 Transfer
-        </button>
-    `;
+    ` : '';
 
     userInfoDiv.innerHTML = `
         <span style="color: #f7931a; font-size: 0.55rem;">👤</span>
@@ -173,8 +167,8 @@ function showLinkAccountModal() {
 
         modal.innerHTML = `
             <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 500px; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
-                <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">📤 Transfer Progress to Cloud</h2>
-                <p style="color: #ccc; margin-bottom: 20px; text-align: center;">Create an account to transfer your progress between devices. Your game auto-saves locally every second!</p>
+                <h2 style="color: #f7931a; margin-bottom: 20px; font-size: 2rem; text-align: center;">☁️ Create Account</h2>
+                <p style="color: #ccc; margin-bottom: 20px; text-align: center;">Link your account to sync progress across devices. Auto-saves to cloud every 20 minutes!</p>
 
                 <form onsubmit="handleLinkAccount(event)" style="display: flex; flex-direction: column; gap: 15px;">
                     <div>
@@ -203,7 +197,7 @@ function showLinkAccountModal() {
                 </form>
 
                 <p style="color: #666; font-size: 0.75rem; margin-top: 15px; text-align: center;">
-                    📤 Your progress will be uploaded to the cloud so you can continue on any device. Local saves happen automatically.
+                    ☁️ Your progress syncs to the cloud every 20 minutes automatically. Play seamlessly across all your devices!
                 </p>
             </div>
         `;

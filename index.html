@@ -157,15 +157,15 @@
 
     <div id="main-layout">
         <div class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
                 <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important;">Crypto Portfolio Valuation</span>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button id="login-btn" style="background: #f7931a; color: #000; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="showLoginScreen()">LOGIN / SIGN UP</button>
-                    <button style="background: #FFD700; color: #000; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="openLeaderboardModal()">🏆 LEADERBOARD</button>
-                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="toggleMute()">SOUND ON</button>
-                    <button style="background: #4CAF50; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="document.getElementById('game-instructions').style.display='block'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
-                    <button style="background: #ffa500; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetEarningsStats()">RESET EARNINGS</button>
-                    <button style="background: #ff3344; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetGame()">RESET SAVE</button>
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                    <button id="login-btn" style="background: #f7931a; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="showLoginScreen()">LOGIN / SIGN UP</button>
+                    <button style="background: #FFD700; color: #000; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openLeaderboardModal()">🏆 LEADERBOARD</button>
+                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
+                    <button style="background: #4CAF50; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='block'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
+                    <button style="background: #ffa500; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
+                    <button style="background: #ff3344; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
                 </div>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>

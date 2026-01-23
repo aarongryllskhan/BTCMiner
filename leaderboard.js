@@ -3,16 +3,18 @@
  * Tracks top players by lifetime earnings
  *
  * Update Policy:
+ * - Auto-syncs to cloud every 20 minutes for registered users
  * - Updates when users come back online (includes offline earnings, capped at 6 hours)
- * - Updates when users manually transfer to cloud (📤 Transfer button)
+ * - Updates when page becomes visible (tab focus)
  * - Guest users are excluded from leaderboard
+ * - Leaderboard cache: 2 minutes (refreshes automatically when opened)
  * - Leaderboard reflects actual earnings with offline cap applied
  */
 
 // Cache management for leaderboard (reduces Firebase reads)
 let leaderboardCache = null;
 let leaderboardCacheTimestamp = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds (more real-time)
 
 // Update player's leaderboard entry
 async function updateLeaderboard() {
@@ -145,7 +147,7 @@ async function openLeaderboardModal() {
             const cacheSeconds = cacheAge % 60;
             const cacheStatus = leaderboardCache ? `Last updated: ${cacheMinutes}m ${cacheSeconds}s ago` : 'Fetching fresh data...';
             refreshInfo.innerHTML = `
-                ${cacheStatus} | Updates when users transfer to cloud
+                ${cacheStatus} | Auto-syncs every 20 min
                 <button onclick="refreshLeaderboardNow()" style="margin-left: 10px; background: #00ff88; color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 700;">
                     🔄 Refresh Now
                 </button>
