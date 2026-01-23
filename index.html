@@ -24,15 +24,15 @@
     <!-- Cache buster - forces fresh load on updates -->
     <script>
         // Check if app has been updated
-        const appVersion = '1.0.0'; // Increment this version to force cache clear
+        const appVersion = '1.0.1'; // Increment this version to force cache clear
         const storedVersion = localStorage.getItem('appVersion');
 
         if (storedVersion !== appVersion) {
             console.log('🔄 App updated! Clearing old cache...');
+
             // Clear all app-related caches
             localStorage.removeItem('satoshiTerminalSave');
             localStorage.removeItem('instructionsDismissed');
-            localStorage.removeItem('appVersion');
 
             // Clear service worker cache if it exists
             if ('serviceWorker' in navigator) {
@@ -41,9 +41,16 @@
                 });
             }
 
-            // Store new version
+            // Store new version BEFORE reload to prevent infinite loop
             localStorage.setItem('appVersion', appVersion);
-            console.log('✅ Cache cleared! Reload the page to see the latest version.');
+
+            console.log('✅ Cache cleared! Forcing hard reload...');
+
+            // Force a hard reload to clear browser cache
+            // This bypasses the HTTP cache and forces fresh JS/CSS files
+            setTimeout(() => {
+                window.location.reload(true); // Hard reload
+            }, 100);
         }
     </script>
 
@@ -748,10 +755,10 @@
 </script>
 
 <!-- Load skill tree system first so its functions are available to game.js -->
-<script src="skilltree.js"></script>
+<script src="skilltree.js?v=1.0.1"></script>
 
 <!-- Load main game after skill tree functions are defined -->
-<script src="game.js"></script>
+<script src="game.js?v=1.0.1"></script>
 <script>
     // Debug: Verify switchTab is loaded
     console.log('DEBUG: After game.js load, switchTab type:', typeof window.switchTab);
@@ -765,10 +772,10 @@
 </script>
 
 <!-- Load staking system after main game variables are defined -->
-<script src="staking.js"></script>
+<script src="staking.js?v=1.0.1"></script>
 
 <!-- Load leaderboard system -->
-<script src="leaderboard.js"></script>
+<script src="leaderboard.js?v=1.0.1"></script>
 
 <!-- Initialize Firebase -->
 <script>

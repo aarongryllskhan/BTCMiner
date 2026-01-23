@@ -117,29 +117,42 @@ async function openLeaderboardModal() {
                     <tbody>
         `;
 
-        leaderboard.forEach(player => {
-            const isCurrentPlayer = auth.currentUser?.uid === player.uid;
-            const rowStyle = isCurrentPlayer
-                ? 'background: rgba(247, 147, 26, 0.3); border: 1px solid #f7931a;'
-                : 'border-bottom: 1px solid #333;';
-
-            const earningsFormatted = formatCurrency(player.lifetimeEarnings);
-            const rankEmoji = player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : '';
-
+        // Check if leaderboard is empty
+        if (leaderboard.length === 0) {
             leaderboardHTML += `
-                <tr style="${rowStyle} hover: background: rgba(255, 255, 255, 0.05);">
-                    <td style="padding: 10px; text-align: left; font-weight: bold; color: #f7931a;">
-                        ${rankEmoji} #${player.rank}
-                    </td>
-                    <td style="padding: 10px; text-align: left; ${isCurrentPlayer ? 'color: #f7931a; font-weight: bold;' : ''}">
-                        ${player.username}${isCurrentPlayer ? ' (YOU)' : ''}
-                    </td>
-                    <td style="padding: 10px; text-align: right; ${isCurrentPlayer ? 'color: #00ff88; font-weight: bold;' : 'color: #00ff88;'}">
-                        $${earningsFormatted}
+                <tr>
+                    <td colspan="3" style="padding: 40px; text-align: center; color: #888;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🏆</div>
+                        <div style="font-size: 1.2rem; color: #f7931a; margin-bottom: 10px;">Be the First!</div>
+                        <div style="font-size: 0.9rem;">Start mining to claim your spot on the leaderboard.</div>
                     </td>
                 </tr>
             `;
-        });
+        } else {
+            leaderboard.forEach(player => {
+                const isCurrentPlayer = auth.currentUser?.uid === player.uid;
+                const rowStyle = isCurrentPlayer
+                    ? 'background: rgba(247, 147, 26, 0.3); border: 1px solid #f7931a;'
+                    : 'border-bottom: 1px solid #333;';
+
+                const earningsFormatted = formatCurrency(player.lifetimeEarnings);
+                const rankEmoji = player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : '';
+
+                leaderboardHTML += `
+                    <tr style="${rowStyle} hover: background: rgba(255, 255, 255, 0.05);">
+                        <td style="padding: 10px; text-align: left; font-weight: bold; color: #f7931a;">
+                            ${rankEmoji} #${player.rank}
+                        </td>
+                        <td style="padding: 10px; text-align: left; ${isCurrentPlayer ? 'color: #f7931a; font-weight: bold;' : ''}">
+                            ${player.username}${isCurrentPlayer ? ' (YOU)' : ''}
+                        </td>
+                        <td style="padding: 10px; text-align: right; ${isCurrentPlayer ? 'color: #00ff88; font-weight: bold;' : 'color: #00ff88;'}">
+                            $${earningsFormatted}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
         leaderboardHTML += `
                     </tbody>
