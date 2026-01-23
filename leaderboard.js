@@ -165,9 +165,11 @@ async function fetchLeaderboard(limit = 10, forceRefresh = false) {
             .get();
 
         const leaderboard = [];
-        snapshot.forEach((doc, index) => {
+        let rankIndex = 0;
+        snapshot.forEach((doc) => {
+            rankIndex++;
             const data = doc.data();
-            console.log(`📊 Leaderboard entry ${index + 1}:`, {
+            console.log(`📊 Leaderboard entry ${rankIndex}:`, {
                 uid: doc.id,
                 username: data.username,
                 lifetimeEarnings: data.lifetimeEarnings,
@@ -175,7 +177,7 @@ async function fetchLeaderboard(limit = 10, forceRefresh = false) {
             });
 
             leaderboard.push({
-                rank: index + 1,
+                rank: rankIndex,
                 uid: doc.id,
                 username: data.username,
                 lifetimeEarnings: data.lifetimeEarnings,
