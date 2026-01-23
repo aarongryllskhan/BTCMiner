@@ -98,21 +98,24 @@ async function updateUserUI(user) {
 
     // Fetch username from Firestore
     let displayName = 'Guest Player';
-    if (!isGuest) {
-        try {
-            const userDoc = await db.collection('users').doc(userId).get();
-            if (userDoc.exists && userDoc.data().username) {
-                displayName = userDoc.data().username;
-            } else if (user.displayName) {
+    try {
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (userDoc.exists && userDoc.data().username) {
+            displayName = userDoc.data().username;
+        } else if (!isGuest) {
+            // For non-guest users, try other fallbacks
+            if (user.displayName) {
                 // Fallback to Google displayName
                 displayName = user.displayName;
             } else if (user.email) {
                 // Last resort: extract from email
                 displayName = user.email.split('@')[0];
             }
-        } catch (error) {
-            console.error('Failed to fetch username:', error);
-            // Fallback to displayName or email
+        }
+    } catch (error) {
+        console.error('Failed to fetch username:', error);
+        // Fallback to displayName or email for non-guest users
+        if (!isGuest) {
             if (user.displayName) {
                 displayName = user.displayName;
             } else if (user.email) {

@@ -555,8 +555,47 @@ async function playAsGuest() {
 
         console.log('✅ Guest login successful');
 
+        // Get the next guest number using a counter document to avoid race conditions
+        let guestNumber = 1;
+        try {
+            const counterRef = db.collection('counters').doc('guestCounter');
+
+            // Use a transaction to safely increment the counter
+            const newGuestNumber = await db.runTransaction(async (transaction) => {
+                const counterDoc = await transaction.get(counterRef);
+
+                let nextNumber = 1;
+                if (counterDoc.exists) {
+                    nextNumber = (counterDoc.data().count || 0) + 1;
+                } else {
+                    // Initialize counter if it doesn't exist
+                    transaction.set(counterRef, { count: 1, lastUpdated: firebase.firestore.FieldValue.serverTimestamp() });
+                    return 1;
+                }
+
+                transaction.update(counterRef, {
+                    count: nextNumber,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                return nextNumber;
+            });
+
+            guestNumber = newGuestNumber;
+            console.log('✅ Guest number assigned:', guestNumber);
+        } catch (queryError) {
+            console.warn('⚠️ Could not get guest counter, using timestamp fallback:', queryError);
+            // Fallback to using timestamp-based number to ensure uniqueness
+            guestNumber = Date.now() % 100000; // Use last 5 digits of timestamp
+        }
+
+        // Format guest username with leading zeros (e.g., guest01, guest02, ...)
+        const guestUsername = `guest${String(guestNumber).padStart(2, '0')}`;
+        console.log('👤 Creating guest user:', guestUsername);
+
         // Create temporary guest profile
         await db.collection('users').doc(user.uid).set({
+            username: guestUsername,
             isGuest: true,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
@@ -924,7 +963,20 @@ function setupAuthListener() {
                             if (typeof window.initDogeShop === 'function') window.initDogeShop();
                             if (typeof window.initPowerShop === 'function') window.initPowerShop();
                             if (typeof window.updateAutoClickerButtonState === 'function') window.updateAutoClickerButtonState();
-                            console.log('✅ Game shops re-initialized');
+
+                            // Reinitialize chart with loaded data
+                            if (typeof window.reinitializeChart === 'function') {
+                                console.log('Re-initializing chart with loaded data...');
+                                window.reinitializeChart();
+                            }
+
+                            // Force display update
+                            if (typeof window.updateDisplay === 'function') {
+                                console.log('Updating display...');
+                                window.updateDisplay();
+                            }
+
+                            console.log('✅ Game shops and UI re-initialized');
                         } catch (initError) {
                             console.error('⚠️ Error re-initializing shops:', initError);
                         }

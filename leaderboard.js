@@ -6,7 +6,7 @@
  * - Updates on login (includes offline earnings, capped at 6 hours)
  * - Updates on logout
  * - Updates when returning to tab after being away for 6+ hours
- * - Guest users are excluded from leaderboard
+ * - Guest users are included with numbered usernames (guest01, guest02, etc.)
  * - Leaderboard cache: 2 minutes (refreshes automatically when opened)
  * - Leaderboard reflects actual earnings with offline cap applied
  */
@@ -87,13 +87,7 @@ async function updateLeaderboard() {
 
         const user = auth.currentUser;
 
-        // Skip leaderboard updates for guest/anonymous users
-        if (user.isAnonymous) {
-            console.log('ℹ️ Guest user - skipping leaderboard update (guests not shown on leaderboard)');
-            return false;
-        }
-
-        // Fetch username from Firestore
+        // Fetch username from Firestore (including guest users)
         let username = 'Anonymous';
         try {
             const userDoc = await db.collection('users').doc(user.uid).get();
