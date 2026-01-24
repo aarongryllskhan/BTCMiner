@@ -1468,13 +1468,35 @@ function setupAuthListener() {
             // Load user's game data
             console.log('Loading game data...');
             try {
-                // IMPORTANT: Always load from LOCAL storage first
-                // This ensures offline earnings are calculated from the local save
-                // Cloud sync happens automatically in background, not at startup
-                console.log('📦 Loading from local storage (offline earnings support)');
-                if (typeof window.loadGame === 'function') {
-                    window.loadGame();
-                    // Don't show a message - offline earnings modal will appear if applicable
+                // IMPORTANT: Try LOCAL storage first for offline earnings support
+                console.log('📦 Checking for local storage data...');
+                const hasLocalData = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
+                const skipCloudLoad = localStorage.getItem('skipCloudLoadOnRefresh') === 'true';
+
+                if (hasLocalData) {
+                    // Local save exists - load it for offline earnings
+                    console.log('✅ Local save found - loading with offline earnings calculation');
+                    if (typeof window.loadGame === 'function') {
+                        window.loadGame();
+                    }
+                } else if (skipCloudLoad) {
+                    // User just reset the game - don't load cloud save
+                    console.log('🚫 User reset save - skipping cloud load, starting fresh');
+                    localStorage.removeItem('skipCloudLoadOnRefresh'); // Clear the flag
+                    if (typeof window.loadGame === 'function') {
+                        window.loadGame(); // This will initialize a fresh game
+                    }
+                } else {
+                    // No local save and no reset flag - load from cloud
+                    console.log('❌ No local save found - loading from cloud');
+                    if (typeof window.loadGameFromCloud === 'function') {
+                        await window.loadGameFromCloud(user.uid);
+                    } else {
+                        console.warn('⚠️ loadGameFromCloud not available, attempting loadGame instead');
+                        if (typeof window.loadGame === 'function') {
+                            window.loadGame();
+                        }
+                    }
                 }
 
                 // Mark that user is now logged in for future page refreshes

@@ -420,11 +420,17 @@ async function loadGameFromCloud(userId = null) {
         // Restore staking data if function exists
         if (cloudData.staking && typeof window.setStakingData === 'function') {
             try {
+                console.log('📥 Staking data from cloud:', cloudData.staking);
                 window.setStakingData(cloudData.staking);
                 console.log('✅ Staking data restored');
             } catch (error) {
                 console.warn('⚠️ Failed to restore staking data:', error);
             }
+        } else {
+            console.log('ℹ️ No staking data in cloud or function not available:', {
+                hasStakingData: !!cloudData.staking,
+                hasFunction: typeof window.setStakingData === 'function'
+            });
         }
 
         // Verify data was actually loaded
@@ -432,6 +438,7 @@ async function loadGameFromCloud(userId = null) {
         console.log('  window.btcBalance:', window.btcBalance);
         console.log('  window.btcClickValue:', window.btcClickValue);
         console.log('  window.btcPerSec:', window.btcPerSec);
+        console.log('  Staking:', typeof window.getStakingData === 'function' ? window.getStakingData() : 'N/A');
         console.log('  window.dollarBalance:', window.dollarBalance);
         console.log('  window.lifetimeEarnings:', window.lifetimeEarnings);
         console.log('  BTC Upgrades loaded:', window.btcUpgrades ? window.btcUpgrades.length : 0, 'upgrades');
@@ -516,6 +523,7 @@ async function loadGameFromCloud(userId = null) {
         if (typeof updateDisplay === 'function') updateDisplay();
         if (typeof updateUpgradeUI === 'function') updateUpgradeUI();
         if (typeof updateSkillTree === 'function') updateSkillTree();
+        if (typeof updateStakingUI === 'function') updateStakingUI();
         if (typeof window.updateManualHashButtons === 'function') window.updateManualHashButtons();
 
         // Reinitialize chart with new account data

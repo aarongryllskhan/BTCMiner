@@ -276,8 +276,22 @@ function loadStakingData(data) {
 }
 
 /**
+ * Set staking data from cloud (alias for loadStakingData for firebase compatibility)
+ */
+function setStakingData(data) {
+    loadStakingData(data);
+    console.log('✅ Staking data loaded from cloud:', { stakedBTC, stakedETH, stakedDOGE });
+}
+
+/**
  * Calculate total staked value in USD
  */
 function getTotalStakedValue() {
     return (stakedBTC * btcPrice) + (stakedETH * ethPrice) + (stakedDOGE * dogePrice);
 }
+
+// Export functions for global use
+window.getStakingData = getStakingData;
+window.loadStakingData = loadStakingData;
+window.setStakingData = setStakingData;
+window.getTotalStakedValue = getTotalStakedValue;

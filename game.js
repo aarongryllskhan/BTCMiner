@@ -804,6 +804,9 @@ function loadGame() {
         if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
             window.safeStorage.removeItem('satoshiTerminalSave');
             window.safeStorage.removeItem('instructionsDismissed');
+            // Set flag to prevent loading cloud save on next refresh
+            localStorage.setItem('skipCloudLoadOnRefresh', 'true');
+            console.log('🚫 Set flag to skip cloud load on refresh');
             // Reset all variables to defaults
             btcBalance = 0;
             btcLifetime = 0;
