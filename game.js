@@ -3146,6 +3146,10 @@ dogeUpgrades.forEach(u => {
             console.log('Page hidden - saving game state');
             pageHiddenTime = Date.now();
             try {
+                // Update lastSaveTime to NOW (critical for accurate offline calculations)
+                lastSaveTime = Date.now();
+                console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
+
                 saveGame();
                 console.log('Save successful on visibility change');
             } catch (e) {
@@ -3184,7 +3188,13 @@ dogeUpgrades.forEach(u => {
         console.log('Current BTC Balance:', btcBalance);
         console.log('Current Dollar Balance:', dollarBalance);
         console.log('Current Lifetime Earnings:', lifetimeEarnings);
+
+        // Force immediate synchronous save
         try {
+            // Update lastSaveTime to NOW (critical for accurate offline calculations)
+            lastSaveTime = Date.now();
+            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
+
             saveGame();
             console.log('✅ SAVE SUCCESSFUL ON BEFOREUNLOAD');
             console.log('Game state saved to localStorage');
@@ -3212,6 +3222,10 @@ dogeUpgrades.forEach(u => {
     window.addEventListener('pagehide', function(e) {
         console.log('Page hide event - saving game state');
         try {
+            // Update lastSaveTime to NOW (critical for accurate offline calculations)
+            lastSaveTime = Date.now();
+            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
+
             saveGame();
             console.log('Save successful on pagehide');
 
@@ -3237,6 +3251,10 @@ dogeUpgrades.forEach(u => {
     window.addEventListener('freeze', function(e) {
         console.log('Page freeze event - saving game state');
         try {
+            // Update lastSaveTime to NOW (critical for accurate offline calculations)
+            lastSaveTime = Date.now();
+            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
+
             saveGame();
             console.log('Save successful on freeze');
 
