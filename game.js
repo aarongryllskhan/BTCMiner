@@ -564,9 +564,18 @@ function loadGame() {
 
         console.log('✓ safeStorage available, _isAvailable:', window.safeStorage._isAvailable);
 
-        // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
-        const savedData = window.safeStorage.getItem('satoshiTerminalSave');
-        console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND (length: ' + savedData.length + ')' : 'NULL/UNDEFINED');
+        // Check if cloud data is available (set by loadGameFromCloud)
+        let savedData = null;
+        if (window.cloudGameData) {
+            // Convert cloud data object to JSON string
+            console.log('📥 Loading from CLOUD data (converted to JSON)');
+            savedData = JSON.stringify(window.cloudGameData);
+            window.cloudGameData = null; // Clear it after using
+        } else {
+            // Fall back to localStorage
+            savedData = window.safeStorage.getItem('satoshiTerminalSave');
+            console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND (length: ' + savedData.length + ')' : 'NULL/UNDEFINED');
+        }
 
         if (!savedData) {
             console.log('✗ No saved game found, starting fresh');

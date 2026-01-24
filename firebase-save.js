@@ -240,11 +240,44 @@ function resetGameVariables() {
     }
 }
 
-// Load game data from Firebase Cloud (smart merge with local save)
-// DISABLED - All cloud loading is disabled, game uses local storage only
+// Load game data from Firebase Cloud
+// Used when logging in on a different device or switching accounts
 async function loadGameFromCloud(userId = null) {
-    console.log('☁️ Cloud load disabled - game loads from local storage only');
-    return false;
+    try {
+        const user = userId ? { uid: userId } : auth.currentUser;
+
+        if (!user) {
+            console.log('⚠️ No user logged in - skipping cloud load');
+            return false;
+        }
+
+        console.log('☁️ LOADING GAME FROM CLOUD for user:', user.uid);
+
+        // Get game data from Firestore
+        const gameDataDoc = await db.collection('users').doc(user.uid).collection('gameData').doc('current').get();
+
+        if (!gameDataDoc.exists) {
+            console.log('⚠️ No cloud save found for this user - starting fresh');
+            return false;
+        }
+
+        const cloudData = gameDataDoc.data();
+        console.log('✅ Cloud data retrieved, size:', JSON.stringify(cloudData).length, 'bytes');
+
+        // Apply cloud data to game state (this will be processed by loadGame logic)
+        if (typeof window.loadGame === 'function') {
+            // Store cloud data in a temporary location for loadGame to use
+            window.cloudGameData = cloudData;
+            console.log('📦 Stored cloud data for loadGame to process');
+            window.loadGame();
+            return true;
+        }
+
+        return false;
+    } catch (error) {
+        console.error('❌ Error loading from cloud:', error);
+        return false;
+    }
 }
 
 // ANTI-CHEAT: Validate game data before saving
