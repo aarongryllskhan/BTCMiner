@@ -935,7 +935,7 @@ async function linkGuestToEmail(email, password, username) {
         const cleanUsername = username.trim();
         const guestUid = guestUser.uid;
 
-        console.log('🔗 Converting anonymous account to email/password account...');
+        console.log('🔗 Converting guest account to permanent account...');
         console.log('Guest UID:', guestUid);
 
         // Check if username is already taken
@@ -959,89 +959,136 @@ async function linkGuestToEmail(email, password, username) {
             }
         }
 
-        // IMPORTANT: Save current game state to cloud BEFORE linking
-        // This ensures the most recent progress (from local cache) is preserved
-        console.log('💾 Saving current game state to cloud before linking...');
+        // Step 1: Save current game state to cloud BEFORE conversion
+        console.log('💾 Saving current game state to cloud before conversion...');
         try {
             if (typeof window.saveGameToCloud === 'function') {
                 await window.saveGameToCloud();
                 console.log('✅ Current game state saved to cloud');
             } else {
-                console.warn('⚠️ saveGameToCloud function not available, skipping pre-link save');
+                console.warn('⚠️ saveGameToCloud function not available, skipping pre-conversion save');
             }
         } catch (saveError) {
-            console.warn('⚠️ Failed to save game before linking (non-critical):', saveError);
+            console.warn('⚠️ Failed to save game before conversion (non-critical):', saveError);
             // Continue anyway - this is non-critical
         }
 
-        // Use Firebase's linkWithCredential to convert anonymous account to email/password
-        // This keeps the same UID, so all data stays in place!
-        console.log('🔗 Linking email/password credentials to anonymous account...');
-
+        // Step 2: Fetch guest's game data before creating new account
+        console.log('📋 Fetching guest game data...');
+        let guestGameData = null;
         try {
-            const credential = firebase.auth.EmailAuthProvider.credential(email, password);
-            const userCredential = await guestUser.linkWithCredential(credential);
-            const linkedUser = userCredential.user;
-
-            console.log('✅ Anonymous account successfully linked!');
-            console.log('UID remains the same:', linkedUser.uid === guestUid);
-            console.log('User now has email:', linkedUser.email);
-
-            // Update the user document in Firestore with email and username
-            console.log('📝 Updating user profile...');
-            await db.collection('users').doc(linkedUser.uid).update({
-                email: email,
-                username: cleanUsername,
-                isGuest: false,
-                linkedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            console.log('✅ User profile updated');
-
-            // Clear guest credentials from localStorage since they're no longer needed
-            localStorage.removeItem('guestUserUid');
-            localStorage.removeItem('guestUsername');
-
-            // Force hide the link account modal immediately
-            console.log('🔒 Hiding link account modal...');
-            const linkModal = document.getElementById('link-account-modal');
-            if (linkModal) {
-                linkModal.style.display = 'none';
-                linkModal.remove(); // Completely remove from DOM
-                console.log('✅ Link account modal removed from DOM');
-            } else {
-                console.warn('⚠️ Link account modal not found in DOM');
+            const gameDataDoc = await db.collection('users').doc(guestUid).collection('gameData').doc('current').get();
+            if (gameDataDoc.exists) {
+                guestGameData = gameDataDoc.data();
+                console.log('✅ Guest game data retrieved');
             }
-
-            // Show refresh modal immediately to update the UI with the new username
-            console.log('🔄 Showing refresh modal to update username display...');
-            showAccountLinkedRefreshModal(cleanUsername);
-
-            return linkedUser;
-
-        } catch (linkError) {
-            console.error('❌ Failed to link credentials:', linkError);
-
-            // Handle specific error cases
-            if (linkError.code === 'auth/email-already-in-use') {
-                showMessage('This email is already in use. Please use a different email.', 'error');
-            } else if (linkError.code === 'auth/invalid-email') {
-                showMessage('Please enter a valid email address.', 'error');
-            } else if (linkError.code === 'auth/weak-password') {
-                showMessage('Password must be at least 6 characters.', 'error');
-            } else if (linkError.code === 'auth/credential-already-in-use') {
-                showMessage('These credentials are already in use.', 'error');
-            } else {
-                showMessage('Failed to create account: ' + linkError.message, 'error');
-            }
-
-            throw linkError;
+        } catch (fetchError) {
+            console.warn('⚠️ Could not fetch guest game data:', fetchError);
         }
 
+        // Step 3: Create new email/password account
+        console.log('👤 Creating new email/password account...');
+        let newUser;
+        try {
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            newUser = userCredential.user;
+            console.log('✅ New email/password account created');
+            console.log('New UID:', newUser.uid);
+        } catch (createError) {
+            console.error('❌ Failed to create new account:', createError);
+
+            // Handle specific error cases
+            if (createError.code === 'auth/email-already-in-use') {
+                showMessage('This email is already in use. Please use a different email.', 'error');
+            } else if (createError.code === 'auth/invalid-email') {
+                showMessage('Please enter a valid email address.', 'error');
+            } else if (createError.code === 'auth/weak-password') {
+                showMessage('Password must be at least 6 characters.', 'error');
+            } else {
+                showMessage('Failed to create account: ' + createError.message, 'error');
+            }
+
+            throw createError;
+        }
+
+        // Step 4: Create user profile in Firestore for new account
+        console.log('📝 Creating user profile for new account...');
+        try {
+            await db.collection('users').doc(newUser.uid).set({
+                email: email,
+                username: cleanUsername,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                totalBTC: 0,
+                level: 1,
+                achievements: [],
+                isPremium: false,
+                migratedFromGuest: true,
+                guestUid: guestUid
+            });
+            console.log('✅ User profile created');
+        } catch (profileError) {
+            console.error('❌ Failed to create user profile:', profileError);
+            throw profileError;
+        }
+
+        // Step 5: Transfer game data from guest account to new account
+        if (guestGameData) {
+            console.log('📦 Transferring game data from guest to new account...');
+            try {
+                await db.collection('users').doc(newUser.uid).collection('gameData').doc('current').set(guestGameData);
+                console.log('✅ Game data transferred successfully');
+            } catch (transferError) {
+                console.warn('⚠️ Failed to transfer game data (non-critical):', transferError);
+                // Continue anyway - user can still play, just with reset progress
+            }
+        }
+
+        // Step 6: Delete old guest account
+        console.log('🗑️ Deleting old guest account...');
+        try {
+            // First, delete guest's Firestore data
+            await db.collection('users').doc(guestUid).delete();
+            console.log('✅ Guest Firestore data deleted');
+
+            // Sign out current user temporarily
+            await auth.signOut();
+
+            // Delete the anonymous account
+            await guestUser.delete();
+            console.log('✅ Guest authentication account deleted');
+
+            // Sign back in with the new account
+            const signInResult = await auth.signInWithEmailAndPassword(email, password);
+            console.log('✅ Signed in with new account');
+
+        } catch (deleteError) {
+            console.warn('⚠️ Could not delete guest account (non-critical):', deleteError);
+            // If we can't delete, just continue - the new account is what matters
+        }
+
+        // Step 7: Clear guest credentials from localStorage
+        localStorage.removeItem('guestUserUid');
+        localStorage.removeItem('guestUsername');
+
+        // Step 8: Hide link account modal
+        console.log('🔒 Hiding link account modal...');
+        const linkModal = document.getElementById('link-account-modal');
+        if (linkModal) {
+            linkModal.style.display = 'none';
+            linkModal.remove();
+            console.log('✅ Link account modal removed from DOM');
+        }
+
+        // Step 9: Show success modal
+        console.log('🎉 Showing account linked success modal...');
+        showAccountLinkedRefreshModal(cleanUsername);
+
+        return newUser;
+
     } catch (error) {
-        console.error('❌ Account creation/linking error (outer catch):', error);
-        // Error message already shown in inner catch blocks
+        console.error('❌ Account conversion error:', error);
+        showMessage('Failed to create account: ' + error.message, 'error');
         throw error;
     }
 }
