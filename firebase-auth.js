@@ -23,16 +23,40 @@ function setupPostMessageListener() {
                 console.log('📨 Received playAsGuest message from iframe');
                 await playAsGuest();
                 console.log('✅ playAsGuest completed successfully');
+                // Close modal immediately after guest login
+                setTimeout(() => {
+                    const loginScreenModal = document.getElementById('login-screen');
+                    if (loginScreenModal) {
+                        console.log('🔐 Closing login modal after guest login');
+                        loginScreenModal.style.display = 'none';
+                    }
+                }, 100);
             }
             else if (event.data.action === 'loginUser') {
                 console.log('📨 Received loginUser message from iframe');
                 await loginUser(event.data.email, event.data.password);
                 console.log('✅ loginUser completed successfully');
+                // Close modal immediately after successful email login
+                setTimeout(() => {
+                    const loginScreenModal = document.getElementById('login-screen');
+                    if (loginScreenModal) {
+                        console.log('🔐 Closing login modal after email login');
+                        loginScreenModal.style.display = 'none';
+                    }
+                }, 100);
             }
             else if (event.data.action === 'registerUser') {
                 console.log('📨 Received registerUser message from iframe');
                 await registerUser(event.data.email, event.data.password, event.data.username);
                 console.log('✅ registerUser completed successfully');
+                // Close modal immediately after successful registration
+                setTimeout(() => {
+                    const loginScreenModal = document.getElementById('login-screen');
+                    if (loginScreenModal) {
+                        console.log('🔐 Closing login modal after registration');
+                        loginScreenModal.style.display = 'none';
+                    }
+                }, 100);
             }
             else if (event.data.action === 'loginWithGoogle') {
                 console.log('📨 Received loginWithGoogle message from iframe');
@@ -43,6 +67,14 @@ function setupPostMessageListener() {
                 }
                 await loginWithGoogle();
                 console.log('✅ loginWithGoogle completed successfully');
+                // Close modal immediately after successful Google login
+                setTimeout(() => {
+                    const loginScreenModal = document.getElementById('login-screen');
+                    if (loginScreenModal) {
+                        console.log('🔐 Closing login modal after Google login');
+                        loginScreenModal.style.display = 'none';
+                    }
+                }, 100);
             }
             else {
                 console.log('⚠️ Unknown message action:', event.data.action);
@@ -1667,6 +1699,10 @@ function setupAuthListener() {
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
             console.log('ℹ️ No user logged in - clearing game state and showing login screen');
+
+            // Reset gameDataLoadedFlag so next login will load data properly
+            gameDataLoadedFlag = false;
+            console.log('🔄 Reset gameDataLoadedFlag to allow next login to load data');
 
             // Clear session storage flag to ensure fresh cloud load on next login
             sessionStorage.removeItem('userWasLoggedIn');
