@@ -1479,6 +1479,14 @@ function setupAuthListener() {
                 // Check if local data belongs to current user
                 const isLocalDataForCurrentUser = hasLocalData && storedUserId === currentUserId;
 
+                console.log('🔍 SAVE LOAD DECISION:');
+                console.log('  hasLocalData:', hasLocalData);
+                console.log('  storedUserId:', storedUserId);
+                console.log('  currentUserId:', currentUserId);
+                console.log('  isLocalDataForCurrentUser:', isLocalDataForCurrentUser);
+                console.log('  skipCloudLoad:', skipCloudLoad);
+                console.log('  DECISION:', isLocalDataForCurrentUser && !skipCloudLoad ? 'LOAD LOCAL' : 'LOAD CLOUD');
+
                 if (isLocalDataForCurrentUser && !skipCloudLoad) {
                     // Same user with local data - load local save with offline earnings
                     console.log('✅ Local save found for current user - loading with offline earnings calculation');
