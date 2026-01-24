@@ -317,44 +317,58 @@
     }
 
     // Sound effects using Web Audio API
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let audioContext;
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+        console.error('Could not create audio context:', error);
+        audioContext = null;
+    }
 
     function playClickSound() {
-        if (isMuted) return;
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
+        if (isMuted || !audioContext) return;
+        try {
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-        osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+            osc.type = 'sine';
 
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
-        osc.start(now);
-        osc.stop(now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } catch (error) {
+            console.error('Error playing click sound:', error);
+        }
     }
 
     function playUpgradeSound() {
-        if (isMuted) return;
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
+        if (isMuted || !audioContext) return;
+        try {
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(500, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
-        osc.type = 'square';
+            osc.frequency.setValueAtTime(500, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+            osc.type = 'square';
 
-        gain.gain.setValueAtTime(0.04, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            gain.gain.setValueAtTime(0.04, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 
-        osc.start(now);
-        osc.stop(now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } catch (error) {
+            console.error('Error playing upgrade sound:', error);
+        }
     }
 
     // Bitcoin mining upgrades
@@ -622,6 +636,21 @@ function loadGame() {
 
         // Calculate total power used
         calculateTotalPowerUsed();
+
+        // Recalculate click values based on Manual Hash Rate upgrades
+        const btcManualHashRate = btcUpgrades[0]; // Manual Hash Rate is always at index 0
+        const ethManualHashRate = ethUpgrades[0];
+        const dogeManualHashRate = dogeUpgrades[0];
+
+        if (btcManualHashRate && btcManualHashRate.level > 0) {
+            btcClickValue = 0.00000250 * Math.pow(1.12, btcManualHashRate.level);
+        }
+        if (ethManualHashRate && ethManualHashRate.level > 0) {
+            ethClickValue = 0.00007143 * Math.pow(1.12, ethManualHashRate.level);
+        }
+        if (dogeManualHashRate && dogeManualHashRate.level > 0) {
+            dogeClickValue = 1.00000000 * Math.pow(1.12, dogeManualHashRate.level);
+        }
 
         // Recalculate totals for all cryptos
         btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
