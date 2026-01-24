@@ -73,7 +73,7 @@
         logViewportInfo();
 
         // Check if app has been updated
-        const appVersion = '1.0.10'; // Increment this version to force cache clear
+        const appVersion = '1.0.11'; // Increment this version to force cache clear
 
         try {
             const storedVersion = localStorage.getItem('appVersion');
@@ -1153,9 +1153,10 @@
             mainLayout.style.setProperty('max-width', '100%', 'important');
         }
         // SECONDARY RULE: Landscape + NOT wide enough = still mobile
-        // Most mobile resolutions are below 2000px width, so use that as threshold
-        else if (isLandscape && width < 2000) {
-            console.log('✅ LANDSCAPE BUT NARROW (<2000px) → Single-Column Mobile Layout');
+        // Use 1400px threshold to account for browser zoom and smaller desktop monitors
+        // At 125% zoom on a 1600px monitor = 1280px effective width, so switch to mobile
+        else if (isLandscape && width < 1400) {
+            console.log('✅ LANDSCAPE BUT NARROW (<1400px) → Single-Column Mobile Layout');
             mainLayout.style.setProperty('display', 'flex', 'important');
             mainLayout.style.setProperty('flex-direction', 'column', 'important');
             mainLayout.style.setProperty('height', 'auto', 'important');
@@ -1163,9 +1164,9 @@
             mainLayout.style.setProperty('width', '100%', 'important');
             mainLayout.style.setProperty('max-width', '100%', 'important');
         }
-        // DESKTOP RULE: Landscape + Wide (2000px+) = 2-column grid
-        else if (isLandscape && width >= 2000) {
-            console.log('✅ LANDSCAPE & WIDE (≥2000px) → Two-Column Desktop Layout');
+        // DESKTOP RULE: Landscape + Wide (1400px+) = 2-column grid
+        else if (isLandscape && width >= 1400) {
+            console.log('✅ LANDSCAPE & WIDE (≥1400px) → Two-Column Desktop Layout');
             mainLayout.style.setProperty('display', 'grid', 'important');
             mainLayout.style.setProperty('grid-template-columns', '7fr 3fr', 'important');
             mainLayout.style.setProperty('height', 'calc(100vh - calc(var(--base-padding) * 2))', 'important');

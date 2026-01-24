@@ -92,9 +92,10 @@
             }
         }
 
-        /* Desktop: 2-column grid layout - ONLY on landscape orientation AND wide (2000px+) */
-        /* Most mobile resolutions are below 2000px, so this threshold ensures only true desktops */
-        @media (min-width: 2000px) and (orientation: landscape) {
+        /* Desktop: 2-column grid layout - ONLY on landscape orientation AND wide (1400px+) */
+        /* 1400px threshold accounts for browser zoom and smaller monitors */
+        /* At 125% zoom on 1600px monitor = 1280px effective, so switches to mobile */
+        @media (min-width: 1400px) and (orientation: landscape) {
             #main-layout {
                 display: grid !important;
                 grid-template-columns: 7fr 3fr;
