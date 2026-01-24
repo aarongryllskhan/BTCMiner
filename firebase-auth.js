@@ -1055,8 +1055,11 @@ async function linkGuestToEmail(email, password, username) {
             console.log('✅ Link account modal closed');
         }
 
-        console.log('🎉 Showing success modal...');
-        showAccountLinkedRefreshModal(cleanUsername);
+        // Small delay to ensure modal is removed and DOM is updated, especially important on mobile
+        setTimeout(() => {
+            console.log('🎉 Showing success modal...');
+            showAccountLinkedRefreshModal(cleanUsername);
+        }, 100);
 
         return newUser;
 
