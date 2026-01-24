@@ -77,13 +77,15 @@
 
         try {
             const storedVersion = localStorage.getItem('appVersion');
+            console.log('🔍 App version check: stored=', storedVersion, 'current=', appVersion);
 
             if (storedVersion !== appVersion) {
-                console.log('🔄 App updated! Clearing old cache...');
+                console.log('🔄 App version mismatch detected. Previous version:', storedVersion);
+                console.warn('⚠️ IMPORTANT: Only clearing app cache, but preserving game save data');
 
-                // Clear all app-related caches
-                localStorage.removeItem('satoshiTerminalSave');
+                // Clear ONLY app caches, NOT game saves
                 localStorage.removeItem('instructionsDismissed');
+                // DO NOT REMOVE 'satoshiTerminalSave' - that's user game data!
 
                 // Clear service worker cache if it exists
                 if ('serviceWorker' in navigator) {
@@ -92,16 +94,18 @@
                     });
                 }
 
-                // Store new version BEFORE reload to prevent infinite loop
+                // Store new version
                 localStorage.setItem('appVersion', appVersion);
 
-                console.log('✅ Cache cleared! Forcing hard reload...');
+                console.log('✅ App cache cleared (game save preserved)');
 
-                // Force a hard reload to clear browser cache
-                // This bypasses the HTTP cache and forces fresh JS/CSS files
-                setTimeout(() => {
-                    window.location.reload(true); // Hard reload
-                }, 100);
+                // Optional: Hard reload to clear browser cache (don't reload by default to preserve save)
+                // Uncomment below to force reload on version change
+                // setTimeout(() => {
+                //     window.location.reload(true);
+                // }, 100);
+            } else {
+                console.log('✅ App version matches - no cache clear needed');
             }
         } catch (e) {
             // localStorage not available (incognito mode, etc.)
