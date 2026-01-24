@@ -2983,7 +2983,6 @@ dogeUpgrades.forEach(u => {
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            checkAgeDisclaimer();
             initializeGame();
         });
     } else {
