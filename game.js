@@ -2645,11 +2645,11 @@ dogeUpgrades.forEach(u => {
         initStaking();
         updateStakingUI();
 
-        // Check if instructions were dismissed
-        if (localStorage.getItem('instructionsDismissed') === 'true') {
+        // Show instructions modal if not dismissed
+        if (localStorage.getItem('instructionsDismissed') !== 'true') {
             const instructionsEl = document.getElementById('game-instructions');
             if (instructionsEl) {
-                instructionsEl.style.display = 'none';
+                instructionsEl.style.display = 'flex';
             }
         }
 
