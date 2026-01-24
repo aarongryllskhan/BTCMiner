@@ -40,13 +40,24 @@ async function saveGameToCloud(isManualSave = false, isLeaderboardRefresh = fals
 
         // Check user document exists
         try {
+            console.log('🔍 Checking if user document exists at: users/' + user.uid);
             const userDocCheck = await db.collection('users').doc(user.uid).get();
             if (!userDocCheck.exists) {
-                console.log('⚠️ User document does not exist yet - skipping cloud save');
+                console.error('❌ User document does not exist - cannot save to cloud');
+                console.error('   This means the user was not properly created in Firestore');
+                console.error('   User UID:', user.uid);
+                console.error('   User email:', user.email);
+                if (isManualSave) {
+                    showSaveMessage('User profile not found in cloud. Please try logging out and back in.', 'error');
+                }
                 return false;
             }
+            console.log('✅ User document exists');
         } catch (checkError) {
-            console.error('Error checking user document:', checkError);
+            console.error('❌ Error checking user document:', checkError);
+            if (isManualSave) {
+                showSaveMessage('Error accessing cloud storage: ' + checkError.message, 'error');
+            }
             return false;
         }
 

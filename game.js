@@ -520,9 +520,11 @@
 
         try {
             const saveString = JSON.stringify(gameState);
-            console.log('=== ATTEMPTING SAVE ===');
+            console.log('=== ATTEMPTING LOCAL SAVE ===');
             console.log('BTC Balance:', btcBalance);
             console.log('Dollar Balance:', dollarBalance);
+            console.log('Hardware Equity:', hardwareEquity);
+            console.log('BTC Upgrades with levels:', btcUpgrades.filter(u => u.level > 0).length);
             console.log('Save string length:', saveString.length, 'bytes');
             console.log('safeStorage._isAvailable:', window.safeStorage._isAvailable);
 
@@ -532,7 +534,11 @@
             // Verify save worked
             const testLoad = window.safeStorage.getItem('satoshiTerminalSave');
             if (testLoad && testLoad.length > 0) {
-                console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage (Length: ' + testLoad.length + ')');
+                const verifyData = JSON.parse(testLoad);
+                console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage');
+                console.log('  Verified BTC:', verifyData.btcBalance);
+                console.log('  Verified Dollar:', verifyData.dollarBalance);
+                console.log('  Verified BTC Upgrades count:', verifyData.btcUpgrades ? verifyData.btcUpgrades.length : 0);
             } else {
                 console.error('✗ SAVE FAILED - Could not verify in safeStorage');
             }
@@ -569,6 +575,10 @@ function loadGame() {
         if (window.cloudGameData) {
             // Convert cloud data object to JSON string
             console.log('📥 Loading from CLOUD data (converted to JSON)');
+            console.log('   Cloud data keys:', Object.keys(window.cloudGameData));
+            console.log('   btcBalance from cloud:', window.cloudGameData.btcBalance);
+            console.log('   dollarBalance from cloud:', window.cloudGameData.dollarBalance);
+            console.log('   hardwareEquity from cloud:', window.cloudGameData.hardwareEquity);
             savedData = JSON.stringify(window.cloudGameData);
             window.cloudGameData = null; // Clear it after using
         } else {
@@ -590,6 +600,22 @@ function loadGame() {
         console.log('✓ Loading game... Save data size:', savedData.length, 'bytes');
         const state = JSON.parse(savedData);
         console.log('✓ Save data parsed successfully');
+
+        // Log ALL saved fields to verify what was saved
+        console.log('📋 ALL SAVED FIELDS IN STATE:');
+        console.log('  btcBalance:', state.btcBalance);
+        console.log('  ethBalance:', state.ethBalance);
+        console.log('  dogeBalance:', state.dogeBalance);
+        console.log('  dollarBalance:', state.dollarBalance);
+        console.log('  hardwareEquity:', state.hardwareEquity);
+        console.log('  btcPerSec:', state.btcPerSec);
+        console.log('  ethPerSec:', state.ethPerSec);
+        console.log('  dogePerSec:', state.dogePerSec);
+        console.log('  chartHistory length:', state.chartHistory ? state.chartHistory.length : 0);
+        console.log('  staking data exists:', !!state.staking);
+        console.log('  btcUpgrades count:', state.btcUpgrades ? state.btcUpgrades.length : 0);
+        console.log('  ethUpgrades count:', state.ethUpgrades ? state.ethUpgrades.length : 0);
+        console.log('  dogeUpgrades count:', state.dogeUpgrades ? state.dogeUpgrades.length : 0);
 
         // Check if this save belongs to the current user
         const currentUserId = (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null;
@@ -621,12 +647,14 @@ function loadGame() {
         ethBalance = state.ethBalance || 0;
         ethLifetime = state.ethLifetime || 0;
         ethClickValue = state.ethClickValue || 0.00007143;
+        ethPerSec = state.ethPerSec || 0;
         ethPrice = state.ethPrice || 3500;
 
         // Load Dogecoin data
         dogeBalance = state.dogeBalance || 0;
         dogeLifetime = state.dogeLifetime || 0;
         dogeClickValue = state.dogeClickValue || 1.00000000;
+        dogePerSec = state.dogePerSec || 0;
         dogePrice = state.dogePrice || 0.25;
 
         // Load general data
@@ -799,10 +827,28 @@ function loadGame() {
             console.log('No saved chart data, starting fresh');
         }
 
-        // Debug log
-        console.log('✓ LOAD COMPLETE');
-        console.log('Final balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
+        // Debug log - COMPLETE state after loading
+        console.log('✓ LOAD COMPLETE - FINAL GAME STATE:');
+        console.log('💰 Balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
+        console.log('📊 Per Second Rates:', { btcPerSec, ethPerSec, dogePerSec });
+        console.log('📈 Lifetime Earnings:', { btcLifetime, ethLifetime, dogeLifetime });
+        console.log('💵 Lifetime Earnings Total:', lifetimeEarnings);
+        console.log('BTC Click Value:', btcClickValue, '| ETH Click Value:', ethClickValue, '| DOGE Click Value:', dogeClickValue);
+        console.log('BTC Upgrades loaded:', btcUpgrades.filter(u => u.level > 0).length, 'with levels');
+        console.log('ETH Upgrades loaded:', ethUpgrades.filter(u => u.level > 0).length, 'with levels');
+        console.log('DOGE Upgrades loaded:', dogeUpgrades.filter(u => u.level > 0).length, 'with levels');
+        console.log('Power Upgrades loaded:', powerUpgrades.filter(u => u.level > 0).length, 'with levels');
         console.log('Chart history length:', chartHistory.length);
+        console.log('Staking status: (check if staking module loaded data)');
+
+        // Log sample upgrade details
+        const btcUpgradesWithLevels = btcUpgrades.filter(u => u.level > 0);
+        if (btcUpgradesWithLevels.length > 0) {
+            console.log('Sample BTC upgrades loaded:');
+            btcUpgradesWithLevels.slice(0, 3).forEach(u => {
+                console.log('  ', u.name, '- level:', u.level, 'yield:', u.currentYield);
+            });
+        }
 
         // Mark that game data has been loaded
         window.gameDataLoaded = true;

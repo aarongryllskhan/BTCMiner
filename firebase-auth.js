@@ -441,6 +441,7 @@ async function loginWithGoogle() {
         const userDoc = await db.collection('users').doc(user.uid).get();
 
         if (!userDoc.exists) {
+            console.log('📝 No existing user document found - treating as new user');
             // New user - prompt for username
             let username = null;
             let usernameValid = false;
@@ -537,10 +538,46 @@ async function loginWithGoogle() {
                 lastSaved: firebase.firestore.FieldValue.serverTimestamp()
             });
         } else {
-            // Update last login
+            // Existing user - just update lastLogin
+            console.log('✅ Existing user detected - updating lastLogin');
             await db.collection('users').doc(user.uid).update({
                 lastLogin: firebase.firestore.FieldValue.serverTimestamp()
             });
+
+            // CRITICAL: Check if gameData collection exists for existing users
+            // Sometimes it might not be created, so ensure it exists
+            console.log('🔍 Checking if gameData document exists for existing user...');
+            const gameDataDoc = await db.collection('users').doc(user.uid).collection('gameData').doc('current').get();
+            if (!gameDataDoc.exists) {
+                console.warn('⚠️ gameData document missing for existing user - creating empty one');
+                await db.collection('users').doc(user.uid).collection('gameData').doc('current').set({
+                    btcBalance: 0,
+                    btcLifetime: 0,
+                    btcClickValue: 0.00000250,
+                    btcPerSec: 0,
+                    btcPrice: 100000,
+                    ethBalance: 0,
+                    ethLifetime: 0,
+                    ethClickValue: 0.00007143,
+                    ethPerSec: 0,
+                    ethPrice: 3500,
+                    dogeBalance: 0,
+                    dogeLifetime: 0,
+                    dogeClickValue: 1.00000000,
+                    dogePerSec: 0,
+                    dogePrice: 0.25,
+                    dollarBalance: 0,
+                    hardwareEquity: 0,
+                    lifetimeEarnings: 0,
+                    sessionEarnings: 0,
+                    autoClickerCooldownEnd: 0,
+                    lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastSaveTime: Date.now()
+                });
+                console.log('✅ Created empty gameData document');
+            } else {
+                console.log('✅ gameData document exists');
+            }
         }
 
         showMessage('Welcome!', 'success');
