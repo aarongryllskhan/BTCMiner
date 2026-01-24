@@ -3009,6 +3009,9 @@ dogeUpgrades.forEach(u => {
             }
         }
 
+        // DISABLED: Offline earnings modal is causing issues with data persistence
+        // TODO: Re-enable after fixing local/cloud save logic
+        /*
         // Show offline earnings modal AFTER instructions
         // Only show if not already displayed by cloud load (firebase-save.js shows it immediately)
         if (offlineEarningsData) {
@@ -3039,6 +3042,8 @@ dogeUpgrades.forEach(u => {
                 console.log('ℹ️ Offline earnings modal already displayed by cloud load');
             }
         }
+        */
+        console.log('⏸️ Offline earnings modal disabled for debugging');
 
         console.log('✓ About to look for canvas element...');
         const canvasElement = document.getElementById('nwChart');

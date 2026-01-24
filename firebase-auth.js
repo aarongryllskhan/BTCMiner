@@ -1377,6 +1377,9 @@ window.saveConsentToFirebase = saveConsentToFirebase;
 window.loadConsentFromFirebase = loadConsentFromFirebase;
 
 // Setup authentication state listener
+// Guard flag to prevent loading game data multiple times
+let gameDataLoadedFlag = false;
+
 // This will be called after Firebase initializes
 function setupAuthListener() {
     console.log('🔍 Setting up authentication listener...');
@@ -1389,6 +1392,12 @@ function setupAuthListener() {
     // Listen for authentication state changes
     auth.onAuthStateChanged(async (user) => {
         console.log('🔄 Auth state changed!');
+
+        // CRITICAL: Prevent loading game data multiple times
+        if (gameDataLoadedFlag) {
+            console.log('⚠️ Game data already loaded this session - skipping duplicate load');
+            return;
+        }
 
         if (user) {
             console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
@@ -1500,24 +1509,16 @@ function setupAuthListener() {
                     }
                 } else if (hasValidLocalData && !isAccountSwitch) {
                     // PRIORITY: LOAD LOCAL SAVE on page refresh (same browser/user)
-                    console.log('✅ LOCAL SAVE FOUND - LOADING LOCAL (page refresh - keep local data!)');
-                    console.log('  DECISION: LOAD LOCAL (has local data)');
+                    console.log('✅ LOCAL SAVE FOUND - LOADING LOCAL ONLY (ignoring cloud)');
+                    console.log('  DECISION: LOAD LOCAL (has local data - DO NOT load from cloud)');
                     if (typeof window.loadGame === 'function') {
                         window.loadGame();
                     }
 
-                    // After loading local, sync to cloud (upload newer local data)
-                    setTimeout(async () => {
-                        if (typeof window.saveGameToCloud === 'function' && auth && auth.currentUser) {
-                            console.log('📤 Uploading local save to cloud after local load...');
-                            try {
-                                await window.saveGameToCloud(true); // Force manual save to bypass cooldown
-                                console.log('✅ Local data synced to cloud');
-                            } catch (err) {
-                                console.warn('⚠️ Cloud sync failed (non-critical):', err);
-                            }
-                        }
-                    }, 2000);
+                    // CRITICAL: Do NOT sync to cloud on page refresh
+                    // Cloud data is only for first login or account switch
+                    // Local data is authoritative on refresh
+                    console.log('⚠️ Cloud sync DISABLED on page refresh - local data is authoritative');
                 } else if (isAccountSwitch) {
                     // ACCOUNT SWITCH - load from cloud for new user
                     console.log('🔄 ACCOUNT SWITCH DETECTED - loading from cloud');
@@ -1553,7 +1554,9 @@ function setupAuthListener() {
                 // Mark that user is now logged in for future page refreshes
                 sessionStorage.setItem('userWasLoggedIn', 'true');
 
-                console.log('✅ Game data loaded successfully');
+                // SET THE FLAG to prevent duplicate loads
+                gameDataLoadedFlag = true;
+                console.log('✅ Game data loaded successfully (flag set to prevent duplicates)');
 
                 // Re-initialize the game UI after loading
                 if (typeof window.initializeGame === 'function') {
