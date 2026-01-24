@@ -409,6 +409,35 @@
     // Keep reference to btcUpgrades as upgrades for backward compatibility
     let upgrades = btcUpgrades;
 
+    // --- DEBOUNCED CLOUD SAVE ---
+    let cloudSaveTimeout = null;
+    let hasPendingCloudSave = false;
+
+    function scheduleDebouncedCloudSave() {
+        // Mark that we have changes to save
+        hasPendingCloudSave = true;
+
+        // Clear any existing timeout
+        if (cloudSaveTimeout) {
+            clearTimeout(cloudSaveTimeout);
+        }
+
+        // Schedule cloud save for 3 seconds from now
+        // If user makes another purchase, this resets the timer
+        cloudSaveTimeout = setTimeout(() => {
+            if (hasPendingCloudSave && typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('💾 Debounced cloud save executing...');
+                window.saveGameToCloud(false).then(() => {
+                    console.log('✅ Debounced cloud save complete');
+                    hasPendingCloudSave = false;
+                }).catch(err => {
+                    console.warn('⚠️ Debounced cloud save failed:', err);
+                    // Keep flag true so we retry later
+                });
+            }
+        }, 3000); // 3 second debounce
+    }
+
     // --- SAVE SYSTEM START ---
     function saveGame() {
         // Check if safeStorage is available
@@ -1612,6 +1641,9 @@ function buyLevel(i) {
             console.log('✅ VERIFIED SAVE - Upgrade level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
         }
 
+        // Schedule a debounced cloud save (reduces Firebase writes)
+        scheduleDebouncedCloudSave();
+
         // Play upgrade sound
         playUpgradeSound();
     }
@@ -1675,6 +1707,9 @@ function buyLevelMultiple(i, quantity) {
             const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
             console.log('✅ VERIFIED SAVE - USB Miner level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
         }
+
+        // Schedule a debounced cloud save (reduces Firebase writes)
+        scheduleDebouncedCloudSave();
 
         playUpgradeSound();
     }
@@ -3226,12 +3261,24 @@ dogeUpgrades.forEach(u => {
             console.log('✅ SAVE SUCCESSFUL ON BEFOREUNLOAD');
             console.log('Game state saved to localStorage');
 
-            // CRITICAL: Also save to cloud if user is logged in
+            // Clear any pending debounced cloud save and force immediate save
+            if (cloudSaveTimeout) {
+                clearTimeout(cloudSaveTimeout);
+                cloudSaveTimeout = null;
+            }
+
+            // CRITICAL: Force immediate cloud save if there are pending changes OR always on unload
             if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('📤 Attempting cloud save on beforeunload...');
+                if (hasPendingCloudSave) {
+                    console.log('📤 Forcing pending cloud save on beforeunload...');
+                } else {
+                    console.log('📤 Attempting cloud save on beforeunload...');
+                }
+                hasPendingCloudSave = false; // Clear the flag
+
                 try {
                     // Use synchronous approach with fetch API to ensure save completes
-                    window.saveGameToCloud().then(() => {
+                    window.saveGameToCloud(true).then(() => {
                         console.log('✅ Cloud save complete on beforeunload');
                     }).catch(err => {
                         console.warn('⚠️ Cloud save failed on beforeunload (non-critical):', err);
