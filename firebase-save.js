@@ -446,7 +446,17 @@ async function loadGameFromCloud(userId = null) {
         }
 
         console.log('✅ Progress loaded from cloud successfully');
-        showMessage('Progress transferred from cloud! Welcome back.', 'success');
+        // Only show "Welcome back" if they had prior data (not a brand new account)
+        const hasExistingProgress = cloudData.lifetimeEarnings > 0 ||
+                                   cloudData.btcBalance > 0 ||
+                                   cloudData.ethBalance > 0 ||
+                                   cloudData.dogeBalance > 0;
+
+        if (hasExistingProgress) {
+            showMessage('Progress transferred from cloud! Welcome back.', 'success');
+        } else {
+            showMessage('Ready to start mining!', 'success');
+        }
 
         return true;
 
