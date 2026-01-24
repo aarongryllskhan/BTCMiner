@@ -312,9 +312,9 @@ async function handleLinkAccount(e) {
 
     try {
         await linkGuestToEmail(email, password, username);
-        // Close the modal on success
-        hideLinkAccountModal();
-        console.log('✅ Account created and modal closed');
+        // Modal will be closed inside linkGuestToEmail function
+        // and refresh modal will be shown
+        console.log('✅ Account linking completed');
     } catch (error) {
         console.error('Account linking failed:', error);
         // Modal stays open so user can try again
@@ -326,3 +326,21 @@ window.showLinkAccountModal = showLinkAccountModal;
 window.hideLinkAccountModal = hideLinkAccountModal;
 window.handleLinkAccount = handleLinkAccount;
 window.updateUserUI = updateUserUI;
+
+// Initialize Firebase and setup auth listener
+console.log('🔧 Initializing Firebase...');
+initializeFirebase().then(success => {
+    if (success) {
+        console.log('✅ Firebase ready - setting up auth listener');
+        if (typeof window.setupAuthListener === 'function') {
+            window.setupAuthListener();
+            console.log('✅ Auth listener setup complete');
+        } else {
+            console.error('❌ setupAuthListener not available');
+        }
+    } else {
+        console.warn('⚠️ Firebase initialization failed - offline mode');
+    }
+}).catch(error => {
+    console.error('❌ Error initializing Firebase:', error);
+});

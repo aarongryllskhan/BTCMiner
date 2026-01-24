@@ -89,6 +89,10 @@ async function registerUser(email, password, username) {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
+        // Mark this as a fresh account that needs a refresh (will show AFTER terms acceptance)
+        localStorage.setItem('needsRefreshModal', 'true');
+        console.log('🔄 Refresh modal will be shown AFTER terms acceptance');
+
         showMessage('Account created successfully! Welcome to Idle BTC Miner!', 'success');
         return user;
 
@@ -603,6 +607,10 @@ async function performLogout() {
             }
         }
 
+        // Clear session storage flag to ensure fresh cloud load on next login
+        sessionStorage.removeItem('userWasLoggedIn');
+        console.log('🗑️ Cleared session storage flag on logout');
+
         showMessage('Logged out successfully', 'success');
 
         // Clear local game data while preserving important flags
@@ -879,18 +887,25 @@ async function playAsGuest() {
         // Save guest credentials to localStorage for future sessions
         localStorage.setItem('guestUserUid', user.uid);
         localStorage.setItem('guestUsername', guestUsername);
-        // Mark this as a fresh guest account that needs a refresh
-        localStorage.setItem('guestNeedsRefresh', 'true');
+        // Mark this as a fresh account that needs a refresh (will show AFTER terms acceptance)
+        localStorage.setItem('needsRefreshModal', 'true');
         console.log('💾 Guest credentials saved to localStorage');
-
-        // Show refresh modal for new guests
-        showGuestRefreshModal(guestUsername);
+        console.log('🔄 Refresh modal will be shown AFTER terms acceptance');
 
         return user;
 
     } catch (error) {
         console.error('❌ Guest login error:', error);
-        showMessage('Failed to start guest session: ' + error.message, 'error');
+        console.error('Error stack:', error.stack);
+        try {
+            if (typeof showMessage === 'function') {
+                showMessage('Failed to start guest session: ' + error.message, 'error');
+            } else {
+                alert('Failed to start guest session: ' + error.message);
+            }
+        } catch (msgError) {
+            console.error('Could not show error message:', msgError);
+        }
         throw error;
     }
 }
@@ -918,7 +933,8 @@ async function linkGuestToEmail(email, password, username) {
         }
 
         const cleanUsername = username.trim();
-        const guestUid = guestUser.uid;
+
+        console.log('🔗 Creating new account from guest progress...');
 
         // Check if username is already taken
         const usernameQuery = await db.collection('users').where('username', '==', cleanUsername).get();
@@ -941,103 +957,115 @@ async function linkGuestToEmail(email, password, username) {
             }
         }
 
-        console.log('📝 Creating new account with email/password...');
+        // Get current game state from local cache (window variables)
+        const localGameData = {
+            btcBalance: window.btcBalance || 0,
+            btcLifetime: window.btcLifetime || 0,
+            btcClickValue: window.btcClickValue || 0.00000250,
+            btcPerSec: window.btcPerSec || 0,
+            btcPrice: window.btcPrice || 100000,
+            ethBalance: window.ethBalance || 0,
+            ethLifetime: window.ethLifetime || 0,
+            ethClickValue: window.ethClickValue || 0.00007143,
+            ethPerSec: window.ethPerSec || 0,
+            ethPrice: window.ethPrice || 3500,
+            dogeBalance: window.dogeBalance || 0,
+            dogeLifetime: window.dogeLifetime || 0,
+            dogeClickValue: window.dogeClickValue || 1.00000000,
+            dogePerSec: window.dogePerSec || 0,
+            dogePrice: window.dogePrice || 0.25,
+            dollarBalance: window.dollarBalance || 0,
+            hardwareEquity: window.hardwareEquity || 0,
+            lifetimeEarnings: window.lifetimeEarnings || 0,
+            sessionEarnings: window.sessionEarnings || 0,
+            autoClickerCooldownEnd: window.autoClickerCooldownEnd || 0,
+            chartHistory: window.chartHistory || [],
+            chartTimestamps: window.chartTimestamps || [],
+            chartStartTime: window.chartStartTime || 0,
+            totalPowerAvailable: window.totalPowerAvailable || 0,
+            powerUpgrades: window.powerUpgrades || [],
+            btcUpgrades: window.btcUpgrades || [],
+            ethUpgrades: window.ethUpgrades || [],
+            dogeUpgrades: window.dogeUpgrades || [],
+            skillTree: window.skillTree || {},
+            staking: window.staking || {},
+            lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-        // Step 1: Create a new account with email/password
-        let newUser = null;
+        console.log('📦 Local game data captured from cache');
+
+        // Create new email/password account
+        console.log('👤 Creating new email/password account...');
+        let newUser;
         try {
-            const newUserCredential = await auth.createUserWithEmailAndPassword(email, password);
-            newUser = newUserCredential.user;
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            newUser = userCredential.user;
             console.log('✅ New account created with UID:', newUser.uid);
-        } catch (authError) {
-            console.error('❌ Failed to create Firebase account:', authError);
-            if (authError.code === 'auth/email-already-in-use') {
+        } catch (createError) {
+            console.error('❌ Failed to create new account:', createError);
+
+            if (createError.code === 'auth/email-already-in-use') {
                 showMessage('This email is already in use. Please use a different email.', 'error');
-            } else if (authError.code === 'auth/invalid-email') {
+            } else if (createError.code === 'auth/invalid-email') {
                 showMessage('Please enter a valid email address.', 'error');
-            } else if (authError.code === 'auth/weak-password') {
+            } else if (createError.code === 'auth/weak-password') {
                 showMessage('Password must be at least 6 characters.', 'error');
-            } else if (authError.code === 'auth/operation-not-allowed') {
-                showMessage('Email/password authentication is not enabled. Please contact support.', 'error');
             } else {
-                showMessage('Failed to create account: ' + authError.message, 'error');
+                showMessage('Failed to create account: ' + createError.message, 'error');
             }
-            throw authError;
+
+            throw createError;
         }
 
-        // Step 2: Copy guest account data to new account
-        console.log('📋 Copying guest progress to new account...');
+        // Create user profile in Firestore
+        console.log('📝 Creating user profile...');
         try {
-            // Get guest's Firestore user document
-            const guestDoc = await db.collection('users').doc(guestUid).get();
-            if (guestDoc.exists) {
-                const guestData = guestDoc.data();
-
-                // Create new user document with guest's progress
-                await db.collection('users').doc(newUser.uid).set({
-                    email: email,
-                    username: cleanUsername,
-                    isGuest: false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                    linkedFromGuest: guestUid,
-                    linkedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    // Copy relevant data from guest account
-                    totalBTC: guestData.totalBTC || 0,
-                    level: guestData.level || 1,
-                    isPremium: guestData.isPremium || false
-                });
-
-                // Copy game data subcollection
-                const gameDataDocs = await db.collection('users').doc(guestUid).collection('gameData').get();
-                for (const doc of gameDataDocs.docs) {
-                    await db.collection('users').doc(newUser.uid).collection('gameData').doc(doc.id).set(doc.data());
-                }
-
-                console.log('✅ Guest progress copied to new account');
-
-                // Step 3: Try to delete the old guest account from Firestore
-                // This is non-critical, so we don't throw if it fails
-                try {
-                    console.log('🗑️ Removing guest account...');
-                    await db.collection('users').doc(guestUid).delete();
-                    console.log('✅ Guest account removed');
-                } catch (deleteError) {
-                    console.warn('⚠️ Could not delete old guest account (non-critical):', deleteError);
-                    // Don't throw - account is already converted, this is just cleanup
-                }
-            }
-        } catch (firestoreError) {
-            console.error('❌ Failed to copy guest progress:', firestoreError);
-            showMessage('Account created but failed to copy progress. Please contact support.', 'error');
-            throw firestoreError;
+            await db.collection('users').doc(newUser.uid).set({
+                email: email,
+                username: cleanUsername,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                totalBTC: 0,
+                level: 1,
+                achievements: [],
+                isPremium: false
+            });
+            console.log('✅ User profile created');
+        } catch (profileError) {
+            console.error('❌ Failed to create user profile:', profileError);
+            throw profileError;
         }
 
-        // Step 4: Sign out the guest and sign in as the new user
-        console.log('🔄 Signing in with new account...');
+        // Save local game data to new account
+        console.log('📦 Saving local cache progress to new account...');
         try {
-            await auth.signOut();
-
-            // Sign in with the new email/password
-            const signInResult = await auth.signInWithEmailAndPassword(email, password);
-            console.log('✅ Signed in as new account:', email);
-
-            // Clear guest credentials from localStorage since they're no longer needed
-            localStorage.removeItem('guestUserUid');
-            localStorage.removeItem('guestUsername');
-
-            showMessage('Account created successfully! Your progress has been saved.', 'success');
-
-            return signInResult.user;
-        } catch (signInError) {
-            console.error('❌ Failed to sign in after account creation:', signInError);
-            showMessage('Account created but sign-in failed. Please try logging in manually.', 'error');
-            throw signInError;
+            await db.collection('users').doc(newUser.uid).collection('gameData').doc('current').set(localGameData);
+            console.log('✅ Game progress saved to new account');
+        } catch (dataError) {
+            console.warn('⚠️ Failed to save game data (non-critical):', dataError);
+            // Don't throw - account creation succeeded, just game data didn't save
+            // User can continue and play with fresh progress
         }
+
+        // Hide link account modal
+        console.log('🔒 Closing link account modal...');
+        const linkModal = document.getElementById('link-account-modal');
+        if (linkModal) {
+            linkModal.style.display = 'none';
+            linkModal.remove();
+            console.log('✅ Link account modal closed');
+        }
+
+        // Store username and set flag to show refresh modal after onboarding is accepted
+        localStorage.setItem('linkedAccountUsername', cleanUsername);
+        localStorage.setItem('showRefreshModalAfterOnboarding', 'true');
+        console.log('💾 Stored flag to show refresh modal after onboarding');
+
+        return newUser;
 
     } catch (error) {
-        console.error('❌ Account creation/linking error (outer catch):', error);
-        // Error message already shown in inner catch blocks
+        console.error('❌ Account creation error:', error);
+        showMessage('Failed to create account: ' + error.message, 'error');
         throw error;
     }
 }
@@ -1185,6 +1213,82 @@ function showGuestRefreshModal(guestUsername) {
     document.body.appendChild(modal);
 }
 
+// Show refresh modal after linking guest account to email/password
+function showAccountLinkedRefreshModal(username) {
+    console.log('🔗 Creating account linked refresh modal for:', username);
+
+    // Remove any existing refresh modal first
+    const existingModal = document.getElementById('account-linked-refresh-modal');
+    if (existingModal) {
+        existingModal.remove();
+        console.log('🗑️ Removed existing refresh modal');
+    }
+
+    // Create modal element
+    const modal = document.createElement('div');
+    modal.id = 'account-linked-refresh-modal';
+
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 9999999;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.3s ease-out;
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 450px;
+            width: 90%;
+            border: 3px solid #4CAF50;
+            box-shadow: 0 0 50px rgba(76, 175, 80, 0.4);
+            text-align: center;
+        ">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+            <h2 style="color: #4CAF50; margin-bottom: 15px; font-size: 1.8rem;">Account Linked Successfully!</h2>
+            <p style="color: #ccc; margin-bottom: 25px; font-size: 1rem; line-height: 1.5;">
+                Welcome, <strong style="color: #f7931a;">${username}</strong>!
+                <br><br>
+                Your guest account has been converted to a full account. Please refresh the page to update your profile.
+            </p>
+            <button onclick="location.reload()" style="
+                background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+                color: #fff;
+                border: none;
+                padding: 18px 50px;
+                font-size: 1.2rem;
+                font-weight: 800;
+                border-radius: 10px;
+                cursor: pointer;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+                transition: transform 0.2s, box-shadow 0.2s;
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(76, 175, 80, 0.6)';"
+               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(76, 175, 80, 0.4)';">
+                🔄 Refresh & Continue
+            </button>
+            <p style="color: #666; font-size: 0.8rem; margin-top: 20px;">
+                All your progress has been preserved!
+            </p>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    console.log('✅ Account linked refresh modal added to DOM');
+    console.log('Modal element:', modal);
+    console.log('Modal display style:', modal.style.display);
+}
+
 // Helper function to show messages
 function showMessage(message, type = 'info') {
     // Create message element if it doesn't exist
@@ -1273,6 +1377,9 @@ window.saveConsentToFirebase = saveConsentToFirebase;
 window.loadConsentFromFirebase = loadConsentFromFirebase;
 
 // Setup authentication state listener
+// Guard flag to prevent loading game data multiple times
+let gameDataLoadedFlag = false;
+
 // This will be called after Firebase initializes
 function setupAuthListener() {
     console.log('🔍 Setting up authentication listener...');
@@ -1286,14 +1393,20 @@ function setupAuthListener() {
     auth.onAuthStateChanged(async (user) => {
         console.log('🔄 Auth state changed!');
 
+        // CRITICAL: Prevent loading game data multiple times
+        if (gameDataLoadedFlag) {
+            console.log('⚠️ Game data already loaded this session - skipping duplicate load');
+            return;
+        }
+
         if (user) {
             console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
             console.log('User UID:', user.uid);
 
-            // Clear the guestNeedsRefresh flag on page load (user has refreshed)
-            if (localStorage.getItem('guestNeedsRefresh')) {
-                console.log('✅ Guest has refreshed - clearing refresh flag');
-                localStorage.removeItem('guestNeedsRefresh');
+            // Clear the needsRefreshModal flag on page load (user has refreshed)
+            if (localStorage.getItem('needsRefreshModal')) {
+                console.log('✅ User has refreshed - clearing refresh flag');
+                localStorage.removeItem('needsRefreshModal');
             }
 
             // Load consent from Firebase if available
@@ -1361,47 +1474,128 @@ function setupAuthListener() {
                 loginBtn.style.display = 'none';
             }
 
-            // Load user's game data (smart merge with local save)
-            console.log('loadGameFromCloud function available?', typeof window.loadGameFromCloud);
-            if (window.loadGameFromCloud) {
-                console.log('Loading game data from cloud...');
-                try {
-                    await window.loadGameFromCloud(user.uid);
-                    console.log('✅ Game data loaded successfully');
+            // Load user's game data
+            console.log('Loading game data...');
+            try {
+                // CRITICAL FIX: ALWAYS prioritize LOCAL save on page refresh
+                // Only load from cloud if there's NO local data (first login) or account switch
+                console.log('📦 Checking local storage...');
+                const hasLocalData = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
+                const storedUserId = localStorage.getItem('lastLoggedInUserId');
+                const skipCloudLoad = localStorage.getItem('skipCloudLoadOnRefresh') === 'true';
+                const currentUserId = user.uid;
 
-                    // Re-initialize the game UI after loading
-                    if (typeof window.initializeGame === 'function') {
-                        console.log('Re-initializing game shops and UI...');
-                        try {
-                            // Initialize shops and UI elements
-                            if (typeof window.initBtcShop === 'function') window.initBtcShop();
-                            if (typeof window.initEthShop === 'function') window.initEthShop();
-                            if (typeof window.initDogeShop === 'function') window.initDogeShop();
-                            if (typeof window.initPowerShop === 'function') window.initPowerShop();
-                            if (typeof window.updateAutoClickerButtonState === 'function') window.updateAutoClickerButtonState();
+                // CRITICAL: If we have local data, assume it belongs to current user (same browser = same user)
+                // Only load from cloud if there's NO local data
+                const hasValidLocalData = !!hasLocalData;
 
-                            // Reinitialize chart with loaded data
-                            if (typeof window.reinitializeChart === 'function') {
-                                console.log('Re-initializing chart with loaded data...');
-                                window.reinitializeChart();
+                // Detect if this is an account switch (different user than last login)
+                const isAccountSwitch = storedUserId && storedUserId !== currentUserId;
+
+                console.log('🔍 SAVE LOAD DECISION:');
+                console.log('  hasValidLocalData:', hasValidLocalData);
+                console.log('  storedUserId:', storedUserId);
+                console.log('  currentUserId:', currentUserId);
+                console.log('  isAccountSwitch:', isAccountSwitch);
+                console.log('  skipCloudLoad:', skipCloudLoad);
+
+                if (skipCloudLoad) {
+                    // User just reset the game - start fresh
+                    console.log('🚫 User reset save - starting fresh');
+                    console.log('  DECISION: FRESH START (reset requested)');
+                    localStorage.removeItem('skipCloudLoadOnRefresh');
+                    if (typeof window.loadGame === 'function') {
+                        window.loadGame(); // Initialize fresh game
+                    }
+                } else if (hasValidLocalData && !isAccountSwitch) {
+                    // PRIORITY: LOAD LOCAL SAVE on page refresh (same browser/user)
+                    console.log('✅ LOCAL SAVE FOUND - LOADING LOCAL (page refresh - keep local data!)');
+                    console.log('  DECISION: LOAD LOCAL (has local data)');
+                    if (typeof window.loadGame === 'function') {
+                        window.loadGame();
+                    }
+
+                    // After loading local, sync to cloud (upload newer local data)
+                    setTimeout(async () => {
+                        if (typeof window.saveGameToCloud === 'function' && auth && auth.currentUser) {
+                            console.log('📤 Uploading local save to cloud after local load...');
+                            try {
+                                await window.saveGameToCloud(true); // Force manual save to bypass cooldown
+                                console.log('✅ Local data synced to cloud');
+                            } catch (err) {
+                                console.warn('⚠️ Cloud sync failed (non-critical):', err);
                             }
+                        }
+                    }, 2000);
+                } else if (isAccountSwitch) {
+                    // ACCOUNT SWITCH - load from cloud for new user
+                    console.log('🔄 ACCOUNT SWITCH DETECTED - loading from cloud');
+                    console.log('  Previous user:', storedUserId);
+                    console.log('  New user:', currentUserId);
+                    console.log('  DECISION: LOAD CLOUD (account switch)');
 
-                            // Force display update
-                            if (typeof window.updateDisplay === 'function') {
-                                console.log('Updating display...');
-                                window.updateDisplay();
-                            }
-
-                            console.log('✅ Game shops and UI re-initialized');
-                        } catch (initError) {
-                            console.error('⚠️ Error re-initializing shops:', initError);
+                    if (typeof window.loadGameFromCloud === 'function') {
+                        await window.loadGameFromCloud(currentUserId);
+                    } else {
+                        console.warn('⚠️ loadGameFromCloud not available, initializing fresh game');
+                        if (typeof window.loadGame === 'function') {
+                            window.loadGame();
                         }
                     }
-                } catch (error) {
-                    console.error('❌ Failed to load game data:', error);
+                } else {
+                    // No local data (first login) - try cloud
+                    console.log('📦 No local data - checking cloud (first login)...');
+                    console.log('  DECISION: LOAD CLOUD (no local data)');
+                    if (typeof window.loadGameFromCloud === 'function') {
+                        await window.loadGameFromCloud(currentUserId);
+                    } else {
+                        console.warn('⚠️ loadGameFromCloud not available, initializing fresh game');
+                        if (typeof window.loadGame === 'function') {
+                            window.loadGame();
+                        }
+                    }
                 }
-            } else {
-                console.warn('⚠️ loadGameFromCloud function not available');
+
+                // Save current user ID for next login check
+                localStorage.setItem('lastLoggedInUserId', currentUserId);
+
+                // Mark that user is now logged in for future page refreshes
+                sessionStorage.setItem('userWasLoggedIn', 'true');
+
+                // SET THE FLAG to prevent duplicate loads
+                gameDataLoadedFlag = true;
+                console.log('✅ Game data loaded successfully (flag set to prevent duplicates)');
+
+                // Re-initialize the game UI after loading
+                if (typeof window.initializeGame === 'function') {
+                    console.log('Re-initializing game shops and UI...');
+                    try {
+                        // Initialize shops and UI elements
+                        if (typeof window.initBtcShop === 'function') window.initBtcShop();
+                        if (typeof window.initEthShop === 'function') window.initEthShop();
+                        if (typeof window.initDogeShop === 'function') window.initDogeShop();
+                        if (typeof window.initPowerShop === 'function') window.initPowerShop();
+                        if (typeof window.updateAutoClickerButtonState === 'function') window.updateAutoClickerButtonState();
+
+                        // Reinitialize chart with loaded data
+                        if (typeof window.reinitializeChart === 'function') {
+                            console.log('Re-initializing chart with loaded data...');
+                            window.reinitializeChart();
+                        }
+
+                        // Force display update
+                        if (typeof window.updateDisplay === 'function') {
+                            console.log('Updating display...');
+                            window.updateDisplay();
+                        }
+
+                        console.log('✅ Game shops and UI re-initialized');
+                    } catch (initError) {
+                        console.error('⚠️ Error re-initializing shops:', initError);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Failed to load game data:', error);
             }
 
             // Start leaderboard updates
@@ -1443,6 +1637,10 @@ function setupAuthListener() {
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
             console.log('ℹ️ No user logged in - clearing game state and showing login screen');
+
+            // Clear session storage flag to ensure fresh cloud load on next login
+            sessionStorage.removeItem('userWasLoggedIn');
+            console.log('🗑️ Cleared session storage flag');
 
             // CRITICAL: Clear all in-memory game state when user logs out
             console.log('🔄 Clearing all game variables on logout...');
@@ -1504,9 +1702,17 @@ window.addEventListener('message', async function(event) {
     if (event.data && event.data.action === 'playAsGuest') {
         console.log('📨 Received playAsGuest message from iframe');
         try {
+            console.log('Calling playAsGuest function...');
+            console.log('playAsGuest function exists?', typeof playAsGuest);
+            console.log('auth available?', typeof auth);
+            console.log('db available?', typeof db);
             await playAsGuest();
+            console.log('✅ playAsGuest completed successfully');
         } catch (error) {
             console.error('❌ Failed to play as guest:', error);
+            console.error('Error stack:', error.stack);
+            // Send error back to iframe
+            event.source.postMessage({ action: 'guestLoginFailed', error: error.message }, event.origin);
         }
     }
 });

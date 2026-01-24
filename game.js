@@ -409,6 +409,35 @@
     // Keep reference to btcUpgrades as upgrades for backward compatibility
     let upgrades = btcUpgrades;
 
+    // --- DEBOUNCED CLOUD SAVE ---
+    let cloudSaveTimeout = null;
+    let hasPendingCloudSave = false;
+
+    function scheduleDebouncedCloudSave() {
+        // Mark that we have changes to save
+        hasPendingCloudSave = true;
+
+        // Clear any existing timeout
+        if (cloudSaveTimeout) {
+            clearTimeout(cloudSaveTimeout);
+        }
+
+        // Schedule cloud save for 3 seconds from now
+        // If user makes another purchase, this resets the timer
+        cloudSaveTimeout = setTimeout(() => {
+            if (hasPendingCloudSave && typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                console.log('💾 Debounced cloud save executing...');
+                window.saveGameToCloud(false).then(() => {
+                    console.log('✅ Debounced cloud save complete');
+                    hasPendingCloudSave = false;
+                }).catch(err => {
+                    console.warn('⚠️ Debounced cloud save failed:', err);
+                    // Keep flag true so we retry later
+                });
+            }
+        }, 3000); // 3 second debounce
+    }
+
     // --- SAVE SYSTEM START ---
     function saveGame() {
         // Check if safeStorage is available
@@ -421,6 +450,8 @@
         lastSaveTime = Date.now();
 
         const gameState = {
+            // User tracking (to prevent loading wrong user's data)
+            userId: (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null,
             // Bitcoin data
             btcBalance,
             btcLifetime,
@@ -550,6 +581,22 @@ function loadGame() {
         console.log('✓ Loading game... Save data size:', savedData.length, 'bytes');
         const state = JSON.parse(savedData);
         console.log('✓ Save data parsed successfully');
+
+        // Check if this save belongs to the current user
+        const currentUserId = (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null;
+        const savedUserId = state.userId || null;
+
+        console.log('🔍 CHECKING SAVE OWNERSHIP:');
+        console.log('  currentUserId:', currentUserId);
+        console.log('  savedUserId:', savedUserId);
+
+        if (currentUserId && savedUserId && currentUserId !== savedUserId) {
+            console.warn('⚠️ LOCAL SAVE BELONGS TO DIFFERENT USER - skipping load');
+            console.warn('   This save will be overwritten by cloud data');
+            return; // Don't load mismatched data
+        }
+
+        console.log('✅ Save ownership verified, proceeding with load');
         console.log('Loaded BTC balance:', state.btcBalance);
         console.log('Loaded dollar balance:', state.dollarBalance);
         console.log('Loaded lastSaveTime from file:', state.lastSaveTime ? new Date(state.lastSaveTime) : 'NOT FOUND');
@@ -619,10 +666,12 @@ function loadGame() {
         totalPowerAvailable = state.totalPowerAvailable || 0;
 
         // Load BTC upgrades
+        console.log('📥 LOADING BTC UPGRADES FROM SAVE...');
         if (state.btcUpgrades) {
             state.btcUpgrades.forEach((savedU) => {
                 const upgradeToUpdate = btcUpgrades.find(u => u.id === savedU.id);
                 if (upgradeToUpdate) {
+                    console.log('   Loading upgrade ID', savedU.id, '-', upgradeToUpdate.name, '- From level', upgradeToUpdate.level, 'to', savedU.level);
                     upgradeToUpdate.level = savedU.level || 0;
                     upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
                     upgradeToUpdate.currentYield = savedU.currentYield || 0;
@@ -711,6 +760,21 @@ function loadGame() {
 
         // Calculate offline earnings using the dedicated function
         calculateOfflineEarnings(state.lastSaveTime || Date.now(), state.staking);
+
+        // Check if there are pending offline earnings from a previous page load that weren't displayed
+        // This handles the case where the page refreshes before the modal is shown
+        try {
+            const pendingEarnings = window.safeStorage.getItem('pendingOfflineEarnings');
+            if (pendingEarnings) {
+                const parsed = JSON.parse(pendingEarnings);
+                console.log('📦 Found pending offline earnings from previous load:', parsed);
+                // Use the pending earnings instead of recalculating (avoids double-counting)
+                window.offlineEarningsToShow = parsed;
+                // Don't delete yet - wait until modal is actually shown
+            }
+        } catch (e) {
+            console.warn('⚠️ Failed to load pending offline earnings:', e);
+        }
 
         updateUI();
 
@@ -902,6 +966,20 @@ function loadGame() {
     function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds) {
         console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds);
 
+        // Prevent duplicate modals
+        if (document.querySelector('.offline-modal-overlay') || document.querySelector('.offline-modal')) {
+            console.log('⚠️ Offline earnings modal already visible - skipping duplicate');
+            return;
+        }
+
+        // Also check if we've shown the modal recently (within 2 seconds)
+        const lastModalTime = window._lastOfflineModalTime || 0;
+        if (Date.now() - lastModalTime < 2000) {
+            console.log('⚠️ Offline earnings modal shown recently - debouncing');
+            return;
+        }
+        window._lastOfflineModalTime = Date.now();
+
         const overlay = document.createElement('div');
         overlay.className = 'offline-modal-overlay';
 
@@ -958,7 +1036,6 @@ function loadGame() {
         }
 
         modal.innerHTML = `
-            <button id="close-modal-btn" type="button">✕</button>
             <h2>⏰ Welcome Back!</h2>
             <div class="earnings-label">Mined While Away</div>
             ${earningsHtml}
@@ -974,6 +1051,14 @@ function loadGame() {
             console.log('✅ OFFLINE EARNINGS MODAL DISMISSED');
             overlay.remove();
             modal.remove();
+
+            // CRITICAL: Clear pending offline earnings from localStorage now that modal is shown
+            try {
+                window.safeStorage.removeItem('pendingOfflineEarnings');
+                console.log('🗑️ Cleared pending offline earnings from localStorage');
+            } catch (e) {
+                console.warn('⚠️ Failed to clear pending offline earnings:', e);
+            }
 
             // Update UI immediately
             if (typeof updateUI === 'function') {
@@ -994,25 +1079,20 @@ function loadGame() {
             }
         };
 
-        // Use event delegation on the modal itself to catch button clicks
-        modal.addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'close-modal-btn') {
-                console.log('✅ Close button clicked');
-                e.stopPropagation();
+        // Auto-dismiss modal after 3.5 seconds
+        setTimeout(() => {
+            if (modal && modal.parentNode) {
+                console.log('⏱️ Auto-closing offline earnings modal (2.5 second timeout)');
                 dismissModal();
             }
-        });
+        }, 2500);
 
-        // Also close on overlay click
-        overlay.addEventListener('click', (e) => {
-            // Only dismiss if clicking the overlay directly, not propagated from modal
-            if (e.target === overlay) {
-                console.log('✅ Overlay clicked');
-                dismissModal();
-            }
-        });
+        console.log('Modal created and appended (auto-dismiss in 3.5 seconds)');
 
-        console.log('Modal created and appended');
+        // CRITICAL: Clear the cached offline earnings data after showing
+        // This prevents showing stale data on the next refresh
+        window.offlineEarningsToShow = null;
+        console.log('🗑️ Cleared window.offlineEarningsToShow to prevent stale data');
     }
 
     // Expose function to window so firebase-save.js can call it
@@ -1608,7 +1688,23 @@ function buyLevel(i) {
 
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
+
+        console.log('🛒 PURCHASE COMPLETED -', u.name);
+        console.log('   New level:', u.level, 'New yield:', u.currentYield);
+
+        // CRITICAL: Save immediately after purchase
         saveGame();
+
+        // Double-check the save actually worked
+        const verifySave = window.safeStorage.getItem('satoshiTerminalSave');
+        if (verifySave) {
+            const parsed = JSON.parse(verifySave);
+            const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
+            console.log('✅ VERIFIED SAVE - Upgrade level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
+        }
+
+        // Schedule a debounced cloud save (reduces Firebase writes)
+        scheduleDebouncedCloudSave();
 
         // Play upgrade sound
         playUpgradeSound();
@@ -1619,6 +1715,9 @@ function buyLevelMultiple(i, quantity) {
     const u = upgrades[i];
     const powerReq = equipmentPowerReqs[u.id] || 0;
     let purchased = 0;
+
+    console.log('💰 buyLevelMultiple CALLED - Upgrade:', u.name, 'Quantity:', quantity);
+    console.log('   Current level:', u.level, 'Current USD:', dollarBalance, 'Cost:', u.currentUsd);
 
     for (let q = 0; q < quantity; q++) {
         const costUsd = u.currentUsd;
@@ -1640,6 +1739,8 @@ function buyLevelMultiple(i, quantity) {
         hardwareEquity += u.currentUsd;
         u.level++;
 
+        console.log('   ✓ Purchase', (q+1), '- Level now:', u.level);
+
         // Update price and yield based on upgrade type
         if (u.id === 0 || u.isClickUpgrade) {
             btcClickValue *= 1.10;
@@ -1659,8 +1760,36 @@ function buyLevelMultiple(i, quantity) {
         }
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
+
+        console.log('🛒 PURCHASE COMPLETED - Bought', purchased, 'x', u.name);
+        console.log('   Final level:', u.level, 'Final yield:', u.currentYield);
+        console.log('   Dollar balance now:', dollarBalance);
+        console.log('   Hardware equity now:', hardwareEquity);
+
+        // CRITICAL: Save immediately after purchase
+        console.log('💾 CALLING saveGame() immediately after purchase...');
         saveGame();
+
+        // Double-check the save actually worked
+        setTimeout(() => {
+            const verifySave = window.safeStorage.getItem('satoshiTerminalSave');
+            if (verifySave) {
+                const parsed = JSON.parse(verifySave);
+                const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
+                console.log('✅ VERIFIED SAVE - Upgrade level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
+                console.log('   Saved dollar balance:', parsed.dollarBalance);
+                console.log('   Saved hardware equity:', parsed.hardwareEquity);
+            } else {
+                console.error('❌ SAVE NOT FOUND in localStorage after purchase!');
+            }
+        }, 100);
+
+        // Schedule a debounced cloud save (reduces Firebase writes)
+        scheduleDebouncedCloudSave();
+
         playUpgradeSound();
+    } else {
+        console.warn('⚠️ No purchases completed - insufficient funds or power');
     }
 }
 
@@ -2745,6 +2874,16 @@ dogeUpgrades.forEach(u => {
             wasCapped: wasTimeCaped,
             cappedSeconds: cappedOfflineSeconds
         };
+
+        // CRITICAL: Save offline earnings to localStorage so they survive page refresh
+        // This prevents loss of calculated earnings if the modal hasn't been shown yet
+        try {
+            window.safeStorage.setItem('pendingOfflineEarnings', JSON.stringify(window.offlineEarningsToShow));
+            console.log('💾 Saved pending offline earnings to localStorage');
+        } catch (e) {
+            console.warn('⚠️ Failed to save offline earnings to localStorage:', e);
+        }
+
         console.log('✅ Modal will be shown with offline earnings data');
     }
 
@@ -2798,13 +2937,34 @@ dogeUpgrades.forEach(u => {
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
+        console.log('✓ About to call loadGame()');
         loadGame(); // This calls updateUI() internally and sets window.offlineEarningsToShow
+        console.log('✓ loadGame() completed');
+
+        console.log('✓ About to call updateAutoClickerButtonState()');
         updateAutoClickerButtonState(); // Update button state immediately after loading
+        console.log('✓ updateAutoClickerButtonState() completed');
+
+        console.log('✓ About to call setBuyQuantity()');
         setBuyQuantity(1); // Highlight the 1x button on page load
+        console.log('✓ setBuyQuantity() completed');
 
         // Initialize staking system
+        console.log('✓ About to initialize staking system');
         initStaking();
         updateStakingUI();
+        console.log('✓ Staking system initialized');
+
+        // ============================================================
+        // CRITICAL: Auto-save must be started BEFORE any early returns!
+        // ============================================================
+        console.log('🔄 CRITICAL: Setting up AUTO-SAVE INTERVAL (every 1.5 seconds)');
+        const autoSaveIntervalId = setInterval(() => {
+            console.log('⏱️ AUTO-SAVE TICK - calling saveGame()');
+            saveGame();
+        }, 1500);
+        console.log('✅ AUTO-SAVE INTERVAL STARTED - ID:', autoSaveIntervalId);
+        // ============================================================
 
         // Get offline earnings data that was set by loadGame()
         const offlineEarningsData = window.offlineEarningsToShow;
@@ -2880,12 +3040,17 @@ dogeUpgrades.forEach(u => {
             }
         }
 
+        console.log('✓ About to look for canvas element...');
         const canvasElement = document.getElementById('nwChart');
-        console.log('Canvas element:', canvasElement);
+        console.log('Canvas element found?', !!canvasElement);
+        if (canvasElement) {
+            console.log('✓ Canvas element:', canvasElement);
+        }
 
         if (!canvasElement) {
-            console.error('ERROR: Canvas element not found!');
-            return;
+            console.error('❌ ERROR: Canvas element not found! This will break the rest of initialization!');
+            console.error('This is CRITICAL - auto-save and price swings will NOT start!');
+            return;  // ← THIS STOPS THE REST OF initializeGame()!
         }
 
         // Function to initialize the chart
@@ -3126,8 +3291,8 @@ dogeUpgrades.forEach(u => {
             }
         }, 2000);
 
-        // Auto-save every 1.5 seconds
-        setInterval(saveGame, 1500);
+        // Auto-save is already set up earlier in initializeGame() before canvas initialization
+        // to ensure it runs even if canvas fails to load
 
         // Start price swings: separate timing for each crypto
         // Only start if not already running (prevents multiple loops on refresh)
@@ -3157,6 +3322,10 @@ dogeUpgrades.forEach(u => {
             console.log('Page hidden - saving game state');
             pageHiddenTime = Date.now();
             try {
+                // Update lastSaveTime to NOW (critical for accurate offline calculations)
+                lastSaveTime = Date.now();
+                console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
+
                 saveGame();
                 console.log('Save successful on visibility change');
             } catch (e) {
@@ -3195,17 +3364,35 @@ dogeUpgrades.forEach(u => {
         console.log('Current BTC Balance:', btcBalance);
         console.log('Current Dollar Balance:', dollarBalance);
         console.log('Current Lifetime Earnings:', lifetimeEarnings);
+
+        // Force immediate synchronous save
         try {
+            // Update lastSaveTime to NOW (critical for accurate offline calculations)
+            lastSaveTime = Date.now();
+            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
+
             saveGame();
             console.log('✅ SAVE SUCCESSFUL ON BEFOREUNLOAD');
             console.log('Game state saved to localStorage');
 
-            // CRITICAL: Also save to cloud if user is logged in
+            // Clear any pending debounced cloud save and force immediate save
+            if (cloudSaveTimeout) {
+                clearTimeout(cloudSaveTimeout);
+                cloudSaveTimeout = null;
+            }
+
+            // CRITICAL: Force immediate cloud save if there are pending changes OR always on unload
             if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('📤 Attempting cloud save on beforeunload...');
+                if (hasPendingCloudSave) {
+                    console.log('📤 Forcing pending cloud save on beforeunload...');
+                } else {
+                    console.log('📤 Attempting cloud save on beforeunload...');
+                }
+                hasPendingCloudSave = false; // Clear the flag
+
                 try {
                     // Use synchronous approach with fetch API to ensure save completes
-                    window.saveGameToCloud().then(() => {
+                    window.saveGameToCloud(true).then(() => {
                         console.log('✅ Cloud save complete on beforeunload');
                     }).catch(err => {
                         console.warn('⚠️ Cloud save failed on beforeunload (non-critical):', err);
@@ -3223,6 +3410,10 @@ dogeUpgrades.forEach(u => {
     window.addEventListener('pagehide', function(e) {
         console.log('Page hide event - saving game state');
         try {
+            // Update lastSaveTime to NOW (critical for accurate offline calculations)
+            lastSaveTime = Date.now();
+            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
+
             saveGame();
             console.log('Save successful on pagehide');
 
@@ -3248,6 +3439,10 @@ dogeUpgrades.forEach(u => {
     window.addEventListener('freeze', function(e) {
         console.log('Page freeze event - saving game state');
         try {
+            // Update lastSaveTime to NOW (critical for accurate offline calculations)
+            lastSaveTime = Date.now();
+            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
+
             saveGame();
             console.log('Save successful on freeze');
 
@@ -3499,6 +3694,74 @@ dogeUpgrades.forEach(u => {
         } else {
             console.error('❌ Save data NOT found in storage!');
         }
+    };
+
+    // COMPREHENSIVE DIAGNOSTIC - run this after buying an upgrade
+    window.diagnoseSaveIssue = function() {
+        console.log('\n🔍 === COMPREHENSIVE SAVE ISSUE DIAGNOSIS ===\n');
+
+        // Check 1: safeStorage availability
+        console.log('CHECK 1: SafeStorage Availability');
+        console.log('  window.safeStorage exists?', !!window.safeStorage);
+        console.log('  _isAvailable?', window.safeStorage ? window.safeStorage._isAvailable : 'N/A');
+        console.log('  localStorage works?', (() => {
+            try {
+                localStorage.setItem('_test', 'test');
+                localStorage.removeItem('_test');
+                return true;
+            } catch {
+                return false;
+            }
+        })());
+
+        // Check 2: Current game state
+        console.log('\nCHECK 2: Current Game State (in memory)');
+        console.log('  BTC Balance:', btcBalance);
+        console.log('  Dollar Balance:', dollarBalance);
+        console.log('  Hardware Equity:', hardwareEquity);
+        console.log('  BTC Upgrades count:', btcUpgrades ? btcUpgrades.length : 'N/A');
+        if (btcUpgrades && btcUpgrades.length > 0) {
+            btcUpgrades.slice(0, 5).forEach(u => {
+                console.log('    -', u.name + ':', 'level', u.level, 'yield', u.currentYield);
+            });
+        }
+
+        // Check 3: What's in localStorage
+        console.log('\nCHECK 3: Data in localStorage');
+        const saved = window.safeStorage.getItem('satoshiTerminalSave');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                console.log('  ✅ Save data exists, size:', saved.length, 'bytes');
+                console.log('  Saved BTC Balance:', parsed.btcBalance);
+                console.log('  Saved Dollar Balance:', parsed.dollarBalance);
+                console.log('  Saved Hardware Equity:', parsed.hardwareEquity);
+                console.log('  Saved BTC Upgrades count:', parsed.btcUpgrades ? parsed.btcUpgrades.length : 'N/A');
+                if (parsed.btcUpgrades && parsed.btcUpgrades.length > 0) {
+                    parsed.btcUpgrades.slice(0, 5).forEach(u => {
+                        console.log('    -', u.id + ':', 'level', u.level, 'yield', u.currentYield);
+                    });
+                }
+                console.log('  Last save time:', new Date(parsed.lastSaveTime));
+            } catch (e) {
+                console.error('  ❌ ERROR parsing saved data:', e.message);
+            }
+        } else {
+            console.error('  ❌ NO SAVE DATA IN STORAGE!');
+        }
+
+        // Check 4: Version tracking
+        console.log('\nCHECK 4: Version Tracking (cache clearing)');
+        console.log('  App Version (hardcoded):', '1.0.13');
+        console.log('  Stored Version in localStorage:', localStorage.getItem('appVersion'));
+        console.log('  Match?', localStorage.getItem('appVersion') === '1.0.13');
+
+        // Check 5: Auto-save status
+        console.log('\nCHECK 5: Auto-Save Interval Status');
+        console.log('  saveGame function exists?', typeof saveGame === 'function');
+        console.log('  (check console for saveGame messages - should see "=== ATTEMPTING SAVE ===" every 1.5 seconds)');
+
+        console.log('\n✅ Diagnosis complete. Look for ❌ marks above.');
     };
 
     // Force display offline earnings modal (for testing)
