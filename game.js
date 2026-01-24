@@ -446,7 +446,6 @@
     // --- SAVE SYSTEM START ---
     function saveGame() {
         // Check if safeStorage is available
-
         if (!window.safeStorage) {
             console.error('❌ CRITICAL: window.safeStorage is not available!');
             return;
@@ -594,26 +593,6 @@ function loadGame() {
         } catch(e) {
             console.error('   Error accessing localStorage:', e);
         }
-    // --- SAVE SYSTEM START ---
-    function saveGame() {
-        // Check if safeStorage is available
-// --- AUTOSAVE SYSTEM ---
-const AUTOSAVE_INTERVAL = 15000; // 15 seconds
-
-setInterval(() => {
-    if (!window.gameDataLoaded) {
-        console.log('⏳ Autosave skipped - game not loaded yet');
-        return;
-    }
-
-    console.log('💾 Autosaving to local cache...');
-    saveGame();
-}, AUTOSAVE_INTERVAL);
-
-window.addEventListener('beforeunload', () => {
-    console.log('🚪 Page closing - forcing save');
-    saveGame();
-});
 
         // Check if cloud data is available (set by loadGameFromCloud)
         let savedData = null;
@@ -716,6 +695,28 @@ window.addEventListener('beforeunload', () => {
         // Reset session on every page load/refresh
         sessionEarnings = 0;
         sessionStartTime = Date.now();
+
+    // --- SAVE SYSTEM START ---
+    function saveGame() {
+        // Check if safeStorage is available
+// --- AUTOSAVE SYSTEM ---
+const AUTOSAVE_INTERVAL = 15000; // 15 seconds
+
+setInterval(() => {
+    if (!window.gameDataLoaded) {
+        console.log('⏳ Autosave skipped - game not loaded yet');
+        return;
+    }
+
+    console.log('💾 Autosaving to local cache...');
+    saveGame();
+}, AUTOSAVE_INTERVAL);
+
+window.addEventListener('beforeunload', () => {
+    console.log('🚪 Page closing - forcing save');
+    saveGame();
+});
+
 
         // Load the last save time for offline earnings calculation
         lastSaveTime = state.lastSaveTime || Date.now();
