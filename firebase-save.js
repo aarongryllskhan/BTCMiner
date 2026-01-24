@@ -13,15 +13,21 @@ const MANUAL_SAVE_COOLDOWN = 20 * 60 * 1000; // 20 minutes in milliseconds
 // 2. Leaderboard refresh (updateLeaderboard calls this)
 async function saveGameToCloud(isManualSave = false, isLeaderboardRefresh = false) {
     try {
+        console.log('💾 saveGameToCloud called - isManualSave:', isManualSave, 'isLeaderboardRefresh:', isLeaderboardRefresh);
+        console.log('   auth:', typeof auth, 'db:', typeof db);
+
         const user = auth.currentUser;
 
         if (!user) {
-            console.log('⚠️ No user logged in - skipping cloud save');
+            console.error('❌ No user logged in - skipping cloud save');
+            console.error('   auth.currentUser:', auth.currentUser);
             if (isManualSave) {
                 showSaveMessage('You must be logged in to transfer progress to cloud. Your game auto-saves locally.', 'warning');
             }
             return false;
         }
+
+        console.log('✅ User found:', user.uid, 'email:', user.email);
 
         // Check user document exists
         try {
@@ -119,20 +125,27 @@ async function saveGameToCloud(isManualSave = false, isLeaderboardRefresh = fals
 
         console.log('💾 Saving game data to cloud:');
         console.log('  btcBalance:', gameData.btcBalance);
+        console.log('  dollarBalance:', gameData.dollarBalance);
         console.log('  btcClickValue:', gameData.btcClickValue);
         console.log('  BTC Upgrades:', gameData.btcUpgrades ? gameData.btcUpgrades.length : 0);
+        console.log('  Data size:', JSON.stringify(gameData).length, 'bytes');
 
         // Save to Firestore
+        console.log('📥 Writing to Firestore at path: users/' + user.uid + '/gameData/current');
         await db.collection('users').doc(user.uid).collection('gameData').doc('current').set(gameData, { merge: true });
+        console.log('✅ Firestore write completed');
 
         // Update user profile stats
+        console.log('📥 Updating user profile stats...');
         await db.collection('users').doc(user.uid).update({
             totalBTC: gameData.btcBalance,
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
+        console.log('✅ User profile updated');
 
         console.log('✅ Progress synced to cloud successfully');
         if (isManualSave) {
+            console.log('🎯 Manual save detected - showing save indicator');
             showSaveIndicator();
             updateLastSaveTime();
         }
@@ -141,6 +154,8 @@ async function saveGameToCloud(isManualSave = false, isLeaderboardRefresh = fals
 
     } catch (error) {
         console.error('❌ Cloud save error:', error);
+        console.error('   Error message:', error.message);
+        console.error('   Error code:', error.code);
         if (isManualSave) {
             showMessage('Failed to save to cloud: ' + error.message, 'error');
         }
@@ -244,17 +259,23 @@ function resetGameVariables() {
 // Used when logging in on a different device or switching accounts
 async function loadGameFromCloud(userId = null) {
     try {
+        console.log('☁️ loadGameFromCloud called - userId:', userId);
+
         const user = userId ? { uid: userId } : auth.currentUser;
 
         if (!user) {
-            console.log('⚠️ No user logged in - skipping cloud load');
+            console.error('❌ No user found - skipping cloud load');
+            console.error('   userId param:', userId);
+            console.error('   auth.currentUser:', auth.currentUser);
             return false;
         }
 
         console.log('☁️ LOADING GAME FROM CLOUD for user:', user.uid);
 
         // Get game data from Firestore
+        console.log('📥 Querying Firestore at: users/' + user.uid + '/gameData/current');
         const gameDataDoc = await db.collection('users').doc(user.uid).collection('gameData').doc('current').get();
+        console.log('📥 Firestore query completed');
 
         if (!gameDataDoc.exists) {
             console.log('⚠️ No cloud save found for this user - starting fresh');
@@ -262,7 +283,10 @@ async function loadGameFromCloud(userId = null) {
         }
 
         const cloudData = gameDataDoc.data();
-        console.log('✅ Cloud data retrieved, size:', JSON.stringify(cloudData).length, 'bytes');
+        console.log('✅ Cloud data retrieved from Firestore:');
+        console.log('   btcBalance:', cloudData.btcBalance);
+        console.log('   dollarBalance:', cloudData.dollarBalance);
+        console.log('   size:', JSON.stringify(cloudData).length, 'bytes');
 
         // Apply cloud data to game state (this will be processed by loadGame logic)
         if (typeof window.loadGame === 'function') {
@@ -270,12 +294,16 @@ async function loadGameFromCloud(userId = null) {
             window.cloudGameData = cloudData;
             console.log('📦 Stored cloud data for loadGame to process');
             window.loadGame();
+            console.log('✅ loadGame completed with cloud data');
             return true;
         }
 
+        console.error('❌ window.loadGame not available');
         return false;
     } catch (error) {
         console.error('❌ Error loading from cloud:', error);
+        console.error('   Error message:', error.message);
+        console.error('   Error code:', error.code);
         return false;
     }
 }
