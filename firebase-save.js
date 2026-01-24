@@ -520,8 +520,26 @@ async function loadGameFromCloud(userId = null) {
         console.log('  DOGE:', offlineDogeEarnings);
         console.log('  Seconds away:', offlineSecondsRaw);
 
-        setTimeout(() => {
-            console.log('🎯 Attempting to show offline earnings modal...');
+        // Wait for onboarding/terms modals to close before showing offline earnings modal
+        const checkAndShowModal = () => {
+            const onboardingModal = document.getElementById('onboarding-modal');
+            const privacyModal = document.getElementById('privacy-modal');
+            const loginScreen = document.getElementById('login-screen');
+
+            // Check if critical modals are still open
+            const onboardingOpen = onboardingModal && onboardingModal.style.display !== 'none' && onboardingModal.classList.contains('show');
+            const privacyOpen = privacyModal && privacyModal.style.display !== 'none';
+            const loginOpen = loginScreen && loginScreen.style.display !== 'none';
+
+            if (onboardingOpen || privacyOpen || loginOpen) {
+                // Wait a bit and try again
+                console.log('⏳ Waiting for modal to close before showing offline earnings...');
+                setTimeout(checkAndShowModal, 500);
+                return;
+            }
+
+            // Now show the offline modal
+            console.log('🎯 All critical modals closed, showing offline earnings modal...');
             if (typeof showOfflineEarningsModal === 'function') {
                 console.log('✅ showOfflineEarningsModal function found, calling now');
                 showOfflineEarningsModal(
@@ -536,7 +554,10 @@ async function loadGameFromCloud(userId = null) {
             } else {
                 console.warn('⚠️ showOfflineEarningsModal function not available, typeof:', typeof showOfflineEarningsModal);
             }
-        }, 500);
+        };
+
+        // Check after a short delay to allow modals to initialize
+        setTimeout(checkAndShowModal, 1000);
 
         // Update UI if functions exist
         if (typeof updateDisplay === 'function') updateDisplay();

@@ -969,37 +969,9 @@ function loadGame() {
         document.body.appendChild(overlay);
         document.body.appendChild(modal);
 
-        // Close modal on X button click or overlay click
-        const closeBtn = document.getElementById('close-modal-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                console.log('✅ OFFLINE EARNINGS MODAL DISMISSED');
-                overlay.remove();
-                modal.remove();
-
-                // Update UI immediately
-                if (typeof updateUI === 'function') {
-                    updateUI();
-                }
-
-                // Save to localStorage
-                if (typeof saveGame === 'function') {
-                    saveGame();
-                }
-
-                // Auto-save to cloud
-                if (typeof window.saveGameToCloud === 'function') {
-                    console.log('💾 Auto-saving to cloud after modal dismissed...');
-                    window.saveGameToCloud(false).catch(err => {
-                        console.warn('⚠️ Cloud auto-save failed:', err);
-                    });
-                }
-            });
-        }
-
-        // Also close on overlay click
-        overlay.addEventListener('click', () => {
-            console.log('✅ OFFLINE EARNINGS MODAL DISMISSED (overlay click)');
+        // Helper function to dismiss modal and save
+        const dismissModal = () => {
+            console.log('✅ OFFLINE EARNINGS MODAL DISMISSED');
             overlay.remove();
             modal.remove();
 
@@ -1019,6 +991,25 @@ function loadGame() {
                 window.saveGameToCloud(false).catch(err => {
                     console.warn('⚠️ Cloud auto-save failed:', err);
                 });
+            }
+        };
+
+        // Close modal on X button click - stop propagation to prevent overlay click
+        const closeBtn = document.getElementById('close-modal-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('✅ Close button clicked');
+                dismissModal();
+            });
+        }
+
+        // Also close on overlay click
+        overlay.addEventListener('click', (e) => {
+            // Only dismiss if clicking the overlay directly, not propagated from modal
+            if (e.target === overlay) {
+                console.log('✅ Overlay clicked');
+                dismissModal();
             }
         });
 
