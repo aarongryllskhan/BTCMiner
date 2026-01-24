@@ -2673,11 +2673,25 @@ dogeUpgrades.forEach(u => {
         initStaking();
         updateStakingUI();
 
-        // Check if instructions were dismissed
-        if (window.safeStorage.getItem('instructionsDismissed') === 'true') {
+        // Check if we need to show instructions after first refresh for new accounts
+        if (localStorage.getItem('showInstructionsAfterRefresh') === 'true') {
+            console.log('🎮 New account detected - showing instructions modal after first refresh');
             const instructionsEl = document.getElementById('game-instructions');
             if (instructionsEl) {
-                instructionsEl.style.display = 'none';
+                // Show the modal by adding the 'show' class (CSS handles display: flex)
+                instructionsEl.classList.add('show');
+                // Remove the flag and clear the instructionsDismissed flag
+                localStorage.removeItem('showInstructionsAfterRefresh');
+                window.safeStorage.removeItem('instructionsDismissed');
+                console.log('✅ Instructions modal displayed');
+            }
+        } else {
+            // Check if instructions were dismissed
+            if (window.safeStorage.getItem('instructionsDismissed') === 'true') {
+                const instructionsEl = document.getElementById('game-instructions');
+                if (instructionsEl) {
+                    instructionsEl.style.display = 'none';
+                }
             }
         }
 
