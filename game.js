@@ -637,21 +637,6 @@ function loadGame() {
         // Calculate total power used
         calculateTotalPowerUsed();
 
-        // Recalculate click values based on Manual Hash Rate upgrades
-        const btcManualHashRate = btcUpgrades[0]; // Manual Hash Rate is always at index 0
-        const ethManualHashRate = ethUpgrades[0];
-        const dogeManualHashRate = dogeUpgrades[0];
-
-        if (btcManualHashRate && btcManualHashRate.level > 0) {
-            btcClickValue = 0.00000250 * Math.pow(1.12, btcManualHashRate.level);
-        }
-        if (ethManualHashRate && ethManualHashRate.level > 0) {
-            ethClickValue = 0.00007143 * Math.pow(1.12, ethManualHashRate.level);
-        }
-        if (dogeManualHashRate && dogeManualHashRate.level > 0) {
-            dogeClickValue = 1.00000000 * Math.pow(1.12, dogeManualHashRate.level);
-        }
-
         // Recalculate totals for all cryptos
         btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
@@ -3008,6 +2993,5 @@ dogeUpgrades.forEach(u => {
             initializeGame();
         });
     } else {
-        checkAgeDisclaimer();
         initializeGame();
     }
