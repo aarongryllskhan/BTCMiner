@@ -2954,17 +2954,15 @@ dogeUpgrades.forEach(u => {
         }
     });
 
-    // Age disclaimer modal handling
-    function acceptAgeDisclaimer() {
+    // Combined age and terms modal handling
+    function acceptAgeAndTerms() {
         localStorage.setItem('ageDisclaimerAccepted', 'true');
-        document.getElementById('age-disclaimer-modal').style.display = 'none';
+        localStorage.setItem('termsAccepted', 'true');
+        document.getElementById('age-terms-modal').style.display = 'none';
     }
 
-    function checkAgeDisclaimer() {
-        const accepted = localStorage.getItem('ageDisclaimerAccepted');
-        if (!accepted) {
-            document.getElementById('age-disclaimer-modal').style.display = 'flex';
-        }
+    function openAgeAndTermsModal() {
+        document.getElementById('age-terms-modal').style.display = 'flex';
     }
 
     // Privacy policy modal handling
@@ -2977,7 +2975,8 @@ dogeUpgrades.forEach(u => {
     }
 
     // Make functions available globally
-    window.acceptAgeDisclaimer = acceptAgeDisclaimer;
+    window.acceptAgeAndTerms = acceptAgeAndTerms;
+    window.openAgeAndTermsModal = openAgeAndTermsModal;
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;
 
