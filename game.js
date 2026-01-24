@@ -2954,9 +2954,20 @@ dogeUpgrades.forEach(u => {
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
-        console.log('✓ About to call loadGame()');
-        loadGame(); // This calls updateUI() internally and sets window.offlineEarningsToShow
-        console.log('✓ loadGame() completed');
+        // NOTE: loadGame() is now called by the auth listener in firebase-auth.js
+        // This ensures that for logged-in users, cloud data is loaded first
+        // For offline/guest users, local data will be loaded
+        // Calling loadGame() here would prevent cloud data from loading on login
+        console.log('⏸️  Skipping loadGame() here - auth listener will handle data loading');
+
+        // FALLBACK: If game data hasn't been loaded after 3 seconds, load from local storage
+        // This handles offline users or cases where auth listener doesn't fire
+        setTimeout(() => {
+            if (!window.gameDataLoaded) {
+                console.log('⏱️ Game data not loaded after 3s - loading from local storage as fallback');
+                loadGame();
+            }
+        }, 3000);
 
         console.log('✓ About to call updateAutoClickerButtonState()');
         updateAutoClickerButtonState(); // Update button state immediately after loading

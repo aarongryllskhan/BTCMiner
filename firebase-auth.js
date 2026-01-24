@@ -1563,12 +1563,8 @@ function setupAuthListener() {
     // Listen for authentication state changes
     auth.onAuthStateChanged(async (user) => {
         console.log('🔄 Auth state changed!');
-
-        // CRITICAL: Prevent loading game data multiple times
-        if (gameDataLoadedFlag) {
-            console.log('⚠️ Game data already loaded this session - skipping duplicate load');
-            return;
-        }
+        console.log('   gameDataLoadedFlag:', gameDataLoadedFlag);
+        console.log('   user:', user ? user.uid : 'null');
 
         if (user) {
             console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
