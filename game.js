@@ -3409,6 +3409,31 @@ dogeUpgrades.forEach(u => {
     window.importSaveFromText = importSaveFromText;
     window.importSaveFromFile = importSaveFromFile;
 
+    // Debug function to check localStorage directly
+    window.debugCheckSave = function() {
+        const data = localStorage.getItem('satoshiTerminalSave');
+        if (!data) {
+            console.log('NO SAVE DATA IN LOCALSTORAGE');
+            alert('No save data found in localStorage!');
+            return;
+        }
+        try {
+            const parsed = JSON.parse(data);
+            console.log('=== LOCALSTORAGE CONTENTS ===');
+            console.log('BTC Balance:', parsed.btcBalance);
+            console.log('ETH Balance:', parsed.ethBalance);
+            console.log('DOGE Balance:', parsed.dogeBalance);
+            console.log('Dollar Balance:', parsed.dollarBalance);
+            console.log('Hardware Equity:', parsed.hardwareEquity);
+            console.log('Lifetime Earnings:', parsed.lifetimeEarnings);
+            console.log('Full data:', parsed);
+            alert('Check console for localStorage contents.\nBTC: ' + parsed.btcBalance + '\nETH: ' + parsed.ethBalance + '\nDOGE: ' + parsed.dogeBalance + '\n$: ' + parsed.dollarBalance);
+        } catch(e) {
+            console.error('Error parsing save:', e);
+            alert('Error parsing save data: ' + e.message);
+        }
+    };
+
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
