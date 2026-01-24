@@ -649,6 +649,22 @@ function loadGame() {
             });
         }
 
+        // Recalculate click values from manual hash upgrade levels
+        const btcManualHashUpgrade = btcUpgrades.find(u => u.id === 0);
+        if (btcManualHashUpgrade && btcManualHashUpgrade.level > 0) {
+            btcClickValue = 0.00000250 * Math.pow(1.10, btcManualHashUpgrade.level);
+        }
+
+        const ethManualHashUpgrade = ethUpgrades.find(u => u.id === 0);
+        if (ethManualHashUpgrade && ethManualHashUpgrade.level > 0) {
+            ethClickValue = 0.00007143 * Math.pow(1.10, ethManualHashUpgrade.level);
+        }
+
+        const dogeManualHashUpgrade = dogeUpgrades.find(u => u.id === 0);
+        if (dogeManualHashUpgrade && dogeManualHashUpgrade.level > 0) {
+            dogeClickValue = 1.00000000 * Math.pow(1.10, dogeManualHashUpgrade.level);
+        }
+
         // Calculate total power used
         calculateTotalPowerUsed();
 
@@ -710,7 +726,7 @@ function loadGame() {
             if (offlineStakingCash > 0) {
                 dollarBalance += offlineStakingCash;
                 lifetimeEarnings += offlineStakingCash;
-                sessionEarnings += offlineStakingCash;
+                // Don't add offline earnings to current session
             }
         }
 
@@ -719,21 +735,21 @@ function loadGame() {
             btcLifetime += offlineBtcEarnings;
             const btcUsdValue = offlineBtcEarnings * btcPrice;
             lifetimeEarnings += btcUsdValue;
-            sessionEarnings += btcUsdValue; // Offline earnings count toward session
+            // Don't add offline earnings to current session
         }
         if (offlineEthEarnings > 0) {
             ethBalance += offlineEthEarnings;
             ethLifetime += offlineEthEarnings;
             const ethUsdValue = offlineEthEarnings * ethPrice;
             lifetimeEarnings += ethUsdValue;
-            sessionEarnings += ethUsdValue; // Offline earnings count toward session
+            // Don't add offline earnings to current session
         }
         if (offlineDogeEarnings > 0) {
             dogeBalance += offlineDogeEarnings;
             dogeLifetime += offlineDogeEarnings;
             const dogeUsdValue = offlineDogeEarnings * dogePrice;
             lifetimeEarnings += dogeUsdValue;
-            sessionEarnings += dogeUsdValue; // Offline earnings count toward session
+            // Don't add offline earnings to current session
         }
 
         // Always show offline earnings if we've been away (even if earnings are 0)
