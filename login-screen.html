@@ -478,14 +478,19 @@
 
             try {
                 console.log('🔑 Attempting login...');
-                console.log('Parent window loginUser exists?', typeof window.parent.loginUser);
 
-                if (typeof window.parent.loginUser !== 'function') {
-                    alert('Error: Login function not found. Please refresh the page.');
-                    return;
+                // Try direct function call first
+                if (typeof window.parent.loginUser === 'function') {
+                    await window.parent.loginUser(email, password);
+                } else {
+                    // Fallback to postMessage
+                    console.log('Using postMessage fallback for login');
+                    window.parent.postMessage({
+                        action: 'loginUser',
+                        email: email,
+                        password: password
+                    }, '*');
                 }
-
-                await window.parent.loginUser(email, password);
             } catch (error) {
                 console.error('Login failed:', error);
                 alert('Login failed: ' + error.message);
@@ -540,18 +545,20 @@
 
             try {
                 console.log('📝 Attempting registration...');
-                console.log('Parent window registerUser exists?', typeof window.parent.registerUser);
 
-                if (typeof window.parent.registerUser !== 'function') {
-                    alert('Error: Registration function not found. Please refresh the page.');
-                    submitBtn.disabled = false;
-                    submitBtn.style.opacity = '1';
-                    submitBtn.style.cursor = 'pointer';
-                    submitBtn.textContent = originalText;
-                    return;
+                // Try direct function call first
+                if (typeof window.parent.registerUser === 'function') {
+                    await window.parent.registerUser(email, password, username);
+                } else {
+                    // Fallback to postMessage
+                    console.log('Using postMessage fallback for registration');
+                    window.parent.postMessage({
+                        action: 'registerUser',
+                        email: email,
+                        password: password,
+                        username: username
+                    }, '*');
                 }
-
-                await window.parent.registerUser(email, password, username);
             } catch (error) {
                 console.error('Registration failed:', error);
                 alert('Registration failed: ' + error.message);
@@ -568,14 +575,17 @@
         async function handleGoogleLogin() {
             try {
                 console.log('🔍 Attempting Google login...');
-                console.log('Parent window loginWithGoogle exists?', typeof window.parent.loginWithGoogle);
 
-                if (typeof window.parent.loginWithGoogle !== 'function') {
-                    alert('Error: Google login function not found. Please refresh the page.');
-                    return;
+                // Try direct function call first
+                if (typeof window.parent.loginWithGoogle === 'function') {
+                    await window.parent.loginWithGoogle();
+                } else {
+                    // Fallback to postMessage
+                    console.log('Using postMessage fallback for Google login');
+                    window.parent.postMessage({
+                        action: 'loginWithGoogle'
+                    }, '*');
                 }
-
-                await window.parent.loginWithGoogle();
             } catch (error) {
                 console.error('Google login failed:', error);
                 alert('Google login failed: ' + error.message);

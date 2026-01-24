@@ -1661,22 +1661,38 @@ function setupAuthListener() {
 // Make it globally available
 window.setupAuthListener = setupAuthListener;
 
-// Listen for messages from iframe (for cross-origin guest login)
+// Listen for messages from iframe (for cross-origin login with postMessage fallback)
 window.addEventListener('message', async function(event) {
-    if (event.data && event.data.action === 'playAsGuest') {
-        console.log('📨 Received playAsGuest message from iframe');
-        try {
-            console.log('Calling playAsGuest function...');
-            console.log('playAsGuest function exists?', typeof playAsGuest);
-            console.log('auth available?', typeof auth);
-            console.log('db available?', typeof db);
+    console.log('📨 Received postMessage from iframe:', event.data?.action);
+
+    try {
+        if (event.data && event.data.action === 'playAsGuest') {
+            console.log('📨 Received playAsGuest message from iframe');
             await playAsGuest();
             console.log('✅ playAsGuest completed successfully');
-        } catch (error) {
-            console.error('❌ Failed to play as guest:', error);
-            console.error('Error stack:', error.stack);
-            // Send error back to iframe
-            event.source.postMessage({ action: 'guestLoginFailed', error: error.message }, event.origin);
         }
+        else if (event.data && event.data.action === 'loginUser') {
+            console.log('📨 Received loginUser message from iframe');
+            await loginUser(event.data.email, event.data.password);
+            console.log('✅ loginUser completed successfully');
+        }
+        else if (event.data && event.data.action === 'registerUser') {
+            console.log('📨 Received registerUser message from iframe');
+            await registerUser(event.data.email, event.data.password, event.data.username);
+            console.log('✅ registerUser completed successfully');
+        }
+        else if (event.data && event.data.action === 'loginWithGoogle') {
+            console.log('📨 Received loginWithGoogle message from iframe');
+            await loginWithGoogle();
+            console.log('✅ loginWithGoogle completed successfully');
+        }
+    } catch (error) {
+        console.error('❌ Auth action failed:', error);
+        console.error('Error stack:', error.stack);
+        // Send error back to iframe
+        event.source.postMessage({
+            action: event.data?.action + 'Failed',
+            error: error.message
+        }, event.origin);
     }
 });
