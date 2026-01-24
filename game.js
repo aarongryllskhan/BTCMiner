@@ -566,6 +566,7 @@
 
 function loadGame() {
     console.log('=== LOAD GAME CALLED ===');
+    console.log('⏰ Timestamp:', new Date().toISOString());
     try {
         // Verify safeStorage is available
         if (!window.safeStorage) {
@@ -574,6 +575,16 @@ function loadGame() {
         }
 
         console.log('✓ safeStorage available, _isAvailable:', window.safeStorage._isAvailable);
+
+        // DIAGNOSTIC: Check actual localStorage before anything else
+        console.log('🔍 DIAGNOSTIC: Checking localStorage directly:');
+        try {
+            const actualLS = localStorage.getItem('satoshiTerminalSave');
+            console.log('   localStorage.satoshiTerminalSave exists?', !!actualLS);
+            if (actualLS) console.log('   Length:', actualLS.length);
+        } catch(e) {
+            console.error('   Error accessing localStorage:', e);
+        }
 
         // Check if cloud data is available (set by loadGameFromCloud)
         let savedData = null;
@@ -595,6 +606,7 @@ function loadGame() {
         if (!savedData) {
             console.log('✗ No saved game found, starting fresh');
             console.log('ℹ️ This is the first time playing or localStorage was cleared');
+            console.log('🔍 DIAGNOSTIC: At this point, localStorage contents are:', Object.keys(localStorage));
             // Initialize lastSaveTime for future saves
             lastSaveTime = Date.now();
             // Still need to call updateUI() to initialize the display
@@ -3035,20 +3047,12 @@ dogeUpgrades.forEach(u => {
         console.log('✓ Staking system initialized');
 
         // ============================================================
-        // CRITICAL: Auto-save setup - skip saving until game data is loaded
+        // AUTO-SAVE: Like Cookie Clicker - always save every 1.5 seconds
+        // Simple and reliable - no conditional checks
         // ============================================================
-        console.log('🔄 Setting up AUTO-SAVE INTERVAL (every 1.5 seconds)');
-        const autoSaveIntervalId = setInterval(() => {
-            // Only save if game data has been loaded (after auth listener or fallback loads it)
-            if (window.gameDataLoaded) {
-                console.log('⏱️ AUTO-SAVE TICK - calling saveGame()');
-                saveGame();
-            } else {
-                console.log('⏳ Skipping auto-save - game data not loaded yet');
-            }
-        }, 1500);
-        console.log('✅ AUTO-SAVE INTERVAL SETUP COMPLETE - ID:', autoSaveIntervalId);
-        // ============================================================
+        console.log('💾 Starting AUTO-SAVE (every 1.5 seconds)');
+        setInterval(saveGame, 1500);
+        console.log('✅ AUTO-SAVE ACTIVE');
 
         // Get offline earnings data that was set by loadGame()
         const offlineEarningsData = window.offlineEarningsToShow;
