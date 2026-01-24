@@ -531,6 +531,9 @@ function loadGame() {
 
         if (!savedData) {
             console.log('✗ No saved game found, starting fresh');
+            console.log('ℹ️ This is the first time playing or localStorage was cleared');
+            // Initialize lastSaveTime for future saves
+            lastSaveTime = Date.now();
             return;
         }
 
@@ -563,12 +566,18 @@ function loadGame() {
         hardwareEquity = state.hardwareEquity || 0;
         lifetimeEarnings = state.lifetimeEarnings || 0;
 
+        console.log('✅ LOADED FROM LOCAL STORAGE:');
+        console.log('  BTC Balance:', btcBalance);
+        console.log('  Dollar Balance:', dollarBalance);
+        console.log('  Lifetime Earnings:', lifetimeEarnings);
+
         // Reset session on every page load/refresh
         sessionEarnings = 0;
         sessionStartTime = Date.now();
 
         // Load the last save time for offline earnings calculation
         lastSaveTime = state.lastSaveTime || Date.now();
+        console.log('  ⏱️ Last Save Time loaded:', new Date(lastSaveTime), 'timestamp:', lastSaveTime);
 
         // Load staking data
         if (state.staking) {
@@ -684,17 +693,18 @@ function loadGame() {
         autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
 
         // Calculate offline earnings (max 6 hours of earnings to prevent exploits)
-        const lastSaveTime = state.lastSaveTime || Date.now();
+        const savedLastSaveTime = state.lastSaveTime || Date.now();
         const currentTime = Date.now();
-        let offlineSeconds = (currentTime - lastSaveTime) / 1000;
+        let offlineSeconds = (currentTime - savedLastSaveTime) / 1000;
         const maxOfflineSeconds = 21600; // Cap at 6 hours
         if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
 
-        console.log('=== OFFLINE EARNINGS DEBUG ===');
-        console.log('Last save time:', new Date(lastSaveTime));
+        console.log('=== OFFLINE EARNINGS CALCULATION ===');
+        console.log('Last save time from file:', new Date(savedLastSaveTime));
         console.log('Current time:', new Date(currentTime));
-        console.log('Offline seconds:', offlineSeconds);
+        console.log('Offline seconds (raw):', offlineSeconds);
         console.log('Will show modal:', offlineSeconds >= 5);
+        console.log('Per-second rates: BTC=' + btcPerSec + '/s, ETH=' + ethPerSec + '/s, DOGE=' + dogePerSec + '/s');
 
         // Cap offline time at 6 hours (21600 seconds) + skill tree bonuses
         const BASE_OFFLINE_CAP = 21600; // 6 hours
@@ -969,6 +979,7 @@ function loadGame() {
         const modal = document.createElement('div');
         modal.className = 'offline-modal';
 
+        // Format time away
         const hours = Math.floor(secondsOffline / 3600);
         const minutes = Math.floor((secondsOffline % 3600) / 60);
         const seconds = Math.floor(secondsOffline % 60);
@@ -979,18 +990,29 @@ function loadGame() {
         if (seconds > 0) timeStr += seconds + 's';
         if (!timeStr) timeStr = '< 1s';
 
+        // Calculate USD values for each crypto
+        const btcUsdValue = btcEarned * (window.btcPrice || 100000);
+        const ethUsdValue = ethEarned * (window.ethPrice || 3500);
+        const dogeUsdValue = dogeEarned * (window.dogePrice || 0.25);
+        const totalUsdValue = btcUsdValue + ethUsdValue + dogeUsdValue + stakingCash;
+
+        // Format earnings with breakdown
         let earningsHtml = '';
+        let breakdownHtml = '<div style="font-size: 0.8rem; color: #999; margin-top: 12px; padding-top: 12px; border-top: 1px solid #333;">';
+
         if (btcEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #f7931a;">₿ ${btcEarned.toFixed(8)}</div>`;
+            breakdownHtml += `<div style="margin: 4px 0;">₿ ${btcEarned.toFixed(8)} = $${btcUsdValue.toFixed(2)}</div>`;
         }
         if (ethEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #627eea;">Ξ ${ethEarned.toFixed(8)}</div>`;
+            breakdownHtml += `<div style="margin: 4px 0;">Ξ ${ethEarned.toFixed(8)} = $${ethUsdValue.toFixed(2)}</div>`;
         }
         if (dogeEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`;
+            breakdownHtml += `<div style="margin: 4px 0;">Ð ${dogeEarned.toFixed(2)} = $${dogeUsdValue.toFixed(2)}</div>`;
         }
         if (stakingCash > 0) {
-            // Abbreviate large cash amounts
             let cashDisplay;
             if (stakingCash >= 1e9) {
                 cashDisplay = '$' + (stakingCash / 1e9).toFixed(2) + 'b';
@@ -1002,7 +1024,9 @@ function loadGame() {
                 cashDisplay = '$' + stakingCash.toFixed(2);
             }
             earningsHtml += `<div class="earnings" style="color: #4caf50;">💰 ${cashDisplay}</div>`;
+            breakdownHtml += `<div style="margin: 4px 0; color: #4caf50;">Staking: ${cashDisplay}</div>`;
         }
+        breakdownHtml += '</div>';
 
         // If no earnings, show a message
         if (!earningsHtml) {
@@ -1013,14 +1037,30 @@ function loadGame() {
         // Add cap notice if time was capped
         let capNotice = '';
         if (wasCapped) {
-            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 6 hours</div>`;
+            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 6 hours (you were away for ${Math.floor(secondsOffline / 3600)} hours)</div>`;
+        }
+
+        // Format total USD value
+        let totalDisplay = '';
+        if (totalUsdValue > 0) {
+            if (totalUsdValue >= 1e9) {
+                totalDisplay = '$' + (totalUsdValue / 1e9).toFixed(2) + 'b';
+            } else if (totalUsdValue >= 1e6) {
+                totalDisplay = '$' + (totalUsdValue / 1e6).toFixed(2) + 'm';
+            } else if (totalUsdValue >= 1e3) {
+                totalDisplay = '$' + (totalUsdValue / 1e3).toFixed(2) + 'k';
+            } else {
+                totalDisplay = '$' + totalUsdValue.toFixed(2);
+            }
         }
 
         modal.innerHTML = `
             <h2>⏰ Welcome Back!</h2>
-            <div class="earnings-label">Offline Earnings${wasCapped ? ' (6 hour max)' : ''}</div>
+            <div class="earnings-label">Offline Earnings (${timeStr})</div>
+            <div style="font-size: 1.1rem; color: #00ff88; margin-bottom: 8px; font-weight: bold;">≈ ${totalDisplay} USD</div>
             ${earningsHtml}
-            <div class="time-offline">While you were away for ${timeStr}</div>
+            ${breakdownHtml}
+            <div class="time-offline">📡 While you were away for <strong>${timeStr}</strong></div>
             ${capNotice}
             <button id="claim-btn">Claim Rewards</button>
         `;
@@ -3103,14 +3143,18 @@ dogeUpgrades.forEach(u => {
 
     // Save game when user is about to leave the page
     window.addEventListener('beforeunload', function(e) {
-        console.log('Page unloading - saving game state');
+        console.log('⚠️ PAGE UNLOAD EVENT FIRED - SAVING GAME STATE');
+        console.log('Current BTC Balance:', btcBalance);
+        console.log('Current Dollar Balance:', dollarBalance);
+        console.log('Current Lifetime Earnings:', lifetimeEarnings);
         try {
             saveGame();
-            console.log('Save successful on beforeunload');
+            console.log('✅ SAVE SUCCESSFUL ON BEFOREUNLOAD');
+            console.log('Game state saved to localStorage');
 
             // CRITICAL: Also save to cloud if user is logged in
             if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('Saving to cloud on beforeunload...');
+                console.log('📤 Attempting cloud save on beforeunload...');
                 try {
                     // Use synchronous approach with fetch API to ensure save completes
                     window.saveGameToCloud().then(() => {
@@ -3123,7 +3167,7 @@ dogeUpgrades.forEach(u => {
                 }
             }
         } catch (err) {
-            console.error('Save failed on beforeunload:', err);
+            console.error('❌ SAVE FAILED ON BEFOREUNLOAD:', err);
         }
     });
 
@@ -3379,6 +3423,33 @@ dogeUpgrades.forEach(u => {
         get: () => lastSaveTime,
         set: (val) => { lastSaveTime = val; }
     });
+
+    // Debug function to test save/load system
+    window.testSaveSystem = function() {
+        console.log('=== SAVE SYSTEM TEST ===');
+        console.log('Current BTC Balance:', btcBalance);
+        console.log('Current Dollar Balance:', dollarBalance);
+        console.log('Current Lifetime Earnings:', lifetimeEarnings);
+        console.log('Last Save Time:', new Date(lastSaveTime));
+
+        // Force a save
+        console.log('Forcing save...');
+        saveGame();
+
+        // Try to load it back
+        const saved = window.safeStorage.getItem('satoshiTerminalSave');
+        if (saved) {
+            console.log('✅ Save data found in storage. Size:', saved.length, 'bytes');
+            const parsed = JSON.parse(saved);
+            console.log('Parsed data:');
+            console.log('  BTC Balance:', parsed.btcBalance);
+            console.log('  Dollar Balance:', parsed.dollarBalance);
+            console.log('  Lifetime Earnings:', parsed.lifetimeEarnings);
+            console.log('  Last Save Time:', new Date(parsed.lastSaveTime));
+        } else {
+            console.error('❌ Save data NOT found in storage!');
+        }
+    };
 
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
