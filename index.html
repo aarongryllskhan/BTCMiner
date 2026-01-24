@@ -527,12 +527,29 @@
         document.getElementById('privacy-modal').style.display = 'none';
     }
 
+    // Check if user has already made a cookie choice
+    function checkCookieConsent() {
+        console.log('checkCookieConsent() called');
+        const consent = localStorage.getItem('cookieConsent');
+        console.log('Cookie consent status:', consent);
+        if (!consent) {
+            const banner = document.getElementById('cookie-consent-banner');
+            console.log('Banner element found:', !!banner);
+            if (banner) {
+                console.log('Setting banner display to block');
+                banner.style.display = 'block';
+            }
+        }
+    }
+
     // Combined age and terms acceptance function
     function acceptAgeAndTerms() {
+        console.log('acceptAgeAndTerms() called');
         localStorage.setItem('ageDisclaimerAccepted', 'true');
         localStorage.setItem('termsAccepted', 'true');
         document.getElementById('age-terms-modal').style.display = 'none';
         // Now show cookie banner after age/terms accepted
+        console.log('Calling checkCookieConsent()');
         checkCookieConsent();
     }
 
@@ -625,17 +642,6 @@
 
 <!-- Cookie Consent JavaScript -->
 <script>
-    // Check if user has already made a cookie choice
-    function checkCookieConsent() {
-        const consent = localStorage.getItem('cookieConsent');
-        if (!consent) {
-            const banner = document.getElementById('cookie-consent-banner');
-            if (banner) {
-                banner.style.display = 'block';
-            }
-        }
-    }
-
     // Accept all cookies
     function acceptAllCookies() {
         localStorage.setItem('cookieConsent', 'all');
