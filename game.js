@@ -713,15 +713,21 @@ function loadGame() {
         const wasTimeCaped = offlineSeconds > MAX_OFFLINE_SECONDS;
 
         console.log('=== OFFLINE EARNINGS CALCULATION ===');
-        console.log('Last save time from file:', new Date(savedLastSaveTime));
-        console.log('Current time:', new Date(currentTime));
-        console.log('Offline seconds (raw):', offlineSeconds, '(capped to:', cappedOfflineSeconds, ')');
+        console.log('Last save time from file:', new Date(savedLastSaveTime), '(', savedLastSaveTime, ')');
+        console.log('Current time:', new Date(currentTime), '(', currentTime, ')');
+        console.log('Offline seconds (raw):', offlineSeconds.toFixed(2), 'seconds');
+        console.log('Capped offline seconds:', cappedOfflineSeconds.toFixed(2), 'seconds');
         console.log('Per-second rates: BTC=' + btcPerSec + '/s, ETH=' + ethPerSec + '/s, DOGE=' + dogePerSec + '/s');
 
         // Calculate mining earnings
         const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds;
         const offlineEthEarnings = ethPerSec * cappedOfflineSeconds;
         const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds;
+
+        console.log('Calculated earnings BEFORE adding to balance:');
+        console.log('  offlineBtcEarnings:', offlineBtcEarnings);
+        console.log('  offlineEthEarnings:', offlineEthEarnings);
+        console.log('  offlineDogeEarnings:', offlineDogeEarnings);
 
         // Add mining earnings to balances immediately
         if (offlineBtcEarnings > 0) {
@@ -2711,6 +2717,30 @@ dogeUpgrades.forEach(u => {
         updateAutoClickerButtonState();
     }, 100);
 
+    // Debug function to test offline earnings calculation
+    window.debugOfflineEarnings = function() {
+        console.log('=== DEBUG OFFLINE EARNINGS ===');
+        console.log('Current btcPerSec:', btcPerSec);
+        console.log('Current ethPerSec:', ethPerSec);
+        console.log('Current dogePerSec:', dogePerSec);
+        console.log('Current lastSaveTime:', new Date(lastSaveTime));
+        console.log('Current Time:', new Date());
+        console.log('Offline seconds (estimated):', (Date.now() - lastSaveTime) / 1000);
+        console.log('window.offlineEarningsToShow:', window.offlineEarningsToShow);
+
+        // Calculate what should be earned
+        const offlineSeconds = (Date.now() - lastSaveTime) / 1000;
+        if (offlineSeconds >= 5) {
+            const btcEarn = btcPerSec * offlineSeconds;
+            const ethEarn = ethPerSec * offlineSeconds;
+            const dogeEarn = dogePerSec * offlineSeconds;
+            console.log('If offline for', offlineSeconds, 'seconds:');
+            console.log('  BTC earnings:', btcEarn);
+            console.log('  ETH earnings:', ethEarn);
+            console.log('  DOGE earnings:', dogeEarn);
+        }
+    };
+
     // Initialize all shops after DOM is ready
     function initializeGame() {
         console.log('🎮 initializeGame() STARTED');
@@ -2750,6 +2780,13 @@ dogeUpgrades.forEach(u => {
 
         console.log('🔍 CHECKING FOR OFFLINE EARNINGS MODAL');
         console.log('window.offlineEarningsToShow:', offlineEarningsData);
+        if (offlineEarningsData) {
+            console.log('  ✅ Data exists');
+            console.log('  offlineEarningsData.seconds:', offlineEarningsData.seconds);
+            console.log('  Condition (seconds >= 5):', offlineEarningsData.seconds >= 5);
+        } else {
+            console.log('  ❌ offlineEarningsToShow is null/undefined');
+        }
 
         // Handle game instructions modal visibility
         const instructionsEl = document.getElementById('game-instructions');
