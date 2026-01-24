@@ -23,31 +23,84 @@ function setupPostMessageListener() {
                 console.log('📨 Received playAsGuest message from iframe');
                 await playAsGuest();
                 console.log('✅ playAsGuest completed successfully');
+
+                // Force hide modal immediately
+                const loginScreenModal = document.getElementById('login-screen');
+                if (loginScreenModal) {
+                    console.log('🔐 FORCE HIDING login modal immediately');
+                    loginScreenModal.style.display = 'none !important';
+                    loginScreenModal.style.visibility = 'hidden';
+                    loginScreenModal.style.opacity = '0';
+                    loginScreenModal.style.pointerEvents = 'none';
+                }
+
                 // Force page refresh after guest login
                 console.log('🔄 Force refreshing page after guest login...');
                 setTimeout(() => {
                     location.reload();
-                }, 500);
+                }, 1000);
             }
             else if (event.data.action === 'loginUser') {
                 console.log('📨 Received loginUser message from iframe');
                 await loginUser(event.data.email, event.data.password);
                 console.log('✅ loginUser completed successfully');
+
+                // Force hide modal immediately
+                const loginScreenModal = document.getElementById('login-screen');
+                if (loginScreenModal) {
+                    console.log('🔐 FORCE HIDING login modal immediately');
+                    loginScreenModal.style.display = 'none !important';
+                    loginScreenModal.style.visibility = 'hidden';
+                    loginScreenModal.style.opacity = '0';
+                    loginScreenModal.style.pointerEvents = 'none';
+                }
+
+                // Save to cloud before refresh to ensure data persists
+                console.log('💾 Saving current game data to cloud...');
+                if (typeof window.saveGameToCloud === 'function') {
+                    try {
+                        await window.saveGameToCloud(false, true); // false = not manual, true = leaderboard refresh (bypasses cooldown)
+                    } catch (e) {
+                        console.warn('⚠️ Cloud save before login refresh failed:', e);
+                    }
+                }
+
                 // Force page refresh after successful email login
                 console.log('🔄 Force refreshing page after email login...');
                 setTimeout(() => {
                     location.reload();
-                }, 500);
+                }, 1000);
             }
             else if (event.data.action === 'registerUser') {
                 console.log('📨 Received registerUser message from iframe');
                 await registerUser(event.data.email, event.data.password, event.data.username);
                 console.log('✅ registerUser completed successfully');
+
+                // Force hide modal immediately
+                const loginScreenModal = document.getElementById('login-screen');
+                if (loginScreenModal) {
+                    console.log('🔐 FORCE HIDING login modal immediately');
+                    loginScreenModal.style.display = 'none !important';
+                    loginScreenModal.style.visibility = 'hidden';
+                    loginScreenModal.style.opacity = '0';
+                    loginScreenModal.style.pointerEvents = 'none';
+                }
+
+                // Save to cloud before refresh to ensure data persists
+                console.log('💾 Saving current game data to cloud...');
+                if (typeof window.saveGameToCloud === 'function') {
+                    try {
+                        await window.saveGameToCloud(false, true); // false = not manual, true = leaderboard refresh (bypasses cooldown)
+                    } catch (e) {
+                        console.warn('⚠️ Cloud save before login refresh failed:', e);
+                    }
+                }
+
                 // Force page refresh after successful registration
                 console.log('🔄 Force refreshing page after registration...');
                 setTimeout(() => {
                     location.reload();
-                }, 500);
+                }, 1000);
             }
             else if (event.data.action === 'loginWithGoogle') {
                 console.log('📨 Received loginWithGoogle message from iframe');
@@ -58,11 +111,32 @@ function setupPostMessageListener() {
                 }
                 await loginWithGoogle();
                 console.log('✅ loginWithGoogle completed successfully');
+
+                // Force hide modal immediately
+                const loginScreenModal = document.getElementById('login-screen');
+                if (loginScreenModal) {
+                    console.log('🔐 FORCE HIDING login modal immediately');
+                    loginScreenModal.style.display = 'none !important';
+                    loginScreenModal.style.visibility = 'hidden';
+                    loginScreenModal.style.opacity = '0';
+                    loginScreenModal.style.pointerEvents = 'none';
+                }
+
+                // Save to cloud before refresh to ensure data persists
+                console.log('💾 Saving current game data to cloud...');
+                if (typeof window.saveGameToCloud === 'function') {
+                    try {
+                        await window.saveGameToCloud(false, true); // false = not manual, true = leaderboard refresh (bypasses cooldown)
+                    } catch (e) {
+                        console.warn('⚠️ Cloud save before login refresh failed:', e);
+                    }
+                }
+
                 // Force page refresh after successful Google login
                 console.log('🔄 Force refreshing page after Google login...');
                 setTimeout(() => {
                     location.reload();
-                }, 500);
+                }, 1000);
             }
             else {
                 console.log('⚠️ Unknown message action:', event.data.action);
@@ -1629,26 +1703,17 @@ function setupAuthListener() {
                         if (typeof window.loadGame === 'function') {
                             window.loadGame();
                         }
-                    } else if (hasValidLocalData && !isAccountSwitch) {
-                        // SAME DEVICE, SAME REAL USER - Load from local (fastest, always up-to-date)
-                        console.log('✅ Same device, same account - loading from LOCAL STORAGE');
-                        if (typeof window.loadGame === 'function') {
-                            window.loadGame();
-                        }
                     } else {
-                        // REAL ACCOUNT on different device OR first time on this device - Load from CLOUD first
-                        console.log('☁️ Real account - loading from CLOUD');
+                        // REAL ACCOUNT (Google/Email) - ALWAYS load from CLOUD first
+                        console.log('☁️ Real account (Google/Email) - loading from CLOUD FIRST');
+                        let cloudLoadSuccess = false;
                         if (typeof window.loadGameFromCloud === 'function') {
-                            const cloudLoadSuccess = await window.loadGameFromCloud(currentUserId);
-                            if (!cloudLoadSuccess) {
-                                // Cloud has no data - fall back to local or start fresh
-                                console.log('⚠️ No cloud save found, falling back to localStorage or starting fresh');
-                                if (typeof window.loadGame === 'function') {
-                                    window.loadGame();
-                                }
-                            }
-                        } else {
-                            console.warn('⚠️ loadGameFromCloud not available, using localStorage');
+                            cloudLoadSuccess = await window.loadGameFromCloud(currentUserId);
+                        }
+
+                        if (!cloudLoadSuccess) {
+                            // Cloud has no data - fall back to local or start fresh
+                            console.log('⚠️ No cloud save found, falling back to localStorage or starting fresh');
                             if (typeof window.loadGame === 'function') {
                                 window.loadGame();
                             }

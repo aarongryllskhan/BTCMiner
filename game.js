@@ -803,6 +803,12 @@ function loadGame() {
         console.log('✓ LOAD COMPLETE');
         console.log('Final balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
         console.log('Chart history length:', chartHistory.length);
+
+        // CRITICAL: If we loaded from cloud, immediately save to localStorage so it's cached locally
+        if (window.cloudGameData) {
+            console.log('☁️ Cloud data was loaded - saving to localStorage immediately for caching');
+            saveGame();
+        }
     } catch (error) {
         console.error('✗ ERROR loading game from localStorage:', error);
         console.error('Error stack:', error.stack);
