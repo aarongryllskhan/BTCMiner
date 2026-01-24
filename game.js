@@ -507,7 +507,15 @@
             }
 
             // Sync to cloud if user is logged in (async - don't block game)
-            // Removed: was causing issues. Cloud sync happens via auto-save and beforeunload instead
+            // Fire off cloud save asynchronously to ensure purchases aren't lost on immediate refresh
+            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
+                // Use Promise.resolve().then() to ensure this runs asynchronously without blocking game
+                Promise.resolve().then(() => {
+                    window.saveGameToCloud(false).catch(err => {
+                        console.warn('⚠️ Cloud save failed (non-critical, local save is safe):', err);
+                    });
+                });
+            }
         } catch (error) {
             console.error('✗ ERROR saving game to storage:', error);
             alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);

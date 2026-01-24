@@ -1468,41 +1468,63 @@ function setupAuthListener() {
             // Load user's game data
             console.log('Loading game data...');
             try {
-                // IMPORTANT: Try LOCAL storage first for offline earnings support
-                console.log('📦 Checking for local storage data...');
+                // IMPORTANT: Check if local data belongs to current user
+                // If different user logged in, load from cloud instead
+                console.log('📦 Checking local storage...');
                 const hasLocalData = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
+                const storedUserId = localStorage.getItem('lastLoggedInUserId');
                 const skipCloudLoad = localStorage.getItem('skipCloudLoadOnRefresh') === 'true';
+                const currentUserId = user.uid;
 
-                if (hasLocalData) {
-                    // Local save exists - load it for offline earnings
-                    console.log('✅ Local save found - loading with offline earnings calculation');
+                // Check if local data belongs to current user
+                const isLocalDataForCurrentUser = hasLocalData && storedUserId === currentUserId;
+
+                if (isLocalDataForCurrentUser && !skipCloudLoad) {
+                    // Same user with local data - load local save with offline earnings
+                    console.log('✅ Local save found for current user - loading with offline earnings calculation');
                     if (typeof window.loadGame === 'function') {
                         window.loadGame();
                     }
                 } else if (skipCloudLoad) {
-                    // User just reset the game - don't load cloud save
-                    console.log('🚫 User reset save - skipping cloud load, starting fresh');
-                    localStorage.removeItem('skipCloudLoadOnRefresh'); // Clear the flag
+                    // User just reset the game - start fresh
+                    console.log('🚫 User reset save - starting fresh');
+                    localStorage.removeItem('skipCloudLoadOnRefresh');
                     if (typeof window.loadGame === 'function') {
-                        window.loadGame(); // This will initialize a fresh game
+                        window.loadGame(); // Initialize fresh game
                     }
                 } else {
-                    // No local save and no reset flag - load from cloud
-                    console.log('❌ No local save found - loading from cloud');
+                    // Different user or no local data - load from cloud
+                    console.log('☁️ Different user or no local data - loading from cloud');
                     if (typeof window.loadGameFromCloud === 'function') {
-                        await window.loadGameFromCloud(user.uid);
+                        await window.loadGameFromCloud(currentUserId);
                     } else {
-                        console.warn('⚠️ loadGameFromCloud not available, attempting loadGame instead');
+                        console.warn('⚠️ loadGameFromCloud not available, initializing fresh game');
                         if (typeof window.loadGame === 'function') {
                             window.loadGame();
                         }
                     }
                 }
 
+                // Save current user ID for next login check
+                localStorage.setItem('lastLoggedInUserId', currentUserId);
+
                 // Mark that user is now logged in for future page refreshes
                 sessionStorage.setItem('userWasLoggedIn', 'true');
 
                 console.log('✅ Game data loaded successfully');
+
+                // Sync current game state to cloud (upload local data or synced cloud data)
+                setTimeout(async () => {
+                    if (typeof window.saveGameToCloud === 'function' && auth && auth.currentUser) {
+                        console.log('☁️ Syncing game data to cloud...');
+                        try {
+                            await window.saveGameToCloud(false);
+                            console.log('✅ Cloud sync complete');
+                        } catch (err) {
+                            console.warn('⚠️ Cloud sync failed (non-critical):', err);
+                        }
+                    }
+                }, 1000);
 
                 // Re-initialize the game UI after loading
                 if (typeof window.initializeGame === 'function') {
