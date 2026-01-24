@@ -189,6 +189,11 @@ async function loginUser(email, password) {
 
         console.log('✅ User logged in:', user.email);
 
+        // Clear guest credentials since user is now logging in with email (real account)
+        localStorage.removeItem('guestUserUid');
+        localStorage.removeItem('guestUsername');
+        console.log('🗑️ Cleared guest credentials - user logging in with email account');
+
         // Check if user document exists in Firestore
         const userDoc = await db.collection('users').doc(user.uid).get();
 
@@ -332,6 +337,11 @@ async function loginWithGoogle() {
         const user = result.user;
 
         console.log('✅ Google login successful:', user.email);
+
+        // Clear guest credentials since user is now logging in with Google (real account)
+        localStorage.removeItem('guestUserUid');
+        localStorage.removeItem('guestUsername');
+        console.log('🗑️ Cleared guest credentials - user logging in with Google account');
 
         // Check if this is a new user
         const userDoc = await db.collection('users').doc(user.uid).get();
@@ -1493,7 +1503,7 @@ function setupAuthListener() {
                 console.log('✅ Both age and terms already accepted - skipping onboarding');
             }
 
-            // Hide login screen
+            // Hide login screen (declare outside block so it's accessible later)
             const loginScreen = document.getElementById('login-screen');
             console.log('Login screen element found?', !!loginScreen);
             if (loginScreen) {
@@ -1547,10 +1557,13 @@ function setupAuthListener() {
                 cloudSaveBtn.style.display = 'inline-block';
             }
 
-            // Close login modal after auth is complete (reuse loginScreen variable from above)
-            if (loginScreen) {
+            // Close login modal after auth is complete
+            const loginScreenModal = document.getElementById('login-screen');
+            if (loginScreenModal) {
                 console.log('🔐 Auth complete - closing login modal');
-                loginScreen.style.display = 'none';
+                loginScreenModal.style.display = 'none';
+            } else {
+                console.log('⚠️ Login screen modal element not found');
             }
 
             // Load user's game data

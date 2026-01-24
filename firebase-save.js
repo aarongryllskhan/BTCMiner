@@ -5,7 +5,7 @@
 
 // Track last manual save time for cooldown
 let lastManualSaveTime = 0;
-const MANUAL_SAVE_COOLDOWN = 10 * 60 * 1000; // 10 minutes in milliseconds
+const MANUAL_SAVE_COOLDOWN = 20 * 60 * 1000; // 20 minutes in milliseconds
 
 // Save game data to Firebase Cloud
 // Only called for:
