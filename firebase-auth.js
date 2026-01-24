@@ -1003,13 +1003,15 @@ async function linkGuestToEmail(email, password, username) {
             localStorage.removeItem('guestUserUid');
             localStorage.removeItem('guestUsername');
 
-            showMessage('Account created successfully! Your progress has been saved.', 'success');
+            // Hide the link account modal if it's open
+            if (typeof window.hideLinkAccountModal === 'function') {
+                window.hideLinkAccountModal();
+                console.log('✅ Link account modal hidden');
+            }
 
-            // Show refresh modal to update the UI with the new username
+            // Show refresh modal immediately to update the UI with the new username
             console.log('🔄 Showing refresh modal to update username display...');
-            setTimeout(() => {
-                showAccountLinkedRefreshModal(cleanUsername);
-            }, 500);
+            showAccountLinkedRefreshModal(cleanUsername);
 
             return linkedUser;
 
