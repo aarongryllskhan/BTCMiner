@@ -1003,10 +1003,15 @@ async function linkGuestToEmail(email, password, username) {
             localStorage.removeItem('guestUserUid');
             localStorage.removeItem('guestUsername');
 
-            // Hide the link account modal if it's open
-            if (typeof window.hideLinkAccountModal === 'function') {
-                window.hideLinkAccountModal();
-                console.log('✅ Link account modal hidden');
+            // Force hide the link account modal immediately
+            console.log('🔒 Hiding link account modal...');
+            const linkModal = document.getElementById('link-account-modal');
+            if (linkModal) {
+                linkModal.style.display = 'none';
+                linkModal.remove(); // Completely remove from DOM
+                console.log('✅ Link account modal removed from DOM');
+            } else {
+                console.warn('⚠️ Link account modal not found in DOM');
             }
 
             // Show refresh modal immediately to update the UI with the new username
@@ -1188,6 +1193,13 @@ function showGuestRefreshModal(guestUsername) {
 function showAccountLinkedRefreshModal(username) {
     console.log('🔗 Creating account linked refresh modal for:', username);
 
+    // Remove any existing refresh modal first
+    const existingModal = document.getElementById('account-linked-refresh-modal');
+    if (existingModal) {
+        existingModal.remove();
+        console.log('🗑️ Removed existing refresh modal');
+    }
+
     // Create modal element
     const modal = document.createElement('div');
     modal.id = 'account-linked-refresh-modal';
@@ -1199,8 +1211,8 @@ function showAccountLinkedRefreshModal(username) {
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 0.95);
-        z-index: 999999;
-        display: flex;
+        z-index: 9999999;
+        display: flex !important;
         justify-content: center;
         align-items: center;
         animation: fadeIn 0.3s ease-out;
@@ -1248,6 +1260,9 @@ function showAccountLinkedRefreshModal(username) {
     `;
 
     document.body.appendChild(modal);
+    console.log('✅ Account linked refresh modal added to DOM');
+    console.log('Modal element:', modal);
+    console.log('Modal display style:', modal.style.display);
 }
 
 // Helper function to show messages
