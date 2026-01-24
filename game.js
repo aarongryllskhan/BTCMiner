@@ -1,5 +1,10 @@
 (function() {
     console.log('🚀 GAME.JS IIFE STARTED');
+
+    // Initialize game data loaded flag early (will be set to true when data actually loads)
+    window.gameDataLoaded = false;
+    console.log('⏸️ Initialized window.gameDataLoaded = false');
+
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
