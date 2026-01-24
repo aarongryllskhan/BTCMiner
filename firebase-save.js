@@ -241,9 +241,8 @@ function resetGameVariables() {
 }
 
 // Load game data from Firebase Cloud (smart merge with local save)
+// DISABLED - All cloud loading is disabled, game uses local storage only
 async function loadGameFromCloud(userId = null) {
-    // CLOUD LOADING DISABLED - Using local-only persistence
-    console.log('☁️ Cloud load disabled - game loads from local storage only');
     return false;
 
         // Check if this is the same user as last time (account switch detection)

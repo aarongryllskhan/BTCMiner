@@ -964,13 +964,9 @@ function loadGame() {
     }
 
     function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds) {
-        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds);
-
-        // Prevent duplicate modals
-        if (document.querySelector('.offline-modal-overlay') || document.querySelector('.offline-modal')) {
-            console.log('⚠️ Offline earnings modal already visible - skipping duplicate');
-            return;
-        }
+        // DISABLED: Offline earnings modal disabled
+        console.log('⏸️ Offline earnings modal disabled - not showing');
+        return;
 
         // Also check if we've shown the modal recently (within 2 seconds)
         const lastModalTime = window._lastOfflineModalTime || 0;

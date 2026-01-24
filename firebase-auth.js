@@ -95,12 +95,7 @@ async function registerUser(email, password, username) {
 
         showMessage('Account created successfully! Welcome to Idle BTC Miner!', 'success');
 
-        // Close login modal
-        const loginScreen = document.getElementById('login-screen');
-        if (loginScreen) {
-            loginScreen.style.display = 'none';
-        }
-
+        // Don't close modal here - let auth state listener handle it
         return user;
 
     } catch (error) {
@@ -244,12 +239,7 @@ async function loginUser(email, password) {
 
         showMessage('Welcome back!', 'success');
 
-        // Close login modal
-        const loginScreen = document.getElementById('login-screen');
-        if (loginScreen) {
-            loginScreen.style.display = 'none';
-        }
-
+        // Don't close modal here - let auth state listener handle it
         return user;
 
     } catch (error) {
@@ -798,12 +788,7 @@ async function playAsGuest() {
                     }
                     showMessage(`Welcome back, ${previousGuestUsername}!`, 'success');
 
-                    // Close login modal
-                    const loginScreen = document.getElementById('login-screen');
-                    if (loginScreen) {
-                        loginScreen.style.display = 'none';
-                    }
-
+                    // Don't close modal here - let auth state listener handle it
                     return currentUser;
                 } else {
                     console.log('⚠️ Previous guest username not found in database. Creating new guest account.');
@@ -913,12 +898,7 @@ async function playAsGuest() {
         console.log('💾 Guest credentials saved to localStorage');
         console.log('🔄 Refresh modal will be shown AFTER terms acceptance');
 
-        // Close login modal
-        const loginScreen = document.getElementById('login-screen');
-        if (loginScreen) {
-            loginScreen.style.display = 'none';
-        }
-
+        // Don't close modal here - let auth state listener handle it
         return user;
 
     } catch (error) {
@@ -1505,6 +1485,13 @@ function setupAuthListener() {
             const cloudSaveBtn = document.getElementById('cloud-save-btn');
             if (cloudSaveBtn) {
                 cloudSaveBtn.style.display = 'inline-block';
+            }
+
+            // Close login modal after auth is complete
+            const loginScreen = document.getElementById('login-screen');
+            if (loginScreen) {
+                console.log('🔐 Auth complete - closing login modal');
+                loginScreen.style.display = 'none';
             }
 
             // Load user's game data

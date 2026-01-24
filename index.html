@@ -1230,6 +1230,25 @@
     window.addEventListener('DOMContentLoaded', async () => {
         console.log('🚀 Initializing Firebase...');
 
+        // Clear any stale notification elements from previous page load
+        const staleMessages = document.getElementById('auth-message');
+        if (staleMessages) {
+            staleMessages.remove();
+        }
+
+        // Clear stale offline earnings modals
+        const staleOfflineModals = document.querySelectorAll('.offline-modal, .offline-modal-overlay');
+        staleOfflineModals.forEach(el => el.remove());
+
+        // Clear pending offline earnings data (it's not needed anymore)
+        if (typeof window !== 'undefined' && typeof window.safeStorage !== 'undefined') {
+            try {
+                window.safeStorage.removeItem('pendingOfflineEarnings');
+            } catch (e) {
+                console.warn('Could not clear pending offline earnings');
+            }
+        }
+
         // Initialize Firebase
         const firebaseReady = await initializeFirebase();
 
