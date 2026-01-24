@@ -629,13 +629,10 @@
     function checkCookieConsent() {
         const consent = localStorage.getItem('cookieConsent');
         if (!consent) {
-            // Show banner after a short delay (after age/terms modals)
-            setTimeout(() => {
-                const banner = document.getElementById('cookie-consent-banner');
-                if (banner) {
-                    banner.style.display = 'block';
-                }
-            }, 2000);
+            const banner = document.getElementById('cookie-consent-banner');
+            if (banner) {
+                banner.style.display = 'block';
+            }
         }
     }
 
