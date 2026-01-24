@@ -421,7 +421,15 @@
     const upgrades = btcUpgrades;
 
     // --- SAVE SYSTEM START ---
+    let importInProgress = false; // Flag to prevent auto-save during import
+
     function saveGame() {
+        // Don't save if an import is in progress (prevents overwriting imported data)
+        if (importInProgress) {
+            console.log('Save blocked - import in progress');
+            return;
+        }
+
         const gameState = {
             // Bitcoin data
             btcBalance,
@@ -966,37 +974,64 @@ function loadGame() {
      * Import save from the textarea
      */
     function importSaveFromText() {
-        const textarea = document.getElementById('import-save-textarea');
-        if (!textarea || !textarea.value.trim()) {
-            showImportStatus('Please paste a save string first!', false);
-            return;
+        try {
+            console.log('=== IMPORT SAVE STARTED ===');
+
+            const textarea = document.getElementById('import-save-textarea');
+            if (!textarea || !textarea.value.trim()) {
+                showImportStatus('Please paste a save string first!', false);
+                return;
+            }
+
+            console.log('Textarea value length:', textarea.value.trim().length);
+
+            const importedState = decodeGameState(textarea.value);
+            if (!importedState) {
+                showImportStatus('Invalid save data! Could not decode.', false);
+                return;
+            }
+
+            console.log('Decoded state successfully');
+            console.log('BTC Balance in import:', importedState.btcBalance);
+            console.log('Dollar Balance in import:', importedState.dollarBalance);
+
+            // Validate the imported data has expected properties
+            if (!validateImportedState(importedState)) {
+                showImportStatus('Invalid save data! Missing required fields.', false);
+                return;
+            }
+
+            console.log('Validation passed');
+
+            // Confirm before overwriting
+            if (!confirm('This will overwrite your current save. Are you sure you want to continue?')) {
+                console.log('User cancelled import');
+                return;
+            }
+
+            console.log('User confirmed, blocking auto-save and applying import...');
+
+            // CRITICAL: Block any auto-saves from overwriting our import
+            importInProgress = true;
+
+            // Apply the imported save
+            applyImportedState(importedState);
+
+            console.log('Import applied to localStorage');
+            showImportStatus('Save imported! Reloading...', true);
+
+            // Close the modal
+            closeExportImportModal();
+
+            // Force reload immediately - use location.href to ensure clean reload
+            console.log('Forcing page reload NOW');
+            window.location.href = window.location.href.split('?')[0] + '?imported=' + Date.now();
+
+        } catch (error) {
+            console.error('IMPORT ERROR:', error);
+            importInProgress = false; // Reset flag on error
+            showImportStatus('Import failed: ' + error.message, false);
         }
-
-        const importedState = decodeGameState(textarea.value);
-        if (!importedState) {
-            showImportStatus('Invalid save data! Could not decode.', false);
-            return;
-        }
-
-        // Validate the imported data has expected properties
-        if (!validateImportedState(importedState)) {
-            showImportStatus('Invalid save data! Missing required fields.', false);
-            return;
-        }
-
-        // Confirm before overwriting
-        if (!confirm('This will overwrite your current save. Are you sure you want to continue?')) {
-            return;
-        }
-
-        // Apply the imported save
-        applyImportedState(importedState);
-        showImportStatus('Save imported successfully! Refreshing...', true);
-
-        // Reload the page to apply changes
-        setTimeout(() => {
-            location.reload();
-        }, 1000);
     }
 
     /**
@@ -1032,12 +1067,15 @@ function loadGame() {
                 return;
             }
 
-            applyImportedState(importedState);
-            showImportStatus('Save imported successfully! Refreshing...', true);
+            // Block auto-saves
+            importInProgress = true;
 
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
+            applyImportedState(importedState);
+            showImportStatus('Save imported! Reloading...', true);
+
+            // Close the modal and force reload
+            closeExportImportModal();
+            window.location.href = window.location.href.split('?')[0] + '?imported=' + Date.now();
         };
         reader.onerror = function() {
             showImportStatus('Failed to read file!', false);
