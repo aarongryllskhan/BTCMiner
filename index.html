@@ -1257,11 +1257,15 @@
 
             // Setup authentication listener
             if (window.setupAuthListener) {
-                setupAuthListener();
+                window.setupAuthListener();
             }
 
-            // Start auto-save
-            startAutoSave();
+            // Start auto-save (check if it's available first)
+            if (typeof window.startAutoSave === 'function') {
+                window.startAutoSave();
+            } else {
+                console.warn('⚠️ startAutoSave not available yet');
+            }
 
             // Note: Manual sync button is now integrated into user UI
             console.log('✅ Manual save integrated into user menu');

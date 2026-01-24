@@ -1547,8 +1547,7 @@ function setupAuthListener() {
                 cloudSaveBtn.style.display = 'inline-block';
             }
 
-            // Close login modal after auth is complete
-            const loginScreen = document.getElementById('login-screen');
+            // Close login modal after auth is complete (reuse loginScreen variable from above)
             if (loginScreen) {
                 console.log('🔐 Auth complete - closing login modal');
                 loginScreen.style.display = 'none';

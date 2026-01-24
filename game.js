@@ -3474,7 +3474,13 @@ dogeUpgrades.forEach(u => {
     function checkAgeDisclaimer() {
         const accepted = window.safeStorage.getItem('ageDisclaimerAccepted');
         if (!accepted) {
-            document.getElementById('age-disclaimer-modal').style.display = 'flex';
+            const modal = document.getElementById('age-disclaimer-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                console.log('⚠️ Age disclaimer modal not found, assuming accepted');
+                window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
+            }
         }
     }
 
