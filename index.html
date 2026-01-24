@@ -203,6 +203,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
+    <!-- Load game.js early so firebase-save.js can call showOfflineEarningsModal -->
+    <script src="game.js?v=20260123065004"></script>
+
     <!-- Firebase Configuration, Save/Load, and Authentication -->
     <script src="firebase-auth.js?v=20260123074003"></script>
     <script src="firebase-save.js?v=20260123074002"></script>
@@ -1119,8 +1122,7 @@
 <!-- Load skill tree system first so its functions are available to game.js -->
 <script src="skilltree.js?v=20260123065005"></script>
 
-<!-- Load main game after skill tree functions are defined -->
-<script src="game.js?v=20260123065004"></script>
+<!-- Game already loaded in head before Firebase scripts -->
 <script>
     // Debug: Verify switchTab is loaded
     console.log('DEBUG: After game.js load, switchTab type:', typeof window.switchTab);
