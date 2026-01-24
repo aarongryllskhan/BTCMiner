@@ -996,10 +996,10 @@ function loadGame() {
         // Auto-dismiss modal after 3.5 seconds
         setTimeout(() => {
             if (modal && modal.parentNode) {
-                console.log('⏱️ Auto-closing offline earnings modal (3.5 second timeout)');
+                console.log('⏱️ Auto-closing offline earnings modal (2.5 second timeout)');
                 dismissModal();
             }
-        }, 3500);
+        }, 2500);
 
         console.log('Modal created and appended (auto-dismiss in 3.5 seconds)');
     }

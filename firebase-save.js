@@ -24,6 +24,12 @@ async function saveGameToCloud(isManualSave = false) {
             return false;
         }
 
+        // Skip cloud save if not manual save - only auto-save on 20-minute interval
+        if (!isManualSave) {
+            console.log('⏱️ Skipping auto cloud sync during gameplay - will use 20-minute interval');
+            return false;
+        }
+
         // Check if user document exists in Firestore
         try {
             const userDocCheck = await db.collection('users').doc(user.uid).get();
