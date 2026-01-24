@@ -420,22 +420,29 @@ async function loadGameFromCloud(userId = null) {
         }
 
         // Recalculate click values from manual hash upgrade levels (same as game.js loadGame())
-        const btcManualHashUpgrade = window.btcUpgrades.find(u => u.id === 0);
-        if (btcManualHashUpgrade && btcManualHashUpgrade.level > 0) {
-            window.btcClickValue = 0.00000250 * Math.pow(1.10, btcManualHashUpgrade.level);
-            console.log('📊 Recalculated BTC click value from upgrade level:', window.btcClickValue);
+        // Safety checks to prevent errors if game.js hasn't fully loaded yet
+        if (window.btcUpgrades && Array.isArray(window.btcUpgrades)) {
+            const btcManualHashUpgrade = window.btcUpgrades.find(u => u.id === 0);
+            if (btcManualHashUpgrade && btcManualHashUpgrade.level > 0) {
+                window.btcClickValue = 0.00000250 * Math.pow(1.10, btcManualHashUpgrade.level);
+                console.log('📊 Recalculated BTC click value from upgrade level:', window.btcClickValue);
+            }
         }
 
-        const ethManualHashUpgrade = window.ethUpgrades.find(u => u.id === 0);
-        if (ethManualHashUpgrade && ethManualHashUpgrade.level > 0) {
-            window.ethClickValue = 0.00007143 * Math.pow(1.10, ethManualHashUpgrade.level);
-            console.log('📊 Recalculated ETH click value from upgrade level:', window.ethClickValue);
+        if (window.ethUpgrades && Array.isArray(window.ethUpgrades)) {
+            const ethManualHashUpgrade = window.ethUpgrades.find(u => u.id === 0);
+            if (ethManualHashUpgrade && ethManualHashUpgrade.level > 0) {
+                window.ethClickValue = 0.00007143 * Math.pow(1.10, ethManualHashUpgrade.level);
+                console.log('📊 Recalculated ETH click value from upgrade level:', window.ethClickValue);
+            }
         }
 
-        const dogeManualHashUpgrade = window.dogeUpgrades.find(u => u.id === 0);
-        if (dogeManualHashUpgrade && dogeManualHashUpgrade.level > 0) {
-            window.dogeClickValue = 1.00000000 * Math.pow(1.10, dogeManualHashUpgrade.level);
-            console.log('📊 Recalculated DOGE click value from upgrade level:', window.dogeClickValue);
+        if (window.dogeUpgrades && Array.isArray(window.dogeUpgrades)) {
+            const dogeManualHashUpgrade = window.dogeUpgrades.find(u => u.id === 0);
+            if (dogeManualHashUpgrade && dogeManualHashUpgrade.level > 0) {
+                window.dogeClickValue = 1.00000000 * Math.pow(1.10, dogeManualHashUpgrade.level);
+                console.log('📊 Recalculated DOGE click value from upgrade level:', window.dogeClickValue);
+            }
         }
 
         // Restore skill tree data if function exists
