@@ -60,7 +60,12 @@ async function saveGameToCloud(isManualSave = false, isLeaderboardRefresh = fals
             lastManualSaveTime = now;
         }
 
-        // Gather game data
+        // Gather game data - checking window object directly
+        console.log('🔍 Checking window object before save:');
+        console.log('   window.btcBalance exists:', typeof window.btcBalance !== 'undefined', 'value:', window.btcBalance);
+        console.log('   window.dollarBalance exists:', typeof window.dollarBalance !== 'undefined', 'value:', window.dollarBalance);
+        console.log('   window.btcUpgrades exists:', typeof window.btcUpgrades !== 'undefined', 'length:', window.btcUpgrades ? window.btcUpgrades.length : 'N/A');
+
         const gameData = {
             btcBalance: typeof window.btcBalance !== 'undefined' ? window.btcBalance : 0,
             btcLifetime: typeof window.btcLifetime !== 'undefined' ? window.btcLifetime : 0,
@@ -123,11 +128,13 @@ async function saveGameToCloud(isManualSave = false, isLeaderboardRefresh = fals
             lastSaveTime: typeof window.lastSaveTime !== 'undefined' ? window.lastSaveTime : Date.now()
         };
 
-        console.log('💾 Saving game data to cloud:');
+        console.log('💾 COLLECTED GAME DATA TO SAVE:');
         console.log('  btcBalance:', gameData.btcBalance);
         console.log('  dollarBalance:', gameData.dollarBalance);
-        console.log('  btcClickValue:', gameData.btcClickValue);
-        console.log('  BTC Upgrades:', gameData.btcUpgrades ? gameData.btcUpgrades.length : 0);
+        console.log('  hardwareEquity:', gameData.hardwareEquity);
+        console.log('  btcUpgrades count:', gameData.btcUpgrades.length);
+        console.log('  ethUpgrades count:', gameData.ethUpgrades.length);
+        console.log('  dogeUpgrades count:', gameData.dogeUpgrades.length);
         console.log('  Data size:', JSON.stringify(gameData).length, 'bytes');
 
         // Save to Firestore

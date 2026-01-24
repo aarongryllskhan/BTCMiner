@@ -1696,19 +1696,28 @@ function setupAuthListener() {
                 } else {
                     // Check if this is a guest user
                     const isGuestUser = user.isAnonymous;
+                    console.log('🔍 Account type check:');
+                    console.log('   user.isAnonymous:', isGuestUser);
+                    console.log('   user.email:', user.email);
+                    console.log('   user.displayName:', user.displayName);
+                    console.log('   user.uid:', user.uid);
 
                     if (isGuestUser) {
                         // GUEST LOGIN - Load from local only
-                        console.log('👤 Guest user - loading from LOCAL STORAGE only');
+                        console.log('👤 GUEST USER DETECTED - loading from LOCAL STORAGE only');
                         if (typeof window.loadGame === 'function') {
                             window.loadGame();
                         }
                     } else {
                         // REAL ACCOUNT (Google/Email) - ALWAYS load from CLOUD first
-                        console.log('☁️ Real account (Google/Email) - loading from CLOUD FIRST');
+                        console.log('👤 REAL ACCOUNT DETECTED - loading from CLOUD FIRST');
+                        console.log('   Calling loadGameFromCloud with userId:', currentUserId);
                         let cloudLoadSuccess = false;
                         if (typeof window.loadGameFromCloud === 'function') {
                             cloudLoadSuccess = await window.loadGameFromCloud(currentUserId);
+                            console.log('   loadGameFromCloud returned:', cloudLoadSuccess);
+                        } else {
+                            console.error('❌ window.loadGameFromCloud not available!');
                         }
 
                         if (!cloudLoadSuccess) {
@@ -1717,6 +1726,8 @@ function setupAuthListener() {
                             if (typeof window.loadGame === 'function') {
                                 window.loadGame();
                             }
+                        } else {
+                            console.log('✅ Cloud load successful, data should now be loaded');
                         }
                     }
                 }
@@ -1826,7 +1837,17 @@ function setupAuthListener() {
             // They can login, register, or skip to play offline
             const loginScreen = document.getElementById('login-screen');
             if (loginScreen) {
+                console.log('🔓 Showing login screen after logout');
                 loginScreen.style.display = 'flex';
+                loginScreen.style.visibility = 'visible';
+                loginScreen.style.opacity = '1';
+                loginScreen.style.pointerEvents = 'auto';
+            }
+
+            // Clear localStorage save so next user doesn't load previous user's data
+            console.log('🗑️ Clearing localStorage save on logout to prevent data bleed');
+            if (typeof window.safeStorage !== 'undefined') {
+                window.safeStorage.removeItem('satoshiTerminalSave');
             }
 
             // Show the login button (for users who skipped or are in offline mode)
