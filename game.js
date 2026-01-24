@@ -759,6 +759,21 @@ function loadGame() {
         // Calculate offline earnings using the dedicated function
         calculateOfflineEarnings(state.lastSaveTime || Date.now(), state.staking);
 
+        // Check if there are pending offline earnings from a previous page load that weren't displayed
+        // This handles the case where the page refreshes before the modal is shown
+        try {
+            const pendingEarnings = window.safeStorage.getItem('pendingOfflineEarnings');
+            if (pendingEarnings) {
+                const parsed = JSON.parse(pendingEarnings);
+                console.log('📦 Found pending offline earnings from previous load:', parsed);
+                // Use the pending earnings instead of recalculating (avoids double-counting)
+                window.offlineEarningsToShow = parsed;
+                // Don't delete yet - wait until modal is actually shown
+            }
+        } catch (e) {
+            console.warn('⚠️ Failed to load pending offline earnings:', e);
+        }
+
         updateUI();
 
         // Restore chart history from save, starting from 0
@@ -1034,6 +1049,14 @@ function loadGame() {
             console.log('✅ OFFLINE EARNINGS MODAL DISMISSED');
             overlay.remove();
             modal.remove();
+
+            // CRITICAL: Clear pending offline earnings from localStorage now that modal is shown
+            try {
+                window.safeStorage.removeItem('pendingOfflineEarnings');
+                console.log('🗑️ Cleared pending offline earnings from localStorage');
+            } catch (e) {
+                console.warn('⚠️ Failed to clear pending offline earnings:', e);
+            }
 
             // Update UI immediately
             if (typeof updateUI === 'function') {
@@ -2833,6 +2856,16 @@ dogeUpgrades.forEach(u => {
             wasCapped: wasTimeCaped,
             cappedSeconds: cappedOfflineSeconds
         };
+
+        // CRITICAL: Save offline earnings to localStorage so they survive page refresh
+        // This prevents loss of calculated earnings if the modal hasn't been shown yet
+        try {
+            window.safeStorage.setItem('pendingOfflineEarnings', JSON.stringify(window.offlineEarningsToShow));
+            console.log('💾 Saved pending offline earnings to localStorage');
+        } catch (e) {
+            console.warn('⚠️ Failed to save offline earnings to localStorage:', e);
+        }
+
         console.log('✅ Modal will be shown with offline earnings data');
     }
 
