@@ -372,34 +372,35 @@
         { id: 10, name: "Quantum Computer", baseUsd: 500000000, baseYield: 125.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
-    // Ethereum mining upgrades
+    // Ethereum mining upgrades - Balanced by USD value per cost (price-adjusted)
     const ethUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00010000 },
-        { id: 1, name: "Single GPU Rig", baseUsd: 8, baseYield: 0.00002500 },
-        { id: 2, name: "RTX 4090 Miner", baseUsd: 150, baseYield: 0.00015000 },
-        { id: 3, name: "8-GPU Mining Rig", baseUsd: 4500, baseYield: 0.00325000 },
-        { id: 4, name: "Professional ETH Farm", baseUsd: 12000, baseYield: 0.01800000 },
-        { id: 5, name: "Staking Validator Node", baseUsd: 40000, baseYield: 0.09500000 },
-        { id: 6, name: "Multi-Validator Farm", baseUsd: 175000, baseYield: 0.68000000 },
-        { id: 7, name: "ETH Mining Complex", baseUsd: 950000, baseYield: 9.50000000 },
-        { id: 8, name: "Enterprise Staking Pool", baseUsd: 7500000, baseYield: 132.00000000 },
-        { id: 9, name: "Layer 2 Validation Network", baseUsd: 52000000, baseYield: 1230.00000000 },
-        { id: 10, name: "Ethereum Foundation Node", baseUsd: 700000000, baseYield: 26500.00000000 }
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00002100 },
+        { id: 1, name: "Single GPU Rig", baseUsd: 8, baseYield: 0.0000053 },
+        { id: 2, name: "RTX 4090 Miner", baseUsd: 150, baseYield: 0.0000316 },
+        { id: 3, name: "8-GPU Mining Rig", baseUsd: 4500, baseYield: 0.000684 },
+        { id: 4, name: "Professional ETH Farm", baseUsd: 12000, baseYield: 0.00378 },
+        { id: 5, name: "Staking Validator Node", baseUsd: 40000, baseYield: 0.0200 },
+        { id: 6, name: "Multi-Validator Farm", baseUsd: 175000, baseYield: 0.143 },
+        { id: 7, name: "ETH Mining Complex", baseUsd: 950000, baseYield: 2.0 },
+        { id: 8, name: "Enterprise Staking Pool", baseUsd: 7500000, baseYield: 27.7 },
+        { id: 9, name: "Layer 2 Validation Network", baseUsd: 52000000, baseYield: 258.0 },
+        { id: 10, name: "Ethereum Foundation Node", baseUsd: 700000000, baseYield: 5570.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
-    // Dogecoin mining upgrades
+    // Dogecoin mining upgrades - Balanced by USD value per cost (price-adjusted)
+    // Formula: (btcYield × btcPrice × dogeCost) / (btcCost × dogePrice)
     const dogeUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.50 },
-        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 0.50 },
-        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 3.20 },
-        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 68.00 },
-        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 385.00 },
-        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 2050.00 },
-        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 14500.00 },
-        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 205000.00 },
-        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 2820000.00 },
-        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 26400000.00 },
-        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 570000000.00 }
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.02 },
+        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 4.60 },
+        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 28.0 },
+        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 600.0 },
+        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 3400.0 },
+        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 18000.0 },
+        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 128000.0 },
+        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 1800000.0 },
+        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 24800000.0 },
+        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 232000000.0 },
+        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 5000000000.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Keep reference to btcUpgrades as upgrades for backward compatibility
@@ -1551,17 +1552,17 @@ function buyLevel(i) {
         // Check if this is the Manual Hash upgrade
         if (u.id === 0 || u.isClickUpgrade) {
             // Increase click value by 10%
-            btcClickValue *= 1.10;
+            btcClickValue *= 1.12;
 
             // FASTER PRICE SCALE: % increase per level
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
 
             // Update the main orange button text to show new click value
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
             // ALL OTHER MINERS: Standard 15% increase
-            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
         }
 
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
@@ -1600,11 +1601,11 @@ function buyLevelMultiple(i, quantity) {
 
         // Update price and yield based on upgrade type
         if (u.id === 0 || u.isClickUpgrade) {
-            btcClickValue *= 1.10;
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+            btcClickValue *= 1.12;
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
         } else {
-            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+            u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
         }
 
         purchased++;
@@ -1740,13 +1741,13 @@ function buyDogeBoost(i) {
 
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
-                ethClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+                ethClickValue *= 1.12;
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
                 // Update the ETH button text to show new click value
                 document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
             } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+                u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
             }
 
             purchased++;
@@ -1789,13 +1790,13 @@ function buyDogeBoost(i) {
 
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
-                dogeClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.75, u.level));
+                dogeClickValue *= 1.12;
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
                 // Update the DOGE button text to show new click value
                 document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
             } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
+                u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
             }
 
             purchased++;
@@ -1959,7 +1960,7 @@ function buyDogeBoost(i) {
             // Show the current speed WITH skill bonuses applied
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} ₿/s - Current Speed`;
         }
@@ -1973,7 +1974,7 @@ function buyDogeBoost(i) {
         } else {
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus);
             increaseEl.innerText = `+${perLevelIncrease.toFixed(8)} ₿/s per level`;
             increaseEl.style.display = 'block';
@@ -1987,9 +1988,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2021,11 +2022,11 @@ function buyDogeBoost(i) {
 
             // Calculate next cost based on upgrade type
             if (u.isClickUpgrade) {
-                // Manual hash: 1.75x multiplier
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                // Manual hash: 1.12x multiplier
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             } else {
-                // Other miners: 1.15x multiplier
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                // Other miners: 1.12x multiplier
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             }
         }
 
@@ -2041,9 +2042,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2147,7 +2148,7 @@ function buyDogeBoost(i) {
     if(boostCostEl) boostCostEl.innerText = `$${Math.floor(u.boostCost).toLocaleString()}`;
 
     // Format the current yield amount (after all boosts applied)
-    const currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+    const currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
     const boostAmtEl = document.getElementById(`boost-amt-${u.id}`);
     if(boostAmtEl) {
         if (currentYield >= 1) {
@@ -2183,7 +2184,7 @@ ethUpgrades.forEach(u => {
             // Show the current speed WITH skill bonuses applied
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} Ξ/s - Current Speed`;
         }
@@ -2197,7 +2198,7 @@ ethUpgrades.forEach(u => {
         } else {
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus);
             ethIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ξ/s per level`;
             ethIncreaseEl.style.display = 'block';
@@ -2211,9 +2212,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2242,9 +2243,9 @@ ethUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             }
         }
 
@@ -2260,9 +2261,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2381,7 +2382,7 @@ dogeUpgrades.forEach(u => {
             // Show the current speed WITH skill bonuses applied
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} Ð/s - Current Speed`;
         }
@@ -2395,7 +2396,7 @@ dogeUpgrades.forEach(u => {
         } else {
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus);
             dogeIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ð/s per level`;
             dogeIncreaseEl.style.display = 'block';
@@ -2409,9 +2410,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2440,9 +2441,9 @@ dogeUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.75, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             }
         }
 
@@ -2458,9 +2459,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.75, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
