@@ -392,17 +392,17 @@
 
     // Dogecoin mining upgrades
     const dogeUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.50 },
-        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 0.50 },
-        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 3.20 },
-        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 68.00 },
-        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 385.00 },
-        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 2050.00 },
-        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 14500.00 },
-        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 205000.00 },
-        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 2820000.00 },
-        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 26400000.00 },
-        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 570000000.00 }
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.80 },
+        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 0.0038 },
+        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 0.021 },
+        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 0.45 },
+        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 2.55 },
+        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 13.5 },
+        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 95 },
+        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 1350 },
+        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 18600 },
+        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 174000 },
+        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 3750000 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Keep reference to btcUpgrades as upgrades for backward compatibility
