@@ -1923,17 +1923,14 @@ function buyDogeBoost(i) {
         document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
 
         // Update manual hash buttons with current click values
-        const mineBtns = document.querySelectorAll('.mine-btn span');
-        console.log('🔘 Mine buttons found:', mineBtns.length, 'btcClickValue:', btcClickValue);
-        if (mineBtns.length >= 1) {
-            const newText = `+${btcClickValue.toFixed(8)} ₿`;
-            if (mineBtns[0].innerText !== newText) {
-                mineBtns[0].innerText = newText;
-                console.log('✅ Updated BTC button to:', newText);
-            }
+        try {
+            const mineBtns = document.querySelectorAll('.mine-btn span');
+            if (mineBtns.length >= 1) mineBtns[0].innerText = `+${btcClickValue.toFixed(8)} ₿`;
+            if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
+            if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
+        } catch (e) {
+            console.warn('⚠️ Could not update manual hash buttons:', e);
         }
-        if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
-        if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
 
         // Update hardware equity
         let hardwareEquityDisplay = "$" + Math.floor(hardwareEquity).toLocaleString();
