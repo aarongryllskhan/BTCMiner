@@ -407,6 +407,25 @@ async function loadGameFromCloud(userId = null) {
             });
         }
 
+        // Recalculate click values from manual hash upgrade levels (same as game.js loadGame())
+        const btcManualHashUpgrade = window.btcUpgrades.find(u => u.id === 0);
+        if (btcManualHashUpgrade && btcManualHashUpgrade.level > 0) {
+            window.btcClickValue = 0.00000250 * Math.pow(1.10, btcManualHashUpgrade.level);
+            console.log('📊 Recalculated BTC click value from upgrade level:', window.btcClickValue);
+        }
+
+        const ethManualHashUpgrade = window.ethUpgrades.find(u => u.id === 0);
+        if (ethManualHashUpgrade && ethManualHashUpgrade.level > 0) {
+            window.ethClickValue = 0.00007143 * Math.pow(1.10, ethManualHashUpgrade.level);
+            console.log('📊 Recalculated ETH click value from upgrade level:', window.ethClickValue);
+        }
+
+        const dogeManualHashUpgrade = window.dogeUpgrades.find(u => u.id === 0);
+        if (dogeManualHashUpgrade && dogeManualHashUpgrade.level > 0) {
+            window.dogeClickValue = 1.00000000 * Math.pow(1.10, dogeManualHashUpgrade.level);
+            console.log('📊 Recalculated DOGE click value from upgrade level:', window.dogeClickValue);
+        }
+
         // Restore skill tree data if function exists
         if (cloudData.skillTree && typeof window.setSkillTreeData === 'function') {
             try {
@@ -531,6 +550,21 @@ async function loadGameFromCloud(userId = null) {
         }
 
         console.log('✅ Progress loaded from cloud successfully');
+
+        // Auto-save to cloud immediately after loading (ensures offline earnings are synced)
+        // This prevents losing progress if user refreshes before next 20-min auto-save
+        setTimeout(async () => {
+            if (typeof window.saveGameToCloud === 'function' && auth && auth.currentUser) {
+                console.log('💾 Auto-saving to cloud after loading (offline earnings sync)...');
+                try {
+                    await window.saveGameToCloud(false);
+                    console.log('✅ Cloud sync complete after load');
+                } catch (err) {
+                    console.warn('⚠️ Cloud sync after load failed (non-critical):', err);
+                }
+            }
+        }, 1000); // Wait 1 second to ensure all calculations are complete
+
         // Only show "Welcome back" if they had prior data (not a brand new account)
         const hasExistingProgress = cloudData.lifetimeEarnings > 0 ||
                                    cloudData.btcBalance > 0 ||
