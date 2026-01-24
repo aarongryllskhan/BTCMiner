@@ -933,10 +933,8 @@ async function linkGuestToEmail(email, password, username) {
         }
 
         const cleanUsername = username.trim();
-        const guestUid = guestUser.uid;
 
-        console.log('🔗 Converting guest account to permanent account...');
-        console.log('Guest UID:', guestUid);
+        console.log('🔗 Creating new account from guest progress...');
 
         // Check if username is already taken
         const usernameQuery = await db.collection('users').where('username', '==', cleanUsername).get();
@@ -959,45 +957,53 @@ async function linkGuestToEmail(email, password, username) {
             }
         }
 
-        // Step 1: Save current game state to cloud BEFORE conversion
-        console.log('💾 Saving current game state to cloud before conversion...');
-        try {
-            if (typeof window.saveGameToCloud === 'function') {
-                await window.saveGameToCloud();
-                console.log('✅ Current game state saved to cloud');
-            } else {
-                console.warn('⚠️ saveGameToCloud function not available, skipping pre-conversion save');
-            }
-        } catch (saveError) {
-            console.warn('⚠️ Failed to save game before conversion (non-critical):', saveError);
-            // Continue anyway - this is non-critical
-        }
+        // Get current game state from local cache (window variables)
+        const localGameData = {
+            btcBalance: window.btcBalance || 0,
+            btcLifetime: window.btcLifetime || 0,
+            btcClickValue: window.btcClickValue || 0.00000250,
+            btcPerSec: window.btcPerSec || 0,
+            btcPrice: window.btcPrice || 100000,
+            ethBalance: window.ethBalance || 0,
+            ethLifetime: window.ethLifetime || 0,
+            ethClickValue: window.ethClickValue || 0.00007143,
+            ethPerSec: window.ethPerSec || 0,
+            ethPrice: window.ethPrice || 3500,
+            dogeBalance: window.dogeBalance || 0,
+            dogeLifetime: window.dogeLifetime || 0,
+            dogeClickValue: window.dogeClickValue || 1.00000000,
+            dogePerSec: window.dogePerSec || 0,
+            dogePrice: window.dogePrice || 0.25,
+            dollarBalance: window.dollarBalance || 0,
+            hardwareEquity: window.hardwareEquity || 0,
+            lifetimeEarnings: window.lifetimeEarnings || 0,
+            sessionEarnings: window.sessionEarnings || 0,
+            autoClickerCooldownEnd: window.autoClickerCooldownEnd || 0,
+            chartHistory: window.chartHistory || [],
+            chartTimestamps: window.chartTimestamps || [],
+            chartStartTime: window.chartStartTime || 0,
+            totalPowerAvailable: window.totalPowerAvailable || 0,
+            powerUpgrades: window.powerUpgrades || [],
+            btcUpgrades: window.btcUpgrades || [],
+            ethUpgrades: window.ethUpgrades || [],
+            dogeUpgrades: window.dogeUpgrades || [],
+            skillTree: window.skillTree || {},
+            staking: window.staking || {},
+            lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-        // Step 2: Fetch guest's game data before creating new account
-        console.log('📋 Fetching guest game data...');
-        let guestGameData = null;
-        try {
-            const gameDataDoc = await db.collection('users').doc(guestUid).collection('gameData').doc('current').get();
-            if (gameDataDoc.exists) {
-                guestGameData = gameDataDoc.data();
-                console.log('✅ Guest game data retrieved');
-            }
-        } catch (fetchError) {
-            console.warn('⚠️ Could not fetch guest game data:', fetchError);
-        }
+        console.log('📦 Local game data captured from cache');
 
-        // Step 3: Create new email/password account
+        // Create new email/password account
         console.log('👤 Creating new email/password account...');
         let newUser;
         try {
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             newUser = userCredential.user;
-            console.log('✅ New email/password account created');
-            console.log('New UID:', newUser.uid);
+            console.log('✅ New account created with UID:', newUser.uid);
         } catch (createError) {
             console.error('❌ Failed to create new account:', createError);
 
-            // Handle specific error cases
             if (createError.code === 'auth/email-already-in-use') {
                 showMessage('This email is already in use. Please use a different email.', 'error');
             } else if (createError.code === 'auth/invalid-email') {
@@ -1011,8 +1017,8 @@ async function linkGuestToEmail(email, password, username) {
             throw createError;
         }
 
-        // Step 4: Create user profile in Firestore for new account
-        console.log('📝 Creating user profile for new account...');
+        // Create user profile in Firestore
+        console.log('📝 Creating user profile...');
         try {
             await db.collection('users').doc(newUser.uid).set({
                 email: email,
@@ -1022,9 +1028,7 @@ async function linkGuestToEmail(email, password, username) {
                 totalBTC: 0,
                 level: 1,
                 achievements: [],
-                isPremium: false,
-                migratedFromGuest: true,
-                guestUid: guestUid
+                isPremium: false
             });
             console.log('✅ User profile created');
         } catch (profileError) {
@@ -1032,62 +1036,32 @@ async function linkGuestToEmail(email, password, username) {
             throw profileError;
         }
 
-        // Step 5: Transfer game data from guest account to new account
-        if (guestGameData) {
-            console.log('📦 Transferring game data from guest to new account...');
-            try {
-                await db.collection('users').doc(newUser.uid).collection('gameData').doc('current').set(guestGameData);
-                console.log('✅ Game data transferred successfully');
-            } catch (transferError) {
-                console.warn('⚠️ Failed to transfer game data (non-critical):', transferError);
-                // Continue anyway - user can still play, just with reset progress
-            }
-        }
-
-        // Step 6: Delete old guest account
-        console.log('🗑️ Deleting old guest account...');
+        // Save local game data to new account
+        console.log('📦 Saving local cache progress to new account...');
         try {
-            // First, delete guest's Firestore data
-            await db.collection('users').doc(guestUid).delete();
-            console.log('✅ Guest Firestore data deleted');
-
-            // Sign out current user temporarily
-            await auth.signOut();
-
-            // Delete the anonymous account
-            await guestUser.delete();
-            console.log('✅ Guest authentication account deleted');
-
-            // Sign back in with the new account
-            const signInResult = await auth.signInWithEmailAndPassword(email, password);
-            console.log('✅ Signed in with new account');
-
-        } catch (deleteError) {
-            console.warn('⚠️ Could not delete guest account (non-critical):', deleteError);
-            // If we can't delete, just continue - the new account is what matters
+            await db.collection('users').doc(newUser.uid).collection('gameData').doc('current').set(localGameData);
+            console.log('✅ Game progress saved to new account');
+        } catch (dataError) {
+            console.warn('⚠️ Failed to save game data:', dataError);
+            throw dataError;
         }
 
-        // Step 7: Clear guest credentials from localStorage
-        localStorage.removeItem('guestUserUid');
-        localStorage.removeItem('guestUsername');
-
-        // Step 8: Hide link account modal
-        console.log('🔒 Hiding link account modal...');
+        // Hide modal and show refresh modal
+        console.log('🔒 Closing link account modal...');
         const linkModal = document.getElementById('link-account-modal');
         if (linkModal) {
             linkModal.style.display = 'none';
             linkModal.remove();
-            console.log('✅ Link account modal removed from DOM');
+            console.log('✅ Link account modal closed');
         }
 
-        // Step 9: Show success modal
-        console.log('🎉 Showing account linked success modal...');
+        console.log('🎉 Showing success modal...');
         showAccountLinkedRefreshModal(cleanUsername);
 
         return newUser;
 
     } catch (error) {
-        console.error('❌ Account conversion error:', error);
+        console.error('❌ Account creation error:', error);
         showMessage('Failed to create account: ' + error.message, 'error');
         throw error;
     }
