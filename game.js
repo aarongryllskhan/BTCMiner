@@ -990,27 +990,17 @@ function loadGame() {
         if (seconds > 0) timeStr += seconds + 's';
         if (!timeStr) timeStr = '< 1s';
 
-        // Calculate USD values for each crypto
-        const btcUsdValue = btcEarned * (window.btcPrice || 100000);
-        const ethUsdValue = ethEarned * (window.ethPrice || 3500);
-        const dogeUsdValue = dogeEarned * (window.dogePrice || 0.25);
-        const totalUsdValue = btcUsdValue + ethUsdValue + dogeUsdValue + stakingCash;
-
-        // Format earnings with breakdown
+        // Format earnings - just show crypto amounts and staking cash
         let earningsHtml = '';
-        let breakdownHtml = '<div style="font-size: 0.8rem; color: #999; margin-top: 12px; padding-top: 12px; border-top: 1px solid #333;">';
 
         if (btcEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #f7931a;">₿ ${btcEarned.toFixed(8)}</div>`;
-            breakdownHtml += `<div style="margin: 4px 0;">₿ ${btcEarned.toFixed(8)} = $${btcUsdValue.toFixed(2)}</div>`;
         }
         if (ethEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #627eea;">Ξ ${ethEarned.toFixed(8)}</div>`;
-            breakdownHtml += `<div style="margin: 4px 0;">Ξ ${ethEarned.toFixed(8)} = $${ethUsdValue.toFixed(2)}</div>`;
         }
         if (dogeEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`;
-            breakdownHtml += `<div style="margin: 4px 0;">Ð ${dogeEarned.toFixed(2)} = $${dogeUsdValue.toFixed(2)}</div>`;
         }
         if (stakingCash > 0) {
             let cashDisplay;
@@ -1024,9 +1014,7 @@ function loadGame() {
                 cashDisplay = '$' + stakingCash.toFixed(2);
             }
             earningsHtml += `<div class="earnings" style="color: #4caf50;">💰 ${cashDisplay}</div>`;
-            breakdownHtml += `<div style="margin: 4px 0; color: #4caf50;">Staking: ${cashDisplay}</div>`;
         }
-        breakdownHtml += '</div>';
 
         // If no earnings, show a message
         if (!earningsHtml) {
@@ -1037,30 +1025,14 @@ function loadGame() {
         // Add cap notice if time was capped
         let capNotice = '';
         if (wasCapped) {
-            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 6 hours (you were away for ${Math.floor(secondsOffline / 3600)} hours)</div>`;
-        }
-
-        // Format total USD value
-        let totalDisplay = '';
-        if (totalUsdValue > 0) {
-            if (totalUsdValue >= 1e9) {
-                totalDisplay = '$' + (totalUsdValue / 1e9).toFixed(2) + 'b';
-            } else if (totalUsdValue >= 1e6) {
-                totalDisplay = '$' + (totalUsdValue / 1e6).toFixed(2) + 'm';
-            } else if (totalUsdValue >= 1e3) {
-                totalDisplay = '$' + (totalUsdValue / 1e3).toFixed(2) + 'k';
-            } else {
-                totalDisplay = '$' + totalUsdValue.toFixed(2);
-            }
+            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 6 hours</div>`;
         }
 
         modal.innerHTML = `
             <h2>⏰ Welcome Back!</h2>
-            <div class="earnings-label">Offline Earnings (${timeStr})</div>
-            <div style="font-size: 1.1rem; color: #00ff88; margin-bottom: 8px; font-weight: bold;">≈ ${totalDisplay} USD</div>
+            <div class="earnings-label">Mined While Away</div>
             ${earningsHtml}
-            ${breakdownHtml}
-            <div class="time-offline">📡 While you were away for <strong>${timeStr}</strong></div>
+            <div class="time-offline">During ${timeStr} offline</div>
             ${capNotice}
             <button id="claim-btn">Claim Rewards</button>
         `;
@@ -3430,6 +3402,7 @@ dogeUpgrades.forEach(u => {
         console.log('Current BTC Balance:', btcBalance);
         console.log('Current Dollar Balance:', dollarBalance);
         console.log('Current Lifetime Earnings:', lifetimeEarnings);
+        console.log('Current BTC Per Sec:', btcPerSec);
         console.log('Last Save Time:', new Date(lastSaveTime));
 
         // Force a save
@@ -3445,10 +3418,38 @@ dogeUpgrades.forEach(u => {
             console.log('  BTC Balance:', parsed.btcBalance);
             console.log('  Dollar Balance:', parsed.dollarBalance);
             console.log('  Lifetime Earnings:', parsed.lifetimeEarnings);
+            console.log('  BTC Per Sec:', parsed.btcPerSec);
             console.log('  Last Save Time:', new Date(parsed.lastSaveTime));
         } else {
             console.error('❌ Save data NOT found in storage!');
         }
+    };
+
+    // Debug function to simulate offline time
+    window.testOfflineEarnings = function(minutesAway = 1) {
+        console.log('=== SIMULATING OFFLINE TIME ===');
+        console.log('Simulating', minutesAway, 'minutes away');
+
+        // Get current saved data
+        const saved = window.safeStorage.getItem('satoshiTerminalSave');
+        if (!saved) {
+            console.error('❌ No save data found!');
+            return;
+        }
+
+        const data = JSON.parse(saved);
+        console.log('Current lastSaveTime:', new Date(data.lastSaveTime));
+
+        // Modify the save to pretend it was made X minutes ago
+        const secondsAway = minutesAway * 60;
+        data.lastSaveTime = Date.now() - (secondsAway * 1000);
+
+        console.log('Modified lastSaveTime:', new Date(data.lastSaveTime), '(' + secondsAway + ' seconds ago)');
+        console.log('BTC Per Sec in save:', data.btcPerSec);
+
+        // Save the modified data
+        window.safeStorage.setItem('satoshiTerminalSave', JSON.stringify(data));
+        console.log('Modified save stored. Reload page to see offline earnings modal!');
     };
 
     // Run initialization when DOM is ready
