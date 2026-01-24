@@ -350,7 +350,8 @@ async function loadGameFromCloud(userId = null) {
         window.hardwareEquity = cloudData.hardwareEquity || 0;
         window.autoClickerCooldownEnd = cloudData.autoClickerCooldownEnd || 0;
         window.lifetimeEarnings = cloudData.lifetimeEarnings || 0;
-        window.sessionEarnings = cloudData.sessionEarnings || 0;
+        // Always reset session earnings to 0 - session is per-login, not restored from cloud
+        window.sessionEarnings = 0;
         // Always reset session time to now - session is per-login, not restored from cloud
         window.sessionStartTime = Date.now();
         window.chartHistory = cloudData.chartHistory || [];
