@@ -121,7 +121,8 @@ async function saveGameToCloud(isManualSave = false) {
             staking: typeof getStakingData === 'function' ? getStakingData() : {},
 
             // Timestamps
-            lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+            lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSaveTime: typeof window.lastSaveTime !== 'undefined' ? window.lastSaveTime : Date.now()
         };
 
         // Log what's being saved for debugging
@@ -434,6 +435,59 @@ async function loadGameFromCloud(userId = null) {
         console.log('  window.dollarBalance:', window.dollarBalance);
         console.log('  window.lifetimeEarnings:', window.lifetimeEarnings);
         console.log('  BTC Upgrades loaded:', window.btcUpgrades ? window.btcUpgrades.length : 0, 'upgrades');
+
+        // Calculate offline earnings from cloud load
+        console.log('📊 Calculating offline earnings from cloud data...');
+        const lastCloudSaveTime = cloudData.lastSaveTime || cloudData.lastSaved || Date.now();
+        const currentTime = Date.now();
+        const offlineSecondsRaw = (currentTime - lastCloudSaveTime) / 1000;
+        const BASE_OFFLINE_CAP = 21600; // 6 hours
+        const MAX_OFFLINE_SECONDS = (typeof window.getOfflineCap === 'function') ? window.getOfflineCap() : BASE_OFFLINE_CAP;
+        const offlineSeconds = Math.min(offlineSecondsRaw, MAX_OFFLINE_SECONDS);
+        const wasTimeCaped = offlineSecondsRaw > MAX_OFFLINE_SECONDS;
+
+        console.log('  Time since cloud save:', offlineSecondsRaw, 'seconds');
+        console.log('  Capped at:', offlineSeconds, 'seconds');
+        console.log('  Was capped:', wasTimeCaped);
+
+        // Calculate offline crypto earnings based on per-second rates
+        const offlineBtcEarnings = (window.btcPerSec || 0) * offlineSeconds;
+        const offlineEthEarnings = (window.ethPerSec || 0) * offlineSeconds;
+        const offlineDogeEarnings = (window.dogePerSec || 0) * offlineSeconds;
+
+        // Add offline earnings to balances
+        if (offlineBtcEarnings > 0) {
+            window.btcBalance += offlineBtcEarnings;
+            window.btcLifetime += offlineBtcEarnings;
+            const btcUsdValue = offlineBtcEarnings * (window.btcPrice || 100000);
+            window.lifetimeEarnings += btcUsdValue;
+        }
+        if (offlineEthEarnings > 0) {
+            window.ethBalance += offlineEthEarnings;
+            window.ethLifetime += offlineEthEarnings;
+            const ethUsdValue = offlineEthEarnings * (window.ethPrice || 3500);
+            window.lifetimeEarnings += ethUsdValue;
+        }
+        if (offlineDogeEarnings > 0) {
+            window.dogeBalance += offlineDogeEarnings;
+            window.dogeLifetime += offlineDogeEarnings;
+            const dogeUsdValue = offlineDogeEarnings * (window.dogePrice || 0.25);
+            window.lifetimeEarnings += dogeUsdValue;
+        }
+
+        // Store offline earnings data to display modal
+        if (offlineSeconds >= 5) {
+            console.log('🎯 Setting offline earnings modal for display');
+            window.offlineEarningsToShow = {
+                btc: offlineBtcEarnings,
+                eth: offlineEthEarnings,
+                doge: offlineDogeEarnings,
+                stakingCash: 0, // Cloud already includes staking in balances
+                seconds: offlineSecondsRaw,
+                wasCapped: wasTimeCaped,
+                cappedSeconds: offlineSeconds
+            };
+        }
 
         // Update UI if functions exist
         if (typeof updateDisplay === 'function') updateDisplay();

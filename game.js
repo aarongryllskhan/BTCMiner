@@ -31,6 +31,7 @@
     let dollarBalance = 0; // USD balance from selling crypto
     let lastTickTime = Date.now();
     let lastPriceUpdateTime = 0; // Track when price was last updated
+    let lastSaveTime = Date.now(); // Track when game was last saved (for offline earnings)
     let manualHashClickTime = 0;
     let manualHashCooldownEnd = 0;
     let clickTimestamps = [];
@@ -416,6 +417,9 @@
             return;
         }
 
+        // Update lastSaveTime whenever we save
+        lastSaveTime = Date.now();
+
         const gameState = {
             // Bitcoin data
             btcBalance,
@@ -438,7 +442,7 @@
             // General data
             dollarBalance,
             hardwareEquity,
-            lastSaveTime: Date.now(),
+            lastSaveTime,
             autoClickerCooldownEnd,
             lifetimeEarnings,
             sessionEarnings,
@@ -562,6 +566,9 @@ function loadGame() {
         // Reset session on every page load/refresh
         sessionEarnings = 0;
         sessionStartTime = Date.now();
+
+        // Load the last save time for offline earnings calculation
+        lastSaveTime = state.lastSaveTime || Date.now();
 
         // Load staking data
         if (state.staking) {
@@ -1024,6 +1031,13 @@ function loadGame() {
         document.getElementById('claim-btn').onclick = () => {
             overlay.remove();
             modal.remove();
+            // Auto-save to cloud after showing offline earnings
+            if (typeof window.saveGameToCloud === 'function') {
+                console.log('💾 Auto-saving to cloud after offline earnings modal...');
+                window.saveGameToCloud(false).catch(err => {
+                    console.warn('⚠️ Cloud auto-save after offline earnings failed:', err);
+                });
+            }
         };
 
         console.log('Modal created and appended');
@@ -2699,8 +2713,20 @@ dogeUpgrades.forEach(u => {
         initStaking();
         updateStakingUI();
 
+        // Store offline earnings data to show after instructions
+        const offlineEarningsData = window.offlineEarningsToShow ? {
+            btc: window.offlineEarningsToShow.btc || 0,
+            eth: window.offlineEarningsToShow.eth || 0,
+            doge: window.offlineEarningsToShow.doge || 0,
+            stakingCash: window.offlineEarningsToShow.stakingCash || 0,
+            seconds: window.offlineEarningsToShow.seconds,
+            wasCapped: window.offlineEarningsToShow.wasCapped || false,
+            cappedSeconds: window.offlineEarningsToShow.cappedSeconds || window.offlineEarningsToShow.seconds
+        } : null;
+
         // Handle game instructions modal visibility
         const instructionsEl = document.getElementById('game-instructions');
+        let showedInstructions = false;
         if (instructionsEl) {
             // Check if user previously dismissed the instructions
             const wasDismissed = window.safeStorage.getItem('instructionsDismissed') === 'true';
@@ -2714,40 +2740,56 @@ dogeUpgrades.forEach(u => {
                 instructionsEl.classList.add('show');
                 localStorage.removeItem('showInstructionsAfterRefresh');
                 window.safeStorage.removeItem('instructionsDismissed');
+                showedInstructions = true;
                 console.log('✅ Instructions modal displayed');
             } else if (wasDismissed) {
                 // User previously dismissed - hide it
                 instructionsEl.style.display = 'none';
+                showedInstructions = false;
             } else {
                 // New player who hasn't dismissed it yet - show by default
                 console.log('🎮 New player detected - showing instructions modal by default');
                 instructionsEl.classList.add('show');
+                showedInstructions = true;
             }
         }
 
-        // Show offline earnings if applicable (must be after loadGame())
-        console.log('=== MODAL CHECK ===');
-        console.log('window.offlineEarningsToShow:', window.offlineEarningsToShow);
-        console.log('Type:', typeof window.offlineEarningsToShow);
+        // Show offline earnings AFTER instructions (with delay to avoid overlap)
+        console.log('=== OFFLINE EARNINGS CHECK ===');
+        console.log('Offline earnings data:', offlineEarningsData);
+        console.log('Showed instructions:', showedInstructions);
+        console.log('Has offline data:', !!offlineEarningsData);
+        if (offlineEarningsData) {
+            console.log('  BTC:', offlineEarningsData.btc);
+            console.log('  ETH:', offlineEarningsData.eth);
+            console.log('  DOGE:', offlineEarningsData.doge);
+            console.log('  Staking Cash:', offlineEarningsData.stakingCash);
+            console.log('  Seconds away:', offlineEarningsData.seconds);
+        }
 
-        if (window.offlineEarningsToShow) {
-            console.log('✓ SHOWING OFFLINE EARNINGS MODAL');
-            console.log('Data:', window.offlineEarningsToShow);
+        if (offlineEarningsData && offlineEarningsData.seconds >= 5) {
+            console.log('✓ OFFLINE EARNINGS MODAL WILL SHOW');
+            // Delay showing offline earnings modal to avoid overlap with instructions
+            const delayMs = showedInstructions ? 1500 : 500;
             setTimeout(() => {
-                console.log('Calling showOfflineEarningsModal function...');
+                console.log('🎯 DISPLAYING OFFLINE EARNINGS MODAL NOW');
                 showOfflineEarningsModal(
-                    window.offlineEarningsToShow.btc || 0,
-                    window.offlineEarningsToShow.eth || 0,
-                    window.offlineEarningsToShow.doge || 0,
-                    window.offlineEarningsToShow.stakingCash || 0,
-                    window.offlineEarningsToShow.seconds,
-                    window.offlineEarningsToShow.wasCapped || false,
-                    window.offlineEarningsToShow.cappedSeconds || window.offlineEarningsToShow.seconds
+                    offlineEarningsData.btc,
+                    offlineEarningsData.eth,
+                    offlineEarningsData.doge,
+                    offlineEarningsData.stakingCash,
+                    offlineEarningsData.seconds,
+                    offlineEarningsData.wasCapped,
+                    offlineEarningsData.cappedSeconds
                 );
-                window.offlineEarningsToShow = null;
-            }, 500);
+            }, delayMs);
         } else {
-            console.log('✗ No offline earnings data - modal will not show');
+            console.log('✗ Not showing offline earnings modal');
+            if (offlineEarningsData) {
+                console.log('  Reason: Was only away for', offlineEarningsData.seconds, 'seconds (need >= 5)');
+            } else {
+                console.log('  Reason: No offline earnings data');
+            }
         }
 
         const canvasElement = document.getElementById('nwChart');
@@ -3331,6 +3373,11 @@ dogeUpgrades.forEach(u => {
     Object.defineProperty(window, 'dogeUpgrades', {
         get: () => dogeUpgrades,
         set: (val) => { }
+    });
+
+    Object.defineProperty(window, 'lastSaveTime', {
+        get: () => lastSaveTime,
+        set: (val) => { lastSaveTime = val; }
     });
 
     // Run initialization when DOM is ready
