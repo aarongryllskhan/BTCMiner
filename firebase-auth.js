@@ -1468,24 +1468,13 @@ function setupAuthListener() {
             // Load user's game data
             console.log('Loading game data...');
             try {
-                // Check if this is a page refresh during active session or a fresh login
-                const wasAlreadyLoggedIn = sessionStorage.getItem('userWasLoggedIn') === 'true';
-                const localSaveExists = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
-
-                // IMPORTANT: Only load local save if this is a page refresh during an active session
-                // On fresh login or account switch, ALWAYS load from cloud
-                if (wasAlreadyLoggedIn && localSaveExists) {
-                    console.log('✅ Page refresh detected - loading local save (unsaved progress)');
-                    if (typeof window.loadGame === 'function') {
-                        window.loadGame();
-                        showMessage('Loaded your most recent local progress', 'success');
-                    }
-                } else {
-                    // Fresh login or no local save - ALWAYS load from cloud
-                    console.log('📦 Fresh login detected - loading from cloud');
-                    if (window.loadGameFromCloud) {
-                        await window.loadGameFromCloud(user.uid);
-                    }
+                // IMPORTANT: Always load from LOCAL storage first
+                // This ensures offline earnings are calculated from the local save
+                // Cloud sync happens automatically in background, not at startup
+                console.log('📦 Loading from local storage (offline earnings support)');
+                if (typeof window.loadGame === 'function') {
+                    window.loadGame();
+                    // Don't show a message - offline earnings modal will appear if applicable
                 }
 
                 // Mark that user is now logged in for future page refreshes

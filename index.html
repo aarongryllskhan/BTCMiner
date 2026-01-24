@@ -107,6 +107,19 @@
             // localStorage not available (incognito mode, etc.)
             console.warn('⚠️ localStorage not available (incognito mode?). Continuing without local cache...');
         }
+
+        // Detect back button navigation and force cache-busting reload
+        if ('performance' in window) {
+            const navigationLastEntry = performance.getEntriesByType('navigation').pop();
+
+            if (navigationLastEntry
+                && navigationLastEntry.type === 'back_forward'
+                && navigationLastEntry.unloadEventStart === 0) {
+                // Reload the page with a cache-busting query parameter
+                console.log('🔙 Back button detected - forcing cache-busted reload...');
+                window.location.href = `${window.location.href.split('?')[0]}?noCache=${new Date().getTime()}`;
+            }
+        }
     </script>
 
     <!-- Safe Storage Wrapper for Incognito/Private Mode Support -->
