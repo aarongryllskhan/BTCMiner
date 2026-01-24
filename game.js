@@ -2673,25 +2673,29 @@ dogeUpgrades.forEach(u => {
         initStaking();
         updateStakingUI();
 
-        // Check if we need to show instructions after first refresh for new accounts
-        if (localStorage.getItem('showInstructionsAfterRefresh') === 'true') {
-            console.log('🎮 New account detected - showing instructions modal after first refresh');
-            const instructionsEl = document.getElementById('game-instructions');
-            if (instructionsEl) {
-                // Show the modal by adding the 'show' class (CSS handles display: flex)
+        // Handle game instructions modal visibility
+        const instructionsEl = document.getElementById('game-instructions');
+        if (instructionsEl) {
+            // Check if user previously dismissed the instructions
+            const wasDismissed = window.safeStorage.getItem('instructionsDismissed') === 'true';
+
+            // Check if this is a new account that just refreshed for the first time
+            const showAfterRefresh = localStorage.getItem('showInstructionsAfterRefresh') === 'true';
+
+            if (showAfterRefresh) {
+                // New account after first refresh - always show
+                console.log('🎮 New account detected - showing instructions modal after first refresh');
                 instructionsEl.classList.add('show');
-                // Remove the flag and clear the instructionsDismissed flag
                 localStorage.removeItem('showInstructionsAfterRefresh');
                 window.safeStorage.removeItem('instructionsDismissed');
                 console.log('✅ Instructions modal displayed');
-            }
-        } else {
-            // Check if instructions were dismissed
-            if (window.safeStorage.getItem('instructionsDismissed') === 'true') {
-                const instructionsEl = document.getElementById('game-instructions');
-                if (instructionsEl) {
-                    instructionsEl.style.display = 'none';
-                }
+            } else if (wasDismissed) {
+                // User previously dismissed - hide it
+                instructionsEl.style.display = 'none';
+            } else {
+                // New player who hasn't dismissed it yet - show by default
+                console.log('🎮 New player detected - showing instructions modal by default');
+                instructionsEl.classList.add('show');
             }
         }
 
