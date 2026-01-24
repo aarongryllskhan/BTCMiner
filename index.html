@@ -680,14 +680,32 @@
     window.addEventListener('DOMContentLoaded', checkCookieConsent);
 </script>
 
+<!-- Cache busting system - forces hard refresh on code updates -->
+<script>
+    const CURRENT_VERSION = '1.0.2';
+    const STORAGE_KEY = 'gameCodeVersion';
+    const lastVersionLoaded = localStorage.getItem(STORAGE_KEY);
+
+    if (lastVersionLoaded && lastVersionLoaded !== CURRENT_VERSION) {
+        // Version mismatch - force hard reload to bypass cache
+        console.log(`Game version updated: ${lastVersionLoaded} → ${CURRENT_VERSION}. Forcing cache refresh...`);
+        localStorage.setItem(STORAGE_KEY, CURRENT_VERSION);
+        // Force reload bypassing cache
+        location.reload(true);
+    } else if (!lastVersionLoaded) {
+        // First load
+        localStorage.setItem(STORAGE_KEY, CURRENT_VERSION);
+    }
+</script>
+
 <!-- Load skill tree system first so its functions are available to game.js -->
-<script src="skilltree.js"></script>
+<script src="skilltree.js?v=1.0.2"></script>
 
 <!-- Load main game after skill tree functions are defined -->
-<script src="game.js"></script>
+<script src="game.js?v=1.0.2"></script>
 
 <!-- Load staking system after main game variables are defined -->
-<script src="staking.js"></script>
+<script src="staking.js?v=1.0.2"></script>
 
 </body>
 
