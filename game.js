@@ -446,6 +446,24 @@
     // --- SAVE SYSTEM START ---
     function saveGame() {
         // Check if safeStorage is available
+// --- AUTOSAVE SYSTEM ---
+const AUTOSAVE_INTERVAL = 15000; // 15 seconds
+
+setInterval(() => {
+    if (!window.gameDataLoaded) {
+        console.log('⏳ Autosave skipped - game not loaded yet');
+        return;
+    }
+
+    console.log('💾 Autosaving to local cache...');
+    saveGame();
+}, AUTOSAVE_INTERVAL);
+
+window.addEventListener('beforeunload', () => {
+    console.log('🚪 Page closing - forcing save');
+    saveGame();
+});
+
         if (!window.safeStorage) {
             console.error('❌ CRITICAL: window.safeStorage is not available!');
             return;
@@ -2870,6 +2888,16 @@ dogeUpgrades.forEach(u => {
         updateUI();
         updateAutoClickerButtonState();
     }, 100);
+
+    // Save game on every UI update (like Cookie Clicker)
+    // This is called after every action, so data is always persisted
+    function saveAfterUpdate() {
+        try {
+            saveGame();
+        } catch (e) {
+            console.error('Error in saveAfterUpdate:', e);
+        }
+    }
 
     // Function to calculate and display offline earnings
     function calculateOfflineEarnings(savedLastSaveTime, savedStakingData) {
