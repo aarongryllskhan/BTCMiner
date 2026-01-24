@@ -1084,8 +1084,25 @@ function loadGame() {
             };
 
             const saveString = JSON.stringify(saveData);
+
+            console.log('=== IMPORT DEBUG ===');
+            console.log('Importing BTC balance:', state.btcBalance);
+            console.log('Importing ETH balance:', state.ethBalance);
+            console.log('Importing DOGE balance:', state.dogeBalance);
+            console.log('Importing dollar balance:', state.dollarBalance);
+            console.log('Importing hardware equity:', state.hardwareEquity);
+            console.log('Importing lifetime earnings:', state.lifetimeEarnings);
+            console.log('Save string length:', saveString.length);
+
             localStorage.setItem('satoshiTerminalSave', saveString);
-            console.log('Imported save applied to localStorage');
+
+            // Verify the save was written
+            const verifyData = localStorage.getItem('satoshiTerminalSave');
+            if (verifyData && verifyData.length === saveString.length) {
+                console.log('IMPORT SUCCESS - Data verified in localStorage');
+            } else {
+                console.error('IMPORT WARNING - Data verification failed');
+            }
         } catch (error) {
             console.error('Error applying imported state:', error);
             throw error;
@@ -3345,6 +3362,14 @@ dogeUpgrades.forEach(u => {
     window.openAgeAndTermsModal = openAgeAndTermsModal;
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;
+
+    // Export/Import functions
+    window.openExportImportModal = openExportImportModal;
+    window.closeExportImportModal = closeExportImportModal;
+    window.exportSaveToClipboard = exportSaveToClipboard;
+    window.exportSaveToFile = exportSaveToFile;
+    window.importSaveFromText = importSaveFromText;
+    window.importSaveFromFile = importSaveFromFile;
 
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
