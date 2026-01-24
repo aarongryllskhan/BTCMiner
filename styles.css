@@ -1,217 +1,39 @@
-        /* ================================================
-           RESPONSIVE LAYOUT SYSTEM
-           ================================================
+        :root { --btc: #f7931a; --bg: #050505; --panel: #111; --green: #00ff88; --red: #ff3344; --border: #222; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; }
+        #dollar-balance { font-size: 1.5rem; }
+        
+        #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; }
 
-           MOBILE vs DESKTOP DETECTION:
-           Primary: Orientation (portrait = mobile, landscape = desktop)
-           Secondary: Screen width for edge cases
-
-           MOBILE LAYOUT:
-           - Portrait orientation (width < height) = Single column
-           - Landscape but <2000px wide = Single column
-           - Elements stack vertically: Graph on top, Upgrades below
-           - Includes: All phones (up to ~1440px width)
-
-           DESKTOP LAYOUT:
-           - Landscape orientation (width > height) AND 2000px+ = Two columns
-           - Left panel (graph) takes 7fr, Right panel (upgrades) takes 3fr
-           - Side-by-side display
-           - Only true desktop/large monitor widths (2000px+)
-
-           ================================================ */
-
-        :root {
-            --btc: #f7931a;
-            --bg: #050505;
-            --panel: #111;
-            --green: #00ff88;
-            --red: #ff3344;
-            --border: #222;
-            --base-padding: clamp(5px, 2vw, 20px);
-            --gap-size: clamp(5px, 1.5vw, 20px);
-            --border-radius: clamp(8px, 2vw, 12px);
+        @media (max-width: 1024px) {
+            body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
+            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; }
+            .panel:last-child { overflow: visible; flex: 0 0 auto; }
+            .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
+            .stat-box b { word-break: break-word; }
+            #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; }
         }
 
-        html {
-            width: 100%;
-            overflow-x: hidden !important;
-            font-size: clamp(12px, 2.5vw, 16px);
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            color: #fff;
-            margin: 0 !important;
-            padding: var(--base-padding);
-            box-sizing: border-box;
-            width: 100% !important;
-            max-width: 100vw !important;
-            overflow-x: hidden !important;
-            overflow-y: auto;
-            min-height: 100vh;
-        }
-
-        @media (min-width: 1441px) {
-            body {
-                height: 100vh;
-                overflow: hidden;
-            }
-        }
-
-        @media (max-width: 1440px) {
-            body {
-                overflow-y: auto;
-            }
-        }
-
-        #dollar-balance {
-            font-size: clamp(1rem, 3vw, 1.5rem);
-        }
-
-        #main-layout {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: var(--gap-size);
-            height: auto !important;
-            box-sizing: border-box;
-            position: relative;
-            z-index: 1;
-            width: 100% !important;
-            max-width: 100% !important;
-            grid-template-columns: unset !important;
-        }
-
-        /* Mobile: Portrait orientation ALWAYS single column */
-        @media (orientation: portrait) {
-            #main-layout {
-                display: flex !important;
-                flex-direction: column !important;
-                height: auto !important;
-                grid-template-columns: unset !important;
-            }
-        }
-
-        /* Desktop: 2-column grid layout - ONLY on landscape orientation AND wide (1400px+) */
-        /* 1400px threshold accounts for browser zoom and smaller monitors */
-        /* At 125% zoom on 1600px monitor = 1280px effective, so switches to mobile */
-        @media (min-width: 1400px) and (orientation: landscape) {
-            #main-layout {
-                display: grid !important;
-                grid-template-columns: 7fr 3fr;
-                height: calc(100vh - calc(var(--base-padding) * 2));
-            }
-        }
-
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: var(--border-radius);
-            display: flex;
-            flex-direction: column;
-            padding: var(--base-padding);
-            position: relative;
-            overflow-y: auto;
-            overflow-x: hidden !important;
-            min-height: 0;
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
-            box-sizing: border-box;
-        }
-
-        /* Stat box sizing for all mobile/tablet sizes */
-        .stat-box {
-            min-width: 0 !important;
-            overflow: visible !important;
-            flex: 0 1 auto !important;
-        }
-
-        .stat-box b {
-            word-break: break-word;
-        }
-
-        #hashrate-display {
-            flex-wrap: wrap !important;
-            justify-content: flex-start !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Mobile responsive: all devices under 1441px are already single-column by default */
-
-        /* Tablet-sized screens: responsive typography and layouts */
-        @media (max-width: 900px) {
-            .nw-label {
-                font-size: clamp(0.55rem, 1.5vw, 0.8rem);
-                letter-spacing: 0.5px;
-                color: #555;
-            }
-
-            .nw-amount {
-                font-size: clamp(1.2rem, 4vw, 1.8rem);
-                margin: 2px 0;
-            }
-
-            .mini-stats {
-                gap: clamp(6px, 2vw, 12px);
-                flex-wrap: wrap;
-                margin-bottom: clamp(4px, 1vw, 8px);
-            }
-
-            .stat-item span {
-                font-size: clamp(0.45rem, 1.2vw, 0.65rem);
-            }
-
-            .stat-val {
-                font-size: clamp(0.85rem, 2vw, 1.2rem) !important;
-            }
-
-            .chart-wrapper {
-                min-height: clamp(100px, 25vh, 200px) !important;
-                height: clamp(100px, 25vh, 200px) !important;
-                flex: 0 0 auto !important;
-                padding: clamp(8px, 1vw, 12px) clamp(4px, 1vw, 8px) clamp(12px, 2vw, 20px) clamp(4px, 1vw, 8px);
-                display: block !important;
-                margin-top: clamp(4px, 1vw, 8px);
-                overflow: visible;
-                position: relative;
-            }
-
+        @media (max-width: 768px) {
+            body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
+            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; }
+            .panel:last-child { overflow: visible; flex: 0 0 auto; }
+            .upgrade-list { overflow-y: auto !important; }
+            .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; color: #555; }
+            .nw-amount { font-size: 1.6rem; margin: 2px 0; }
+            .mini-stats { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+            .stat-item span { font-size: 0.55rem; }
+            .stat-val { font-size: 1.1rem !important; }
+            .chart-wrapper { min-height: 150px !important; height: 150px !important; flex: 0 0 150px !important; padding: 6px; display: block !important; margin-top: 6px; overflow: hidden; position: relative; }
             /* Keep crypto prices in a compact row on mobile */
-            #crypto-prices-flex {
-                gap: clamp(4px, 1.5vw, 8px) !important;
-                flex-wrap: nowrap !important;
-                overflow-x: auto;
-            }
-
-            #crypto-prices-flex > div {
-                flex: 0 0 auto !important;
-                min-width: auto !important;
-            }
-
-            #crypto-prices-flex .stat-val {
-                font-size: clamp(0.7rem, 1.5vw, 1rem) !important;
-            }
-
-            #crypto-prices-flex span {
-                font-size: clamp(0.4rem, 1vw, 0.6rem) !important;
-            }
-
-            /* Center buttons on mobile */
-            .panel > div:first-child {
-                justify-content: center !important;
-            }
-
-            .panel > div:first-child > div {
-                justify-content: center !important;
-                flex-wrap: wrap;
-                gap: clamp(4px, 1vw, 8px);
-            }
-
-            .upgrade-list {
-                overflow-y: auto !important;
-            }
+            #crypto-prices-flex { gap: 6px !important; flex-wrap: nowrap !important; overflow-x: auto; }
+            #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; }
+            #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
+            #crypto-prices-flex span { font-size: 0.5rem !important; }
 
             /* Professional 2-column grid layout for stat boxes on mobile */
             #hashrate-display {
@@ -278,60 +100,23 @@
             }
         }
 
-        /* Mobile phones: Smallest screen sizes */
-        @media (max-width: 600px) {
-            .nw-label {
-                font-size: clamp(0.5rem, 1.2vw, 0.7rem);
-                color: #555;
-            }
-
-            .nw-amount {
-                font-size: clamp(1rem, 3.5vw, 1.6rem);
-                margin: clamp(1px, 0.5vw, 3px) 0;
-            }
-
-            .stat-val {
-                font-size: clamp(0.75rem, 1.8vw, 1.1rem) !important;
-            }
-
-            .chart-wrapper {
-                min-height: clamp(80px, 20vh, 150px) !important;
-                height: clamp(80px, 20vh, 150px) !important;
-                flex: 0 0 auto !important;
-                display: block !important;
-                margin-top: clamp(2px, 1vw, 6px);
-                padding: clamp(6px, 1vw, 10px) clamp(4px, 1vw, 8px) clamp(10px, 2vw, 15px) clamp(4px, 1vw, 8px);
-                overflow: visible;
-                position: relative;
-            }
-
-            #nwChart {
-                width: 100% !important;
-                height: 100% !important;
-                display: block !important;
-                min-height: auto !important;
-            }
-
+        @media (max-width: 480px) {
+            body { padding: 5px; margin: 0; height: auto; overflow-y: scroll; }
+            #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; }
+            .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; }
+            .panel:last-child { overflow: visible; flex: 0 0 auto; }
+            .upgrade-list { overflow-y: auto !important; }
+            .nw-label { font-size: 0.6rem; color: #555; }
+            .nw-amount { font-size: 1.5rem; margin: 1px 0; }
+            .stat-val { font-size: 0.95rem !important; }
+            .chart-wrapper { min-height: 120px !important; height: 120px !important; flex: 0 0 120px !important; display: block !important; margin-top: 4px; overflow: hidden; position: relative; }
+            #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 120px !important; }
             /* Keep crypto prices in compact row on small phones */
-            #crypto-prices-flex {
-                gap: clamp(3px, 1vw, 6px) !important;
-                flex-wrap: nowrap !important;
-                overflow-x: auto;
-            }
-
-            #crypto-prices-flex > div {
-                flex: 0 0 auto !important;
-                min-width: auto !important;
-                padding: clamp(2px, 0.5vw, 4px) !important;
-            }
-
-            #crypto-prices-flex .stat-val {
-                font-size: clamp(0.6rem, 1.2vw, 0.85rem) !important;
-            }
-
-            #crypto-prices-flex span {
-                font-size: clamp(0.35rem, 0.8vw, 0.55rem) !important;
-            }
+            #crypto-prices-flex { gap: 4px !important; flex-wrap: nowrap !important; overflow-x: auto; }
+            #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; padding: 3px !important; }
+            #crypto-prices-flex .stat-val { font-size: 0.7rem !important; }
+            #crypto-prices-flex span { font-size: 0.4rem !important; }
 
             /* Professional 2-column grid layout for small phones */
             #hashrate-display {
@@ -369,26 +154,24 @@
                 grid-row: 3;
             }
             #hashrate-display .stat-box {
-                padding: clamp(4px, 1vw, 10px) clamp(6px, 1.5vw, 12px) !important;
+                padding: 6px 8px !important;
                 background: rgba(0,0,0,0.4) !important;
-                border-radius: clamp(4px, 1.5vw, 8px) !important;
+                border-radius: 6px !important;
                 border: 1px solid #333 !important;
                 text-align: center;
                 flex: none !important;
                 min-width: 0;
                 overflow: hidden;
             }
-
             #hashrate-display span {
-                font-size: clamp(0.4rem, 0.9vw, 0.65rem) !important;
-                margin-bottom: clamp(2px, 0.5vw, 4px) !important;
+                font-size: 0.5rem !important;
+                margin-bottom: 3px !important;
                 line-height: 1.2;
                 display: block;
                 letter-spacing: 0.3px;
             }
-
             #hashrate-display b {
-                font-size: clamp(0.55rem, 1.2vw, 0.85rem) !important;
+                font-size: 0.65rem !important;
                 line-height: 1.3;
                 display: block;
                 word-break: break-all;
@@ -433,14 +216,12 @@
         .chart-wrapper {
             flex: 1;
             min-height: 200px;
-            max-height: 400px;
             background: #0a0a0a;
             border-radius: 8px;
             border: 1px solid #1a1a1a;
             position: relative;
             margin-top: 10px;
-            margin-bottom: 20px;
-            padding: 15px 10px 30px 10px;
+            padding: 10px;
         }
 
         #nwChart {
@@ -565,7 +346,7 @@ button:disabled:hover {
             border: 2px solid #f7931a;
             border-radius: 12px;
             padding: 30px;
-            z-index: 10000000;
+            z-index: 2000;
             max-width: 400px;
             text-align: center;
             box-shadow: 0 0 40px rgba(247, 147, 26, 0.3);
@@ -616,29 +397,6 @@ button:disabled:hover {
             transform: scale(1.05);
         }
 
-        #close-modal-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none !important;
-            border: none !important;
-            color: #f7931a;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 0;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-
-        #close-modal-btn:hover {
-            color: #ffaa33;
-            transform: scale(1.1);
-        }
-
         .offline-modal-overlay {
             position: fixed;
             top: 0;
@@ -646,7 +404,7 @@ button:disabled:hover {
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.8);
-            z-index: 9999999;
+            z-index: 1999;
             animation: fadeIn 0.3s ease;
         }
 
@@ -887,20 +645,7 @@ button:disabled:hover {
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .skill-tree-modal, .conversion-modal {
-                width: 98%;
-                max-height: 85vh;
-            }
-
-            .skill-tree-modal .modal-body {
-                padding: 10px;
-                overflow-x: auto;
-                overflow-y: auto;
-            }
-
-            .skill-tree-modal .skill-tree-grid {
-                min-width: 500px;
-                gap: 8px !important;
-                padding: 10px !important;
+                width: 95%;
             }
 
             .modal-header h2 {
@@ -908,161 +653,50 @@ button:disabled:hover {
             }
 
             .skill-node {
-                padding: 8px;
-                min-height: 60px !important;
+                padding: 12px;
             }
 
             .skill-name {
-                font-size: 0.85rem;
+                font-size: 1rem;
             }
 
             .skill-description {
-                font-size: 0.7rem;
-            }
-
-            .skill-cost {
-                font-size: 0.7rem;
+                font-size: 0.8rem;
             }
         }
 
-        @media (max-width: 500px) {
-            .skill-tree-modal {
-                width: 100%;
-                max-height: 90vh;
-                border-radius: 0;
-            }
-
-            .skill-tree-modal .modal-body {
-                padding: 5px;
-            }
-
-            .skill-tree-modal .skill-tree-grid {
-                min-width: 450px;
-                gap: 5px !important;
-                padding: 5px !important;
-            }
-
-            .skill-node {
-                padding: 6px;
-                min-height: 50px !important;
-            }
-
-            .skill-name {
-                font-size: 0.75rem;
-            }
-
-            .skill-description {
-                font-size: 0.6rem;
-            }
-
-            .skill-cost {
-                font-size: 0.6rem;
-            }
+        /* Export/Import Modal Styles */
+        .export-import-modal {
+            width: 550px;
         }
 
-        /* Fix modal and login screen overflow issues */
-        #login-screen {
-            overflow: hidden !important;
+        #import-save-textarea {
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        #login-screen iframe {
-            display: block;
-            margin: 0;
-            padding: 0;
+        #import-save-textarea:focus {
+            outline: none;
+            border-color: #f7931a;
+            box-shadow: 0 0 10px rgba(247, 147, 26, 0.3);
         }
 
-        #onboarding-modal,
-        /* Modal base styles - HIDDEN by default */
-        #leaderboard-modal,
-        #policy-modal,
-        #skill-tree-modal,
-        #game-instructions {
-            display: none !important;
-            overflow: hidden !important;
-            justify-content: center !important;
-            align-items: center !important;
+        #import-save-textarea::placeholder {
+            color: #555;
         }
 
-        /* Show modals only when JavaScript sets display: flex */
-        /* This uses !important to ensure visibility when needed */
-        #onboarding-modal.show,
-        #leaderboard-modal.show,
-        #policy-modal.show,
-        #skill-tree-modal.show,
-        #game-instructions.show {
-            display: flex !important;
+        /* Export/Import button hover effects */
+        #export-import-modal button:hover:not(.modal-close) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
-        #onboarding-modal > div,
-        #leaderboard-modal > div,
-        #policy-modal > div,
-        #skill-tree-modal > div {
-            max-width: 95vw;
-            max-height: 95vh;
-            overflow-y: auto;
-            width: 100%;
+        #export-import-modal button:active:not(.modal-close) {
+            transform: translateY(0);
         }
 
-        /* Mobile modal fixes */
-        @media (max-width: 768px) {
-            #onboarding-modal > div,
-            #leaderboard-modal > div,
-            #policy-modal > div,
-            #skill-tree-modal > div {
-                max-width: 100vw !important;
-                width: 95% !important;
-                margin: auto !important;
-            }
-
-            #leaderboard-modal > div {
-                max-height: calc(100vh - 40px) !important;
-            }
-
-            #policy-modal > div {
-                max-height: calc(100vh - 40px) !important;
-            }
-
-            #onboarding-modal > div {
-                max-height: calc(100vh - 40px) !important;
-                padding: 20px !important;
-            }
-        }
-
-        @media (max-width: 480px) {
-            #onboarding-modal > div,
-            #leaderboard-modal > div,
-            #policy-modal > div,
-            #skill-tree-modal > div {
-                max-width: 100% !important;
-                width: 90% !important;
-                margin: auto !important;
-                border-radius: 8px !important;
-            }
-
-            #onboarding-modal > div {
-                padding: 15px !important;
-            }
-
-            #leaderboard-modal > div {
-                padding: 15px !important;
-            }
-
-            #policy-modal > div {
-                padding: 15px !important;
-            }
-
-            #skill-tree-modal > div {
-                padding: 15px !important;
-            }
-
-            #cookie-consent-banner {
-                padding: 10px 15px !important;
-                bottom: 0 !important;
-            }
-
-            #cookie-consent-banner > div {
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
+        /* File input label styling */
+        #export-import-modal label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 

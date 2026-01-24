@@ -1,5 +1,3 @@
-(function() {
-    console.log('🚀 GAME.JS IIFE STARTED');
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
@@ -31,7 +29,6 @@
     let dollarBalance = 0; // USD balance from selling crypto
     let lastTickTime = Date.now();
     let lastPriceUpdateTime = 0; // Track when price was last updated
-    let lastSaveTime = Date.now(); // Track when game was last saved (for offline earnings)
     let manualHashClickTime = 0;
     let manualHashCooldownEnd = 0;
     let clickTimestamps = [];
@@ -43,7 +40,6 @@
     let sessionStartNetWorth = 0;
     let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
     let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
-    let totalPlayTime = 0; // Total accumulated play time in seconds
 
     // Buy quantity setting
     let buyQuantity = 1;
@@ -321,44 +317,58 @@
     }
 
     // Sound effects using Web Audio API
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let audioContext;
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+        console.error('Could not create audio context:', error);
+        audioContext = null;
+    }
 
     function playClickSound() {
-        if (isMuted) return;
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
+        if (isMuted || !audioContext) return;
+        try {
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-        osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+            osc.type = 'sine';
 
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
-        osc.start(now);
-        osc.stop(now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } catch (error) {
+            console.error('Error playing click sound:', error);
+        }
     }
 
     function playUpgradeSound() {
-        if (isMuted) return;
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
+        if (isMuted || !audioContext) return;
+        try {
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
 
-        osc.frequency.setValueAtTime(500, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
-        osc.type = 'square';
+            osc.frequency.setValueAtTime(500, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+            osc.type = 'square';
 
-        gain.gain.setValueAtTime(0.04, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            gain.gain.setValueAtTime(0.04, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 
-        osc.start(now);
-        osc.stop(now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } catch (error) {
+            console.error('Error playing upgrade sound:', error);
+        }
     }
 
     // Bitcoin mining upgrades
@@ -376,82 +386,43 @@
         { id: 10, name: "Quantum Computer", baseUsd: 500000000, baseYield: 125.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
-    // Ethereum mining upgrades
+    // Ethereum mining upgrades - Balanced by USD value per cost (price-adjusted)
     const ethUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00010000 },
-        { id: 1, name: "Single GPU Rig", baseUsd: 8, baseYield: 0.00002500 },
-        { id: 2, name: "RTX 4090 Miner", baseUsd: 150, baseYield: 0.00015000 },
-        { id: 3, name: "8-GPU Mining Rig", baseUsd: 4500, baseYield: 0.00325000 },
-        { id: 4, name: "Professional ETH Farm", baseUsd: 12000, baseYield: 0.01800000 },
-        { id: 5, name: "Staking Validator Node", baseUsd: 40000, baseYield: 0.09500000 },
-        { id: 6, name: "Multi-Validator Farm", baseUsd: 175000, baseYield: 0.68000000 },
-        { id: 7, name: "ETH Mining Complex", baseUsd: 950000, baseYield: 9.50000000 },
-        { id: 8, name: "Enterprise Staking Pool", baseUsd: 7500000, baseYield: 132.00000000 },
-        { id: 9, name: "Layer 2 Validation Network", baseUsd: 52000000, baseYield: 1230.00000000 },
-        { id: 10, name: "Ethereum Foundation Node", baseUsd: 700000000, baseYield: 26500.00000000 }
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00002100 },
+        { id: 1, name: "Single GPU Rig", baseUsd: 8, baseYield: 0.0000053 },
+        { id: 2, name: "RTX 4090 Miner", baseUsd: 150, baseYield: 0.0000316 },
+        { id: 3, name: "8-GPU Mining Rig", baseUsd: 4500, baseYield: 0.000684 },
+        { id: 4, name: "Professional ETH Farm", baseUsd: 12000, baseYield: 0.00378 },
+        { id: 5, name: "Staking Validator Node", baseUsd: 40000, baseYield: 0.0200 },
+        { id: 6, name: "Multi-Validator Farm", baseUsd: 175000, baseYield: 0.143 },
+        { id: 7, name: "ETH Mining Complex", baseUsd: 950000, baseYield: 2.0 },
+        { id: 8, name: "Enterprise Staking Pool", baseUsd: 7500000, baseYield: 27.7 },
+        { id: 9, name: "Layer 2 Validation Network", baseUsd: 52000000, baseYield: 258.0 },
+        { id: 10, name: "Ethereum Foundation Node", baseUsd: 700000000, baseYield: 5570.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
-    // Dogecoin mining upgrades
+    // Dogecoin mining upgrades - Balanced by USD value per cost (price-adjusted)
+    // Formula: (btcYield × btcPrice × dogeCost) / (btcCost × dogePrice)
     const dogeUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.80 },
-        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 0.0038 },
-        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 0.021 },
-        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 0.45 },
-        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 2.55 },
-        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 13.5 },
-        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 95 },
-        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 1350 },
-        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 18600 },
-        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 174000 },
-        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 3750000 }
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.02 },
+        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 4.60 },
+        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 28.0 },
+        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 600.0 },
+        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 3400.0 },
+        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 18000.0 },
+        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 128000.0 },
+        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 1800000.0 },
+        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 24800000.0 },
+        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 232000000.0 },
+        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 5000000000.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Keep reference to btcUpgrades as upgrades for backward compatibility
-    let upgrades = btcUpgrades;
-
-    // --- DEBOUNCED CLOUD SAVE ---
-    let cloudSaveTimeout = null;
-    let hasPendingCloudSave = false;
-
-    function scheduleDebouncedCloudSave() {
-        // Mark that we have changes to save
-        hasPendingCloudSave = true;
-
-        // Clear any existing timeout
-        if (cloudSaveTimeout) {
-            clearTimeout(cloudSaveTimeout);
-        }
-
-        // Schedule cloud save for 3 seconds from now
-        // If user makes another purchase, this resets the timer
-        cloudSaveTimeout = setTimeout(() => {
-            if (hasPendingCloudSave && typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('💾 Debounced cloud save executing...');
-                window.saveGameToCloud(false).then(() => {
-                    console.log('✅ Debounced cloud save complete');
-                    hasPendingCloudSave = false;
-                }).catch(err => {
-                    console.warn('⚠️ Debounced cloud save failed:', err);
-                    // Keep flag true so we retry later
-                });
-            }
-        }, 3000); // 3 second debounce
-    }
+    const upgrades = btcUpgrades;
 
     // --- SAVE SYSTEM START ---
     function saveGame() {
-        // Check if safeStorage is available
-        if (!window.safeStorage) {
-            console.error('❌ CRITICAL: window.safeStorage is not available!');
-            return;
-        }
-
-        // Update lastSaveTime whenever we save
-        lastSaveTime = Date.now();
-
         const gameState = {
-            // User tracking (to prevent loading wrong user's data)
-            userId: (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null,
             // Bitcoin data
             btcBalance,
             btcLifetime,
@@ -473,7 +444,7 @@
             // General data
             dollarBalance,
             hardwareEquity,
-            lastSaveTime,
+            lastSaveTime: Date.now(),
             autoClickerCooldownEnd,
             lifetimeEarnings,
             sessionEarnings,
@@ -484,8 +455,6 @@
             totalPowerAvailable,
             // Staking data
             staking: getStakingData(),
-            // Skill tree data
-            skillTree: getSkillTreeData(),
             powerUpgrades: powerUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
@@ -524,31 +493,18 @@
             console.log('BTC Balance:', btcBalance);
             console.log('Dollar Balance:', dollarBalance);
             console.log('Save string length:', saveString.length, 'bytes');
-            console.log('safeStorage._isAvailable:', window.safeStorage._isAvailable);
 
-            // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
-            window.safeStorage.setItem('satoshiTerminalSave', saveString);
+            localStorage.setItem('satoshiTerminalSave', saveString);
 
             // Verify save worked
-            const testLoad = window.safeStorage.getItem('satoshiTerminalSave');
+            const testLoad = localStorage.getItem('satoshiTerminalSave');
             if (testLoad && testLoad.length > 0) {
-                console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage (Length: ' + testLoad.length + ')');
+                console.log('✓ SAVE SUCCESSFUL - Verified in localStorage');
             } else {
-                console.error('✗ SAVE FAILED - Could not verify in safeStorage');
-            }
-
-            // Sync to cloud if user is logged in (async - don't block game)
-            // Fire off cloud save asynchronously to ensure purchases aren't lost on immediate refresh
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                // Use Promise.resolve().then() to ensure this runs asynchronously without blocking game
-                Promise.resolve().then(() => {
-                    window.saveGameToCloud(false).catch(err => {
-                        console.warn('⚠️ Cloud save failed (non-critical, local save is safe):', err);
-                    });
-                });
+                console.error('✗ SAVE FAILED - Could not verify in localStorage');
             }
         } catch (error) {
-            console.error('✗ ERROR saving game to storage:', error);
+            console.error('✗ ERROR saving game to localStorage:', error);
             alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
         }
     }
@@ -556,51 +512,19 @@
 function loadGame() {
     console.log('=== LOAD GAME CALLED ===');
     try {
-        // Verify safeStorage is available
-        if (!window.safeStorage) {
-            console.error('❌ CRITICAL: window.safeStorage is not available!');
-            return;
-        }
-
-        console.log('✓ safeStorage available, _isAvailable:', window.safeStorage._isAvailable);
-
-        // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
-        const savedData = window.safeStorage.getItem('satoshiTerminalSave');
-        console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND (length: ' + savedData.length + ')' : 'NULL/UNDEFINED');
+        const savedData = localStorage.getItem('satoshiTerminalSave');
+        console.log('localStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
 
         if (!savedData) {
             console.log('✗ No saved game found, starting fresh');
-            console.log('ℹ️ This is the first time playing or localStorage was cleared');
-            // Initialize lastSaveTime for future saves
-            lastSaveTime = Date.now();
-            // Still need to call updateUI() to initialize the display
-            updateUI();
             return;
         }
 
         console.log('✓ Loading game... Save data size:', savedData.length, 'bytes');
         const state = JSON.parse(savedData);
         console.log('✓ Save data parsed successfully');
-
-        // Check if this save belongs to the current user
-        const currentUserId = (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null;
-        const savedUserId = state.userId || null;
-
-        console.log('🔍 CHECKING SAVE OWNERSHIP:');
-        console.log('  currentUserId:', currentUserId);
-        console.log('  savedUserId:', savedUserId);
-
-        if (currentUserId && savedUserId && currentUserId !== savedUserId) {
-            console.warn('⚠️ LOCAL SAVE BELONGS TO DIFFERENT USER - skipping load');
-            console.warn('   This save will be overwritten by cloud data');
-            return; // Don't load mismatched data
-        }
-
-        console.log('✅ Save ownership verified, proceeding with load');
         console.log('Loaded BTC balance:', state.btcBalance);
         console.log('Loaded dollar balance:', state.dollarBalance);
-        console.log('Loaded lastSaveTime from file:', state.lastSaveTime ? new Date(state.lastSaveTime) : 'NOT FOUND');
-        console.log('Loaded btcPerSec from file:', state.btcPerSec);
 
         // Load Bitcoin data
         btcBalance = state.btcBalance || 0;
@@ -625,27 +549,13 @@ function loadGame() {
         hardwareEquity = state.hardwareEquity || 0;
         lifetimeEarnings = state.lifetimeEarnings || 0;
 
-        console.log('✅ LOADED FROM LOCAL STORAGE:');
-        console.log('  BTC Balance:', btcBalance);
-        console.log('  Dollar Balance:', dollarBalance);
-        console.log('  Lifetime Earnings:', lifetimeEarnings);
-
         // Reset session on every page load/refresh
         sessionEarnings = 0;
         sessionStartTime = Date.now();
 
-        // Load the last save time for offline earnings calculation
-        lastSaveTime = state.lastSaveTime || Date.now();
-        console.log('  ⏱️ Last Save Time loaded:', new Date(lastSaveTime), 'timestamp:', lastSaveTime);
-
         // Load staking data
         if (state.staking) {
             loadStakingData(state.staking);
-        }
-
-        // Load skill tree data
-        if (state.skillTree) {
-            loadSkillTreeData(state.skillTree);
         }
 
         sessionStartBalance = btcBalance;
@@ -666,12 +576,10 @@ function loadGame() {
         totalPowerAvailable = state.totalPowerAvailable || 0;
 
         // Load BTC upgrades
-        console.log('📥 LOADING BTC UPGRADES FROM SAVE...');
         if (state.btcUpgrades) {
             state.btcUpgrades.forEach((savedU) => {
                 const upgradeToUpdate = btcUpgrades.find(u => u.id === savedU.id);
                 if (upgradeToUpdate) {
-                    console.log('   Loading upgrade ID', savedU.id, '-', upgradeToUpdate.name, '- From level', upgradeToUpdate.level, 'to', savedU.level);
                     upgradeToUpdate.level = savedU.level || 0;
                     upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
                     upgradeToUpdate.currentYield = savedU.currentYield || 0;
@@ -726,54 +634,108 @@ function loadGame() {
             });
         }
 
-        // Recalculate click values from manual hash upgrade levels
-        const btcManualHashUpgrade = btcUpgrades.find(u => u.id === 0);
-        if (btcManualHashUpgrade && btcManualHashUpgrade.level > 0) {
-            btcClickValue = 0.00000250 * Math.pow(1.10, btcManualHashUpgrade.level);
-        }
-
-        const ethManualHashUpgrade = ethUpgrades.find(u => u.id === 0);
-        if (ethManualHashUpgrade && ethManualHashUpgrade.level > 0) {
-            ethClickValue = 0.00007143 * Math.pow(1.10, ethManualHashUpgrade.level);
-        }
-
-        const dogeManualHashUpgrade = dogeUpgrades.find(u => u.id === 0);
-        if (dogeManualHashUpgrade && dogeManualHashUpgrade.level > 0) {
-            dogeClickValue = 1.00000000 * Math.pow(1.10, dogeManualHashUpgrade.level);
-        }
-
         // Calculate total power used
         calculateTotalPowerUsed();
 
-        // Recalculate totals for all cryptos FROM LOADED UPGRADES
+        // Recalculate totals for all cryptos
         btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
 
-        console.log('📊 CALCULATED PER-SECOND RATES FROM UPGRADES:');
-        console.log('  BTC/sec:', btcPerSec, '(from', btcUpgrades.length, 'upgrades)');
-        console.log('  ETH/sec:', ethPerSec, '(from', ethUpgrades.length, 'upgrades)');
-        console.log('  DOGE/sec:', dogePerSec, '(from', dogeUpgrades.length, 'upgrades)');
-
         // Restore autoclicker cooldown
         autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
 
-        // Calculate offline earnings using the dedicated function
-        calculateOfflineEarnings(state.lastSaveTime || Date.now(), state.staking);
+        // Calculate offline earnings (max 6 hours of earnings to prevent exploits)
+        const lastSaveTime = state.lastSaveTime || Date.now();
+        const currentTime = Date.now();
+        let offlineSeconds = (currentTime - lastSaveTime) / 1000;
+        const maxOfflineSeconds = 21600; // Cap at 6 hours
+        if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
 
-        // Check if there are pending offline earnings from a previous page load that weren't displayed
-        // This handles the case where the page refreshes before the modal is shown
-        try {
-            const pendingEarnings = window.safeStorage.getItem('pendingOfflineEarnings');
-            if (pendingEarnings) {
-                const parsed = JSON.parse(pendingEarnings);
-                console.log('📦 Found pending offline earnings from previous load:', parsed);
-                // Use the pending earnings instead of recalculating (avoids double-counting)
-                window.offlineEarningsToShow = parsed;
-                // Don't delete yet - wait until modal is actually shown
+        console.log('=== OFFLINE EARNINGS DEBUG ===');
+        console.log('Last save time:', new Date(lastSaveTime));
+        console.log('Current time:', new Date(currentTime));
+        console.log('Offline seconds:', offlineSeconds);
+        console.log('Will show modal:', offlineSeconds >= 5);
+
+        // Cap offline time at 6 hours (21600 seconds) + skill tree bonuses
+        const BASE_OFFLINE_CAP = 21600; // 6 hours
+        const MAX_OFFLINE_SECONDS = (typeof getOfflineCap === 'function') ? getOfflineCap() : BASE_OFFLINE_CAP;
+        const cappedOfflineSeconds = Math.min(offlineSeconds, MAX_OFFLINE_SECONDS);
+        const wasTimeCaped = offlineSeconds > MAX_OFFLINE_SECONDS;
+
+        const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds;
+        const offlineEthEarnings = ethPerSec * cappedOfflineSeconds;
+        const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds;
+
+        // Calculate offline staking earnings (cash from staked crypto)
+        const APR_RATE = 0.001; // 0.1% per 2 seconds
+        const stakingIntervals = cappedOfflineSeconds / 2; // Number of 2-second intervals (capped)
+        let offlineStakingCash = 0;
+
+        if (state.staking) {
+            const stakedBTC = state.staking.stakedBTC || 0;
+            const stakedETH = state.staking.stakedETH || 0;
+            const stakedDOGE = state.staking.stakedDOGE || 0;
+
+            if (stakedBTC > 0) {
+                const btcStakingEarnings = stakedBTC * APR_RATE * stakingIntervals;
+                offlineStakingCash += btcStakingEarnings * btcPrice;
             }
-        } catch (e) {
-            console.warn('⚠️ Failed to load pending offline earnings:', e);
+            if (stakedETH > 0) {
+                const ethStakingEarnings = stakedETH * APR_RATE * stakingIntervals;
+                offlineStakingCash += ethStakingEarnings * ethPrice;
+            }
+            if (stakedDOGE > 0) {
+                const dogeStakingEarnings = stakedDOGE * APR_RATE * stakingIntervals;
+                offlineStakingCash += dogeStakingEarnings * dogePrice;
+            }
+
+            // Add staking cash to dollar balance
+            if (offlineStakingCash > 0) {
+                dollarBalance += offlineStakingCash;
+                lifetimeEarnings += offlineStakingCash;
+                sessionEarnings += offlineStakingCash;
+            }
+        }
+
+        if (offlineBtcEarnings > 0) {
+            btcBalance += offlineBtcEarnings;
+            btcLifetime += offlineBtcEarnings;
+            const btcUsdValue = offlineBtcEarnings * btcPrice;
+            lifetimeEarnings += btcUsdValue;
+            sessionEarnings += btcUsdValue; // Offline earnings count toward session
+        }
+        if (offlineEthEarnings > 0) {
+            ethBalance += offlineEthEarnings;
+            ethLifetime += offlineEthEarnings;
+            const ethUsdValue = offlineEthEarnings * ethPrice;
+            lifetimeEarnings += ethUsdValue;
+            sessionEarnings += ethUsdValue; // Offline earnings count toward session
+        }
+        if (offlineDogeEarnings > 0) {
+            dogeBalance += offlineDogeEarnings;
+            dogeLifetime += offlineDogeEarnings;
+            const dogeUsdValue = offlineDogeEarnings * dogePrice;
+            lifetimeEarnings += dogeUsdValue;
+            sessionEarnings += dogeUsdValue; // Offline earnings count toward session
+        }
+
+        // Always show offline earnings if we've been away (even if earnings are 0)
+        // Only skip if the time away is less than 5 seconds (quick refresh)
+        if (offlineSeconds >= 5) {
+            window.offlineEarningsToShow = {
+                btc: offlineBtcEarnings,
+                eth: offlineEthEarnings,
+                doge: offlineDogeEarnings,
+                stakingCash: offlineStakingCash,
+                seconds: offlineSeconds,
+                wasCapped: wasTimeCaped,
+                cappedSeconds: cappedOfflineSeconds
+            };
+            console.log('Offline earnings set:', window.offlineEarningsToShow);
+        } else {
+            console.log('Time away too short for offline modal:', offlineSeconds, 'seconds');
         }
 
         updateUI();
@@ -801,6 +763,365 @@ function loadGame() {
     }
 }
     // --- SAVE SYSTEM END ---
+
+    // --- EXPORT/IMPORT SYSTEM START ---
+
+    /**
+     * Get the current game state for export (reuses saveGame structure)
+     */
+    function getExportableGameState() {
+        return {
+            // Game version for compatibility checks
+            version: '1.1.0',
+            exportDate: Date.now(),
+            // Bitcoin data
+            btcBalance,
+            btcLifetime,
+            btcClickValue,
+            btcPerSec,
+            btcPrice,
+            // Ethereum data
+            ethBalance,
+            ethLifetime,
+            ethClickValue,
+            ethPerSec,
+            ethPrice,
+            // Dogecoin data
+            dogeBalance,
+            dogeLifetime,
+            dogeClickValue,
+            dogePerSec,
+            dogePrice,
+            // General data
+            dollarBalance,
+            hardwareEquity,
+            lastSaveTime: Date.now(),
+            autoClickerCooldownEnd,
+            lifetimeEarnings,
+            sessionEarnings,
+            sessionStartTime,
+            chartHistory: chartHistory,
+            chartTimestamps: chartTimestamps,
+            chartStartTime: chartStartTime,
+            totalPowerAvailable,
+            // Staking data
+            staking: getStakingData(),
+            powerUpgrades: powerUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentPower: u.currentPower
+            })),
+            btcUpgrades: btcUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
+            })),
+            ethUpgrades: ethUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
+            })),
+            dogeUpgrades: dogeUpgrades.map(u => ({
+                id: u.id,
+                level: u.level,
+                currentUsd: u.currentUsd,
+                currentYield: u.currentYield,
+                boostCost: u.boostCost,
+                boostLevel: u.boostLevel
+            }))
+        };
+    }
+
+    /**
+     * Encode game state to Base64 string (Cookie Clicker style)
+     */
+    function encodeGameState(gameState) {
+        try {
+            const jsonString = JSON.stringify(gameState);
+            // Use btoa for Base64 encoding, with UTF-8 support
+            const base64 = btoa(unescape(encodeURIComponent(jsonString)));
+            return base64;
+        } catch (error) {
+            console.error('Error encoding game state:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Decode Base64 string back to game state
+     */
+    function decodeGameState(base64String) {
+        try {
+            // Remove any whitespace that might have been added
+            const cleanBase64 = base64String.trim().replace(/\s/g, '');
+            // Decode from Base64 with UTF-8 support
+            const jsonString = decodeURIComponent(escape(atob(cleanBase64)));
+            return JSON.parse(jsonString);
+        } catch (error) {
+            console.error('Error decoding game state:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Open the export/import modal
+     */
+    function openExportImportModal() {
+        const modal = document.getElementById('export-import-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Clear previous status messages
+            const exportStatus = document.getElementById('export-status');
+            const importStatus = document.getElementById('import-status');
+            if (exportStatus) exportStatus.style.display = 'none';
+            if (importStatus) importStatus.style.display = 'none';
+            // Clear the textarea
+            const textarea = document.getElementById('import-save-textarea');
+            if (textarea) textarea.value = '';
+        }
+    }
+
+    /**
+     * Close the export/import modal
+     */
+    function closeExportImportModal() {
+        const modal = document.getElementById('export-import-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    /**
+     * Export save to clipboard
+     */
+    function exportSaveToClipboard() {
+        const gameState = getExportableGameState();
+        const encoded = encodeGameState(gameState);
+
+        if (!encoded) {
+            showExportStatus('Failed to encode save data!', false);
+            return;
+        }
+
+        // Copy to clipboard
+        navigator.clipboard.writeText(encoded).then(() => {
+            showExportStatus('Save copied to clipboard!', true);
+            console.log('Save exported to clipboard, length:', encoded.length, 'characters');
+        }).catch(err => {
+            // Fallback for older browsers
+            const textarea = document.createElement('textarea');
+            textarea.value = encoded;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showExportStatus('Save copied to clipboard!', true);
+            } catch (e) {
+                showExportStatus('Failed to copy to clipboard!', false);
+            }
+            document.body.removeChild(textarea);
+        });
+    }
+
+    /**
+     * Export save to a downloadable file
+     */
+    function exportSaveToFile() {
+        const gameState = getExportableGameState();
+        const encoded = encodeGameState(gameState);
+
+        if (!encoded) {
+            showExportStatus('Failed to encode save data!', false);
+            return;
+        }
+
+        // Create filename with timestamp
+        const date = new Date();
+        const timestamp = date.toISOString().slice(0, 10).replace(/-/g, '');
+        const filename = `SatoshiTerminal_${timestamp}.txt`;
+
+        // Create and download file
+        const blob = new Blob([encoded], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showExportStatus(`Save downloaded as ${filename}`, true);
+        console.log('Save exported to file:', filename);
+    }
+
+    /**
+     * Import save from the textarea
+     */
+    function importSaveFromText() {
+        const textarea = document.getElementById('import-save-textarea');
+        if (!textarea || !textarea.value.trim()) {
+            showImportStatus('Please paste a save string first!', false);
+            return;
+        }
+
+        const importedState = decodeGameState(textarea.value);
+        if (!importedState) {
+            showImportStatus('Invalid save data! Could not decode.', false);
+            return;
+        }
+
+        // Validate the imported data has expected properties
+        if (!validateImportedState(importedState)) {
+            showImportStatus('Invalid save data! Missing required fields.', false);
+            return;
+        }
+
+        // Confirm before overwriting
+        if (!confirm('This will overwrite your current save. Are you sure you want to continue?')) {
+            return;
+        }
+
+        // Apply the imported save
+        applyImportedState(importedState);
+        showImportStatus('Save imported successfully! Refreshing...', true);
+
+        // Reload the page to apply changes
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    }
+
+    /**
+     * Import save from a file
+     */
+    function importSaveFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            const textarea = document.getElementById('import-save-textarea');
+            if (textarea) {
+                textarea.value = content;
+            }
+
+            const importedState = decodeGameState(content);
+            if (!importedState) {
+                showImportStatus('Invalid save file! Could not decode.', false);
+                return;
+            }
+
+            if (!validateImportedState(importedState)) {
+                showImportStatus('Invalid save file! Missing required fields.', false);
+                return;
+            }
+
+            // Confirm before overwriting
+            if (!confirm('This will overwrite your current save. Are you sure you want to continue?')) {
+                // Reset the file input
+                event.target.value = '';
+                return;
+            }
+
+            applyImportedState(importedState);
+            showImportStatus('Save imported successfully! Refreshing...', true);
+
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        };
+        reader.onerror = function() {
+            showImportStatus('Failed to read file!', false);
+        };
+        reader.readAsText(file);
+    }
+
+    /**
+     * Validate that imported state has required fields
+     */
+    function validateImportedState(state) {
+        // Check for essential fields that should exist in any valid save
+        const requiredFields = [
+            'btcBalance',
+            'dollarBalance',
+            'btcUpgrades'
+        ];
+
+        for (const field of requiredFields) {
+            if (state[field] === undefined) {
+                console.error('Missing required field:', field);
+                return false;
+            }
+        }
+
+        // Check that btcUpgrades is an array
+        if (!Array.isArray(state.btcUpgrades)) {
+            console.error('btcUpgrades is not an array');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Apply imported state to localStorage (let loadGame handle the actual loading)
+     */
+    function applyImportedState(state) {
+        try {
+            // Convert the imported state back to the format expected by loadGame
+            const saveData = {
+                ...state,
+                lastSaveTime: Date.now() // Update the save time
+            };
+
+            const saveString = JSON.stringify(saveData);
+            localStorage.setItem('satoshiTerminalSave', saveString);
+            console.log('Imported save applied to localStorage');
+        } catch (error) {
+            console.error('Error applying imported state:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Show export status message
+     */
+    function showExportStatus(message, success) {
+        const status = document.getElementById('export-status');
+        if (status) {
+            status.textContent = message;
+            status.style.color = success ? '#00ff88' : '#ff3344';
+            status.style.display = 'block';
+
+            // Hide after 3 seconds
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    /**
+     * Show import status message
+     */
+    function showImportStatus(message, success) {
+        const status = document.getElementById('import-status');
+        if (status) {
+            status.textContent = message;
+            status.style.color = success ? '#00ff88' : '#ff3344';
+            status.style.display = 'block';
+        }
+    }
+
+    // --- EXPORT/IMPORT SYSTEM END ---
 
     function calculateTotalPowerUsed() {
         let rawPowerUsed = 0;
@@ -856,8 +1177,8 @@ function loadGame() {
     function dismissInstructions() {
         const instructionsEl = document.getElementById('game-instructions');
         if (instructionsEl) {
-            instructionsEl.classList.remove('show');
-            window.safeStorage.setItem('instructionsDismissed', 'true');
+            instructionsEl.style.display = 'none';
+            localStorage.setItem('instructionsDismissed', 'true');
         }
     }
 
@@ -874,11 +1195,8 @@ function loadGame() {
 
     function resetGame() {
         if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
-            window.safeStorage.removeItem('satoshiTerminalSave');
-            window.safeStorage.removeItem('instructionsDismissed');
-            // Set flag to prevent loading cloud save on next refresh
-            localStorage.setItem('skipCloudLoadOnRefresh', 'true');
-            console.log('🚫 Set flag to skip cloud load on refresh');
+            localStorage.removeItem('satoshiTerminalSave');
+            localStorage.removeItem('instructionsDismissed');
             // Reset all variables to defaults
             btcBalance = 0;
             btcLifetime = 0;
@@ -966,27 +1284,12 @@ function loadGame() {
     function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds) {
         console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds);
 
-        // Prevent duplicate modals
-        if (document.querySelector('.offline-modal-overlay') || document.querySelector('.offline-modal')) {
-            console.log('⚠️ Offline earnings modal already visible - skipping duplicate');
-            return;
-        }
-
-        // Also check if we've shown the modal recently (within 2 seconds)
-        const lastModalTime = window._lastOfflineModalTime || 0;
-        if (Date.now() - lastModalTime < 2000) {
-            console.log('⚠️ Offline earnings modal shown recently - debouncing');
-            return;
-        }
-        window._lastOfflineModalTime = Date.now();
-
         const overlay = document.createElement('div');
         overlay.className = 'offline-modal-overlay';
 
         const modal = document.createElement('div');
         modal.className = 'offline-modal';
 
-        // Format time away
         const hours = Math.floor(secondsOffline / 3600);
         const minutes = Math.floor((secondsOffline % 3600) / 60);
         const seconds = Math.floor(secondsOffline % 60);
@@ -997,9 +1300,7 @@ function loadGame() {
         if (seconds > 0) timeStr += seconds + 's';
         if (!timeStr) timeStr = '< 1s';
 
-        // Format earnings - just show crypto amounts and staking cash
         let earningsHtml = '';
-
         if (btcEarned > 0) {
             earningsHtml += `<div class="earnings" style="color: #f7931a;">₿ ${btcEarned.toFixed(8)}</div>`;
         }
@@ -1010,6 +1311,7 @@ function loadGame() {
             earningsHtml += `<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`;
         }
         if (stakingCash > 0) {
+            // Abbreviate large cash amounts
             let cashDisplay;
             if (stakingCash >= 1e9) {
                 cashDisplay = '$' + (stakingCash / 1e9).toFixed(2) + 'b';
@@ -1037,66 +1339,23 @@ function loadGame() {
 
         modal.innerHTML = `
             <h2>⏰ Welcome Back!</h2>
-            <div class="earnings-label">Mined While Away</div>
+            <div class="earnings-label">Offline Earnings${wasCapped ? ' (6 hour max)' : ''}</div>
             ${earningsHtml}
-            <div class="time-offline">During ${timeStr} offline</div>
+            <div class="time-offline">While you were away for ${timeStr}</div>
             ${capNotice}
+            <button id="claim-btn">Claim Rewards</button>
         `;
 
         document.body.appendChild(overlay);
         document.body.appendChild(modal);
 
-        // Helper function to dismiss modal and save
-        const dismissModal = () => {
-            console.log('✅ OFFLINE EARNINGS MODAL DISMISSED');
+        document.getElementById('claim-btn').onclick = () => {
             overlay.remove();
             modal.remove();
-
-            // CRITICAL: Clear pending offline earnings from localStorage now that modal is shown
-            try {
-                window.safeStorage.removeItem('pendingOfflineEarnings');
-                console.log('🗑️ Cleared pending offline earnings from localStorage');
-            } catch (e) {
-                console.warn('⚠️ Failed to clear pending offline earnings:', e);
-            }
-
-            // Update UI immediately
-            if (typeof updateUI === 'function') {
-                updateUI();
-            }
-
-            // Save to localStorage
-            if (typeof saveGame === 'function') {
-                saveGame();
-            }
-
-            // Auto-save to cloud
-            if (typeof window.saveGameToCloud === 'function') {
-                console.log('💾 Auto-saving to cloud after modal dismissed...');
-                window.saveGameToCloud(false).catch(err => {
-                    console.warn('⚠️ Cloud auto-save failed:', err);
-                });
-            }
         };
 
-        // Auto-dismiss modal after 3.5 seconds
-        setTimeout(() => {
-            if (modal && modal.parentNode) {
-                console.log('⏱️ Auto-closing offline earnings modal (2.5 second timeout)');
-                dismissModal();
-            }
-        }, 2500);
-
-        console.log('Modal created and appended (auto-dismiss in 3.5 seconds)');
-
-        // CRITICAL: Clear the cached offline earnings data after showing
-        // This prevents showing stale data on the next refresh
-        window.offlineEarningsToShow = null;
-        console.log('🗑️ Cleared window.offlineEarningsToShow to prevent stale data');
+        console.log('Modal created and appended');
     }
-
-    // Expose function to window so firebase-save.js can call it
-    window.showOfflineEarningsModal = showOfflineEarningsModal;
 
     // Sound mute toggle
     let isMuted = false;
@@ -1157,13 +1416,7 @@ function loadGame() {
     }
 
     function initBtcShop() {
-        console.log('initBtcShop called');
         const container = document.getElementById('btc-shop');
-        if (!container) {
-            console.error('ERROR: btc-shop container not found!');
-            return;
-        }
-        console.log('btc-shop container found, btcUpgrades length:', btcUpgrades.length);
         container.innerHTML = '';
 
         btcUpgrades.forEach((u, i) => {
@@ -1349,15 +1602,13 @@ function loadGame() {
         });
     }
 
-    function switchTab(tab, event) {
+    function switchTab(tab) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
         const tabElement = document.getElementById(tab + '-tab');
         tabElement.classList.add('active');
-        if (event && event.target) {
-            event.target.classList.add('active');
-        }
+        event.target.classList.add('active');
 
         // Reset purchase quantity to 1x when switching tabs
         setBuyQuantity(1);
@@ -1473,8 +1724,8 @@ function loadGame() {
             u.currentPower = u.basePower * u.level;
             totalPowerAvailable += u.basePower;
 
-            // Update price with 1.1x multiplier
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+            // Update price with 1.2x multiplier
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.2, u.level));
 
             updateUI();
             saveGame();
@@ -1547,7 +1798,7 @@ function loadGame() {
                     canAfford++;
                     nextLevel++;
                     // Power upgrades: 1.2x multiplier
-                    nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
+                    nextCost = u.baseUsd * Math.pow(1.2, nextLevel);
                 }
 
                 affordEl.innerText = `x${canAfford}`;
@@ -1560,7 +1811,6 @@ function loadGame() {
     }
 
 function manualHash() {
-    console.log('🔨 MANUAL HASH CLICKED - btcClickValue:', btcClickValue, 'btcBalance before:', btcBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = btcClickValue * clickBonus;
@@ -1587,12 +1837,10 @@ function manualHash() {
     playClickSound();
 
     // This refreshes the screen so you see the numbers go up
-    console.log('✅ MANUAL HASH COMPLETE - btcBalance after:', btcBalance, 'lifetimeEarnings:', lifetimeEarnings);
     updateUI();
 }
 
 function manualEthHash() {
-    console.log('🔨 MANUAL ETH HASH CLICKED - ethClickValue:', ethClickValue, 'ethBalance before:', ethBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = ethClickValue * clickBonus;
@@ -1617,12 +1865,10 @@ function manualEthHash() {
     playClickSound();
 
     // Refresh the screen
-    console.log('✅ MANUAL ETH HASH COMPLETE - ethBalance after:', ethBalance);
     updateUI();
 }
 
 function manualDogeHash() {
-    console.log('🔨 MANUAL DOGE HASH CLICKED - dogeClickValue:', dogeClickValue, 'dogeBalance before:', dogeBalance);
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     const actualClickValue = dogeClickValue * clickBonus;
@@ -1647,7 +1893,6 @@ function manualDogeHash() {
     playClickSound();
 
     // Refresh the screen
-    console.log('✅ MANUAL DOGE HASH COMPLETE - dogeBalance after:', dogeBalance);
     updateUI();
 }
 
@@ -1673,38 +1918,22 @@ function buyLevel(i) {
         // Check if this is the Manual Hash upgrade
         if (u.id === 0 || u.isClickUpgrade) {
             // Increase click value by 10%
-            btcClickValue *= 1.10;
+            btcClickValue *= 1.12;
 
             // FASTER PRICE SCALE: % increase per level
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
 
             // Update the main orange button text to show new click value
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
             // ALL OTHER MINERS: Standard 15% increase
-            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+            u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
         }
 
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
-
-        console.log('🛒 PURCHASE COMPLETED -', u.name);
-        console.log('   New level:', u.level, 'New yield:', u.currentYield);
-
-        // CRITICAL: Save immediately after purchase
         saveGame();
-
-        // Double-check the save actually worked
-        const verifySave = window.safeStorage.getItem('satoshiTerminalSave');
-        if (verifySave) {
-            const parsed = JSON.parse(verifySave);
-            const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
-            console.log('✅ VERIFIED SAVE - Upgrade level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
-        }
-
-        // Schedule a debounced cloud save (reduces Firebase writes)
-        scheduleDebouncedCloudSave();
 
         // Play upgrade sound
         playUpgradeSound();
@@ -1715,9 +1944,6 @@ function buyLevelMultiple(i, quantity) {
     const u = upgrades[i];
     const powerReq = equipmentPowerReqs[u.id] || 0;
     let purchased = 0;
-
-    console.log('💰 buyLevelMultiple CALLED - Upgrade:', u.name, 'Quantity:', quantity);
-    console.log('   Current level:', u.level, 'Current USD:', dollarBalance, 'Cost:', u.currentUsd);
 
     for (let q = 0; q < quantity; q++) {
         const costUsd = u.currentUsd;
@@ -1739,15 +1965,13 @@ function buyLevelMultiple(i, quantity) {
         hardwareEquity += u.currentUsd;
         u.level++;
 
-        console.log('   ✓ Purchase', (q+1), '- Level now:', u.level);
-
         // Update price and yield based on upgrade type
         if (u.id === 0 || u.isClickUpgrade) {
-            btcClickValue *= 1.10;
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+            btcClickValue *= 1.12;
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
         } else {
-            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+            u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
         }
 
         purchased++;
@@ -1760,36 +1984,8 @@ function buyLevelMultiple(i, quantity) {
         }
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
-
-        console.log('🛒 PURCHASE COMPLETED - Bought', purchased, 'x', u.name);
-        console.log('   Final level:', u.level, 'Final yield:', u.currentYield);
-        console.log('   Dollar balance now:', dollarBalance);
-        console.log('   Hardware equity now:', hardwareEquity);
-
-        // CRITICAL: Save immediately after purchase
-        console.log('💾 CALLING saveGame() immediately after purchase...');
         saveGame();
-
-        // Double-check the save actually worked
-        setTimeout(() => {
-            const verifySave = window.safeStorage.getItem('satoshiTerminalSave');
-            if (verifySave) {
-                const parsed = JSON.parse(verifySave);
-                const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
-                console.log('✅ VERIFIED SAVE - Upgrade level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
-                console.log('   Saved dollar balance:', parsed.dollarBalance);
-                console.log('   Saved hardware equity:', parsed.hardwareEquity);
-            } else {
-                console.error('❌ SAVE NOT FOUND in localStorage after purchase!');
-            }
-        }, 100);
-
-        // Schedule a debounced cloud save (reduces Firebase writes)
-        scheduleDebouncedCloudSave();
-
         playUpgradeSound();
-    } else {
-        console.warn('⚠️ No purchases completed - insufficient funds or power');
     }
 }
 
@@ -1911,13 +2107,13 @@ function buyDogeBoost(i) {
 
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
-                ethClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+                ethClickValue *= 1.12;
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
                 // Update the ETH button text to show new click value
                 document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
             } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+                u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
             }
 
             purchased++;
@@ -1960,13 +2156,13 @@ function buyDogeBoost(i) {
 
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
-                dogeClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+                dogeClickValue *= 1.12;
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
                 // Update the DOGE button text to show new click value
                 document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
             } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
+                u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
             }
 
             purchased++;
@@ -2056,14 +2252,18 @@ function buyDogeBoost(i) {
         document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
         document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
 
-        // Update manual hash buttons with current click values
-        try {
-            const mineBtns = document.querySelectorAll('.mine-btn span');
-            if (mineBtns.length >= 1) mineBtns[0].innerText = `+${btcClickValue.toFixed(8)} ₿`;
-            if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
-            if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
-        } catch (e) {
-            console.warn('⚠️ Could not update manual hash buttons:', e);
+        // Update manual hash button text
+        const mineBtnSpan = document.querySelector('.mine-btn span');
+        if (mineBtnSpan) {
+            mineBtnSpan.innerText = `+${btcClickValue.toFixed(8)} ₿`;
+        }
+        const ethMineBtnSpan = document.querySelectorAll('.mine-btn span')[1];
+        if (ethMineBtnSpan) {
+            ethMineBtnSpan.innerText = `+${ethClickValue.toFixed(8)} Ξ`;
+        }
+        const dogeMineBtnSpan = document.querySelectorAll('.mine-btn span')[2];
+        if (dogeMineBtnSpan) {
+            dogeMineBtnSpan.innerText = `+${dogeClickValue.toFixed(8)} Ð`;
         }
 
         // Update hardware equity
@@ -2126,7 +2326,7 @@ function buyDogeBoost(i) {
             // Show the current speed WITH skill bonuses applied
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} ₿/s - Current Speed`;
         }
@@ -2140,7 +2340,7 @@ function buyDogeBoost(i) {
         } else {
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus);
             increaseEl.innerText = `+${perLevelIncrease.toFixed(8)} ₿/s per level`;
             increaseEl.style.display = 'block';
@@ -2154,9 +2354,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2188,11 +2388,11 @@ function buyDogeBoost(i) {
 
             // Calculate next cost based on upgrade type
             if (u.isClickUpgrade) {
-                // Manual hash: 1.75x multiplier
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
+                // Manual hash: 1.12x multiplier
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             } else {
-                // Other miners: 1.15x multiplier
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
+                // Other miners: 1.12x multiplier
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             }
         }
 
@@ -2208,9 +2408,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2314,7 +2514,7 @@ function buyDogeBoost(i) {
     if(boostCostEl) boostCostEl.innerText = `$${Math.floor(u.boostCost).toLocaleString()}`;
 
     // Format the current yield amount (after all boosts applied)
-    const currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+    const currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
     const boostAmtEl = document.getElementById(`boost-amt-${u.id}`);
     if(boostAmtEl) {
         if (currentYield >= 1) {
@@ -2350,7 +2550,7 @@ ethUpgrades.forEach(u => {
             // Show the current speed WITH skill bonuses applied
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} Ξ/s - Current Speed`;
         }
@@ -2364,7 +2564,7 @@ ethUpgrades.forEach(u => {
         } else {
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus);
             ethIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ξ/s per level`;
             ethIncreaseEl.style.display = 'block';
@@ -2378,9 +2578,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2409,9 +2609,9 @@ ethUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             }
         }
 
@@ -2427,9 +2627,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2548,7 +2748,7 @@ dogeUpgrades.forEach(u => {
             // Show the current speed WITH skill bonuses applied
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} Ð/s - Current Speed`;
         }
@@ -2562,7 +2762,7 @@ dogeUpgrades.forEach(u => {
         } else {
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus);
             dogeIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ð/s per level`;
             dogeIncreaseEl.style.display = 'block';
@@ -2576,9 +2776,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2607,9 +2807,9 @@ dogeUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
             }
         }
 
@@ -2625,9 +2825,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
             }
             tempLevel++;
         }
@@ -2783,137 +2983,8 @@ dogeUpgrades.forEach(u => {
         updateAutoClickerButtonState();
     }, 100);
 
-    // Function to calculate and display offline earnings
-    function calculateOfflineEarnings(savedLastSaveTime, savedStakingData) {
-        const currentTime = Date.now();
-        let offlineSeconds = (currentTime - savedLastSaveTime) / 1000;
-
-        // Get capped offline seconds with skill tree bonuses
-        const BASE_OFFLINE_CAP = 21600; // 6 hours
-        const MAX_OFFLINE_SECONDS = (typeof getOfflineCap === 'function') ? getOfflineCap() : BASE_OFFLINE_CAP;
-        const cappedOfflineSeconds = Math.min(offlineSeconds, MAX_OFFLINE_SECONDS);
-        const wasTimeCaped = offlineSeconds > MAX_OFFLINE_SECONDS;
-
-        console.log('=== OFFLINE EARNINGS CALCULATION ===');
-        console.log('Last save time from file:', new Date(savedLastSaveTime), '(', savedLastSaveTime, ')');
-        console.log('Current time:', new Date(currentTime), '(', currentTime, ')');
-        console.log('Offline seconds (raw):', offlineSeconds.toFixed(2), 'seconds');
-        console.log('Capped offline seconds:', cappedOfflineSeconds.toFixed(2), 'seconds');
-        console.log('Per-second rates: BTC=' + btcPerSec + '/s, ETH=' + ethPerSec + '/s, DOGE=' + dogePerSec + '/s');
-
-        // Calculate mining earnings
-        const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds;
-        const offlineEthEarnings = ethPerSec * cappedOfflineSeconds;
-        const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds;
-
-        console.log('Calculated earnings BEFORE adding to balance:');
-        console.log('  offlineBtcEarnings:', offlineBtcEarnings);
-        console.log('  offlineEthEarnings:', offlineEthEarnings);
-        console.log('  offlineDogeEarnings:', offlineDogeEarnings);
-
-        // Add mining earnings to balances immediately
-        if (offlineBtcEarnings > 0) {
-            btcBalance += offlineBtcEarnings;
-            btcLifetime += offlineBtcEarnings;
-            lifetimeEarnings += offlineBtcEarnings * btcPrice;
-        }
-        if (offlineEthEarnings > 0) {
-            ethBalance += offlineEthEarnings;
-            ethLifetime += offlineEthEarnings;
-            lifetimeEarnings += offlineEthEarnings * ethPrice;
-        }
-        if (offlineDogeEarnings > 0) {
-            dogeBalance += offlineDogeEarnings;
-            dogeLifetime += offlineDogeEarnings;
-            lifetimeEarnings += offlineDogeEarnings * dogePrice;
-        }
-
-        // Calculate offline staking earnings (cash from staked crypto)
-        const APR_RATE = 0.001; // 0.1% per 2 seconds
-        const stakingIntervals = cappedOfflineSeconds / 2; // Number of 2-second intervals (capped)
-        let offlineStakingCash = 0;
-
-        if (savedStakingData) {
-            const stakedBTC = savedStakingData.stakedBTC || 0;
-            const stakedETH = savedStakingData.stakedETH || 0;
-            const stakedDOGE = savedStakingData.stakedDOGE || 0;
-
-            if (stakedBTC > 0) {
-                const btcStakingEarnings = stakedBTC * APR_RATE * stakingIntervals;
-                offlineStakingCash += btcStakingEarnings * btcPrice;
-            }
-            if (stakedETH > 0) {
-                const ethStakingEarnings = stakedETH * APR_RATE * stakingIntervals;
-                offlineStakingCash += ethStakingEarnings * ethPrice;
-            }
-            if (stakedDOGE > 0) {
-                const dogeStakingEarnings = stakedDOGE * APR_RATE * stakingIntervals;
-                offlineStakingCash += dogeStakingEarnings * dogePrice;
-            }
-
-            // Add staking cash to dollar balance
-            if (offlineStakingCash > 0) {
-                dollarBalance += offlineStakingCash;
-                lifetimeEarnings += offlineStakingCash;
-            }
-        }
-
-        console.log('✅ OFFLINE EARNINGS APPLIED:');
-        console.log('   BTC:', offlineBtcEarnings, '(', btcPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-        console.log('   ETH:', offlineEthEarnings, '(', ethPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-        console.log('   DOGE:', offlineDogeEarnings, '(', dogePerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-        console.log('   Staking:', offlineStakingCash);
-
-        // Show modal for any offline duration (even if 0 seconds)
-        window.offlineEarningsToShow = {
-            btc: offlineBtcEarnings,
-            eth: offlineEthEarnings,
-            doge: offlineDogeEarnings,
-            stakingCash: offlineStakingCash,
-            seconds: offlineSeconds,
-            wasCapped: wasTimeCaped,
-            cappedSeconds: cappedOfflineSeconds
-        };
-
-        // CRITICAL: Save offline earnings to localStorage so they survive page refresh
-        // This prevents loss of calculated earnings if the modal hasn't been shown yet
-        try {
-            window.safeStorage.setItem('pendingOfflineEarnings', JSON.stringify(window.offlineEarningsToShow));
-            console.log('💾 Saved pending offline earnings to localStorage');
-        } catch (e) {
-            console.warn('⚠️ Failed to save offline earnings to localStorage:', e);
-        }
-
-        console.log('✅ Modal will be shown with offline earnings data');
-    }
-
-    // Debug function to test offline earnings calculation
-    window.debugOfflineEarnings = function() {
-        console.log('=== DEBUG OFFLINE EARNINGS ===');
-        console.log('Current btcPerSec:', btcPerSec);
-        console.log('Current ethPerSec:', ethPerSec);
-        console.log('Current dogePerSec:', dogePerSec);
-        console.log('Current lastSaveTime:', new Date(lastSaveTime));
-        console.log('Current Time:', new Date());
-        console.log('Offline seconds (estimated):', (Date.now() - lastSaveTime) / 1000);
-        console.log('window.offlineEarningsToShow:', window.offlineEarningsToShow);
-
-        // Calculate what should be earned
-        const offlineSeconds = (Date.now() - lastSaveTime) / 1000;
-        if (offlineSeconds >= 5) {
-            const btcEarn = btcPerSec * offlineSeconds;
-            const ethEarn = ethPerSec * offlineSeconds;
-            const dogeEarn = dogePerSec * offlineSeconds;
-            console.log('If offline for', offlineSeconds, 'seconds:');
-            console.log('  BTC earnings:', btcEarn);
-            console.log('  ETH earnings:', ethEarn);
-            console.log('  DOGE earnings:', dogeEarn);
-        }
-    };
-
     // Initialize all shops after DOM is ready
     function initializeGame() {
-        console.log('🎮 initializeGame() STARTED');
         // Test localStorage availability
         try {
             localStorage.setItem('test', 'test');
@@ -2925,147 +2996,64 @@ dogeUpgrades.forEach(u => {
         }
 
         try {
-            console.log('🛒 Initializing shops...');
             initBtcShop();
-            console.log('✓ BTC shop done');
             initEthShop();
-            console.log('✓ ETH shop done');
             initDogeShop();
-            console.log('✓ DOGE shop done');
             initPowerShop();
-            console.log('✓ Power shop done');
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
-        console.log('✓ About to call loadGame()');
-        loadGame(); // This calls updateUI() internally and sets window.offlineEarningsToShow
-        console.log('✓ loadGame() completed');
-
-        console.log('✓ About to call updateAutoClickerButtonState()');
+        loadGame(); // This calls updateUI() internally
         updateAutoClickerButtonState(); // Update button state immediately after loading
-        console.log('✓ updateAutoClickerButtonState() completed');
-
-        console.log('✓ About to call setBuyQuantity()');
         setBuyQuantity(1); // Highlight the 1x button on page load
-        console.log('✓ setBuyQuantity() completed');
 
         // Initialize staking system
-        console.log('✓ About to initialize staking system');
         initStaking();
         updateStakingUI();
-        console.log('✓ Staking system initialized');
 
-        // ============================================================
-        // CRITICAL: Auto-save must be started BEFORE any early returns!
-        // ============================================================
-        console.log('🔄 CRITICAL: Setting up AUTO-SAVE INTERVAL (every 1.5 seconds)');
-        const autoSaveIntervalId = setInterval(() => {
-            console.log('⏱️ AUTO-SAVE TICK - calling saveGame()');
-            saveGame();
-        }, 1500);
-        console.log('✅ AUTO-SAVE INTERVAL STARTED - ID:', autoSaveIntervalId);
-        // ============================================================
+        // Show instructions modal if not dismissed
+        if (localStorage.getItem('instructionsDismissed') !== 'true') {
+            const instructionsEl = document.getElementById('game-instructions');
+            if (instructionsEl) {
+                instructionsEl.style.display = 'flex';
+            }
+        }
 
-        // Get offline earnings data that was set by loadGame()
-        const offlineEarningsData = window.offlineEarningsToShow;
+        // Show offline earnings if applicable (must be after loadGame())
+        console.log('=== MODAL CHECK ===');
+        console.log('window.offlineEarningsToShow:', window.offlineEarningsToShow);
+        console.log('Type:', typeof window.offlineEarningsToShow);
 
-        console.log('🔍 CHECKING FOR OFFLINE EARNINGS MODAL');
-        console.log('window.offlineEarningsToShow:', offlineEarningsData);
-        if (offlineEarningsData) {
-            console.log('  ✅ Data exists');
-            console.log('  offlineEarningsData.seconds:', offlineEarningsData.seconds);
-            console.log('  Condition (seconds >= 5):', offlineEarningsData.seconds >= 5);
+        if (window.offlineEarningsToShow) {
+            console.log('✓ SHOWING OFFLINE EARNINGS MODAL');
+            console.log('Data:', window.offlineEarningsToShow);
+            setTimeout(() => {
+                console.log('Calling showOfflineEarningsModal function...');
+                showOfflineEarningsModal(
+                    window.offlineEarningsToShow.btc || 0,
+                    window.offlineEarningsToShow.eth || 0,
+                    window.offlineEarningsToShow.doge || 0,
+                    window.offlineEarningsToShow.stakingCash || 0,
+                    window.offlineEarningsToShow.seconds,
+                    window.offlineEarningsToShow.wasCapped || false,
+                    window.offlineEarningsToShow.cappedSeconds || window.offlineEarningsToShow.seconds
+                );
+                window.offlineEarningsToShow = null;
+            }, 500);
         } else {
-            console.log('  ❌ offlineEarningsToShow is null/undefined');
+            console.log('✗ No offline earnings data - modal will not show');
         }
 
-        // Handle game instructions modal visibility
-        const instructionsEl = document.getElementById('game-instructions');
-        let showedInstructions = false;
-        if (instructionsEl) {
-            // Check if user previously dismissed the instructions
-            const wasDismissed = window.safeStorage.getItem('instructionsDismissed') === 'true';
-
-            // Check if this is a new account that just refreshed for the first time
-            const showAfterRefresh = localStorage.getItem('showInstructionsAfterRefresh') === 'true';
-
-            if (showAfterRefresh) {
-                // New account after first refresh - always show
-                console.log('🎮 New account detected - showing instructions modal after first refresh');
-                instructionsEl.classList.add('show');
-                localStorage.removeItem('showInstructionsAfterRefresh');
-                window.safeStorage.removeItem('instructionsDismissed');
-                showedInstructions = true;
-                console.log('✅ Instructions modal displayed');
-            } else if (wasDismissed) {
-                // User previously dismissed - hide it
-                instructionsEl.style.display = 'none';
-                showedInstructions = false;
-            } else {
-                // New player who hasn't dismissed it yet - show by default
-                console.log('🎮 New player detected - showing instructions modal by default');
-                instructionsEl.classList.add('show');
-                showedInstructions = true;
-            }
-        }
-
-        // Show offline earnings modal AFTER instructions
-        // Only show if not already displayed by cloud load (firebase-save.js shows it immediately)
-        if (offlineEarningsData) {
-            // Check if modal is already visible (set by cloud load)
-            const modalExists = document.querySelector('.offline-modal');
-            if (!modalExists) {
-                console.log('✅ SHOWING OFFLINE EARNINGS MODAL');
-                console.log('  BTC:', offlineEarningsData.btc);
-                console.log('  ETH:', offlineEarningsData.eth);
-                console.log('  DOGE:', offlineEarningsData.doge);
-                console.log('  Staking:', offlineEarningsData.stakingCash);
-                console.log('  Seconds away:', offlineEarningsData.seconds);
-
-                // Delay showing offline earnings modal to avoid overlap with instructions
-                const delayMs = showedInstructions ? 1500 : 500;
-                setTimeout(() => {
-                    showOfflineEarningsModal(
-                        offlineEarningsData.btc,
-                        offlineEarningsData.eth,
-                        offlineEarningsData.doge,
-                        offlineEarningsData.stakingCash,
-                        offlineEarningsData.seconds,
-                        offlineEarningsData.wasCapped,
-                        offlineEarningsData.cappedSeconds
-                    );
-                }, delayMs);
-            } else {
-                console.log('ℹ️ Offline earnings modal already displayed by cloud load');
-            }
-        }
-
-        console.log('✓ About to look for canvas element...');
         const canvasElement = document.getElementById('nwChart');
-        console.log('Canvas element found?', !!canvasElement);
-        if (canvasElement) {
-            console.log('✓ Canvas element:', canvasElement);
-        }
+        console.log('Canvas element:', canvasElement);
 
         if (!canvasElement) {
-            console.error('❌ ERROR: Canvas element not found! This will break the rest of initialization!');
-            console.error('This is CRITICAL - auto-save and price swings will NOT start!');
-            return;  // ← THIS STOPS THE REST OF initializeGame()!
+            console.error('ERROR: Canvas element not found!');
+            return;
         }
 
         // Function to initialize the chart
         const initChart = () => {
-            // Destroy existing chart instance if it exists
-            if (window.nwChartInstance) {
-                try {
-                    window.nwChartInstance.destroy();
-                    console.log('Destroyed existing chart instance');
-                } catch (e) {
-                    console.error('Error destroying chart:', e);
-                }
-                window.nwChartInstance = null;
-            }
-
             const ctx = canvasElement.getContext('2d');
             console.log('Canvas context:', ctx);
 
@@ -3122,14 +3110,6 @@ dogeUpgrades.forEach(u => {
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
-                    layout: {
-                        padding: {
-                            left: 5,
-                            right: 5,
-                            top: 10,
-                            bottom: 20
-                        }
-                    },
                     scales: {
                         x: {
                             display: false,
@@ -3176,9 +3156,6 @@ dogeUpgrades.forEach(u => {
                 console.log('Chart object created:', nwChart);
                 console.log('Chart initialized with data:', chartHistory);
 
-                // Store globally so we can destroy it later
-                window.nwChartInstance = nwChart;
-
                 // Force an immediate render
                 try {
                     nwChart.update();
@@ -3200,16 +3177,10 @@ dogeUpgrades.forEach(u => {
         let chartInitialized = false;
 
         const tryInitChart = () => {
-            // Don't try to initialize if already successful
-            if (chartInitialized) {
-                console.log('⚠️ Chart already initialized, skipping duplicate initialization');
-                return;
-            }
-
             nwChart = initChart();
             if (nwChart) {
                 chartInitialized = true;
-                console.log('✅ Chart successfully initialized');
+                console.log('Chart successfully initialized');
             }
         };
 
@@ -3220,11 +3191,11 @@ dogeUpgrades.forEach(u => {
             // Retry with delays (especially important for mobile)
             if (!chartInitialized) {
                 console.log('Chart init failed, retrying with delays...');
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 200);
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 500);
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 1000);
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 2000); // Extra retry for slow mobile devices
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 3000); // Final attempt
+                setTimeout(tryInitChart, 200);
+                setTimeout(tryInitChart, 500);
+                setTimeout(tryInitChart, 1000);
+                setTimeout(tryInitChart, 2000); // Extra retry for slow mobile devices
+                setTimeout(tryInitChart, 3000); // Final attempt
             }
         }, 100); // Small initial delay to ensure DOM is fully rendered
 
@@ -3241,26 +3212,6 @@ dogeUpgrades.forEach(u => {
                 }
             }, 300);
         });
-
-        // Expose function to reinitialize chart (called when switching accounts)
-        window.reinitializeChart = function() {
-            console.log('🔄 Reinitializing chart for account switch...');
-            if (nwChart) {
-                try {
-                    nwChart.destroy();
-                    console.log('✅ Old chart destroyed');
-                } catch (e) {
-                    console.warn('⚠️ Error destroying old chart:', e);
-                }
-                nwChart = null;
-            }
-            chartInitialized = false;
-            // Small delay to ensure clean state
-            setTimeout(() => {
-                tryInitChart();
-                console.log('✅ Chart reinitialized with new data');
-            }, 100);
-        };
 
         let updateCount = 0;
         setInterval(() => {
@@ -3291,8 +3242,8 @@ dogeUpgrades.forEach(u => {
             }
         }, 2000);
 
-        // Auto-save is already set up earlier in initializeGame() before canvas initialization
-        // to ensure it runs even if canvas fails to load
+        // Auto-save every 1.5 seconds
+        setInterval(saveGame, 1500);
 
         // Start price swings: separate timing for each crypto
         // Only start if not already running (prevents multiple loops on refresh)
@@ -3316,16 +3267,10 @@ dogeUpgrades.forEach(u => {
     }
 
     // Save game when page becomes hidden (mobile browser close, tab switch, etc.)
-    let pageHiddenTime = null;
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             console.log('Page hidden - saving game state');
-            pageHiddenTime = Date.now();
             try {
-                // Update lastSaveTime to NOW (critical for accurate offline calculations)
-                lastSaveTime = Date.now();
-                console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
-
                 saveGame();
                 console.log('Save successful on visibility change');
             } catch (e) {
@@ -3333,76 +3278,23 @@ dogeUpgrades.forEach(u => {
             }
         } else {
             console.log('Page visible - checking saved data exists');
-            const testSave = window.safeStorage.getItem('satoshiTerminalSave');
+            const testSave = localStorage.getItem('satoshiTerminalSave');
             if (testSave) {
-                console.log('Save data confirmed in storage');
+                console.log('Save data confirmed in localStorage');
             } else {
-                console.error('WARNING: No save data found in storage!');
+                console.error('WARNING: No save data found in localStorage!');
             }
-
-            // Update leaderboard only if user was away for 6+ hours
-            if (typeof window.updateLeaderboard === 'function' && auth && auth.currentUser && !auth.currentUser.isAnonymous) {
-                const timeAway = pageHiddenTime ? (Date.now() - pageHiddenTime) / 1000 : 0;
-                const SIX_HOURS = 6 * 60 * 60; // 6 hours in seconds
-
-                if (timeAway >= SIX_HOURS) {
-                    console.log('🏆 Updating leaderboard (user was away for ' + Math.floor(timeAway / 3600) + ' hours)');
-                    window.updateLeaderboard().catch(err => {
-                        console.warn('⚠️ Leaderboard update failed:', err);
-                    });
-                } else {
-                    console.log('ℹ️ Skipping leaderboard update (only updates after 6+ hours away, login, or logout)');
-                }
-            }
-            pageHiddenTime = null;
         }
     });
 
     // Save game when user is about to leave the page
     window.addEventListener('beforeunload', function(e) {
-        console.log('⚠️ PAGE UNLOAD EVENT FIRED - SAVING GAME STATE');
-        console.log('Current BTC Balance:', btcBalance);
-        console.log('Current Dollar Balance:', dollarBalance);
-        console.log('Current Lifetime Earnings:', lifetimeEarnings);
-
-        // Force immediate synchronous save
+        console.log('Page unloading - saving game state');
         try {
-            // Update lastSaveTime to NOW (critical for accurate offline calculations)
-            lastSaveTime = Date.now();
-            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
-
             saveGame();
-            console.log('✅ SAVE SUCCESSFUL ON BEFOREUNLOAD');
-            console.log('Game state saved to localStorage');
-
-            // Clear any pending debounced cloud save and force immediate save
-            if (cloudSaveTimeout) {
-                clearTimeout(cloudSaveTimeout);
-                cloudSaveTimeout = null;
-            }
-
-            // CRITICAL: Force immediate cloud save if there are pending changes OR always on unload
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                if (hasPendingCloudSave) {
-                    console.log('📤 Forcing pending cloud save on beforeunload...');
-                } else {
-                    console.log('📤 Attempting cloud save on beforeunload...');
-                }
-                hasPendingCloudSave = false; // Clear the flag
-
-                try {
-                    // Use synchronous approach with fetch API to ensure save completes
-                    window.saveGameToCloud(true).then(() => {
-                        console.log('✅ Cloud save complete on beforeunload');
-                    }).catch(err => {
-                        console.warn('⚠️ Cloud save failed on beforeunload (non-critical):', err);
-                    });
-                } catch (cloudErr) {
-                    console.warn('⚠️ Could not save to cloud on beforeunload:', cloudErr);
-                }
-            }
+            console.log('Save successful on beforeunload');
         } catch (err) {
-            console.error('❌ SAVE FAILED ON BEFOREUNLOAD:', err);
+            console.error('Save failed on beforeunload:', err);
         }
     });
 
@@ -3410,26 +3302,8 @@ dogeUpgrades.forEach(u => {
     window.addEventListener('pagehide', function(e) {
         console.log('Page hide event - saving game state');
         try {
-            // Update lastSaveTime to NOW (critical for accurate offline calculations)
-            lastSaveTime = Date.now();
-            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
-
             saveGame();
             console.log('Save successful on pagehide');
-
-            // CRITICAL: Also save to cloud if user is logged in
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('Saving to cloud on pagehide...');
-                try {
-                    window.saveGameToCloud().then(() => {
-                        console.log('✅ Cloud save complete on pagehide');
-                    }).catch(err => {
-                        console.warn('⚠️ Cloud save failed on pagehide (non-critical):', err);
-                    });
-                } catch (cloudErr) {
-                    console.warn('⚠️ Could not save to cloud on pagehide:', cloudErr);
-                }
-            }
         } catch (err) {
             console.error('Save failed on pagehide:', err);
         }
@@ -3439,42 +3313,22 @@ dogeUpgrades.forEach(u => {
     window.addEventListener('freeze', function(e) {
         console.log('Page freeze event - saving game state');
         try {
-            // Update lastSaveTime to NOW (critical for accurate offline calculations)
-            lastSaveTime = Date.now();
-            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
-
             saveGame();
             console.log('Save successful on freeze');
-
-            // CRITICAL: Also save to cloud if user is logged in
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('Saving to cloud on freeze...');
-                try {
-                    window.saveGameToCloud().then(() => {
-                        console.log('✅ Cloud save complete on freeze');
-                    }).catch(err => {
-                        console.warn('⚠️ Cloud save failed on freeze (non-critical):', err);
-                    });
-                } catch (cloudErr) {
-                    console.warn('⚠️ Could not save to cloud on freeze:', cloudErr);
-                }
-            }
         } catch (err) {
             console.error('Save failed on freeze:', err);
         }
     });
 
-    // Age disclaimer modal handling
-    function acceptAgeDisclaimer() {
-        window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
-        document.getElementById('age-disclaimer-modal').style.display = 'none';
+    // Combined age and terms modal handling
+    function acceptAgeAndTerms() {
+        localStorage.setItem('ageDisclaimerAccepted', 'true');
+        localStorage.setItem('termsAccepted', 'true');
+        document.getElementById('age-terms-modal').style.display = 'none';
     }
 
-    function checkAgeDisclaimer() {
-        const accepted = window.safeStorage.getItem('ageDisclaimerAccepted');
-        if (!accepted) {
-            document.getElementById('age-disclaimer-modal').style.display = 'flex';
-        }
+    function openAgeAndTermsModal() {
+        document.getElementById('age-terms-modal').style.display = 'flex';
     }
 
     // Privacy policy modal handling
@@ -3487,346 +3341,16 @@ dogeUpgrades.forEach(u => {
     }
 
     // Make functions available globally
-    window.manualHash = manualHash;
-    window.manualEthHash = manualEthHash;
-    // Update manual hash button display values
-    function updateManualHashButtons() {
-        const mineBtns = document.querySelectorAll('.mine-btn span');
-        if (mineBtns.length >= 1) mineBtns[0].innerText = `+${btcClickValue.toFixed(8)} ₿`;
-        if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
-        if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
-        console.log('✅ Manual hash buttons updated - BTC:', btcClickValue.toFixed(8));
-    }
-
-    window.manualDogeHash = manualDogeHash;
-    window.acceptAgeDisclaimer = acceptAgeDisclaimer;
+    window.acceptAgeAndTerms = acceptAgeAndTerms;
+    window.openAgeAndTermsModal = openAgeAndTermsModal;
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;
-    window.initBtcShop = initBtcShop;
-    window.initEthShop = initEthShop;
-    window.initDogeShop = initDogeShop;
-    window.initPowerShop = initPowerShop;
-    window.updateAutoClickerButtonState = updateAutoClickerButtonState;
-    window.updateManualHashButtons = updateManualHashButtons;
-    // window.updateDisplay = updateDisplay; // REMOVED: function doesn't exist
-    // window.updateUpgradeUI = updateUpgradeUI; // REMOVED: function doesn't exist
-    window.updateUI = updateUI;
-    window.switchTab = switchTab;
-    window.setBuyQuantity = setBuyQuantity;
-    window.startAutoClicker = startAutoClicker;
-    window.toggleMute = toggleMute;
-    window.sellBTC = sellBTC;
-    window.sellAllBTC = sellAllBTC;
-    window.sellETH = sellETH;
-    window.sellAllETH = sellAllETH;
-    window.sellDOGE = sellDOGE;
-    window.sellAllDOGE = sellAllDOGE;
-    window.dismissInstructions = dismissInstructions;
-    window.resetEarningsStats = resetEarningsStats;
-    window.resetGame = resetGame;
-    window.saveGame = saveGame;
-
-    // Verify functions are accessible
-    console.log('✅ GAME.JS LOADED - Functions exported to window:');
-    console.log('  manualHash:', typeof window.manualHash === 'function' ? 'READY ✓' : 'MISSING ✗');
-    console.log('  manualEthHash:', typeof window.manualEthHash === 'function' ? 'READY ✓' : 'MISSING ✗');
-    console.log('  manualDogeHash:', typeof window.manualDogeHash === 'function' ? 'READY ✓' : 'MISSING ✗');
-    console.log('  switchTab:', typeof window.switchTab === 'function' ? 'READY ✓' : 'MISSING ✗');
-    console.log('  toggleMute:', typeof window.toggleMute === 'function' ? 'READY ✓' : 'MISSING ✗');
-
-    // Expose game variables globally for Firebase save/load
-    // This creates a getter/setter interface so firebase-save.js can access the closure variables
-    Object.defineProperty(window, 'btcBalance', {
-        get: () => btcBalance,
-        set: (val) => { btcBalance = val; }
-    });
-    Object.defineProperty(window, 'btcLifetime', {
-        get: () => btcLifetime,
-        set: (val) => { btcLifetime = val; }
-    });
-    Object.defineProperty(window, 'btcPerSec', {
-        get: () => btcPerSec,
-        set: (val) => { btcPerSec = val; }
-    });
-    Object.defineProperty(window, 'btcPrice', {
-        get: () => btcPrice,
-        set: (val) => { btcPrice = val; }
-    });
-    Object.defineProperty(window, 'btcClickValue', {
-        get: () => btcClickValue,
-        set: (val) => { btcClickValue = val; }
-    });
-
-    Object.defineProperty(window, 'ethBalance', {
-        get: () => ethBalance,
-        set: (val) => { ethBalance = val; }
-    });
-    Object.defineProperty(window, 'ethLifetime', {
-        get: () => ethLifetime,
-        set: (val) => { ethLifetime = val; }
-    });
-    Object.defineProperty(window, 'ethPerSec', {
-        get: () => ethPerSec,
-        set: (val) => { ethPerSec = val; }
-    });
-    Object.defineProperty(window, 'ethPrice', {
-        get: () => ethPrice,
-        set: (val) => { ethPrice = val; }
-    });
-    Object.defineProperty(window, 'ethClickValue', {
-        get: () => ethClickValue,
-        set: (val) => { ethClickValue = val; }
-    });
-
-    Object.defineProperty(window, 'dogeBalance', {
-        get: () => dogeBalance,
-        set: (val) => { dogeBalance = val; }
-    });
-    Object.defineProperty(window, 'dogeLifetime', {
-        get: () => dogeLifetime,
-        set: (val) => { dogeLifetime = val; }
-    });
-    Object.defineProperty(window, 'dogePerSec', {
-        get: () => dogePerSec,
-        set: (val) => { dogePerSec = val; }
-    });
-    Object.defineProperty(window, 'dogePrice', {
-        get: () => dogePrice,
-        set: (val) => { dogePrice = val; }
-    });
-    Object.defineProperty(window, 'dogeClickValue', {
-        get: () => dogeClickValue,
-        set: (val) => { dogeClickValue = val; }
-    });
-
-    Object.defineProperty(window, 'dollarBalance', {
-        get: () => dollarBalance,
-        set: (val) => { dollarBalance = val; }
-    });
-    Object.defineProperty(window, 'hardwareEquity', {
-        get: () => hardwareEquity,
-        set: (val) => { hardwareEquity = val; }
-    });
-    Object.defineProperty(window, 'lifetimeEarnings', {
-        get: () => lifetimeEarnings,
-        set: (val) => { lifetimeEarnings = val; }
-    });
-    Object.defineProperty(window, 'sessionEarnings', {
-        get: () => sessionEarnings,
-        set: (val) => { sessionEarnings = val; }
-    });
-    Object.defineProperty(window, 'sessionStartTime', {
-        get: () => sessionStartTime,
-        set: (val) => { sessionStartTime = val; }
-    });
-    Object.defineProperty(window, 'totalPlayTime', {
-        get: () => totalPlayTime,
-        set: (val) => { totalPlayTime = val; }
-    });
-    Object.defineProperty(window, 'totalPowerAvailable', {
-        get: () => totalPowerAvailable,
-        set: (val) => { totalPowerAvailable = val; }
-    });
-    Object.defineProperty(window, 'chartHistory', {
-        get: () => chartHistory,
-        set: (val) => { chartHistory = val; }
-    });
-    Object.defineProperty(window, 'chartTimestamps', {
-        get: () => chartTimestamps,
-        set: (val) => { chartTimestamps = val; }
-    });
-    Object.defineProperty(window, 'chartStartTime', {
-        get: () => chartStartTime,
-        set: (val) => { chartStartTime = val; }
-    });
-    Object.defineProperty(window, 'autoClickerCooldownEnd', {
-        get: () => autoClickerCooldownEnd,
-        set: (val) => { autoClickerCooldownEnd = val; }
-    });
-
-    // Expose arrays/objects
-    Object.defineProperty(window, 'powerUpgrades', {
-        get: () => powerUpgrades,
-        set: (val) => { }
-    });
-    Object.defineProperty(window, 'btcUpgrades', {
-        get: () => btcUpgrades,
-        set: (val) => { }
-    });
-    Object.defineProperty(window, 'ethUpgrades', {
-        get: () => ethUpgrades,
-        set: (val) => { }
-    });
-    Object.defineProperty(window, 'dogeUpgrades', {
-        get: () => dogeUpgrades,
-        set: (val) => { }
-    });
-
-    Object.defineProperty(window, 'lastSaveTime', {
-        get: () => lastSaveTime,
-        set: (val) => { lastSaveTime = val; }
-    });
-
-    // Debug function to test save/load system
-    window.testSaveSystem = function() {
-        console.log('=== SAVE SYSTEM TEST ===');
-        console.log('Current BTC Balance:', btcBalance);
-        console.log('Current Dollar Balance:', dollarBalance);
-        console.log('Current Lifetime Earnings:', lifetimeEarnings);
-        console.log('Current BTC Per Sec:', btcPerSec);
-        console.log('Last Save Time:', new Date(lastSaveTime));
-
-        // Force a save
-        console.log('Forcing save...');
-        saveGame();
-
-        // Try to load it back
-        const saved = window.safeStorage.getItem('satoshiTerminalSave');
-        if (saved) {
-            console.log('✅ Save data found in storage. Size:', saved.length, 'bytes');
-            const parsed = JSON.parse(saved);
-            console.log('Parsed data:');
-            console.log('  BTC Balance:', parsed.btcBalance);
-            console.log('  Dollar Balance:', parsed.dollarBalance);
-            console.log('  Lifetime Earnings:', parsed.lifetimeEarnings);
-            console.log('  BTC Per Sec:', parsed.btcPerSec);
-            console.log('  Last Save Time:', new Date(parsed.lastSaveTime));
-        } else {
-            console.error('❌ Save data NOT found in storage!');
-        }
-    };
-
-    // COMPREHENSIVE DIAGNOSTIC - run this after buying an upgrade
-    window.diagnoseSaveIssue = function() {
-        console.log('\n🔍 === COMPREHENSIVE SAVE ISSUE DIAGNOSIS ===\n');
-
-        // Check 1: safeStorage availability
-        console.log('CHECK 1: SafeStorage Availability');
-        console.log('  window.safeStorage exists?', !!window.safeStorage);
-        console.log('  _isAvailable?', window.safeStorage ? window.safeStorage._isAvailable : 'N/A');
-        console.log('  localStorage works?', (() => {
-            try {
-                localStorage.setItem('_test', 'test');
-                localStorage.removeItem('_test');
-                return true;
-            } catch {
-                return false;
-            }
-        })());
-
-        // Check 2: Current game state
-        console.log('\nCHECK 2: Current Game State (in memory)');
-        console.log('  BTC Balance:', btcBalance);
-        console.log('  Dollar Balance:', dollarBalance);
-        console.log('  Hardware Equity:', hardwareEquity);
-        console.log('  BTC Upgrades count:', btcUpgrades ? btcUpgrades.length : 'N/A');
-        if (btcUpgrades && btcUpgrades.length > 0) {
-            btcUpgrades.slice(0, 5).forEach(u => {
-                console.log('    -', u.name + ':', 'level', u.level, 'yield', u.currentYield);
-            });
-        }
-
-        // Check 3: What's in localStorage
-        console.log('\nCHECK 3: Data in localStorage');
-        const saved = window.safeStorage.getItem('satoshiTerminalSave');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                console.log('  ✅ Save data exists, size:', saved.length, 'bytes');
-                console.log('  Saved BTC Balance:', parsed.btcBalance);
-                console.log('  Saved Dollar Balance:', parsed.dollarBalance);
-                console.log('  Saved Hardware Equity:', parsed.hardwareEquity);
-                console.log('  Saved BTC Upgrades count:', parsed.btcUpgrades ? parsed.btcUpgrades.length : 'N/A');
-                if (parsed.btcUpgrades && parsed.btcUpgrades.length > 0) {
-                    parsed.btcUpgrades.slice(0, 5).forEach(u => {
-                        console.log('    -', u.id + ':', 'level', u.level, 'yield', u.currentYield);
-                    });
-                }
-                console.log('  Last save time:', new Date(parsed.lastSaveTime));
-            } catch (e) {
-                console.error('  ❌ ERROR parsing saved data:', e.message);
-            }
-        } else {
-            console.error('  ❌ NO SAVE DATA IN STORAGE!');
-        }
-
-        // Check 4: Version tracking
-        console.log('\nCHECK 4: Version Tracking (cache clearing)');
-        console.log('  App Version (hardcoded):', '1.0.13');
-        console.log('  Stored Version in localStorage:', localStorage.getItem('appVersion'));
-        console.log('  Match?', localStorage.getItem('appVersion') === '1.0.13');
-
-        // Check 5: Auto-save status
-        console.log('\nCHECK 5: Auto-Save Interval Status');
-        console.log('  saveGame function exists?', typeof saveGame === 'function');
-        console.log('  (check console for saveGame messages - should see "=== ATTEMPTING SAVE ===" every 1.5 seconds)');
-
-        console.log('\n✅ Diagnosis complete. Look for ❌ marks above.');
-    };
-
-    // Force display offline earnings modal (for testing)
-    window.forceShowOfflineModal = function(btc = 0.001, eth = 0.01, doge = 50, staking = 10) {
-        console.log('🔨 FORCING OFFLINE EARNINGS MODAL');
-        showOfflineEarningsModal(btc, eth, doge, staking, 600, false, 600);
-    };
-
-    // Debug function to simulate offline time
-    window.testOfflineEarnings = function(minutesAway = 1) {
-        console.log('=== SIMULATING OFFLINE TIME ===');
-        console.log('Simulating', minutesAway, 'minutes away');
-
-        // Get current saved data
-        const saved = window.safeStorage.getItem('satoshiTerminalSave');
-        if (!saved) {
-            console.error('❌ No save data found!');
-            return;
-        }
-
-        const data = JSON.parse(saved);
-        console.log('Current lastSaveTime:', new Date(data.lastSaveTime));
-
-        // Modify the save to pretend it was made X minutes ago
-        const secondsAway = minutesAway * 60;
-        data.lastSaveTime = Date.now() - (secondsAway * 1000);
-
-        console.log('Modified lastSaveTime:', new Date(data.lastSaveTime), '(' + secondsAway + ' seconds ago)');
-        console.log('BTC Per Sec in save:', data.btcPerSec);
-
-        // Save the modified data
-        window.safeStorage.setItem('satoshiTerminalSave', JSON.stringify(data));
-        console.log('Modified save stored. Reload page to see offline earnings modal!');
-    };
 
     // Run initialization when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            checkAgeDisclaimer();
             initializeGame();
-            // Test manual hash buttons after DOM is ready
-            setTimeout(() => {
-                const btcBtn = document.querySelector('button.mine-btn[onclick*="manualHash"]');
-                const ethBtn = document.querySelector('button.mine-btn[onclick*="manualEthHash"]');
-                const dogeBtn = document.querySelector('button.mine-btn[onclick*="manualDogeHash"]');
-                console.log('🔘 Button elements found:');
-                console.log('  BTC button:', btcBtn ? 'EXISTS ✓' : 'MISSING ✗');
-                console.log('  ETH button:', ethBtn ? 'EXISTS ✓' : 'MISSING ✗');
-                console.log('  DOGE button:', dogeBtn ? 'EXISTS ✓' : 'MISSING ✗');
-                if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
-            }, 500);
         });
     } else {
-        checkAgeDisclaimer();
         initializeGame();
-        // Test manual hash buttons after initialization
-        setTimeout(() => {
-            const btcBtn = document.querySelector('button.mine-btn[onclick*="manualHash"]');
-            const ethBtn = document.querySelector('button.mine-btn[onclick*="manualEthHash"]');
-            const dogeBtn = document.querySelector('button.mine-btn[onclick*="manualDogeHash"]');
-            console.log('🔘 Button elements found:');
-            console.log('  BTC button:', btcBtn ? 'EXISTS ✓' : 'MISSING ✗');
-            console.log('  ETH button:', ethBtn ? 'EXISTS ✓' : 'MISSING ✗');
-            console.log('  DOGE button:', dogeBtn ? 'EXISTS ✓' : 'MISSING ✗');
-            if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
-        }, 500);
     }
-})();

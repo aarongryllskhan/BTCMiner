@@ -1,47 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <!-- Main Game Page -->
     <url>
-        <loc>https://www.idlebtcminer.com/</loc>
-        <lastmod>2026-01-23</lastmod>
-        <changefreq>daily</changefreq>
+        <loc>https://idlebtcminer.com</loc>
+        <lastmod>2026-01-24</lastmod>
+        <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
-
-    <!-- Policy Pages -->
     <url>
-        <loc>https://www.idlebtcminer.com/privacy.html</loc>
-        <lastmod>2026-01-23</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://www.idlebtcminer.com/cookies.html</loc>
-        <lastmod>2026-01-23</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://www.idlebtcminer.com/terms.html</loc>
-        <lastmod>2026-01-23</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://www.idlebtcminer.com/contact.html</loc>
-        <lastmod>2026-01-23</lastmod>
+        <loc>https://idlebtcminer.com/privacy.html</loc>
+        <lastmod>2026-01-24</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
-
-    <!-- Additional Pages -->
     <url>
-        <loc>https://www.idlebtcminer.com/eula.html</loc>
-        <lastmod>2026-01-23</lastmod>
+        <loc>https://idlebtcminer.com/cookies.html</loc>
+        <lastmod>2026-01-24</lastmod>
         <changefreq>monthly</changefreq>
-        <priority>0.6</priority>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://idlebtcminer.com/terms.html</loc>
+        <lastmod>2026-01-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://idlebtcminer.com/contact.html</loc>
+        <lastmod>2026-01-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
     </url>
 </urlset>
