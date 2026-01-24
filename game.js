@@ -1924,7 +1924,14 @@ function buyDogeBoost(i) {
 
         // Update manual hash buttons with current click values
         const mineBtns = document.querySelectorAll('.mine-btn span');
-        if (mineBtns.length >= 1) mineBtns[0].innerText = `+${btcClickValue.toFixed(8)} ₿`;
+        console.log('🔘 Mine buttons found:', mineBtns.length, 'btcClickValue:', btcClickValue);
+        if (mineBtns.length >= 1) {
+            const newText = `+${btcClickValue.toFixed(8)} ₿`;
+            if (mineBtns[0].innerText !== newText) {
+                mineBtns[0].innerText = newText;
+                console.log('✅ Updated BTC button to:', newText);
+            }
+        }
         if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
         if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
 
@@ -3140,6 +3147,15 @@ dogeUpgrades.forEach(u => {
     // Make functions available globally
     window.manualHash = manualHash;
     window.manualEthHash = manualEthHash;
+    // Update manual hash button display values
+    function updateManualHashButtons() {
+        const mineBtns = document.querySelectorAll('.mine-btn span');
+        if (mineBtns.length >= 1) mineBtns[0].innerText = `+${btcClickValue.toFixed(8)} ₿`;
+        if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
+        if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
+        console.log('✅ Manual hash buttons updated - BTC:', btcClickValue.toFixed(8));
+    }
+
     window.manualDogeHash = manualDogeHash;
     window.acceptAgeDisclaimer = acceptAgeDisclaimer;
     window.openPrivacyModal = openPrivacyModal;
@@ -3149,6 +3165,7 @@ dogeUpgrades.forEach(u => {
     window.initDogeShop = initDogeShop;
     window.initPowerShop = initPowerShop;
     window.updateAutoClickerButtonState = updateAutoClickerButtonState;
+    window.updateManualHashButtons = updateManualHashButtons;
     // window.updateDisplay = updateDisplay; // REMOVED: function doesn't exist
     // window.updateUpgradeUI = updateUpgradeUI; // REMOVED: function doesn't exist
     window.updateUI = updateUI;

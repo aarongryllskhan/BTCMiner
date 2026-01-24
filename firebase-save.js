@@ -438,6 +438,7 @@ async function loadGameFromCloud(userId = null) {
         if (typeof updateDisplay === 'function') updateDisplay();
         if (typeof updateUpgradeUI === 'function') updateUpgradeUI();
         if (typeof updateSkillTree === 'function') updateSkillTree();
+        if (typeof window.updateManualHashButtons === 'function') window.updateManualHashButtons();
 
         // Reinitialize chart with new account data
         if (typeof window.reinitializeChart === 'function') {
