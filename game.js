@@ -450,6 +450,8 @@
         lastSaveTime = Date.now();
 
         const gameState = {
+            // User tracking (to prevent loading wrong user's data)
+            userId: (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null,
             // Bitcoin data
             btcBalance,
             btcLifetime,
@@ -579,6 +581,22 @@ function loadGame() {
         console.log('✓ Loading game... Save data size:', savedData.length, 'bytes');
         const state = JSON.parse(savedData);
         console.log('✓ Save data parsed successfully');
+
+        // Check if this save belongs to the current user
+        const currentUserId = (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null;
+        const savedUserId = state.userId || null;
+
+        console.log('🔍 CHECKING SAVE OWNERSHIP:');
+        console.log('  currentUserId:', currentUserId);
+        console.log('  savedUserId:', savedUserId);
+
+        if (currentUserId && savedUserId && currentUserId !== savedUserId) {
+            console.warn('⚠️ LOCAL SAVE BELONGS TO DIFFERENT USER - skipping load');
+            console.warn('   This save will be overwritten by cloud data');
+            return; // Don't load mismatched data
+        }
+
+        console.log('✅ Save ownership verified, proceeding with load');
         console.log('Loaded BTC balance:', state.btcBalance);
         console.log('Loaded dollar balance:', state.dollarBalance);
         console.log('Loaded lastSaveTime from file:', state.lastSaveTime ? new Date(state.lastSaveTime) : 'NOT FOUND');
@@ -1031,6 +1049,11 @@ function loadGame() {
         }, 2500);
 
         console.log('Modal created and appended (auto-dismiss in 3.5 seconds)');
+
+        // CRITICAL: Clear the cached offline earnings data after showing
+        // This prevents showing stale data on the next refresh
+        window.offlineEarningsToShow = null;
+        console.log('🗑️ Cleared window.offlineEarningsToShow to prevent stale data');
     }
 
     // Expose function to window so firebase-save.js can call it
