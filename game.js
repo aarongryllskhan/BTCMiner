@@ -2824,27 +2824,34 @@ dogeUpgrades.forEach(u => {
         }
 
         // Show offline earnings modal AFTER instructions
+        // Only show if not already displayed by cloud load (firebase-save.js shows it immediately)
         if (offlineEarningsData && offlineEarningsData.seconds >= 5) {
-            console.log('✅ SHOWING OFFLINE EARNINGS MODAL');
-            console.log('  BTC:', offlineEarningsData.btc);
-            console.log('  ETH:', offlineEarningsData.eth);
-            console.log('  DOGE:', offlineEarningsData.doge);
-            console.log('  Staking:', offlineEarningsData.stakingCash);
-            console.log('  Seconds away:', offlineEarningsData.seconds);
+            // Check if modal is already visible (set by cloud load)
+            const modalExists = document.querySelector('.offline-modal');
+            if (!modalExists) {
+                console.log('✅ SHOWING OFFLINE EARNINGS MODAL');
+                console.log('  BTC:', offlineEarningsData.btc);
+                console.log('  ETH:', offlineEarningsData.eth);
+                console.log('  DOGE:', offlineEarningsData.doge);
+                console.log('  Staking:', offlineEarningsData.stakingCash);
+                console.log('  Seconds away:', offlineEarningsData.seconds);
 
-            // Delay showing offline earnings modal to avoid overlap with instructions
-            const delayMs = showedInstructions ? 1500 : 500;
-            setTimeout(() => {
-                showOfflineEarningsModal(
-                    offlineEarningsData.btc,
-                    offlineEarningsData.eth,
-                    offlineEarningsData.doge,
-                    offlineEarningsData.stakingCash,
-                    offlineEarningsData.seconds,
-                    offlineEarningsData.wasCapped,
-                    offlineEarningsData.cappedSeconds
-                );
-            }, delayMs);
+                // Delay showing offline earnings modal to avoid overlap with instructions
+                const delayMs = showedInstructions ? 1500 : 500;
+                setTimeout(() => {
+                    showOfflineEarningsModal(
+                        offlineEarningsData.btc,
+                        offlineEarningsData.eth,
+                        offlineEarningsData.doge,
+                        offlineEarningsData.stakingCash,
+                        offlineEarningsData.seconds,
+                        offlineEarningsData.wasCapped,
+                        offlineEarningsData.cappedSeconds
+                    );
+                }, delayMs);
+            } else {
+                console.log('ℹ️ Offline earnings modal already displayed by cloud load');
+            }
         }
 
         const canvasElement = document.getElementById('nwChart');

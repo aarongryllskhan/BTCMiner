@@ -487,6 +487,29 @@ async function loadGameFromCloud(userId = null) {
                 wasCapped: wasTimeCaped,
                 cappedSeconds: offlineSeconds
             };
+
+            // Show modal immediately after cloud load (don't wait for DOMContentLoaded check)
+            console.log('✅ SHOWING OFFLINE EARNINGS MODAL FROM CLOUD');
+            console.log('  BTC:', offlineBtcEarnings);
+            console.log('  ETH:', offlineEthEarnings);
+            console.log('  DOGE:', offlineDogeEarnings);
+            console.log('  Seconds away:', offlineSecondsRaw);
+
+            setTimeout(() => {
+                if (typeof showOfflineEarningsModal === 'function') {
+                    showOfflineEarningsModal(
+                        offlineBtcEarnings,
+                        offlineEthEarnings,
+                        offlineDogeEarnings,
+                        0, // stakingCash
+                        offlineSecondsRaw,
+                        wasTimeCaped,
+                        offlineSeconds
+                    );
+                } else {
+                    console.warn('⚠️ showOfflineEarningsModal function not available yet');
+                }
+            }, 500);
         }
 
         // Update UI if functions exist
