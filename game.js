@@ -969,34 +969,44 @@ function loadGame() {
         document.body.appendChild(overlay);
         document.body.appendChild(modal);
 
-        document.getElementById('claim-btn').onclick = () => {
-            // Offline earnings were already added to balances in loadGame()
-            // Just dismiss the modal and save
-            console.log('✅ OFFLINE EARNINGS MODAL CLAIMED');
-            console.log('  BTC Balance:', window.btcBalance);
-            console.log('  Lifetime Earnings:', window.lifetimeEarnings);
+        // Use addEventListener for more reliable event handling
+        const claimBtn = document.getElementById('claim-btn');
+        if (claimBtn) {
+            claimBtn.addEventListener('click', function handleClaimRewards() {
+                // Offline earnings were already added to balances in loadGame()
+                // Just dismiss the modal and save
+                console.log('✅ OFFLINE EARNINGS MODAL CLAIMED');
+                console.log('  BTC Balance:', window.btcBalance);
+                console.log('  Lifetime Earnings:', window.lifetimeEarnings);
 
-            overlay.remove();
-            modal.remove();
+                overlay.remove();
+                modal.remove();
 
-            // Update UI immediately
-            if (typeof updateUI === 'function') {
-                updateUI();
-            }
+                // Update UI immediately
+                if (typeof updateUI === 'function') {
+                    updateUI();
+                }
 
-            // Save to localStorage
-            if (typeof saveGame === 'function') {
-                saveGame();
-            }
+                // Save to localStorage
+                if (typeof saveGame === 'function') {
+                    saveGame();
+                }
 
-            // Auto-save to cloud
-            if (typeof window.saveGameToCloud === 'function') {
-                console.log('💾 Auto-saving to cloud after offline earnings modal claimed...');
-                window.saveGameToCloud(false).catch(err => {
-                    console.warn('⚠️ Cloud auto-save failed:', err);
-                });
-            }
-        };
+                // Auto-save to cloud
+                if (typeof window.saveGameToCloud === 'function') {
+                    console.log('💾 Auto-saving to cloud after offline earnings modal claimed...');
+                    window.saveGameToCloud(false).catch(err => {
+                        console.warn('⚠️ Cloud auto-save failed:', err);
+                    });
+                }
+
+                // Remove the event listener after handling
+                claimBtn.removeEventListener('click', handleClaimRewards);
+            });
+            console.log('✅ Modal claim button listener attached');
+        } else {
+            console.error('❌ Could not find claim-btn element');
+        }
 
         console.log('Modal created and appended');
     }

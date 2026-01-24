@@ -521,7 +521,9 @@ async function loadGameFromCloud(userId = null) {
         console.log('  Seconds away:', offlineSecondsRaw);
 
         setTimeout(() => {
+            console.log('🎯 Attempting to show offline earnings modal...');
             if (typeof showOfflineEarningsModal === 'function') {
+                console.log('✅ showOfflineEarningsModal function found, calling now');
                 showOfflineEarningsModal(
                     offlineBtcEarnings,
                     offlineEthEarnings,
@@ -532,7 +534,7 @@ async function loadGameFromCloud(userId = null) {
                     offlineSeconds
                 );
             } else {
-                console.warn('⚠️ showOfflineEarningsModal function not available yet');
+                console.warn('⚠️ showOfflineEarningsModal function not available, typeof:', typeof showOfflineEarningsModal);
             }
         }, 500);
 
