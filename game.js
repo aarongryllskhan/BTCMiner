@@ -1922,6 +1922,12 @@ function buyDogeBoost(i) {
         document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
         document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
 
+        // Update manual hash buttons with current click values
+        const mineBtns = document.querySelectorAll('.mine-btn span');
+        if (mineBtns.length >= 1) mineBtns[0].innerText = `+${btcClickValue.toFixed(8)} ₿`;
+        if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
+        if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
+
         // Update hardware equity
         let hardwareEquityDisplay = "$" + Math.floor(hardwareEquity).toLocaleString();
         if (isMobileUI && hardwareEquity >= 1000) {
