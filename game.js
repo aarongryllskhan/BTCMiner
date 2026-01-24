@@ -679,8 +679,6 @@ function loadGame() {
                     upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
                 }
             });
-        } else {
-            console.warn('⚠️ NO BTC UPGRADES IN SAVE STATE!');
         } else if (state.upgrades) {
             // Backward compatibility: load old saves
             state.upgrades.forEach((savedU, index) => {

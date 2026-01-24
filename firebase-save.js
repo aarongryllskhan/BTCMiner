@@ -364,8 +364,8 @@ async function loadGameFromCloud(userId = null) {
         window.chartStartTime = cloudData.chartStartTime || 0;
         window.totalPowerAvailable = cloudData.totalPowerAvailable || 0;
 
-        // Restore upgrades from cloud data
-        if (cloudData.powerUpgrades && Array.isArray(cloudData.powerUpgrades)) {
+        // Restore upgrades from cloud data (with safety checks for undefined arrays)
+        if (window.powerUpgrades && cloudData.powerUpgrades && Array.isArray(cloudData.powerUpgrades)) {
             cloudData.powerUpgrades.forEach((cloudUpgrade, index) => {
                 if (window.powerUpgrades[index]) {
                     window.powerUpgrades[index].level = cloudUpgrade.level || 0;
@@ -373,9 +373,11 @@ async function loadGameFromCloud(userId = null) {
                     window.powerUpgrades[index].currentPower = cloudUpgrade.currentPower || 0;
                 }
             });
+        } else if (!window.powerUpgrades) {
+            console.warn('⚠️ window.powerUpgrades is undefined - game.js may not have loaded yet');
         }
 
-        if (cloudData.btcUpgrades && Array.isArray(cloudData.btcUpgrades)) {
+        if (window.btcUpgrades && cloudData.btcUpgrades && Array.isArray(cloudData.btcUpgrades)) {
             cloudData.btcUpgrades.forEach((cloudUpgrade, index) => {
                 if (window.btcUpgrades[index]) {
                     window.btcUpgrades[index].level = cloudUpgrade.level || 0;
@@ -385,9 +387,11 @@ async function loadGameFromCloud(userId = null) {
                     window.btcUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
                 }
             });
+        } else if (!window.btcUpgrades) {
+            console.warn('⚠️ window.btcUpgrades is undefined - game.js may not have loaded yet');
         }
 
-        if (cloudData.ethUpgrades && Array.isArray(cloudData.ethUpgrades)) {
+        if (window.ethUpgrades && cloudData.ethUpgrades && Array.isArray(cloudData.ethUpgrades)) {
             cloudData.ethUpgrades.forEach((cloudUpgrade, index) => {
                 if (window.ethUpgrades[index]) {
                     window.ethUpgrades[index].level = cloudUpgrade.level || 0;
@@ -397,9 +401,11 @@ async function loadGameFromCloud(userId = null) {
                     window.ethUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
                 }
             });
+        } else if (!window.ethUpgrades) {
+            console.warn('⚠️ window.ethUpgrades is undefined - game.js may not have loaded yet');
         }
 
-        if (cloudData.dogeUpgrades && Array.isArray(cloudData.dogeUpgrades)) {
+        if (window.dogeUpgrades && cloudData.dogeUpgrades && Array.isArray(cloudData.dogeUpgrades)) {
             cloudData.dogeUpgrades.forEach((cloudUpgrade, index) => {
                 if (window.dogeUpgrades[index]) {
                     window.dogeUpgrades[index].level = cloudUpgrade.level || 0;
@@ -409,6 +415,8 @@ async function loadGameFromCloud(userId = null) {
                     window.dogeUpgrades[index].boostLevel = cloudUpgrade.boostLevel || 0;
                 }
             });
+        } else if (!window.dogeUpgrades) {
+            console.warn('⚠️ window.dogeUpgrades is undefined - game.js may not have loaded yet');
         }
 
         // Recalculate click values from manual hash upgrade levels (same as game.js loadGame())
