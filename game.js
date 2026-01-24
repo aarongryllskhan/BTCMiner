@@ -1597,7 +1597,20 @@ function buyLevel(i) {
 
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
+
+        console.log('🛒 PURCHASE COMPLETED -', u.name);
+        console.log('   New level:', u.level, 'New yield:', u.currentYield);
+
+        // CRITICAL: Save immediately after purchase
         saveGame();
+
+        // Double-check the save actually worked
+        const verifySave = window.safeStorage.getItem('satoshiTerminalSave');
+        if (verifySave) {
+            const parsed = JSON.parse(verifySave);
+            const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
+            console.log('✅ VERIFIED SAVE - Upgrade level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
+        }
 
         // Play upgrade sound
         playUpgradeSound();
@@ -1648,7 +1661,21 @@ function buyLevelMultiple(i, quantity) {
         }
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         updateUI();
+
+        console.log('🛒 PURCHASE COMPLETED - Bought', purchased, 'x', u.name);
+        console.log('   New level:', u.level, 'New yield:', u.currentYield);
+
+        // CRITICAL: Save immediately after purchase
         saveGame();
+
+        // Double-check the save actually worked
+        const verifySave = window.safeStorage.getItem('satoshiTerminalSave');
+        if (verifySave) {
+            const parsed = JSON.parse(verifySave);
+            const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
+            console.log('✅ VERIFIED SAVE - USB Miner level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
+        }
+
         playUpgradeSound();
     }
 }
