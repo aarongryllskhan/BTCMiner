@@ -1042,11 +1042,12 @@ async function linkGuestToEmail(email, password, username) {
             await db.collection('users').doc(newUser.uid).collection('gameData').doc('current').set(localGameData);
             console.log('✅ Game progress saved to new account');
         } catch (dataError) {
-            console.warn('⚠️ Failed to save game data:', dataError);
-            throw dataError;
+            console.warn('⚠️ Failed to save game data (non-critical):', dataError);
+            // Don't throw - account creation succeeded, just game data didn't save
+            // User can continue and play with fresh progress
         }
 
-        // Hide modal and show refresh modal
+        // Hide link account modal
         console.log('🔒 Closing link account modal...');
         const linkModal = document.getElementById('link-account-modal');
         if (linkModal) {
@@ -1055,11 +1056,10 @@ async function linkGuestToEmail(email, password, username) {
             console.log('✅ Link account modal closed');
         }
 
-        // Small delay to ensure modal is removed and DOM is updated, especially important on mobile
-        setTimeout(() => {
-            console.log('🎉 Showing success modal...');
-            showAccountLinkedRefreshModal(cleanUsername);
-        }, 100);
+        // Store username and set flag to show refresh modal after onboarding is accepted
+        localStorage.setItem('linkedAccountUsername', cleanUsername);
+        localStorage.setItem('showRefreshModalAfterOnboarding', 'true');
+        console.log('💾 Stored flag to show refresh modal after onboarding');
 
         return newUser;
 

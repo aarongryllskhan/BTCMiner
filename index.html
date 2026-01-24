@@ -73,7 +73,7 @@
         logViewportInfo();
 
         // Check if app has been updated
-        const appVersion = '1.0.6'; // Increment this version to force cache clear
+        const appVersion = '1.0.8'; // Increment this version to force cache clear
 
         try {
             const storedVersion = localStorage.getItem('appVersion');
@@ -781,9 +781,23 @@
             }
         }, 50);
 
-        // Show refresh modal if this is a new account (guest or normal)
+        // Show refresh modal if this is a new account (guest or normal) or if account was just linked
         setTimeout(() => {
-            if (localStorage.getItem('needsRefreshModal') === 'true') {
+            const needsRefresh = localStorage.getItem('needsRefreshModal') === 'true';
+            const linkedAccount = localStorage.getItem('showRefreshModalAfterOnboarding') === 'true';
+
+            if (linkedAccount) {
+                // Account was just linked - show linked account refresh modal
+                console.log('🔄 Showing linked account refresh modal after terms acceptance');
+                const username = localStorage.getItem('linkedAccountUsername') || 'User';
+                if (typeof window.showAccountLinkedRefreshModal === 'function') {
+                    window.showAccountLinkedRefreshModal(username);
+                }
+                // Clear the flags
+                localStorage.removeItem('showRefreshModalAfterOnboarding');
+                localStorage.removeItem('linkedAccountUsername');
+            } else if (needsRefresh) {
+                // New account created - show regular refresh modal
                 console.log('🔄 Showing refresh modal after terms acceptance');
                 if (typeof showRefreshModalAfterOnboarding === 'function') {
                     showRefreshModalAfterOnboarding();
