@@ -1586,7 +1586,7 @@ console.log('✅ PostMessage listener initialized for iframe authentication');
 
 // Setup authentication state listener
 // Guard flag to prevent loading game data multiple times
-let gameDataLoadedFlag = false;
+window.gameDataLoaded = false;
 
 // This will be called after Firebase initializes
 function setupAuthListener() {
@@ -1600,7 +1600,7 @@ function setupAuthListener() {
     // Listen for authentication state changes
     auth.onAuthStateChanged(async (user) => {
         console.log('🔄 Auth state changed!');
-        console.log('   gameDataLoadedFlag:', gameDataLoadedFlag);
+        console.log('   window.gameDataLoaded:', window.gameDataLoaded);
         console.log('   user:', user ? user.uid : 'null');
 
         if (user) {
@@ -1696,26 +1696,11 @@ function setupAuthListener() {
             // Load user's game data
             console.log('Loading game data...');
             try {
-                // CRITICAL FIX: ALWAYS prioritize LOCAL save on page refresh
-                // Only load from cloud if there's NO local data (first login) or account switch
-                console.log('📦 Checking local storage...');
-                const hasLocalData = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
-                const storedUserId = localStorage.getItem('lastLoggedInUserId');
                 const skipCloudLoad = localStorage.getItem('skipCloudLoadOnRefresh') === 'true';
                 const currentUserId = user.uid;
 
-                // CRITICAL: If we have local data, assume it belongs to current user (same browser = same user)
-                // Only load from cloud if there's NO local data
-                const hasValidLocalData = !!hasLocalData;
-
-                // Detect if this is an account switch (different user than last login)
-                const isAccountSwitch = storedUserId && storedUserId !== currentUserId;
-
                 console.log('🔍 SAVE LOAD DECISION:');
-                console.log('  hasValidLocalData:', hasValidLocalData);
-                console.log('  storedUserId:', storedUserId);
                 console.log('  currentUserId:', currentUserId);
-                console.log('  isAccountSwitch:', isAccountSwitch);
                 console.log('  skipCloudLoad:', skipCloudLoad);
 
                 if (skipCloudLoad) {
@@ -1772,7 +1757,7 @@ function setupAuthListener() {
                 sessionStorage.setItem('userWasLoggedIn', 'true');
 
                 // SET THE FLAG to prevent duplicate loads
-                gameDataLoadedFlag = true;
+                window.gameDataLoaded = true;
                 console.log('✅ Game data loaded successfully (flag set to prevent duplicates)');
 
                 // Re-initialize the game UI after loading
@@ -1825,9 +1810,9 @@ function setupAuthListener() {
         } else {
             console.log('ℹ️ No user logged in - clearing game state and showing login screen');
 
-            // Reset gameDataLoadedFlag so next login will load data properly
-            gameDataLoadedFlag = false;
-            console.log('🔄 Reset gameDataLoadedFlag to allow next login to load data');
+            // Reset window.gameDataLoaded so next login will load data properly
+            window.gameDataLoaded = false;
+            console.log('🔄 Reset window.gameDataLoaded to allow next login to load data');
 
             // Clear session storage flag to ensure fresh cloud load on next login
             sessionStorage.removeItem('userWasLoggedIn');

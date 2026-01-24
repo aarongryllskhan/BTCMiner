@@ -3030,14 +3030,19 @@ dogeUpgrades.forEach(u => {
         console.log('✓ Staking system initialized');
 
         // ============================================================
-        // CRITICAL: Auto-save must be started BEFORE any early returns!
+        // CRITICAL: Delay auto-save until after the 3-second fallback loads data
+        // This ensures we never save zeros before game state is loaded
         // ============================================================
-        console.log('🔄 CRITICAL: Setting up AUTO-SAVE INTERVAL (every 1.5 seconds)');
-        const autoSaveIntervalId = setInterval(() => {
-            console.log('⏱️ AUTO-SAVE TICK - calling saveGame()');
-            saveGame();
-        }, 1500);
-        console.log('✅ AUTO-SAVE INTERVAL STARTED - ID:', autoSaveIntervalId);
+        console.log('⏳ Auto-save will start in 3.5 seconds (after game data loads)');
+
+        setTimeout(() => {
+            console.log('🔄 Starting AUTO-SAVE INTERVAL (every 1.5 seconds)');
+            const autoSaveIntervalId = setInterval(() => {
+                console.log('⏱️ AUTO-SAVE TICK - calling saveGame()');
+                saveGame();
+            }, 1500);
+            console.log('✅ AUTO-SAVE INTERVAL STARTED - ID:', autoSaveIntervalId);
+        }, 3500); // Start after the 3-second fallback + 500ms buffer
         // ============================================================
 
         // Get offline earnings data that was set by loadGame()
