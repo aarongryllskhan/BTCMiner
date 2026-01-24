@@ -1479,30 +1479,64 @@ function setupAuthListener() {
                 // Check if local data belongs to current user
                 const isLocalDataForCurrentUser = hasLocalData && storedUserId === currentUserId;
 
+                // Detect if this is an account switch (different user than last login)
+                const isAccountSwitch = storedUserId && storedUserId !== currentUserId;
+
                 console.log('🔍 SAVE LOAD DECISION:');
-                console.log('  hasLocalData:', hasLocalData);
+                console.log('  hasLocalData:', !!hasLocalData);
                 console.log('  storedUserId:', storedUserId);
                 console.log('  currentUserId:', currentUserId);
                 console.log('  isLocalDataForCurrentUser:', isLocalDataForCurrentUser);
+                console.log('  isAccountSwitch:', isAccountSwitch);
                 console.log('  skipCloudLoad:', skipCloudLoad);
-                console.log('  DECISION:', isLocalDataForCurrentUser && !skipCloudLoad ? 'LOAD LOCAL' : 'LOAD CLOUD');
 
-                if (isLocalDataForCurrentUser && !skipCloudLoad) {
-                    // Same user with local data - load local save with offline earnings
-                    console.log('✅ Local save found for current user - loading with offline earnings calculation');
-                    if (typeof window.loadGame === 'function') {
-                        window.loadGame();
-                    }
-                } else if (skipCloudLoad) {
+                if (skipCloudLoad) {
                     // User just reset the game - start fresh
                     console.log('🚫 User reset save - starting fresh');
+                    console.log('  DECISION: FRESH START (reset requested)');
                     localStorage.removeItem('skipCloudLoadOnRefresh');
                     if (typeof window.loadGame === 'function') {
                         window.loadGame(); // Initialize fresh game
                     }
+                } else if (isAccountSwitch) {
+                    // ACCOUNT SWITCH - this is the ONLY time we should load from cloud
+                    console.log('🔄 ACCOUNT SWITCH DETECTED - loading from cloud');
+                    console.log('  Previous user:', storedUserId);
+                    console.log('  New user:', currentUserId);
+                    console.log('  DECISION: LOAD CLOUD (account switch)');
+
+                    if (typeof window.loadGameFromCloud === 'function') {
+                        await window.loadGameFromCloud(currentUserId);
+                    } else {
+                        console.warn('⚠️ loadGameFromCloud not available, initializing fresh game');
+                        if (typeof window.loadGame === 'function') {
+                            window.loadGame();
+                        }
+                    }
+                } else if (isLocalDataForCurrentUser) {
+                    // SAME USER with local data - ALWAYS load local first (page refresh)
+                    console.log('✅ LOCAL SAVE FOUND for current user - loading LOCAL with offline earnings');
+                    console.log('  DECISION: LOAD LOCAL (same user, has local data)');
+                    if (typeof window.loadGame === 'function') {
+                        window.loadGame();
+                    }
+
+                    // After loading local, sync to cloud (upload newer local data)
+                    setTimeout(async () => {
+                        if (typeof window.saveGameToCloud === 'function' && auth && auth.currentUser) {
+                            console.log('📤 Uploading local save to cloud after local load...');
+                            try {
+                                await window.saveGameToCloud(true); // Force manual save to bypass cooldown
+                                console.log('✅ Local data synced to cloud');
+                            } catch (err) {
+                                console.warn('⚠️ Cloud sync failed (non-critical):', err);
+                            }
+                        }
+                    }, 2000);
                 } else {
-                    // Different user or no local data - load from cloud
-                    console.log('☁️ Different user or no local data - loading from cloud');
+                    // No local data but same user (or first login) - try cloud
+                    console.log('📦 No local data for user - checking cloud...');
+                    console.log('  DECISION: LOAD CLOUD (no local data)');
                     if (typeof window.loadGameFromCloud === 'function') {
                         await window.loadGameFromCloud(currentUserId);
                     } else {
@@ -1520,19 +1554,6 @@ function setupAuthListener() {
                 sessionStorage.setItem('userWasLoggedIn', 'true');
 
                 console.log('✅ Game data loaded successfully');
-
-                // Sync current game state to cloud (upload local data or synced cloud data)
-                setTimeout(async () => {
-                    if (typeof window.saveGameToCloud === 'function' && auth && auth.currentUser) {
-                        console.log('☁️ Syncing game data to cloud...');
-                        try {
-                            await window.saveGameToCloud(false);
-                            console.log('✅ Cloud sync complete');
-                        } catch (err) {
-                            console.warn('⚠️ Cloud sync failed (non-critical):', err);
-                        }
-                    }
-                }, 1000);
 
                 // Re-initialize the game UI after loading
                 if (typeof window.initializeGame === 'function') {

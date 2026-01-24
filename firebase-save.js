@@ -281,15 +281,16 @@ async function loadGameFromCloud(userId = null) {
         }
 
         // Check if this is the same user as last time (account switch detection)
-        const lastUserId = localStorage.getItem('lastLoggedInUser');
+        // Use 'lastLoggedInUserId' key to match firebase-auth.js
+        const lastUserId = localStorage.getItem('lastLoggedInUserId');
         const isAccountSwitch = lastUserId && lastUserId !== user.uid;
 
         if (isAccountSwitch) {
             console.log('🔄 Account switch detected - previous user:', lastUserId, 'new user:', user.uid);
         }
 
-        // Store current user ID for future comparisons
-        localStorage.setItem('lastLoggedInUser', user.uid);
+        // Store current user ID for future comparisons (use same key as firebase-auth.js)
+        localStorage.setItem('lastLoggedInUserId', user.uid);
 
         // Get game data from Firestore
         const docRef = db.collection('users').doc(user.uid).collection('gameData').doc('current');
@@ -318,52 +319,13 @@ async function loadGameFromCloud(userId = null) {
         const cloudData = docSnap.data();
         console.log('☁️ Cloud save found for user:', user.uid);
 
-        // Check if local save is newer than cloud save
-        const localSaveData = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
-        let localTimestamp = 0;
-        if (localSaveData) {
-            try {
-                const localParsed = JSON.parse(localSaveData);
-                localTimestamp = localParsed.lastSaveTime || 0;
-            } catch (e) {
-                console.warn('⚠️ Could not parse local save for timestamp check');
-            }
-        }
+        // This function should ONLY be called when we want cloud data
+        // (e.g., account switch or first login without local data)
+        // The caller (firebase-auth.js) has already determined this is the right action
+        console.log('☁️ Loading cloud data (caller determined cloud load is needed)');
 
-        const cloudTimestamp = cloudData.lastSaveTime || cloudData.lastSaved || 0;
-
-        console.log('TIMESTAMP COMPARISON:');
-        console.log('  Local save time:', new Date(localTimestamp), '(', localTimestamp, ')');
-        console.log('  Cloud save time:', new Date(cloudTimestamp), '(', cloudTimestamp, ')');
-        console.log('  Local is newer:', localTimestamp > cloudTimestamp);
-
-        // If account switch, ALWAYS load cloud data (ignore local cache from different account)
-        if (isAccountSwitch) {
-            console.log('🔄 Loading cloud data due to account switch');
-            resetGameVariables();
-        } else if (localTimestamp > cloudTimestamp && localTimestamp > 0) {
-            // Local save is newer - don't overwrite with stale cloud data!
-            console.log('✅ LOCAL SAVE IS NEWER - keeping local data, skipping cloud load');
-            console.log('   Cloud will be updated with local data on next auto-save');
-
-            // Force an immediate cloud save to sync the newer local data to cloud
-            setTimeout(() => {
-                if (typeof window.saveGameToCloud === 'function') {
-                    console.log('📤 Syncing newer local save to cloud...');
-                    window.saveGameToCloud(true).then(() => {
-                        console.log('✅ Cloud updated with newer local data');
-                    }).catch(err => {
-                        console.warn('⚠️ Failed to sync local to cloud:', err);
-                    });
-                }
-            }, 2000);
-
-            return false; // Don't load cloud data
-        } else {
-            // Cloud is newer or same age - load cloud data
-            console.log('☁️ Cloud save is newer or equal - loading cloud data');
-            resetGameVariables();
-        }
+        // Always reset game variables before loading cloud data to prevent data bleed
+        resetGameVariables();
 
         console.log('  Cloud data - btcBalance:', cloudData.btcBalance);
         console.log('  Cloud data - btcClickValue:', cloudData.btcClickValue);
@@ -523,7 +485,12 @@ async function loadGameFromCloud(userId = null) {
         const offlineEthEarnings = (window.ethPerSec || 0) * offlineSeconds;
         const offlineDogeEarnings = (window.dogePerSec || 0) * offlineSeconds;
 
-        // Add offline earnings to balances
+        console.log('📊 Offline mining earnings calculated:');
+        console.log('  BTC:', offlineBtcEarnings, '(', window.btcPerSec, '/sec ×', offlineSeconds, 'sec)');
+        console.log('  ETH:', offlineEthEarnings, '(', window.ethPerSec, '/sec ×', offlineSeconds, 'sec)');
+        console.log('  DOGE:', offlineDogeEarnings, '(', window.dogePerSec, '/sec ×', offlineSeconds, 'sec)');
+
+        // Add offline mining earnings to balances
         if (offlineBtcEarnings > 0) {
             window.btcBalance += offlineBtcEarnings;
             window.btcLifetime += offlineBtcEarnings;
@@ -543,13 +510,49 @@ async function loadGameFromCloud(userId = null) {
             window.lifetimeEarnings += dogeUsdValue;
         }
 
+        // Calculate offline staking earnings (cash from staked crypto)
+        const APR_RATE = 0.001; // 0.1% per 2 seconds (same as game.js)
+        const stakingIntervals = offlineSeconds / 2; // Number of 2-second intervals
+        let offlineStakingCash = 0;
+
+        // Get staking data from cloud
+        const stakingData = cloudData.staking || {};
+        const stakedBTC = stakingData.stakedBTC || 0;
+        const stakedETH = stakingData.stakedETH || 0;
+        const stakedDOGE = stakingData.stakedDOGE || 0;
+
+        console.log('📊 Staking data from cloud:', { stakedBTC, stakedETH, stakedDOGE });
+
+        if (stakedBTC > 0) {
+            const btcStakingEarnings = stakedBTC * APR_RATE * stakingIntervals;
+            offlineStakingCash += btcStakingEarnings * (window.btcPrice || 100000);
+            console.log('  BTC staking:', btcStakingEarnings, 'BTC = $', btcStakingEarnings * (window.btcPrice || 100000));
+        }
+        if (stakedETH > 0) {
+            const ethStakingEarnings = stakedETH * APR_RATE * stakingIntervals;
+            offlineStakingCash += ethStakingEarnings * (window.ethPrice || 3500);
+            console.log('  ETH staking:', ethStakingEarnings, 'ETH = $', ethStakingEarnings * (window.ethPrice || 3500));
+        }
+        if (stakedDOGE > 0) {
+            const dogeStakingEarnings = stakedDOGE * APR_RATE * stakingIntervals;
+            offlineStakingCash += dogeStakingEarnings * (window.dogePrice || 0.25);
+            console.log('  DOGE staking:', dogeStakingEarnings, 'DOGE = $', dogeStakingEarnings * (window.dogePrice || 0.25));
+        }
+
+        // Add staking cash to dollar balance
+        if (offlineStakingCash > 0) {
+            window.dollarBalance += offlineStakingCash;
+            window.lifetimeEarnings += offlineStakingCash;
+            console.log('💰 Staking cash added to dollar balance: $', offlineStakingCash);
+        }
+
         // Store offline earnings data to display modal (show for any duration, even if 0)
         console.log('🎯 Setting offline earnings modal for display');
         window.offlineEarningsToShow = {
             btc: offlineBtcEarnings,
             eth: offlineEthEarnings,
             doge: offlineDogeEarnings,
-            stakingCash: 0, // Cloud already includes staking in balances
+            stakingCash: offlineStakingCash,
             seconds: offlineSecondsRaw,
             wasCapped: wasTimeCaped,
             cappedSeconds: offlineSeconds
@@ -560,6 +563,7 @@ async function loadGameFromCloud(userId = null) {
         console.log('  BTC:', offlineBtcEarnings);
         console.log('  ETH:', offlineEthEarnings);
         console.log('  DOGE:', offlineDogeEarnings);
+        console.log('  Staking Cash: $', offlineStakingCash);
         console.log('  Seconds away:', offlineSecondsRaw);
 
         // Wait for onboarding/terms modals to close before showing offline earnings modal
@@ -588,7 +592,7 @@ async function loadGameFromCloud(userId = null) {
                     offlineBtcEarnings,
                     offlineEthEarnings,
                     offlineDogeEarnings,
-                    0, // stakingCash
+                    offlineStakingCash,
                     offlineSecondsRaw,
                     wasTimeCaped,
                     offlineSeconds
@@ -616,19 +620,12 @@ async function loadGameFromCloud(userId = null) {
 
         console.log('✅ Progress loaded from cloud successfully');
 
-        // Auto-save to cloud immediately after loading (ensures offline earnings are synced)
-        // This prevents losing progress if user refreshes before next 20-min auto-save
-        setTimeout(async () => {
-            if (typeof window.saveGameToCloud === 'function' && auth && auth.currentUser) {
-                console.log('💾 Auto-saving to cloud after loading (offline earnings sync)...');
-                try {
-                    await window.saveGameToCloud(false);
-                    console.log('✅ Cloud sync complete after load');
-                } catch (err) {
-                    console.warn('⚠️ Cloud sync after load failed (non-critical):', err);
-                }
-            }
-        }, 1000); // Wait 1 second to ensure all calculations are complete
+        // Save cloud data to local storage so next refresh loads from local
+        // This ensures the flow: cloud -> local storage -> future refreshes use local
+        if (typeof window.saveGame === 'function') {
+            console.log('💾 Saving cloud data to local storage for future refreshes...');
+            window.saveGame();
+        }
 
         // Only show "Welcome back" if they had prior data (not a brand new account)
         const hasExistingProgress = cloudData.lifetimeEarnings > 0 ||
