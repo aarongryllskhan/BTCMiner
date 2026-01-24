@@ -481,15 +481,21 @@
 
                 // Try direct function call first
                 if (typeof window.parent.loginUser === 'function') {
+                    console.log('✅ Direct call available, calling loginUser directly');
                     await window.parent.loginUser(email, password);
                 } else {
                     // Fallback to postMessage
                     console.log('Using postMessage fallback for login');
+                    console.log('Sending postMessage:', { action: 'loginUser', email, password: '***' });
                     window.parent.postMessage({
                         action: 'loginUser',
                         email: email,
                         password: password
                     }, '*');
+                    // postMessage is asynchronous, auth happens in parent window
+                    console.log('✅ PostMessage sent to parent window');
+                    // Wait a bit for modal to close (modal closes via auth state listener in parent)
+                    return;
                 }
             } catch (error) {
                 console.error('Login failed:', error);
@@ -548,16 +554,20 @@
 
                 // Try direct function call first
                 if (typeof window.parent.registerUser === 'function') {
+                    console.log('✅ Direct call available, calling registerUser directly');
                     await window.parent.registerUser(email, password, username);
                 } else {
                     // Fallback to postMessage
                     console.log('Using postMessage fallback for registration');
+                    console.log('Sending postMessage:', { action: 'registerUser', email, username, password: '***' });
                     window.parent.postMessage({
                         action: 'registerUser',
                         email: email,
                         password: password,
                         username: username
                     }, '*');
+                    console.log('✅ PostMessage sent to parent window');
+                    return;
                 }
             } catch (error) {
                 console.error('Registration failed:', error);
@@ -578,13 +588,17 @@
 
                 // Try direct function call first
                 if (typeof window.parent.loginWithGoogle === 'function') {
+                    console.log('✅ Direct call available, calling loginWithGoogle directly');
                     await window.parent.loginWithGoogle();
                 } else {
                     // Fallback to postMessage
                     console.log('Using postMessage fallback for Google login');
+                    console.log('Sending postMessage for Google login...');
                     window.parent.postMessage({
                         action: 'loginWithGoogle'
                     }, '*');
+                    console.log('✅ PostMessage sent to parent window');
+                    return;
                 }
             } catch (error) {
                 console.error('Google login failed:', error);
@@ -599,7 +613,8 @@
 
                 // Try to access parent function
                 try {
-                    if (window.parent && window.parent.playAsGuest) {
+                    if (window.parent && typeof window.parent.playAsGuest === 'function') {
+                        console.log('✅ Direct call available, calling playAsGuest directly');
                         await window.parent.playAsGuest();
                         return;
                     }
@@ -608,7 +623,10 @@
                 }
 
                 // Fallback: use postMessage for cross-origin communication
+                console.log('Using postMessage fallback for guest login');
+                console.log('Sending postMessage for guest login...');
                 window.parent.postMessage({ action: 'playAsGuest' }, '*');
+                console.log('✅ PostMessage sent to parent window');
 
             } catch (error) {
                 console.error('Guest login failed:', error);

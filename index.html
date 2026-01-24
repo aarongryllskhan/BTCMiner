@@ -210,10 +210,12 @@
     <!-- Load game.js early so firebase-save.js can call showOfflineEarningsModal -->
     <script src="game.js?v=20260124120000"></script>
 
-    <!-- Firebase Configuration, Save/Load, and Authentication -->
+    <!-- Firebase Configuration MUST load first so auth and db are available -->
+    <script src="firebase-config.js?v=20260123074001"></script>
+
+    <!-- Firebase Authentication and Save/Load (depend on config) -->
     <script src="firebase-auth.js?v=20260123074003"></script>
     <script src="firebase-save.js?v=20260123074002"></script>
-    <script src="firebase-config.js?v=20260123074001"></script>
 </head>
 <body>
 
