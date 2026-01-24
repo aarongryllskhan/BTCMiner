@@ -146,6 +146,16 @@ async function updateLeaderboard() {
             throw writeError;
         }
 
+        // Cloud save on leaderboard refresh (bypasses 20-min cooldown)
+        if (typeof window.saveGameToCloud === 'function') {
+            try {
+                console.log('💾 Cloud saving on leaderboard refresh...');
+                await window.saveGameToCloud(false, true); // false = not manual save, true = leaderboard refresh
+            } catch (cloudSaveError) {
+                console.warn('⚠️ Failed to save game data during leaderboard update (non-critical):', cloudSaveError);
+            }
+        }
+
         console.log('✅ Leaderboard updated successfully:', { username, lifetime });
         return true;
 

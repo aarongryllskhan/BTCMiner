@@ -8,29 +8,22 @@ let lastManualSaveTime = 0;
 const MANUAL_SAVE_COOLDOWN = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 // Save game data to Firebase Cloud
-async function saveGameToCloud(isManualSave = false) {
+// Only called for:
+// 1. Manual saves (user clicks "Transfer to Cloud" button) - respects 20-min cooldown
+// 2. Leaderboard refresh (updateLeaderboard calls this)
+async function saveGameToCloud(isManualSave = false, isLeaderboardRefresh = false) {
     try {
-        // Check if we're in offline mode (no Firebase)
-        if (window.isOfflineMode) {
-            console.log('📴 Offline mode - skipping cloud save');
-            return false;
-        }
-
         const user = auth.currentUser;
 
         if (!user) {
             console.log('⚠️ No user logged in - skipping cloud save');
-            showSaveMessage('You must be logged in to transfer progress to cloud. Your game auto-saves locally.', 'warning');
+            if (isManualSave) {
+                showSaveMessage('You must be logged in to transfer progress to cloud. Your game auto-saves locally.', 'warning');
+            }
             return false;
         }
 
-        // Skip cloud save if not manual save - only auto-save on 20-minute interval
-        if (!isManualSave) {
-            console.log('⏱️ Skipping auto cloud sync during gameplay - will use 20-minute interval');
-            return false;
-        }
-
-        // Check if user document exists in Firestore
+        // Check user document exists
         try {
             const userDocCheck = await db.collection('users').doc(user.uid).get();
             if (!userDocCheck.exists) {
@@ -42,8 +35,8 @@ async function saveGameToCloud(isManualSave = false) {
             return false;
         }
 
-        // Check cooldown for manual saves only (auto-saves bypass this)
-        if (isManualSave) {
+        // Cooldown check for manual saves only (leaderboard refresh bypasses this)
+        if (isManualSave && !isLeaderboardRefresh) {
             const now = Date.now();
             const timeSinceLastSave = now - lastManualSaveTime;
 
@@ -61,27 +54,23 @@ async function saveGameToCloud(isManualSave = false) {
             lastManualSaveTime = now;
         }
 
-        // Gather game data from your existing game variables (use window accessors for closure variables)
+        // Gather game data
         const gameData = {
-            // Bitcoin data
             btcBalance: typeof window.btcBalance !== 'undefined' ? window.btcBalance : 0,
             btcLifetime: typeof window.btcLifetime !== 'undefined' ? window.btcLifetime : 0,
             btcClickValue: typeof window.btcClickValue !== 'undefined' ? window.btcClickValue : 0,
             btcPerSec: typeof window.btcPerSec !== 'undefined' ? window.btcPerSec : 0,
             btcPrice: typeof window.btcPrice !== 'undefined' ? window.btcPrice : 100000,
-            // Ethereum data
             ethBalance: typeof window.ethBalance !== 'undefined' ? window.ethBalance : 0,
             ethLifetime: typeof window.ethLifetime !== 'undefined' ? window.ethLifetime : 0,
             ethClickValue: typeof window.ethClickValue !== 'undefined' ? window.ethClickValue : 0,
             ethPerSec: typeof window.ethPerSec !== 'undefined' ? window.ethPerSec : 0,
             ethPrice: typeof window.ethPrice !== 'undefined' ? window.ethPrice : 3500,
-            // Dogecoin data
             dogeBalance: typeof window.dogeBalance !== 'undefined' ? window.dogeBalance : 0,
             dogeLifetime: typeof window.dogeLifetime !== 'undefined' ? window.dogeLifetime : 0,
             dogeClickValue: typeof window.dogeClickValue !== 'undefined' ? window.dogeClickValue : 0,
             dogePerSec: typeof window.dogePerSec !== 'undefined' ? window.dogePerSec : 0,
             dogePrice: typeof window.dogePrice !== 'undefined' ? window.dogePrice : 0.25,
-            // General data
             dollarBalance: typeof window.dollarBalance !== 'undefined' ? window.dollarBalance : 0,
             hardwareEquity: typeof window.hardwareEquity !== 'undefined' ? window.hardwareEquity : 0,
             autoClickerCooldownEnd: typeof window.autoClickerCooldownEnd !== 'undefined' ? window.autoClickerCooldownEnd : 0,
@@ -92,7 +81,6 @@ async function saveGameToCloud(isManualSave = false) {
             chartTimestamps: typeof window.chartTimestamps !== 'undefined' ? window.chartTimestamps : [],
             chartStartTime: typeof window.chartStartTime !== 'undefined' ? window.chartStartTime : 0,
             totalPowerAvailable: typeof window.totalPowerAvailable !== 'undefined' ? window.totalPowerAvailable : 0,
-            // Upgrades and skills
             powerUpgrades: typeof window.powerUpgrades !== 'undefined' ? window.powerUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
@@ -125,26 +113,14 @@ async function saveGameToCloud(isManualSave = false) {
             })) : [],
             skillTree: typeof getSkillTreeData === 'function' ? getSkillTreeData() : {},
             staking: typeof getStakingData === 'function' ? getStakingData() : {},
-
-            // Timestamps
             lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
             lastSaveTime: typeof window.lastSaveTime !== 'undefined' ? window.lastSaveTime : Date.now()
         };
 
-        // Log what's being saved for debugging
-        console.log('💾 Saving game data:');
+        console.log('💾 Saving game data to cloud:');
         console.log('  btcBalance:', gameData.btcBalance);
         console.log('  btcClickValue:', gameData.btcClickValue);
-        console.log('  btcPerSec:', gameData.btcPerSec);
         console.log('  BTC Upgrades:', gameData.btcUpgrades ? gameData.btcUpgrades.length : 0);
-
-        // ANTI-CHEAT: Server-side validation (disabled for now - causing false rejections)
-        // const isValid = await validateGameData(user.uid, gameData);
-        // if (!isValid) {
-        //     console.error('❌ Invalid game data detected - save rejected');
-        //     showMessage('Save failed: Invalid data detected', 'error');
-        //     return false;
-        // }
 
         // Save to Firestore
         await db.collection('users').doc(user.uid).collection('gameData').doc('current').set(gameData, { merge: true });
@@ -155,19 +131,19 @@ async function saveGameToCloud(isManualSave = false) {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Leaderboard updates are handled separately (on login/logout and when returning after 6+ hours away)
-
         console.log('✅ Progress synced to cloud successfully');
-
-        // Show subtle save indicator with timestamp
-        showSaveIndicator();
-        updateLastSaveTime();
+        if (isManualSave) {
+            showSaveIndicator();
+            updateLastSaveTime();
+        }
 
         return true;
 
     } catch (error) {
         console.error('❌ Cloud save error:', error);
-        showMessage('Failed to save to cloud: ' + error.message, 'error');
+        if (isManualSave) {
+            showMessage('Failed to save to cloud: ' + error.message, 'error');
+        }
         return false;
     }
 }
@@ -266,19 +242,9 @@ function resetGameVariables() {
 
 // Load game data from Firebase Cloud (smart merge with local save)
 async function loadGameFromCloud(userId = null) {
-    try {
-        // Check if we're in offline mode (no Firebase)
-        if (window.isOfflineMode) {
-            console.log('📴 Offline mode - using local save only');
-            return false;
-        }
-
-        const user = userId ? { uid: userId } : auth.currentUser;
-
-        if (!user) {
-            console.log('⚠️ No user logged in - using local save only');
-            return false;
-        }
+    // CLOUD LOADING DISABLED - Using local-only persistence
+    console.log('☁️ Cloud load disabled - game loads from local storage only');
+    return false;
 
         // Check if this is the same user as last time (account switch detection)
         // Use 'lastLoggedInUserId' key to match firebase-auth.js
@@ -573,6 +539,9 @@ async function loadGameFromCloud(userId = null) {
             cappedSeconds: offlineSeconds
         };
 
+        // DISABLED: Offline earnings modal is interfering with data loading
+        // TODO: Re-enable after fixing local/cloud save priority
+        /*
         // Show modal immediately after cloud load (don't wait for DOMContentLoaded check)
         console.log('✅ SHOWING OFFLINE EARNINGS MODAL FROM CLOUD');
         console.log('  BTC:', offlineBtcEarnings);
@@ -619,6 +588,8 @@ async function loadGameFromCloud(userId = null) {
 
         // Check after a short delay to allow modals to initialize
         setTimeout(checkAndShowModal, 1000);
+        */
+        console.log('⏸️ Offline earnings modal disabled for debugging');
 
         // Update UI if functions exist
         if (typeof updateDisplay === 'function') updateDisplay();
@@ -752,35 +723,8 @@ async function logSuspiciousActivity(userId, type, data) {
 let autoSaveInterval;
 
 function startAutoSave() {
-    // Check if we're in offline mode (no Firebase)
-    if (window.isOfflineMode) {
-        console.log('📴 Offline mode - cloud auto-save disabled');
-        return;
-    }
-
-    // Clear any existing interval
-    if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-    }
-
-    // Auto-save for all logged-in users (including guests)
-    if (auth.currentUser) {
-        // Save every 20 minutes for all users (both guests and registered)
-        // Local saves happen frequently during gameplay (every action)
-        // Cloud saves are less frequent to optimize Firebase free tier usage
-        const saveInterval = 1200000; // 20 minutes for all users
-
-        autoSaveInterval = setInterval(async () => {
-            if (auth.currentUser && !window.isOfflineMode) {
-                console.log('🔄 Auto-saving to cloud (20 min interval)...');
-                await saveGameToCloud(false); // false = not manual save, skip cooldown
-            }
-        }, saveInterval);
-
-        console.log('✅ Auto cloud save started (every 20 minutes for all users - local saves happen much more frequently during play)');
-    } else {
-        console.log('ℹ️ No user logged in - cloud auto-save disabled');
-    }
+    // CLOUD AUTO-SAVE DISABLED - Using local-only persistence
+    console.log('☁️ Cloud auto-save disabled - game uses local storage only');
 }
 
 function stopAutoSave() {

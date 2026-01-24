@@ -94,6 +94,13 @@ async function registerUser(email, password, username) {
         console.log('🔄 Refresh modal will be shown AFTER terms acceptance');
 
         showMessage('Account created successfully! Welcome to Idle BTC Miner!', 'success');
+
+        // Close login modal
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) {
+            loginScreen.style.display = 'none';
+        }
+
         return user;
 
     } catch (error) {
@@ -236,6 +243,13 @@ async function loginUser(email, password) {
         }
 
         showMessage('Welcome back!', 'success');
+
+        // Close login modal
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) {
+            loginScreen.style.display = 'none';
+        }
+
         return user;
 
     } catch (error) {
@@ -783,6 +797,13 @@ async function playAsGuest() {
                         await window.updateUserUI(currentUser);
                     }
                     showMessage(`Welcome back, ${previousGuestUsername}!`, 'success');
+
+                    // Close login modal
+                    const loginScreen = document.getElementById('login-screen');
+                    if (loginScreen) {
+                        loginScreen.style.display = 'none';
+                    }
+
                     return currentUser;
                 } else {
                     console.log('⚠️ Previous guest username not found in database. Creating new guest account.');
@@ -891,6 +912,12 @@ async function playAsGuest() {
         localStorage.setItem('needsRefreshModal', 'true');
         console.log('💾 Guest credentials saved to localStorage');
         console.log('🔄 Refresh modal will be shown AFTER terms acceptance');
+
+        // Close login modal
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) {
+            loginScreen.style.display = 'none';
+        }
 
         return user;
 
@@ -1474,6 +1501,12 @@ function setupAuthListener() {
                 loginBtn.style.display = 'none';
             }
 
+            // Show the cloud save button for logged-in users
+            const cloudSaveBtn = document.getElementById('cloud-save-btn');
+            if (cloudSaveBtn) {
+                cloudSaveBtn.style.display = 'inline-block';
+            }
+
             // Load user's game data
             console.log('Loading game data...');
             try {
@@ -1507,44 +1540,12 @@ function setupAuthListener() {
                     if (typeof window.loadGame === 'function') {
                         window.loadGame(); // Initialize fresh game
                     }
-                } else if (hasValidLocalData && !isAccountSwitch) {
-                    // PRIORITY: LOAD LOCAL SAVE on page refresh (same browser/user)
-                    console.log('✅ LOCAL SAVE FOUND - LOADING LOCAL ONLY (ignoring cloud)');
-                    console.log('  DECISION: LOAD LOCAL (has local data - DO NOT load from cloud)');
+                } else {
+                    // CLOUD DISABLED - Local only persistence
+                    // Simply load from localStorage (local-only)
+                    console.log('✅ LOADING FROM LOCAL STORAGE ONLY (cloud disabled)');
                     if (typeof window.loadGame === 'function') {
                         window.loadGame();
-                    }
-
-                    // CRITICAL: Do NOT sync to cloud on page refresh
-                    // Cloud data is only for first login or account switch
-                    // Local data is authoritative on refresh
-                    console.log('⚠️ Cloud sync DISABLED on page refresh - local data is authoritative');
-                } else if (isAccountSwitch) {
-                    // ACCOUNT SWITCH - load from cloud for new user
-                    console.log('🔄 ACCOUNT SWITCH DETECTED - loading from cloud');
-                    console.log('  Previous user:', storedUserId);
-                    console.log('  New user:', currentUserId);
-                    console.log('  DECISION: LOAD CLOUD (account switch)');
-
-                    if (typeof window.loadGameFromCloud === 'function') {
-                        await window.loadGameFromCloud(currentUserId);
-                    } else {
-                        console.warn('⚠️ loadGameFromCloud not available, initializing fresh game');
-                        if (typeof window.loadGame === 'function') {
-                            window.loadGame();
-                        }
-                    }
-                } else {
-                    // No local data (first login) - try cloud
-                    console.log('📦 No local data - checking cloud (first login)...');
-                    console.log('  DECISION: LOAD CLOUD (no local data)');
-                    if (typeof window.loadGameFromCloud === 'function') {
-                        await window.loadGameFromCloud(currentUserId);
-                    } else {
-                        console.warn('⚠️ loadGameFromCloud not available, initializing fresh game');
-                        if (typeof window.loadGame === 'function') {
-                            window.loadGame();
-                        }
                     }
                 }
 
@@ -1601,30 +1602,8 @@ function setupAuthListener() {
                 window.startAutoSave();
             }
 
-            // For guest users, do initial saves more frequently to prevent progress loss
-            if (user.isAnonymous && window.saveGameToCloud) {
-                // First save after 10 seconds
-                setTimeout(async () => {
-                    console.log('💾 Initial save for guest user (10 second delay)...');
-                    try {
-                        await window.saveGameToCloud(false);
-                        console.log('✅ Guest initial save complete');
-                    } catch (saveError) {
-                        console.warn('⚠️ Guest initial save failed:', saveError);
-                    }
-                }, 10000);
-
-                // Second save after 60 seconds
-                setTimeout(async () => {
-                    console.log('💾 Second save for guest user (60 second delay)...');
-                    try {
-                        await window.saveGameToCloud(false);
-                        console.log('✅ Guest second save complete');
-                    } catch (saveError) {
-                        console.warn('⚠️ Guest second save failed:', saveError);
-                    }
-                }, 60000);
-            }
+            // Cloud save disabled - local-only persistence
+            console.log('💾 Cloud saving disabled - using local storage only');
 
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
@@ -1679,6 +1658,12 @@ function setupAuthListener() {
             if (loginBtn) {
                 loginBtn.style.display = 'inline-block';
                 loginBtn.textContent = 'LOGIN / SIGN UP';
+            }
+
+            // Hide the cloud save button when user logs out
+            const cloudSaveBtn = document.getElementById('cloud-save-btn');
+            if (cloudSaveBtn) {
+                cloudSaveBtn.style.display = 'none';
             }
 
             console.log('✅ Logout complete - UI updated and game state cleared');
