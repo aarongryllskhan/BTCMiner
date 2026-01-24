@@ -804,6 +804,10 @@ function loadGame() {
         console.log('Final balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
         console.log('Chart history length:', chartHistory.length);
 
+        // Mark that game data has been loaded
+        window.gameDataLoaded = true;
+        console.log('✅ Set window.gameDataLoaded = true');
+
         // CRITICAL: If we loaded from cloud, immediately save to localStorage so it's cached locally
         if (window.cloudGameData) {
             console.log('☁️ Cloud data was loaded - saving to localStorage immediately for caching');
@@ -812,6 +816,8 @@ function loadGame() {
     } catch (error) {
         console.error('✗ ERROR loading game from localStorage:', error);
         console.error('Error stack:', error.stack);
+        // Mark that game data has been loaded (even if failed - prevents infinite waiting)
+        window.gameDataLoaded = true;
         // Silently start fresh without showing alert
     }
 }

@@ -14,6 +14,15 @@ const MANUAL_SAVE_COOLDOWN = 20 * 60 * 1000; // 20 minutes in milliseconds
 async function saveGameToCloud(isManualSave = false, isLeaderboardRefresh = false) {
     try {
         console.log('💾 saveGameToCloud called - isManualSave:', isManualSave, 'isLeaderboardRefresh:', isLeaderboardRefresh);
+        console.log('   gameDataLoaded:', window.gameDataLoaded);
+
+        // Prevent saving until game data has loaded
+        if (isManualSave && !window.gameDataLoaded) {
+            console.warn('⚠️ Game data not loaded yet - cannot save to cloud');
+            showSaveMessage('Game is still loading. Please wait a moment and try again.', 'warning');
+            return false;
+        }
+
         console.log('   auth:', typeof auth, 'db:', typeof db);
 
         const user = auth.currentUser;
