@@ -956,9 +956,34 @@ async function linkGuestToEmail(email, password, username) {
             }
         }
 
+        // Step 1: Read and save guest data to memory BEFORE creating new account
+        console.log('📋 Reading guest progress while still authenticated as guest...');
+        let guestData = null;
+        let gameDataDocsData = [];
+        try {
+            // Get guest's Firestore user document
+            const guestDoc = await db.collection('users').doc(guestUid).get();
+            if (guestDoc.exists) {
+                guestData = guestDoc.data();
+                console.log('✅ Guest user data read');
+            }
+
+            // Get guest's game data subcollection
+            const gameDataDocs = await db.collection('users').doc(guestUid).collection('gameData').get();
+            gameDataDocsData = gameDataDocs.docs.map(doc => ({
+                id: doc.id,
+                data: doc.data()
+            }));
+            console.log('✅ Guest game data read:', gameDataDocsData.length, 'documents');
+        } catch (readError) {
+            console.error('❌ Failed to read guest data:', readError);
+            showMessage('Failed to read guest progress. Please try again.', 'error');
+            throw readError;
+        }
+
         console.log('📝 Creating new account with email/password...');
 
-        // Step 1: Create a new account with email/password
+        // Step 2: Create a new account with email/password
         let newUser = null;
         try {
             const newUserCredential = await auth.createUserWithEmailAndPassword(email, password);
@@ -980,14 +1005,22 @@ async function linkGuestToEmail(email, password, username) {
             throw authError;
         }
 
-        // Step 2: Copy guest account data to new account
-        console.log('📋 Copying guest progress to new account...');
+        // Step 3: Sign in as the new user first
+        console.log('🔄 Signing in with new account...');
         try {
-            // Get guest's Firestore user document
-            const guestDoc = await db.collection('users').doc(guestUid).get();
-            if (guestDoc.exists) {
-                const guestData = guestDoc.data();
+            await auth.signOut();
+            const signInResult = await auth.signInWithEmailAndPassword(email, password);
+            console.log('✅ Signed in as new account:', email);
+        } catch (signInError) {
+            console.error('❌ Failed to sign in after account creation:', signInError);
+            showMessage('Account created but sign-in failed. Please try logging in manually.', 'error');
+            throw signInError;
+        }
 
+        // Step 4: Now copy guest data to new account (while authenticated as new user)
+        console.log('📋 Writing guest progress to new account...');
+        try {
+            if (guestData) {
                 // Create new user document with guest's progress
                 await db.collection('users').doc(newUser.uid).set({
                     email: email,
@@ -1004,51 +1037,26 @@ async function linkGuestToEmail(email, password, username) {
                 });
 
                 // Copy game data subcollection
-                const gameDataDocs = await db.collection('users').doc(guestUid).collection('gameData').get();
-                for (const doc of gameDataDocs.docs) {
-                    await db.collection('users').doc(newUser.uid).collection('gameData').doc(doc.id).set(doc.data());
+                for (const docData of gameDataDocsData) {
+                    await db.collection('users').doc(newUser.uid).collection('gameData').doc(docData.id).set(docData.data);
                 }
 
-                console.log('✅ Guest progress copied to new account');
-
-                // Step 3: Try to delete the old guest account from Firestore
-                // This is non-critical, so we don't throw if it fails
-                try {
-                    console.log('🗑️ Removing guest account...');
-                    await db.collection('users').doc(guestUid).delete();
-                    console.log('✅ Guest account removed');
-                } catch (deleteError) {
-                    console.warn('⚠️ Could not delete old guest account (non-critical):', deleteError);
-                    // Don't throw - account is already converted, this is just cleanup
-                }
+                console.log('✅ Guest progress written to new account');
             }
         } catch (firestoreError) {
-            console.error('❌ Failed to copy guest progress:', firestoreError);
-            showMessage('Account created but failed to copy progress. Please contact support.', 'error');
+            console.error('❌ Failed to write guest progress:', firestoreError);
+            showMessage('Account created but failed to transfer progress. Please contact support.', 'error');
             throw firestoreError;
         }
 
-        // Step 4: Sign out the guest and sign in as the new user
-        console.log('🔄 Signing in with new account...');
-        try {
-            await auth.signOut();
+        // Step 5: Clean up (optional - delete guest account)
+        // Clear guest credentials from localStorage since they're no longer needed
+        localStorage.removeItem('guestUserUid');
+        localStorage.removeItem('guestUsername');
 
-            // Sign in with the new email/password
-            const signInResult = await auth.signInWithEmailAndPassword(email, password);
-            console.log('✅ Signed in as new account:', email);
+        showMessage('Account created successfully! Your progress has been saved.', 'success');
 
-            // Clear guest credentials from localStorage since they're no longer needed
-            localStorage.removeItem('guestUserUid');
-            localStorage.removeItem('guestUsername');
-
-            showMessage('Account created successfully! Your progress has been saved.', 'success');
-
-            return signInResult.user;
-        } catch (signInError) {
-            console.error('❌ Failed to sign in after account creation:', signInError);
-            showMessage('Account created but sign-in failed. Please try logging in manually.', 'error');
-            throw signInError;
-        }
+        return newUser;
 
     } catch (error) {
         console.error('❌ Account creation/linking error (outer catch):', error);
