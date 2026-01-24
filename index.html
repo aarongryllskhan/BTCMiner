@@ -191,9 +191,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <!-- Firebase Configuration, Save/Load, and Authentication -->
-    <script src="firebase-config.js?v=20260123074001"></script>
-    <script src="firebase-save.js?v=20260123074002"></script>
     <script src="firebase-auth.js?v=20260123074003"></script>
+    <script src="firebase-save.js?v=20260123074002"></script>
+    <script src="firebase-config.js?v=20260123074001"></script>
 </head>
 <body>
 
@@ -781,12 +781,99 @@
             }
         }, 50);
 
+        // Show refresh modal if this is a new account (guest or normal)
+        setTimeout(() => {
+            if (localStorage.getItem('needsRefreshModal') === 'true') {
+                console.log('🔄 Showing refresh modal after terms acceptance');
+                if (typeof showRefreshModalAfterOnboarding === 'function') {
+                    showRefreshModalAfterOnboarding();
+                }
+            }
+        }, 100);
+
         // NOTE: Cookie consent will be checked automatically if needed
         // Don't call it here as it's already been checked on page load
     }
 
     function declineOnboarding() {
         alert('You must accept the Age Requirement and Terms & Conditions to use this service.');
+    }
+
+    // Show refresh modal after onboarding for new accounts
+    function showRefreshModalAfterOnboarding() {
+        // Get username from Firebase if available
+        let username = 'User';
+        if (window.auth && window.auth.currentUser) {
+            const user = window.auth.currentUser;
+            // Try to get username from display name or email
+            if (user.displayName) {
+                username = user.displayName;
+            } else if (user.email) {
+                username = user.email.split('@')[0];
+            } else if (user.isAnonymous) {
+                username = localStorage.getItem('guestUsername') || 'Guest';
+            }
+        }
+
+        // Create modal element
+        const modal = document.createElement('div');
+        modal.id = 'refresh-modal-onboarding';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 999999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        `;
+
+        modal.innerHTML = `
+            <div style="
+                background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+                padding: 40px;
+                border-radius: 16px;
+                max-width: 450px;
+                width: 90%;
+                border: 3px solid #f7931a;
+                box-shadow: 0 0 50px rgba(247, 147, 26, 0.4);
+                text-align: center;
+            ">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🎮</div>
+                <h2 style="color: #f7931a; margin-bottom: 15px; font-size: 1.8rem;">Welcome, ${username}!</h2>
+                <p style="color: #ccc; margin-bottom: 25px; font-size: 1rem; line-height: 1.5;">
+                    Your account has been created successfully!
+                    <br><br>
+                    Please refresh the page to fully initialize the game and start mining.
+                </p>
+                <button onclick="location.reload()" style="
+                    background: linear-gradient(135deg, #f7931a 0%, #ff6b00 100%);
+                    color: #fff;
+                    border: none;
+                    padding: 18px 50px;
+                    font-size: 1.2rem;
+                    font-weight: 800;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    box-shadow: 0 4px 15px rgba(247, 147, 26, 0.4);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(247, 147, 26, 0.6)';"
+                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(247, 147, 26, 0.4)';">
+                    🔄 Refresh & Start Mining
+                </button>
+                <p style="color: #666; font-size: 0.8rem; margin-top: 20px;">
+                    Your progress will be saved automatically to the cloud.
+                </p>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
     }
 
     function switchPolicyTab(tab) {

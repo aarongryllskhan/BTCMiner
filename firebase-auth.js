@@ -89,6 +89,10 @@ async function registerUser(email, password, username) {
             lastSaved: firebase.firestore.FieldValue.serverTimestamp()
         });
 
+        // Mark this as a fresh account that needs a refresh (will show AFTER terms acceptance)
+        localStorage.setItem('needsRefreshModal', 'true');
+        console.log('🔄 Refresh modal will be shown AFTER terms acceptance');
+
         showMessage('Account created successfully! Welcome to Idle BTC Miner!', 'success');
         return user;
 
@@ -603,6 +607,10 @@ async function performLogout() {
             }
         }
 
+        // Clear session storage flag to ensure fresh cloud load on next login
+        sessionStorage.removeItem('userWasLoggedIn');
+        console.log('🗑️ Cleared session storage flag on logout');
+
         showMessage('Logged out successfully', 'success');
 
         // Clear local game data while preserving important flags
@@ -879,18 +887,10 @@ async function playAsGuest() {
         // Save guest credentials to localStorage for future sessions
         localStorage.setItem('guestUserUid', user.uid);
         localStorage.setItem('guestUsername', guestUsername);
-        // Mark this as a fresh guest account that needs a refresh
-        localStorage.setItem('guestNeedsRefresh', 'true');
+        // Mark this as a fresh account that needs a refresh (will show AFTER terms acceptance)
+        localStorage.setItem('needsRefreshModal', 'true');
         console.log('💾 Guest credentials saved to localStorage');
-
-        // Show refresh modal for new guests
-        try {
-            showGuestRefreshModal(guestUsername);
-            console.log('✅ Guest refresh modal shown');
-        } catch (modalError) {
-            console.warn('⚠️ Could not show refresh modal:', modalError);
-            // Still continue even if modal fails
-        }
+        console.log('🔄 Refresh modal will be shown AFTER terms acceptance');
 
         return user;
 
@@ -1305,10 +1305,10 @@ function setupAuthListener() {
             console.log('✅ User is logged in:', user.email || user.displayName || 'Guest User');
             console.log('User UID:', user.uid);
 
-            // Clear the guestNeedsRefresh flag on page load (user has refreshed)
-            if (localStorage.getItem('guestNeedsRefresh')) {
-                console.log('✅ Guest has refreshed - clearing refresh flag');
-                localStorage.removeItem('guestNeedsRefresh');
+            // Clear the needsRefreshModal flag on page load (user has refreshed)
+            if (localStorage.getItem('needsRefreshModal')) {
+                console.log('✅ User has refreshed - clearing refresh flag');
+                localStorage.removeItem('needsRefreshModal');
             }
 
             // Load consent from Firebase if available
@@ -1376,25 +1376,31 @@ function setupAuthListener() {
                 loginBtn.style.display = 'none';
             }
 
-            // Load user's game data - prefer LOCAL save if it exists, otherwise load CLOUD
+            // Load user's game data
             console.log('Loading game data...');
             try {
-                // STEP 1: Check if local save exists
+                // Check if this is a page refresh during active session or a fresh login
+                const wasAlreadyLoggedIn = sessionStorage.getItem('userWasLoggedIn') === 'true';
                 const localSaveExists = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
 
-                if (localSaveExists) {
-                    console.log('✅ Local save found - loading local data (you have unsaved progress)');
+                // IMPORTANT: Only load local save if this is a page refresh during an active session
+                // On fresh login or account switch, ALWAYS load from cloud
+                if (wasAlreadyLoggedIn && localSaveExists) {
+                    console.log('✅ Page refresh detected - loading local save (unsaved progress)');
                     if (typeof window.loadGame === 'function') {
                         window.loadGame();
                         showMessage('Loaded your most recent local progress', 'success');
                     }
                 } else {
-                    // STEP 2: No local save, load from cloud
-                    console.log('📦 No local save found - loading from cloud');
+                    // Fresh login or no local save - ALWAYS load from cloud
+                    console.log('📦 Fresh login detected - loading from cloud');
                     if (window.loadGameFromCloud) {
                         await window.loadGameFromCloud(user.uid);
                     }
                 }
+
+                // Mark that user is now logged in for future page refreshes
+                sessionStorage.setItem('userWasLoggedIn', 'true');
 
                 console.log('✅ Game data loaded successfully');
 
@@ -1469,6 +1475,10 @@ function setupAuthListener() {
             console.log('🎮 Auth state handling complete - game should be visible now');
         } else {
             console.log('ℹ️ No user logged in - clearing game state and showing login screen');
+
+            // Clear session storage flag to ensure fresh cloud load on next login
+            sessionStorage.removeItem('userWasLoggedIn');
+            console.log('🗑️ Cleared session storage flag');
 
             // CRITICAL: Clear all in-memory game state when user logs out
             console.log('🔄 Clearing all game variables on logout...');
