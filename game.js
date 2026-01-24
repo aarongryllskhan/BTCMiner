@@ -441,8 +441,6 @@
             totalPowerAvailable,
             // Staking data
             staking: getStakingData(),
-            // Skill tree data
-            skillTree: getSkillTreeData(),
             powerUpgrades: powerUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
@@ -544,11 +542,6 @@ function loadGame() {
         // Load staking data
         if (state.staking) {
             loadStakingData(state.staking);
-        }
-
-        // Load skill tree data
-        if (state.skillTree) {
-            loadSkillTreeData(state.skillTree);
         }
 
         sessionStartBalance = btcBalance;
