@@ -532,6 +532,8 @@
         localStorage.setItem('ageDisclaimerAccepted', 'true');
         localStorage.setItem('termsAccepted', 'true');
         document.getElementById('age-terms-modal').style.display = 'none';
+        // Now show cookie banner after age/terms accepted
+        checkCookieConsent();
     }
 
     function switchPolicyTab(tab) {
@@ -698,13 +700,13 @@
         document.getElementById('cookie-consent-banner').style.display = 'block';
     }
 
-    // Check consent on page load
-    window.addEventListener('DOMContentLoaded', checkCookieConsent);
+    // Cookie consent is now checked after age/terms modal is accepted
+    // via the acceptAgeAndTerms() function
 </script>
 
 <!-- Cache busting system - forces hard refresh on code updates -->
 <script>
-    const CURRENT_VERSION = '1.0.8';
+    const CURRENT_VERSION = '1.0.9';
     const STORAGE_KEY = 'gameCodeVersion';
     const lastVersionLoaded = localStorage.getItem(STORAGE_KEY);
 
@@ -721,13 +723,13 @@
 </script>
 
 <!-- Load skill tree system first so its functions are available to game.js -->
-<script src="skilltree.js?v=1.0.8"></script>
+<script src="skilltree.js?v=1.0.9"></script>
 
 <!-- Load main game after skill tree functions are defined -->
-<script src="game.js?v=1.0.8"></script>
+<script src="game.js?v=1.0.9"></script>
 
 <!-- Load staking system after main game variables are defined -->
-<script src="staking.js?v=1.0.8"></script>
+<script src="staking.js?v=1.0.9"></script>
 
 </body>
 
