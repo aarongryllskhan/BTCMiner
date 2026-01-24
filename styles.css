@@ -92,9 +92,10 @@
             }
         }
 
-        /* Desktop: 2-column grid layout - ONLY on landscape orientation AND wide (2000px+) */
-        /* Most mobile resolutions are below 2000px, so this threshold ensures only true desktops */
-        @media (min-width: 2000px) and (orientation: landscape) {
+        /* Desktop: 2-column grid layout - ONLY on landscape orientation AND wide (1400px+) */
+        /* 1400px threshold accounts for browser zoom and smaller monitors */
+        /* At 125% zoom on 1600px monitor = 1280px effective, so switches to mobile */
+        @media (min-width: 1400px) and (orientation: landscape) {
             #main-layout {
                 display: grid !important;
                 grid-template-columns: 7fr 3fr;
@@ -564,7 +565,7 @@ button:disabled:hover {
             border: 2px solid #f7931a;
             border-radius: 12px;
             padding: 30px;
-            z-index: 2000;
+            z-index: 10000000;
             max-width: 400px;
             text-align: center;
             box-shadow: 0 0 40px rgba(247, 147, 26, 0.3);
@@ -615,6 +616,29 @@ button:disabled:hover {
             transform: scale(1.05);
         }
 
+        #close-modal-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none !important;
+            border: none !important;
+            color: #f7931a;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        #close-modal-btn:hover {
+            color: #ffaa33;
+            transform: scale(1.1);
+        }
+
         .offline-modal-overlay {
             position: fixed;
             top: 0;
@@ -622,7 +646,7 @@ button:disabled:hover {
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.8);
-            z-index: 1999;
+            z-index: 9999999;
             animation: fadeIn 0.3s ease;
         }
 

@@ -121,7 +121,8 @@ async function saveGameToCloud(isManualSave = false) {
             staking: typeof getStakingData === 'function' ? getStakingData() : {},
 
             // Timestamps
-            lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+            lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSaveTime: typeof window.lastSaveTime !== 'undefined' ? window.lastSaveTime : Date.now()
         };
 
         // Log what's being saved for debugging
@@ -316,36 +317,9 @@ async function loadGameFromCloud(userId = null) {
             console.log('🔄 Loading cloud data due to account switch');
             resetGameVariables();
         } else {
-            // Same account - compare progress to load the better save
-            // Local save might have more recent progress than cloud (which auto-saves every 20 mins)
-            const cloudLifetime = cloudData.lifetimeEarnings || 0;
-            const cloudBtcBalance = cloudData.btcBalance || 0;
-
-            let localLifetime = 0;
-            let localBtcBalance = 0;
-            try {
-                const savedGame = localStorage.getItem('satoshiTerminalSave');
-                if (savedGame) {
-                    const localSaveData = JSON.parse(savedGame);
-                    localLifetime = localSaveData.lifetimeEarnings || 0;
-                    localBtcBalance = localSaveData.btcBalance || 0;
-                }
-            } catch (e) {
-                console.warn('Could not parse localStorage save:', e);
-            }
-
-            console.log('📊 Comparing saves:');
-            console.log('  📦 Local: lifetimeEarnings=' + localLifetime + ', btcBalance=' + localBtcBalance);
-            console.log('  ☁️  Cloud: lifetimeEarnings=' + cloudLifetime + ', btcBalance=' + cloudBtcBalance);
-
-            // Load local if it has significantly better progress (more lifetime earnings)
-            if (localLifetime > cloudLifetime) {
-                console.log('🏠 Local save has better progress - keeping local cache (you earned more recently)');
-                showMessage('Loaded local progress (more recent than cloud save)', 'success');
-                return false;
-            }
-
-            console.log('☁️ Cloud save has equal or better progress - loading from cloud');
+            // Same account - load cloud data
+            // (Local vs cloud decision is now made at a higher level in firebase-auth.js)
+            console.log('☁️ Loading cloud data for same user');
             resetGameVariables();
         }
 
@@ -377,7 +351,8 @@ async function loadGameFromCloud(userId = null) {
         window.hardwareEquity = cloudData.hardwareEquity || 0;
         window.autoClickerCooldownEnd = cloudData.autoClickerCooldownEnd || 0;
         window.lifetimeEarnings = cloudData.lifetimeEarnings || 0;
-        window.sessionEarnings = cloudData.sessionEarnings || 0;
+        // Always reset session earnings to 0 - session is per-login, not restored from cloud
+        window.sessionEarnings = 0;
         // Always reset session time to now - session is per-login, not restored from cloud
         window.sessionStartTime = Date.now();
         window.chartHistory = cloudData.chartHistory || [];
@@ -432,6 +407,25 @@ async function loadGameFromCloud(userId = null) {
             });
         }
 
+        // Recalculate click values from manual hash upgrade levels (same as game.js loadGame())
+        const btcManualHashUpgrade = window.btcUpgrades.find(u => u.id === 0);
+        if (btcManualHashUpgrade && btcManualHashUpgrade.level > 0) {
+            window.btcClickValue = 0.00000250 * Math.pow(1.10, btcManualHashUpgrade.level);
+            console.log('📊 Recalculated BTC click value from upgrade level:', window.btcClickValue);
+        }
+
+        const ethManualHashUpgrade = window.ethUpgrades.find(u => u.id === 0);
+        if (ethManualHashUpgrade && ethManualHashUpgrade.level > 0) {
+            window.ethClickValue = 0.00007143 * Math.pow(1.10, ethManualHashUpgrade.level);
+            console.log('📊 Recalculated ETH click value from upgrade level:', window.ethClickValue);
+        }
+
+        const dogeManualHashUpgrade = window.dogeUpgrades.find(u => u.id === 0);
+        if (dogeManualHashUpgrade && dogeManualHashUpgrade.level > 0) {
+            window.dogeClickValue = 1.00000000 * Math.pow(1.10, dogeManualHashUpgrade.level);
+            console.log('📊 Recalculated DOGE click value from upgrade level:', window.dogeClickValue);
+        }
+
         // Restore skill tree data if function exists
         if (cloudData.skillTree && typeof window.setSkillTreeData === 'function') {
             try {
@@ -445,11 +439,17 @@ async function loadGameFromCloud(userId = null) {
         // Restore staking data if function exists
         if (cloudData.staking && typeof window.setStakingData === 'function') {
             try {
+                console.log('📥 Staking data from cloud:', cloudData.staking);
                 window.setStakingData(cloudData.staking);
                 console.log('✅ Staking data restored');
             } catch (error) {
                 console.warn('⚠️ Failed to restore staking data:', error);
             }
+        } else {
+            console.log('ℹ️ No staking data in cloud or function not available:', {
+                hasStakingData: !!cloudData.staking,
+                hasFunction: typeof window.setStakingData === 'function'
+            });
         }
 
         // Verify data was actually loaded
@@ -457,14 +457,114 @@ async function loadGameFromCloud(userId = null) {
         console.log('  window.btcBalance:', window.btcBalance);
         console.log('  window.btcClickValue:', window.btcClickValue);
         console.log('  window.btcPerSec:', window.btcPerSec);
+        console.log('  Staking:', typeof window.getStakingData === 'function' ? window.getStakingData() : 'N/A');
         console.log('  window.dollarBalance:', window.dollarBalance);
         console.log('  window.lifetimeEarnings:', window.lifetimeEarnings);
         console.log('  BTC Upgrades loaded:', window.btcUpgrades ? window.btcUpgrades.length : 0, 'upgrades');
+
+        // Calculate offline earnings from cloud load
+        console.log('📊 Calculating offline earnings from cloud data...');
+        const lastCloudSaveTime = cloudData.lastSaveTime || cloudData.lastSaved || Date.now();
+        const currentTime = Date.now();
+        const offlineSecondsRaw = (currentTime - lastCloudSaveTime) / 1000;
+        const BASE_OFFLINE_CAP = 21600; // 6 hours
+        const MAX_OFFLINE_SECONDS = (typeof window.getOfflineCap === 'function') ? window.getOfflineCap() : BASE_OFFLINE_CAP;
+        const offlineSeconds = Math.min(offlineSecondsRaw, MAX_OFFLINE_SECONDS);
+        const wasTimeCaped = offlineSecondsRaw > MAX_OFFLINE_SECONDS;
+
+        console.log('  Time since cloud save:', offlineSecondsRaw, 'seconds');
+        console.log('  Capped at:', offlineSeconds, 'seconds');
+        console.log('  Was capped:', wasTimeCaped);
+
+        // Calculate offline crypto earnings based on per-second rates
+        const offlineBtcEarnings = (window.btcPerSec || 0) * offlineSeconds;
+        const offlineEthEarnings = (window.ethPerSec || 0) * offlineSeconds;
+        const offlineDogeEarnings = (window.dogePerSec || 0) * offlineSeconds;
+
+        // Add offline earnings to balances
+        if (offlineBtcEarnings > 0) {
+            window.btcBalance += offlineBtcEarnings;
+            window.btcLifetime += offlineBtcEarnings;
+            const btcUsdValue = offlineBtcEarnings * (window.btcPrice || 100000);
+            window.lifetimeEarnings += btcUsdValue;
+        }
+        if (offlineEthEarnings > 0) {
+            window.ethBalance += offlineEthEarnings;
+            window.ethLifetime += offlineEthEarnings;
+            const ethUsdValue = offlineEthEarnings * (window.ethPrice || 3500);
+            window.lifetimeEarnings += ethUsdValue;
+        }
+        if (offlineDogeEarnings > 0) {
+            window.dogeBalance += offlineDogeEarnings;
+            window.dogeLifetime += offlineDogeEarnings;
+            const dogeUsdValue = offlineDogeEarnings * (window.dogePrice || 0.25);
+            window.lifetimeEarnings += dogeUsdValue;
+        }
+
+        // Store offline earnings data to display modal (show for any duration, even if 0)
+        console.log('🎯 Setting offline earnings modal for display');
+        window.offlineEarningsToShow = {
+            btc: offlineBtcEarnings,
+            eth: offlineEthEarnings,
+            doge: offlineDogeEarnings,
+            stakingCash: 0, // Cloud already includes staking in balances
+            seconds: offlineSecondsRaw,
+            wasCapped: wasTimeCaped,
+            cappedSeconds: offlineSeconds
+        };
+
+        // Show modal immediately after cloud load (don't wait for DOMContentLoaded check)
+        console.log('✅ SHOWING OFFLINE EARNINGS MODAL FROM CLOUD');
+        console.log('  BTC:', offlineBtcEarnings);
+        console.log('  ETH:', offlineEthEarnings);
+        console.log('  DOGE:', offlineDogeEarnings);
+        console.log('  Seconds away:', offlineSecondsRaw);
+
+        // Wait for onboarding/terms modals to close before showing offline earnings modal
+        const checkAndShowModal = () => {
+            const onboardingModal = document.getElementById('onboarding-modal');
+            const privacyModal = document.getElementById('privacy-modal');
+            const loginScreen = document.getElementById('login-screen');
+
+            // Check if critical modals are still open
+            const onboardingOpen = onboardingModal && onboardingModal.style.display !== 'none' && onboardingModal.classList.contains('show');
+            const privacyOpen = privacyModal && privacyModal.style.display !== 'none';
+            const loginOpen = loginScreen && loginScreen.style.display !== 'none';
+
+            if (onboardingOpen || privacyOpen || loginOpen) {
+                // Wait a bit and try again
+                console.log('⏳ Waiting for modal to close before showing offline earnings...');
+                setTimeout(checkAndShowModal, 500);
+                return;
+            }
+
+            // Now show the offline modal
+            console.log('🎯 All critical modals closed, showing offline earnings modal...');
+            if (typeof showOfflineEarningsModal === 'function') {
+                console.log('✅ showOfflineEarningsModal function found, calling now');
+                showOfflineEarningsModal(
+                    offlineBtcEarnings,
+                    offlineEthEarnings,
+                    offlineDogeEarnings,
+                    0, // stakingCash
+                    offlineSecondsRaw,
+                    wasTimeCaped,
+                    offlineSeconds
+                );
+            } else {
+                console.warn('⚠️ showOfflineEarningsModal function not available, typeof:', typeof showOfflineEarningsModal);
+            }
+        };
+
+        // Check after a short delay to allow modals to initialize
+        setTimeout(checkAndShowModal, 1000);
 
         // Update UI if functions exist
         if (typeof updateDisplay === 'function') updateDisplay();
         if (typeof updateUpgradeUI === 'function') updateUpgradeUI();
         if (typeof updateSkillTree === 'function') updateSkillTree();
+        if (typeof updateStakingUI === 'function') updateStakingUI();
+        if (typeof window.updateManualHashButtons === 'function') window.updateManualHashButtons();
 
         // Reinitialize chart with new account data
         if (typeof window.reinitializeChart === 'function') {
@@ -473,7 +573,32 @@ async function loadGameFromCloud(userId = null) {
         }
 
         console.log('✅ Progress loaded from cloud successfully');
-        showMessage('Progress transferred from cloud! Welcome back.', 'success');
+
+        // Auto-save to cloud immediately after loading (ensures offline earnings are synced)
+        // This prevents losing progress if user refreshes before next 20-min auto-save
+        setTimeout(async () => {
+            if (typeof window.saveGameToCloud === 'function' && auth && auth.currentUser) {
+                console.log('💾 Auto-saving to cloud after loading (offline earnings sync)...');
+                try {
+                    await window.saveGameToCloud(false);
+                    console.log('✅ Cloud sync complete after load');
+                } catch (err) {
+                    console.warn('⚠️ Cloud sync after load failed (non-critical):', err);
+                }
+            }
+        }, 1000); // Wait 1 second to ensure all calculations are complete
+
+        // Only show "Welcome back" if they had prior data (not a brand new account)
+        const hasExistingProgress = cloudData.lifetimeEarnings > 0 ||
+                                   cloudData.btcBalance > 0 ||
+                                   cloudData.ethBalance > 0 ||
+                                   cloudData.dogeBalance > 0;
+
+        if (hasExistingProgress) {
+            showMessage('Progress transferred from cloud! Welcome back.', 'success');
+        } else {
+            showMessage('Ready to start mining!', 'success');
+        }
 
         return true;
 
