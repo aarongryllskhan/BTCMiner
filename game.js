@@ -958,7 +958,7 @@ function loadGame() {
         }
 
         modal.innerHTML = `
-            <button id="close-modal-btn" style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: #f7931a; font-size: 28px; cursor: pointer; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; line-height: 1;">✕</button>
+            <button id="close-modal-btn" type="button">✕</button>
             <h2>⏰ Welcome Back!</h2>
             <div class="earnings-label">Mined While Away</div>
             ${earningsHtml}

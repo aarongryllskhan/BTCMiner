@@ -616,6 +616,29 @@ button:disabled:hover {
             transform: scale(1.05);
         }
 
+        #close-modal-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none !important;
+            border: none !important;
+            color: #f7931a;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        #close-modal-btn:hover {
+            color: #ffaa33;
+            transform: scale(1.1);
+        }
+
         .offline-modal-overlay {
             position: fixed;
             top: 0;
