@@ -993,6 +993,9 @@ function loadGame() {
         console.log('Modal created and appended');
     }
 
+    // Expose function to window so firebase-save.js can call it
+    window.showOfflineEarningsModal = showOfflineEarningsModal;
+
     // Sound mute toggle
     let isMuted = false;
     function toggleMute() {
@@ -2710,19 +2713,17 @@ dogeUpgrades.forEach(u => {
         console.log('   DOGE:', offlineDogeEarnings, '(', dogePerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
         console.log('   Staking:', offlineStakingCash);
 
-        // Show modal if we've been away long enough
-        if (offlineSeconds >= 5) {
-            window.offlineEarningsToShow = {
-                btc: offlineBtcEarnings,
-                eth: offlineEthEarnings,
-                doge: offlineDogeEarnings,
-                stakingCash: offlineStakingCash,
-                seconds: offlineSeconds,
-                wasCapped: wasTimeCaped,
-                cappedSeconds: cappedOfflineSeconds
-            };
-            console.log('✅ Modal will be shown with offline earnings data');
-        }
+        // Show modal for any offline duration (even if 0 seconds)
+        window.offlineEarningsToShow = {
+            btc: offlineBtcEarnings,
+            eth: offlineEthEarnings,
+            doge: offlineDogeEarnings,
+            stakingCash: offlineStakingCash,
+            seconds: offlineSeconds,
+            wasCapped: wasTimeCaped,
+            cappedSeconds: cappedOfflineSeconds
+        };
+        console.log('✅ Modal will be shown with offline earnings data');
     }
 
     // Debug function to test offline earnings calculation
@@ -2828,7 +2829,7 @@ dogeUpgrades.forEach(u => {
 
         // Show offline earnings modal AFTER instructions
         // Only show if not already displayed by cloud load (firebase-save.js shows it immediately)
-        if (offlineEarningsData && offlineEarningsData.seconds >= 5) {
+        if (offlineEarningsData) {
             // Check if modal is already visible (set by cloud load)
             const modalExists = document.querySelector('.offline-modal');
             if (!modalExists) {
