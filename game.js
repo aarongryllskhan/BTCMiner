@@ -706,22 +706,39 @@ function loadGame() {
         const maxOfflineSeconds = 21600; // Cap at 6 hours
         if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
 
-        console.log('=== OFFLINE EARNINGS CALCULATION ===');
-        console.log('Last save time from file:', new Date(savedLastSaveTime));
-        console.log('Current time:', new Date(currentTime));
-        console.log('Offline seconds (raw):', offlineSeconds);
-        console.log('Will show modal:', offlineSeconds >= 5);
-        console.log('Per-second rates: BTC=' + btcPerSec + '/s, ETH=' + ethPerSec + '/s, DOGE=' + dogePerSec + '/s');
-
-        // Cap offline time at 6 hours (21600 seconds) + skill tree bonuses
+        // Get capped offline seconds with skill tree bonuses
         const BASE_OFFLINE_CAP = 21600; // 6 hours
         const MAX_OFFLINE_SECONDS = (typeof getOfflineCap === 'function') ? getOfflineCap() : BASE_OFFLINE_CAP;
         const cappedOfflineSeconds = Math.min(offlineSeconds, MAX_OFFLINE_SECONDS);
         const wasTimeCaped = offlineSeconds > MAX_OFFLINE_SECONDS;
 
+        console.log('=== OFFLINE EARNINGS CALCULATION ===');
+        console.log('Last save time from file:', new Date(savedLastSaveTime));
+        console.log('Current time:', new Date(currentTime));
+        console.log('Offline seconds (raw):', offlineSeconds, '(capped to:', cappedOfflineSeconds, ')');
+        console.log('Per-second rates: BTC=' + btcPerSec + '/s, ETH=' + ethPerSec + '/s, DOGE=' + dogePerSec + '/s');
+
+        // Calculate mining earnings
         const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds;
         const offlineEthEarnings = ethPerSec * cappedOfflineSeconds;
         const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds;
+
+        // Add mining earnings to balances immediately
+        if (offlineBtcEarnings > 0) {
+            btcBalance += offlineBtcEarnings;
+            btcLifetime += offlineBtcEarnings;
+            lifetimeEarnings += offlineBtcEarnings * btcPrice;
+        }
+        if (offlineEthEarnings > 0) {
+            ethBalance += offlineEthEarnings;
+            ethLifetime += offlineEthEarnings;
+            lifetimeEarnings += offlineEthEarnings * ethPrice;
+        }
+        if (offlineDogeEarnings > 0) {
+            dogeBalance += offlineDogeEarnings;
+            dogeLifetime += offlineDogeEarnings;
+            lifetimeEarnings += offlineDogeEarnings * dogePrice;
+        }
 
         // Calculate offline staking earnings (cash from staked crypto)
         const APR_RATE = 0.001; // 0.1% per 2 seconds
@@ -750,34 +767,16 @@ function loadGame() {
             if (offlineStakingCash > 0) {
                 dollarBalance += offlineStakingCash;
                 lifetimeEarnings += offlineStakingCash;
-                // Don't add offline earnings to current session
             }
         }
 
-        if (offlineBtcEarnings > 0) {
-            btcBalance += offlineBtcEarnings;
-            btcLifetime += offlineBtcEarnings;
-            const btcUsdValue = offlineBtcEarnings * btcPrice;
-            lifetimeEarnings += btcUsdValue;
-            // Don't add offline earnings to current session
-        }
-        if (offlineEthEarnings > 0) {
-            ethBalance += offlineEthEarnings;
-            ethLifetime += offlineEthEarnings;
-            const ethUsdValue = offlineEthEarnings * ethPrice;
-            lifetimeEarnings += ethUsdValue;
-            // Don't add offline earnings to current session
-        }
-        if (offlineDogeEarnings > 0) {
-            dogeBalance += offlineDogeEarnings;
-            dogeLifetime += offlineDogeEarnings;
-            const dogeUsdValue = offlineDogeEarnings * dogePrice;
-            lifetimeEarnings += dogeUsdValue;
-            // Don't add offline earnings to current session
-        }
+        console.log('✅ OFFLINE EARNINGS APPLIED:');
+        console.log('   BTC:', offlineBtcEarnings, '(', btcPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
+        console.log('   ETH:', offlineEthEarnings, '(', ethPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
+        console.log('   DOGE:', offlineDogeEarnings, '(', dogePerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
+        console.log('   Staking:', offlineStakingCash);
 
-        // Always show offline earnings if we've been away (even if earnings are 0)
-        // Only skip if the time away is less than 5 seconds (quick refresh)
+        // Show modal if we've been away long enough
         if (offlineSeconds >= 5) {
             window.offlineEarningsToShow = {
                 btc: offlineBtcEarnings,
@@ -788,11 +787,6 @@ function loadGame() {
                 wasCapped: wasTimeCaped,
                 cappedSeconds: cappedOfflineSeconds
             };
-            console.log('✅ OFFLINE EARNINGS CALCULATED AND SET:');
-            console.log('   BTC:', offlineBtcEarnings, '(', btcPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-            console.log('   ETH:', offlineEthEarnings, '(', ethPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-            console.log('   DOGE:', offlineDogeEarnings, '(', dogePerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-            console.log('   Staking:', offlineStakingCash);
         }
 
         updateUI();
@@ -1050,13 +1044,30 @@ function loadGame() {
         document.body.appendChild(modal);
 
         document.getElementById('claim-btn').onclick = () => {
+            // Offline earnings were already added to balances in loadGame()
+            // Just dismiss the modal and save
+            console.log('✅ OFFLINE EARNINGS MODAL CLAIMED');
+            console.log('  BTC Balance:', window.btcBalance);
+            console.log('  Lifetime Earnings:', window.lifetimeEarnings);
+
             overlay.remove();
             modal.remove();
-            // Auto-save to cloud after showing offline earnings
+
+            // Update UI immediately
+            if (typeof updateUI === 'function') {
+                updateUI();
+            }
+
+            // Save to localStorage
+            if (typeof saveGame === 'function') {
+                saveGame();
+            }
+
+            // Auto-save to cloud
             if (typeof window.saveGameToCloud === 'function') {
-                console.log('💾 Auto-saving to cloud after offline earnings modal...');
+                console.log('💾 Auto-saving to cloud after offline earnings modal claimed...');
                 window.saveGameToCloud(false).catch(err => {
-                    console.warn('⚠️ Cloud auto-save after offline earnings failed:', err);
+                    console.warn('⚠️ Cloud auto-save failed:', err);
                 });
             }
         };
@@ -2737,6 +2748,9 @@ dogeUpgrades.forEach(u => {
         // Get offline earnings data that was set by loadGame()
         const offlineEarningsData = window.offlineEarningsToShow;
 
+        console.log('🔍 CHECKING FOR OFFLINE EARNINGS MODAL');
+        console.log('window.offlineEarningsToShow:', offlineEarningsData);
+
         // Handle game instructions modal visibility
         const instructionsEl = document.getElementById('game-instructions');
         let showedInstructions = false;
@@ -3410,6 +3424,12 @@ dogeUpgrades.forEach(u => {
         } else {
             console.error('❌ Save data NOT found in storage!');
         }
+    };
+
+    // Force display offline earnings modal (for testing)
+    window.forceShowOfflineModal = function(btc = 0.001, eth = 0.01, doge = 50, staking = 10) {
+        console.log('🔨 FORCING OFFLINE EARNINGS MODAL');
+        showOfflineEarningsModal(btc, eth, doge, staking, 600, false, 600);
     };
 
     // Debug function to simulate offline time
