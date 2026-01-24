@@ -533,11 +533,19 @@
             console.log('Save string length:', saveString.length, 'bytes');
             console.log('safeStorage._isAvailable:', window.safeStorage._isAvailable);
 
-            // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
-            window.safeStorage.setItem('satoshiTerminalSave', saveString);
+            // ALWAYS use localStorage directly for game save - don't fall back to memory
+            // Memory storage is lost on page refresh!
+            try {
+                localStorage.setItem('satoshiTerminalSave', saveString);
+                console.log('✓ Saved directly to localStorage');
+            } catch (e) {
+                console.error('❌ localStorage save failed:', e);
+                // In private/incognito, localStorage might fail, that's OK - at least we tried
+                return;
+            }
 
             // Verify save worked
-            const testLoad = window.safeStorage.getItem('satoshiTerminalSave');
+            const testLoad = localStorage.getItem('satoshiTerminalSave');
             if (testLoad && testLoad.length > 0) {
                 const verifyData = JSON.parse(testLoad);
                 console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage');
@@ -598,9 +606,9 @@ function loadGame() {
             savedData = JSON.stringify(window.cloudGameData);
             window.cloudGameData = null; // Clear it after using
         } else {
-            // Fall back to localStorage
-            savedData = window.safeStorage.getItem('satoshiTerminalSave');
-            console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND (length: ' + savedData.length + ')' : 'NULL/UNDEFINED');
+            // Load from localStorage directly (don't use safeStorage memory fallback)
+            savedData = localStorage.getItem('satoshiTerminalSave');
+            console.log('localStorage.getItem returned:', savedData ? 'DATA FOUND (length: ' + savedData.length + ')' : 'NULL/UNDEFINED');
         }
 
         if (!savedData) {
