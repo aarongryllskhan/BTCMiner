@@ -958,7 +958,6 @@ function loadGame() {
         }
 
         modal.innerHTML = `
-            <button id="close-modal-btn" type="button">✕</button>
             <h2>⏰ Welcome Back!</h2>
             <div class="earnings-label">Mined While Away</div>
             ${earningsHtml}
@@ -994,26 +993,15 @@ function loadGame() {
             }
         };
 
-        // Close modal on X button click - stop propagation to prevent overlay click
-        const closeBtn = document.getElementById('close-modal-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                console.log('✅ Close button clicked');
-                dismissModal();
-            });
-        }
-
-        // Also close on overlay click
-        overlay.addEventListener('click', (e) => {
-            // Only dismiss if clicking the overlay directly, not propagated from modal
-            if (e.target === overlay) {
-                console.log('✅ Overlay clicked');
+        // Auto-dismiss modal after 3.5 seconds
+        setTimeout(() => {
+            if (modal && modal.parentNode) {
+                console.log('⏱️ Auto-closing offline earnings modal (3.5 second timeout)');
                 dismissModal();
             }
-        });
+        }, 3500);
 
-        console.log('Modal created and appended');
+        console.log('Modal created and appended (auto-dismiss in 3.5 seconds)');
     }
 
     // Expose function to window so firebase-save.js can call it
