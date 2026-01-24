@@ -318,14 +318,50 @@ async function loadGameFromCloud(userId = null) {
         const cloudData = docSnap.data();
         console.log('☁️ Cloud save found for user:', user.uid);
 
+        // Check if local save is newer than cloud save
+        const localSaveData = window.safeStorage && window.safeStorage.getItem('satoshiTerminalSave');
+        let localTimestamp = 0;
+        if (localSaveData) {
+            try {
+                const localParsed = JSON.parse(localSaveData);
+                localTimestamp = localParsed.lastSaveTime || 0;
+            } catch (e) {
+                console.warn('⚠️ Could not parse local save for timestamp check');
+            }
+        }
+
+        const cloudTimestamp = cloudData.lastSaveTime || cloudData.lastSaved || 0;
+
+        console.log('TIMESTAMP COMPARISON:');
+        console.log('  Local save time:', new Date(localTimestamp), '(', localTimestamp, ')');
+        console.log('  Cloud save time:', new Date(cloudTimestamp), '(', cloudTimestamp, ')');
+        console.log('  Local is newer:', localTimestamp > cloudTimestamp);
+
         // If account switch, ALWAYS load cloud data (ignore local cache from different account)
         if (isAccountSwitch) {
             console.log('🔄 Loading cloud data due to account switch');
             resetGameVariables();
+        } else if (localTimestamp > cloudTimestamp && localTimestamp > 0) {
+            // Local save is newer - don't overwrite with stale cloud data!
+            console.log('✅ LOCAL SAVE IS NEWER - keeping local data, skipping cloud load');
+            console.log('   Cloud will be updated with local data on next auto-save');
+
+            // Force an immediate cloud save to sync the newer local data to cloud
+            setTimeout(() => {
+                if (typeof window.saveGameToCloud === 'function') {
+                    console.log('📤 Syncing newer local save to cloud...');
+                    window.saveGameToCloud(true).then(() => {
+                        console.log('✅ Cloud updated with newer local data');
+                    }).catch(err => {
+                        console.warn('⚠️ Failed to sync local to cloud:', err);
+                    });
+                }
+            }, 2000);
+
+            return false; // Don't load cloud data
         } else {
-            // Same account - load cloud data
-            // (Local vs cloud decision is now made at a higher level in firebase-auth.js)
-            console.log('☁️ Loading cloud data for same user');
+            // Cloud is newer or same age - load cloud data
+            console.log('☁️ Cloud save is newer or equal - loading cloud data');
             resetGameVariables();
         }
 
