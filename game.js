@@ -542,6 +542,8 @@ function loadGame() {
         console.log('✓ Save data parsed successfully');
         console.log('Loaded BTC balance:', state.btcBalance);
         console.log('Loaded dollar balance:', state.dollarBalance);
+        console.log('Loaded lastSaveTime from file:', state.lastSaveTime ? new Date(state.lastSaveTime) : 'NOT FOUND');
+        console.log('Loaded btcPerSec from file:', state.btcPerSec);
 
         // Load Bitcoin data
         btcBalance = state.btcBalance || 0;
@@ -684,10 +686,15 @@ function loadGame() {
         // Calculate total power used
         calculateTotalPowerUsed();
 
-        // Recalculate totals for all cryptos
+        // Recalculate totals for all cryptos FROM LOADED UPGRADES
         btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
         dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+
+        console.log('📊 CALCULATED PER-SECOND RATES FROM UPGRADES:');
+        console.log('  BTC/sec:', btcPerSec, '(from', btcUpgrades.length, 'upgrades)');
+        console.log('  ETH/sec:', ethPerSec, '(from', ethUpgrades.length, 'upgrades)');
+        console.log('  DOGE/sec:', dogePerSec, '(from', dogeUpgrades.length, 'upgrades)');
 
         // Restore autoclicker cooldown
         autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
@@ -781,9 +788,11 @@ function loadGame() {
                 wasCapped: wasTimeCaped,
                 cappedSeconds: cappedOfflineSeconds
             };
-            console.log('Offline earnings set:', window.offlineEarningsToShow);
-        } else {
-            console.log('Time away too short for offline modal:', offlineSeconds, 'seconds');
+            console.log('✅ OFFLINE EARNINGS CALCULATED AND SET:');
+            console.log('   BTC:', offlineBtcEarnings, '(', btcPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
+            console.log('   ETH:', offlineEthEarnings, '(', ethPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
+            console.log('   DOGE:', offlineDogeEarnings, '(', dogePerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
+            console.log('   Staking:', offlineStakingCash);
         }
 
         updateUI();
@@ -2717,7 +2726,7 @@ dogeUpgrades.forEach(u => {
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
-        loadGame(); // This calls updateUI() internally
+        loadGame(); // This calls updateUI() internally and sets window.offlineEarningsToShow
         updateAutoClickerButtonState(); // Update button state immediately after loading
         setBuyQuantity(1); // Highlight the 1x button on page load
 
@@ -2725,16 +2734,8 @@ dogeUpgrades.forEach(u => {
         initStaking();
         updateStakingUI();
 
-        // Store offline earnings data to show after instructions
-        const offlineEarningsData = window.offlineEarningsToShow ? {
-            btc: window.offlineEarningsToShow.btc || 0,
-            eth: window.offlineEarningsToShow.eth || 0,
-            doge: window.offlineEarningsToShow.doge || 0,
-            stakingCash: window.offlineEarningsToShow.stakingCash || 0,
-            seconds: window.offlineEarningsToShow.seconds,
-            wasCapped: window.offlineEarningsToShow.wasCapped || false,
-            cappedSeconds: window.offlineEarningsToShow.cappedSeconds || window.offlineEarningsToShow.seconds
-        } : null;
+        // Get offline earnings data that was set by loadGame()
+        const offlineEarningsData = window.offlineEarningsToShow;
 
         // Handle game instructions modal visibility
         const instructionsEl = document.getElementById('game-instructions');
@@ -2766,25 +2767,18 @@ dogeUpgrades.forEach(u => {
             }
         }
 
-        // Show offline earnings AFTER instructions (with delay to avoid overlap)
-        console.log('=== OFFLINE EARNINGS CHECK ===');
-        console.log('Offline earnings data:', offlineEarningsData);
-        console.log('Showed instructions:', showedInstructions);
-        console.log('Has offline data:', !!offlineEarningsData);
-        if (offlineEarningsData) {
+        // Show offline earnings modal AFTER instructions
+        if (offlineEarningsData && offlineEarningsData.seconds >= 5) {
+            console.log('✅ SHOWING OFFLINE EARNINGS MODAL');
             console.log('  BTC:', offlineEarningsData.btc);
             console.log('  ETH:', offlineEarningsData.eth);
             console.log('  DOGE:', offlineEarningsData.doge);
-            console.log('  Staking Cash:', offlineEarningsData.stakingCash);
+            console.log('  Staking:', offlineEarningsData.stakingCash);
             console.log('  Seconds away:', offlineEarningsData.seconds);
-        }
 
-        if (offlineEarningsData && offlineEarningsData.seconds >= 5) {
-            console.log('✓ OFFLINE EARNINGS MODAL WILL SHOW');
             // Delay showing offline earnings modal to avoid overlap with instructions
             const delayMs = showedInstructions ? 1500 : 500;
             setTimeout(() => {
-                console.log('🎯 DISPLAYING OFFLINE EARNINGS MODAL NOW');
                 showOfflineEarningsModal(
                     offlineEarningsData.btc,
                     offlineEarningsData.eth,
@@ -2795,13 +2789,6 @@ dogeUpgrades.forEach(u => {
                     offlineEarningsData.cappedSeconds
                 );
             }, delayMs);
-        } else {
-            console.log('✗ Not showing offline earnings modal');
-            if (offlineEarningsData) {
-                console.log('  Reason: Was only away for', offlineEarningsData.seconds, 'seconds (need >= 5)');
-            } else {
-                console.log('  Reason: No offline earnings data');
-            }
         }
 
         const canvasElement = document.getElementById('nwChart');
