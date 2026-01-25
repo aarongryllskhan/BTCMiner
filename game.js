@@ -1403,6 +1403,7 @@ function loadGame() {
         if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
             localStorage.removeItem('satoshiTerminalSave');
             localStorage.removeItem('instructionsDismissed');
+            localStorage.removeItem('achievements');
             // Reset all variables to defaults
             btcBalance = 0;
             btcLifetime = 0;
@@ -1476,6 +1477,20 @@ function loadGame() {
                 console.log('Calling resetAscensionData()...');
                 resetAscensionData();
                 console.log('After reset - rugpullCurrency:', typeof rugpullCurrency !== 'undefined' ? rugpullCurrency : 'undefined');
+            }
+
+            // Reset achievements on full save reset
+            if (typeof achievementsData !== 'undefined') {
+                Object.keys(achievementsData.achievements).forEach(id => {
+                    achievementsData.achievements[id] = {
+                        unlocked: false,
+                        unlockedAt: null,
+                        progress: 0,
+                        notificationShown: false
+                    };
+                });
+                notificationsShownThisSession.clear();
+                console.log('✓ Achievements reset on save reset');
             }
 
             console.log('Calling saveGame() after reset...');
