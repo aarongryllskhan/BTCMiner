@@ -143,10 +143,17 @@ function executeRugpull(reward) {
     updateStakingUI();
 
     // Show success message
-    alert(`🎉 ASCENSION COMPLETE!\n\n+${reward} Corrupt Tokens earned\n\nTotal Tokens: ${rugpullCurrency}\n\nNew run starting with bonuses...`);
+    alert(`🎉 RUGPULL COMPLETE!\n\n+${reward} Corrupt Tokens earned\n\nTotal Tokens: ${rugpullCurrency}\n\nNew run starting with bonuses...\n\nOpen the Meta-Upgrades to spend your tokens!`);
 
-    // Reload to show new UI state
-    window.location.reload(true);
+    // Open meta-upgrades modal so player can spend tokens immediately
+    setTimeout(() => {
+        openMetaUpgradesModal();
+    }, 500);
+
+    // Reload to show new UI state after a delay (gives time to see modal)
+    setTimeout(() => {
+        window.location.reload(true);
+    }, 3000);
 }
 
 /**
@@ -381,7 +388,7 @@ function getUpgradeName(upgradeKey) {
         'mining_speed_10': '+10% Mining Speed',
         'mining_speed_25': '+25% Mining Speed',
         'mining_speed_50': '+50% Mining Speed',
-        'starter_miners': 'Start with Basic Miners',
+        'starter_miners': 'Start with 1 Basic Miner (BTC, ETH, DOGE)',
         'auto_buy_basic': 'Auto-Buy Basic Upgrades',
         'power_efficiency': '+20% Power Efficiency',
         'offline_boost': '2x Offline Earnings',
@@ -401,7 +408,7 @@ function updateMetaUpgradesUI() {
     container.innerHTML = '';
 
     const title = document.createElement('h3');
-    title.textContent = `🌟 Meta Upgrades | Corrupt Tokens: ${rugpullCurrency}`;
+    title.textContent = `🔴 RUGPULL META UPGRADES | Corrupt Tokens: ${rugpullCurrency}`;
     title.style.color = '#ff00ff';
     title.style.textAlign = 'center';
     title.style.marginBottom = '20px';
@@ -529,19 +536,68 @@ function closeMetaUpgradesModal() {
 }
 
 /**
- * Display ascension info in main UI (call from updateUI)
+ * Display rugpull info in main UI (call from updateUI)
  */
 function updateAscensionUI() {
     const ascensionInfo = document.getElementById('ascension-info');
     if (ascensionInfo) {
-        if (ascensionLevel === 0) {
+        if (ascensionLevel === 0 && rugpullCurrency === 0) {
             ascensionInfo.innerHTML = '';
         } else {
             ascensionInfo.innerHTML = `
                 <div style="text-align: center; color: #ff00ff; font-weight: bold; margin-top: 10px;">
-                    ✨ Ascension Level: ${ascensionLevel} | Corrupt Tokens: ${rugpullCurrency} ✨
+                    🔴 Rugpull Level: ${ascensionLevel} | Corrupt Tokens: ${rugpullCurrency} 🔴
                 </div>
             `;
         }
     }
+
+    // Update RUGPULL button state
+    const rugpullBtn = document.getElementById('rugpull-btn');
+    if (rugpullBtn) {
+        const isEligible = isRugpullEligible();
+        rugpullBtn.style.display = 'inline-block';
+        rugpullBtn.disabled = !isEligible;
+
+        if (!isEligible) {
+            rugpullBtn.style.opacity = '0.5';
+            rugpullBtn.style.cursor = 'not-allowed';
+            rugpullBtn.title = `Rugpull requires: $1M lifetime earnings OR BTC mining speed > 0.01/sec\n\nCurrent: $${lifetimeEarnings.toLocaleString()} earnings | ${btcPerSec.toFixed(8)} ₿/sec`;
+        } else {
+            rugpullBtn.style.opacity = '1';
+            rugpullBtn.style.cursor = 'pointer';
+            rugpullBtn.title = `Ready to Rugpull! You will earn ${calculateRugpullReward()} Corrupt Tokens`;
+        }
+    }
+}
+
+/**
+ * Handle RUGPULL button click - smart routing
+ * If eligible for rugpull: show offer
+ * If already have tokens: show meta-upgrades
+ * If neither: show requirements
+ */
+function handleRugpullButtonClick() {
+    if (isRugpullEligible()) {
+        // Can rugpull - show the rugpull offer
+        showRugpullOffer();
+    } else if (rugpullCurrency > 0) {
+        // Already have tokens - show meta-upgrades to spend them
+        openMetaUpgradesModal();
+    } else {
+        // Not eligible and no tokens - show requirements
+        alert(`🔴 NOT READY TO RUGPULL\n\nRequirements:\n• $1,000,000 lifetime earnings\nOR\n• Bitcoin mining speed > 0.01/sec\n\nCurrent Progress:\n• Earnings: $${lifetimeEarnings.toLocaleString()}\n• BTC Speed: ${btcPerSec.toFixed(8)} ₿/sec`);
+    }
+}
+
+/**
+ * Manual test function - force show rugpull offer (for testing)
+ * Type in console: testRugpull()
+ */
+function testRugpull() {
+    console.log('TEST MODE: Showing rugpull offer...');
+    console.log('Current eligibility:', isRugpullEligible());
+    console.log('Lifetime earnings:', lifetimeEarnings);
+    console.log('BTC per second:', btcPerSec);
+    showRugpullOffer();
 }

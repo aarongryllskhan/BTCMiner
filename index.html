@@ -109,7 +109,7 @@
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="toggleMute()">SOUND ON</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #2196F3; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
-                    <button style="background: #ff00ff; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; display: none;" id="ascension-btn" onclick="openMetaUpgradesModal()">🌟 ASCEND</button>
+                    <button style="background: #ff00ff; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; font-size: 0.55rem;" id="rugpull-btn" onclick="handleRugpullButtonClick()" title="Rugpull requires eligibility">🔴 RUGPULL</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetGame()">RESET SAVE</button>
                 </div>
@@ -503,11 +503,11 @@
     </div>
 </div>
 
-<!-- Meta-Upgrades Modal (Rugpull/Ascension System) -->
+<!-- Meta-Upgrades Modal (Rugpull System) -->
 <div id="meta-upgrades-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
         <div class="modal-header">
-            <h2>🌟 Meta Upgrades - Ascension Rewards</h2>
+            <h2>🔴 RUGPULL META UPGRADES</h2>
             <button onclick="closeMetaUpgradesModal()" class="modal-close">&times;</button>
         </div>
         <div class="modal-body" style="padding: 20px;">

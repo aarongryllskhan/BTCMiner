@@ -3039,6 +3039,11 @@ dogeUpgrades.forEach(u => {
     if (typeof updateStakingUI === 'function') {
         updateStakingUI();
     }
+
+    // Update ascension UI
+    if (typeof updateAscensionUI === 'function') {
+        updateAscensionUI();
+    }
     }
 
     setInterval(() => {
