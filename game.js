@@ -134,7 +134,8 @@
             let movePercent = (Math.random() * 0.0005) + 0.0005;
             let direction;
 
-            if (Math.random() < (0.3 + distancePercent * 0.4)) {
+            // Increased mean reversion: 50% base + up to 45% more = up to 95% when far from target
+            if (Math.random() < (0.5 + distancePercent * 0.45)) {
                 direction = btcPrice > btcTarget ? -1 : 1;
             } else {
                 direction = Math.random() > 0.5 ? 1 : -1;
@@ -159,12 +160,12 @@
             const maxDistance = Math.abs(BTC_MAX_PRICE - btcTarget);
             const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
 
-            // 60% + up to 30% more chance to revert when far from target
+            // Increased mean reversion: 75% + up to 25% more = up to 100% when far from target
             let newBtcPrice = oldBtcPrice * (1 + movePercent);
-            if (Math.random() < (0.6 + distancePercent * 0.3)) {
+            if (Math.random() < (0.75 + distancePercent * 0.25)) {
                 const targetPrice = 100000;
                 const diff = targetPrice - oldBtcPrice;
-                newBtcPrice = oldBtcPrice + (diff * 0.02);
+                newBtcPrice = oldBtcPrice + (diff * 0.03);
             } else {
                 let direction = Math.random() > 0.5 ? 1 : -1;
                 newBtcPrice = oldBtcPrice * (1 + (direction * movePercent));
@@ -188,7 +189,8 @@
             let movePercent = (Math.random() * 0.0005) + 0.0005;
             let direction;
 
-            if (Math.random() < (0.3 + distancePercent * 0.4)) {
+            // Increased mean reversion: 50% base + up to 45% more = up to 95% when far from target
+            if (Math.random() < (0.5 + distancePercent * 0.45)) {
                 direction = ethPrice > ethTarget ? -1 : 1;
             } else {
                 direction = Math.random() > 0.5 ? 1 : -1;
@@ -213,11 +215,12 @@
             const maxDistance = Math.abs(ETH_MAX_PRICE - ethTarget);
             const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
 
+            // Increased mean reversion: 75% + up to 25% more = up to 100% when far from target
             let newEthPrice = oldEthPrice * (1 + movePercent);
-            if (Math.random() < (0.6 + distancePercent * 0.3)) {
+            if (Math.random() < (0.75 + distancePercent * 0.25)) {
                 const targetPrice = 3500;
                 const diff = targetPrice - oldEthPrice;
-                newEthPrice = oldEthPrice + (diff * 0.02);
+                newEthPrice = oldEthPrice + (diff * 0.03);
             } else {
                 let direction = Math.random() > 0.5 ? 1 : -1;
                 newEthPrice = oldEthPrice * (1 + (direction * movePercent));
@@ -241,7 +244,8 @@
             let movePercent = (Math.random() * 0.001) + 0.0005;
             let direction;
 
-            if (Math.random() < (0.3 + distancePercent * 0.4)) {
+            // Increased mean reversion: 50% base + up to 45% more = up to 95% when far from target
+            if (Math.random() < (0.5 + distancePercent * 0.45)) {
                 direction = dogePrice > dogeTarget ? -1 : 1;
             } else {
                 direction = Math.random() > 0.5 ? 1 : -1;
@@ -266,11 +270,12 @@
             const maxDistance = Math.abs(DOGE_MAX_PRICE - dogeTarget);
             const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
 
+            // Increased mean reversion: 75% + up to 25% more = up to 100% when far from target
             let newDogePrice = oldDogePrice * (1 + movePercent * 1.5);
-            if (Math.random() < (0.6 + distancePercent * 0.3)) {
+            if (Math.random() < (0.75 + distancePercent * 0.25)) {
                 const targetPrice = 0.25;
                 const diff = targetPrice - oldDogePrice;
-                newDogePrice = oldDogePrice + (diff * 0.02);
+                newDogePrice = oldDogePrice + (diff * 0.03);
             } else {
                 let direction = Math.random() > 0.5 ? 1 : -1;
                 newDogePrice = oldDogePrice * (1 + (direction * movePercent * 1.5));
@@ -292,6 +297,13 @@
             let oldBtcPrice = btcPrice;
             btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, btcPrice * (1 + move)));
             updatePriceIndicator('btc', oldBtcPrice, btcPrice);
+
+            // Show news popup for big swings
+            const changePercent = ((btcPrice - oldBtcPrice) / oldBtcPrice) * 100;
+            if (typeof showNewsPopup !== 'undefined') {
+                showNewsPopup('btc', changePercent, changePercent >= 0);
+            }
+
             updateUI();
             btcBigSwing();
         }, nextBigSwing);
@@ -307,6 +319,13 @@
             let oldEthPrice = ethPrice;
             ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, ethPrice * (1 + move)));
             updatePriceIndicator('eth', oldEthPrice, ethPrice);
+
+            // Show news popup for big swings
+            const changePercent = ((ethPrice - oldEthPrice) / oldEthPrice) * 100;
+            if (typeof showNewsPopup !== 'undefined') {
+                showNewsPopup('eth', changePercent, changePercent >= 0);
+            }
+
             updateUI();
             ethBigSwing();
         }, nextBigSwing);
@@ -322,6 +341,13 @@
             let oldDogePrice = dogePrice;
             dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, dogePrice * (1 + move * 1.8)));
             updatePriceIndicator('doge', oldDogePrice, dogePrice);
+
+            // Show news popup for big swings
+            const changePercent = ((dogePrice - oldDogePrice) / oldDogePrice) * 100;
+            if (typeof showNewsPopup !== 'undefined') {
+                showNewsPopup('doge', changePercent, changePercent >= 0);
+            }
+
             updateUI();
             dogeBigSwing();
         }, nextBigSwing);

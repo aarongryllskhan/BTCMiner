@@ -418,6 +418,19 @@ button:disabled:hover {
             to { opacity: 1; }
         }
 
+        @keyframes newsSlideIn {
+            from {
+                transform: translate(-50%, -60%);
+                opacity: 0;
+                scale: 0.8;
+            }
+            to {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+                scale: 1;
+            }
+        }
+
         /* Skill Tree Modal Styles */
         .modal-overlay {
             position: fixed;
