@@ -103,21 +103,23 @@
 
     <div id="main-layout">
         <div class="panel">
-            <!-- Top row: Label on left, RUGPULL centered, utility buttons on right -->
-            <div style="position: relative; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap: 12px; min-height: 80px;">
-                <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important;">Crypto Portfolio Valuation</span>
+            <!-- Title -->
+            <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important; margin-bottom: 0px;">Crypto Portfolio Valuation</span>
+
+            <!-- Top row: RUGPULL centered, utility buttons on right -->
+            <div style="position: absolute; top: 24px; left: 24px; right: 24px; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0px; gap: 12px; pointer-events: none;">
 
                 <!-- RUGPULL BUTTON - CENTER -->
-                <div style="position: absolute; left: 50%; top: 30px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 5;">
-                    <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 10px 20px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
+                <div style="position: absolute; left: 50%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 5; pointer-events: auto;">
+                    <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 4px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
                     <div id="rugpull-tooltip" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
                         <span id="tooltip-text">Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
                     </div>
-                    <div id="rugpull-progress-text" style="color: #ffeb3b; font-size: 0.65rem; font-weight: bold; margin-top: 6px; text-align: center;">$0 / $1M</div>
+                    <div id="rugpull-progress-text" style="color: #ffeb3b; font-size: 0.65rem; font-weight: bold; margin-top: 2px; text-align: center;">$0 / $1M</div>
                 </div>
 
                 <!-- OTHER BUTTONS - RIGHT SIDE, VERTICAL COLUMN -->
-                <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto;">
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto; pointer-events: auto;">
                     <button id="rugpull-store-btn" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.65rem; transition: all 0.3s ease; display: none; white-space: nowrap;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
@@ -129,16 +131,16 @@
             <div class="nw-amount" id="nw-val">$0.00</div>
 
             <!-- Crypto Balances -->
-            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 0px;">
                 <div style="font-size: 1.4rem; color: #f7931a; font-weight: bold; font-family: monospace;">₿ <span id="bal-btc">0.00000000</span></div>
                 <div style="font-size: 1.4rem; color: #627eea; font-weight: bold; font-family: monospace;">Ξ <span id="bal-eth">0.00000000</span></div>
                 <div style="font-size: 1.4rem; color: #c2a633; font-weight: bold; font-family: monospace;">Ð <span id="bal-doge">0.00</span></div>
             </div>
 
             <!-- Ascension Info -->
-            <div id="ascension-info"></div>
+            <div id="ascension-info" style="margin-bottom: 4px;"></div>
 
-            <div class="mini-stats">
+            <div class="mini-stats" style="margin-bottom: 4px;">
                 <div class="stat-item">
                     <span>Hardware Equity</span>
                     <b class="stat-val" id="asset-usd">$0</b>
@@ -146,7 +148,7 @@
             </div>
 
             <!-- Hashrate Display -->
-            <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 0.1px; justify-content: flex-end; flex-wrap: wrap;">
+            <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 4px; justify-content: flex-end; flex-wrap: wrap;">
                 <div class="stat-box stat-box-session" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">TIME THIS SESSION</span>
                     <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-time">0m 0s</b>
@@ -206,6 +208,10 @@
 
             <div class="chart-wrapper" style="position: relative;">
                 <canvas id="nwChart"></canvas>
+                <!-- News ticker overlay -->
+                <div id="news-ticker-overlay">
+                    <div id="news-ticker-content"></div>
+                </div>
             </div>
 
             <!-- Chart refresh message -->
@@ -715,22 +721,6 @@
     });
 </script>
 
-<!-- News Feed Ticker at top of page -->
-<div id="news-feed-ticker" style="position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); border-bottom: 2px solid #f7931a; padding: 8px 15px; z-index: 4999; overflow: hidden; max-height: 120px;">
-  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-    <span style="color: #f7931a; font-weight: 900; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">📰 CRYPTO NEWS</span>
-    <span style="color: #666;">|</span>
-  </div>
-  <div id="news-ticker-content" style="display: flex; flex-direction: column; gap: 6px; max-height: 90px; overflow-y: auto; padding-right: 8px;">
-    <!-- News items will be added here dynamically -->
-  </div>
-</div>
-
-<!-- Adjust body padding to account for news ticker -->
-<style>
-  body { padding-top: 120px !important; }
-</style>
-
 <!-- Cookie Consent Banner -->
 <div id="cookie-consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 20px; border-top: 3px solid #f7931a; z-index: 99999; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);">
     <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
@@ -828,62 +818,181 @@
     // Cookie consent is now checked after age/terms modal is accepted
     // via the acceptAgeAndTerms() function
 
-    // Price fluctuation news feed system
+    // Price fluctuation news feed system - headlines scale with volatility
     function showNewsPopup(crypto, changePercent, isUp) {
-        // News headlines for different scenarios
+        console.log(`📰 News popup triggered: ${crypto.toUpperCase()} ${changePercent.toFixed(2)}% ${isUp ? '📈' : '📉'}`);
+
+        const absChange = Math.abs(changePercent);
+
+        // Categorize by volatility tier
+        let tier; // 'tiny', 'small', 'medium', 'large'
+        if (absChange < 0.5) tier = 'tiny';
+        else if (absChange < 2) tier = 'small';
+        else if (absChange < 5) tier = 'medium';
+        else tier = 'large';
+
+        // News headlines organized by magnitude and direction
         const newsHeadlines = {
             btc: {
-                up: [
-                    { emoji: '🚀', title: 'BTC SURGE', text: 'Bitcoin breaks through resistance!' },
-                    { emoji: '📈', title: 'BULLISH', text: 'Satoshi Era Wallet Wakes Up!' },
-                    { emoji: '🪙', title: 'HODLER RALLY', text: 'Whale accumulated 1,000 BTC!' },
-                    { emoji: '⛏️', title: 'MINING BOOM', text: 'Hashrate surges to new ATH!' },
-                    { emoji: '🔗', title: 'NETWORK', text: 'All-time high security levels!' }
-                ],
-                down: [
-                    { emoji: '📉', title: 'CORRECTION', text: 'Market taking profits.' },
-                    { emoji: '⚠️', title: 'VOLATILITY', text: 'Unexpected market movement.' },
-                    { emoji: '💔', title: 'SELL PRESSURE', text: 'Wallet liquidation detected.' },
-                    { emoji: '🌧️', title: 'BEARISH', text: 'Technical weakness forming.' },
-                    { emoji: '❄️', title: 'MARKET CHILL', text: 'Crypto winter signals.' }
-                ]
+                up: {
+                    tiny: [
+                        { emoji: '📈', title: 'SLIGHT GAIN', text: 'Bitcoin price ticks up slightly' },
+                        { emoji: '⬆️', title: 'MODEST BUY', text: 'Small buying pressure detected' },
+                        { emoji: '💚', title: 'GREEN DAY', text: 'Bitcoin holding modest gains' }
+                    ],
+                    small: [
+                        { emoji: '📊', title: 'DAILY GAINS', text: 'Bitcoin climbing steadily today' },
+                        { emoji: '🆙', title: 'BUILDING STRENGTH', text: 'Positive momentum building' },
+                        { emoji: '💰', title: 'BULLISH SENTIMENT', text: 'Optimism growing in market' }
+                    ],
+                    medium: [
+                        { emoji: '🚀', title: 'STRONG RALLY', text: 'Bitcoin surging with conviction' },
+                        { emoji: '📈', title: 'BREAKOUT MOVE', text: 'Bitcoin making significant gains' },
+                        { emoji: '💎', title: 'BULL CONFIDENCE', text: 'Buyers showing real interest' }
+                    ],
+                    large: [
+                        { emoji: '🚀', title: 'RESISTANCE BREAK', text: 'Bitcoin breaks major resistance level' },
+                        { emoji: '🏛️', title: 'INSTITUTIONS', text: 'Institutions pile into Bitcoin as inflows surge' },
+                        { emoji: '📊', title: 'ETF BOOM', text: 'Bitcoin ETF records biggest day ever' },
+                        { emoji: '⛏️', title: 'MINERS HODL', text: 'Miners begin hoarding instead of selling' },
+                        { emoji: '🐋', title: 'WHALE PUMP', text: 'Whale accumulation reaches yearly high' },
+                        { emoji: '💰', title: 'EXCHANGE DRAIN', text: 'Exchange balances drop to multi-year lows' }
+                    ]
+                },
+                down: {
+                    tiny: [
+                        { emoji: '📉', title: 'SLIGHT DIP', text: 'Bitcoin prices slip marginally' },
+                        { emoji: '⬇️', title: 'MINOR PULLBACK', text: 'Small profit-taking happening' },
+                        { emoji: '⚪', title: 'CONSOLIDATION', text: 'Bitcoin taking a brief pause' }
+                    ],
+                    small: [
+                        { emoji: '📊', title: 'LOSING STEAM', text: 'Bitcoin retreating from highs' },
+                        { emoji: '⬇️', title: 'SELLING PRESSURE', text: 'Some weakness showing up' },
+                        { emoji: '💔', title: 'SENTIMENT SHIFT', text: 'Market caution increasing' }
+                    ],
+                    medium: [
+                        { emoji: '📉', title: 'SHARP DECLINE', text: 'Bitcoin dropping with intensity' },
+                        { emoji: '⚠️', title: 'VOLATILITY SPIKE', text: 'Significant selloff underway' },
+                        { emoji: '💔', title: 'BEAR PRESSURE', text: 'Sellers taking control' }
+                    ],
+                    large: [
+                        { emoji: '📉', title: 'REJECTION', text: 'Bitcoin rejected hard at key resistance' },
+                        { emoji: '👻', title: 'SATOSHI MOVES', text: 'Satoshi-era wallet moves coins, panic spreads' },
+                        { emoji: '🐋', title: 'WHALE DUMP', text: 'Whale dumps hundreds of millions in BTC' },
+                        { emoji: '⚡', title: 'FLASH CRASH', text: 'Flash crash liquidates billions in longs' },
+                        { emoji: '🚨', title: 'RESTRICTIONS', text: 'Government hints at new Bitcoin restrictions' },
+                        { emoji: '🔴', title: 'SUPPORT BREAK', text: 'Bitcoin breaks below critical support' }
+                    ]
+                }
             },
             eth: {
-                up: [
-                    { emoji: '🔥', title: 'ETH ERUPTS', text: 'Layer 2 adoption accelerates!' },
-                    { emoji: '💎', title: 'DEFLATIONARY', text: 'Network burn explodes!' },
-                    { emoji: '⚡', title: 'LIGHTNING', text: 'Record throughput achieved!' },
-                    { emoji: '🌟', title: 'ETH 2.0 BOOST', text: '10M+ ETH staking spike!' },
-                    { emoji: '🎯', title: 'BREAKOUT', text: 'Bull pattern confirmed!' }
-                ],
-                down: [
-                    { emoji: '⛓️', title: 'CORRECTION', text: 'Consolidation beginning.' },
-                    { emoji: '❌', title: 'STAKING CONCERNS', text: 'Validator unstaking.' },
-                    { emoji: '🔴', title: 'RED CANDLES', text: 'Resistance failure.' },
-                    { emoji: '📊', title: 'DOWNTREND', text: 'Support weakness.' },
-                    { emoji: '🛑', title: 'PAUSE', text: 'Finding equilibrium.' }
-                ]
+                up: {
+                    tiny: [
+                        { emoji: '📈', title: 'ETH GAINS', text: 'Ethereum ticking up gradually' },
+                        { emoji: '⬆️', title: 'SMALL RALLY', text: 'Modest buying in ETH market' },
+                        { emoji: '💚', title: 'GREEN MOVES', text: 'Ethereum in positive territory' }
+                    ],
+                    small: [
+                        { emoji: '📊', title: 'ETH CLIMBING', text: 'Ethereum showing steady strength' },
+                        { emoji: '💨', title: 'GAS ACTIVITY', text: 'Network activity increasing' },
+                        { emoji: '⬆️', title: 'DEFI BUYING', text: 'DeFi sector showing interest' }
+                    ],
+                    medium: [
+                        { emoji: '🔥', title: 'ETH SURGE', text: 'Ethereum rallying strongly' },
+                        { emoji: '📈', title: 'SOLID BREAKOUT', text: 'ETH making impressive moves' },
+                        { emoji: '💎', title: 'STAKING INTEREST', text: 'Staking demand picking up' }
+                    ],
+                    large: [
+                        { emoji: '⬆️', title: 'UPGRADE SUCCESS', text: 'Major Ethereum upgrade successfully deployed' },
+                        { emoji: '💨', title: 'LOW GAS FEES', text: 'Ethereum gas fees drop, activity surges' },
+                        { emoji: '📈', title: 'DEFI BOOM', text: 'DeFi total value locked explodes on Ethereum' },
+                        { emoji: '🖼️', title: 'NFT SURGE', text: 'NFT trading volume spikes on ETH network' },
+                        { emoji: '🏛️', title: 'INSTITUTIONS', text: 'Institutions increase Ethereum exposure' },
+                        { emoji: '🚀', title: 'BREAKOUT', text: 'ETH breaks out as ecosystem growth accelerates' }
+                    ]
+                },
+                down: {
+                    tiny: [
+                        { emoji: '📉', title: 'ETH SLIP', text: 'Ethereum prices edge lower' },
+                        { emoji: '⬇️', title: 'MINOR WEAKNESS', text: 'Small dip in ETH value' },
+                        { emoji: '⚪', title: 'PAUSE TIME', text: 'Ethereum consolidating briefly' }
+                    ],
+                    small: [
+                        { emoji: '📊', title: 'ETH RETREATING', text: 'Ethereum losing some momentum' },
+                        { emoji: '⬇️', title: 'GAS CONCERNS', text: 'Network fees creating friction' },
+                        { emoji: '💔', title: 'DEFI CAUTION', text: 'DeFi sector shows hesitation' }
+                    ],
+                    medium: [
+                        { emoji: '🔥', title: 'ETH SELLOFF', text: 'Ethereum dropping meaningfully' },
+                        { emoji: '📉', title: 'SHARP DROP', text: 'ETH experiencing real weakness' },
+                        { emoji: '⚠️', title: 'BUYER CONCERNS', text: 'Market worries surfacing' }
+                    ],
+                    large: [
+                        { emoji: '🐛', title: 'BUG FOUND', text: 'Bug discovered in major Ethereum update' },
+                        { emoji: '🔥', title: 'HIGH FEES', text: 'High gas fees drive users to rival chains' },
+                        { emoji: '💥', title: 'EXPLOIT', text: 'DeFi exploit drains millions on Ethereum' },
+                        { emoji: '📤', title: 'WHALE EXIT', text: 'Whales move huge ETH stacks to exchanges' },
+                        { emoji: '🔴', title: 'SUPPORT BREAK', text: 'ETH breaks below long-term support zone' }
+                    ]
+                }
             },
             doge: {
-                up: [
-                    { emoji: '🐕', title: 'DOGE MOON', text: 'Elon Tweets Doge meme!' },
-                    { emoji: '🚀', title: 'TO THE MOON', text: 'Community rallies hard!' },
-                    { emoji: '😄', title: 'MUCH PROFIT', text: 'Major exchange listings!' },
-                    { emoji: '💰', title: 'DOGE SURGE', text: 'Retail investors flooding in!' },
-                    { emoji: '🎉', title: 'CELEBRATION', text: '1 billion DOGE milestone!' }
-                ],
-                down: [
-                    { emoji: '📉', title: 'DOGE DIP', text: 'Volatility correction.' },
-                    { emoji: '😅', title: 'TEMPORARY DIP', text: 'Profit-taking continues.' },
-                    { emoji: '🔄', title: 'CONSOLIDATION', text: 'DOGE needs rest.' },
-                    { emoji: '😔', title: 'SENTIMENT SHIFT', text: 'Meme cycle cooling.' },
-                    { emoji: '⬇️', title: 'PULLBACK', text: 'Overextended positions.' }
-                ]
+                up: {
+                    tiny: [
+                        { emoji: '📈', title: 'DOGE UP', text: 'Dogecoin price rising slightly' },
+                        { emoji: '🐕', title: 'GOOD BOY', text: 'Much gain, such rise' },
+                        { emoji: '💚', title: 'DOGE HAPPY', text: 'Positive vibes for DOGE' }
+                    ],
+                    small: [
+                        { emoji: '📊', title: 'STEADY CLIMB', text: 'Dogecoin building momentum' },
+                        { emoji: '🆙', title: 'COMMUNITY INTEREST', text: 'DOGE holders showing support' },
+                        { emoji: '💰', title: 'SMALL GAINS', text: 'Retail traders entering' }
+                    ],
+                    medium: [
+                        { emoji: '🚀', title: 'DOGE PUMPING', text: 'Dogecoin rallying nicely' },
+                        { emoji: '📈', title: 'SIGNIFICANT MOVE', text: 'DOGE making real waves' },
+                        { emoji: '😄', title: 'DOGE VIBES', text: 'Community excitement rising' }
+                    ],
+                    large: [
+                        { emoji: '🐕', title: 'ELON MEME', text: 'Elon Musk posts new Doge meme, price jumps' },
+                        { emoji: '📱', title: 'TRENDING', text: 'Dogecoin trends #1 worldwide on social media' },
+                        { emoji: '🛍️', title: 'PAYMENT APP', text: 'Major payment app adds Dogecoin support' },
+                        { emoji: '🔥', title: 'RETAIL FRENZY', text: 'Retail frenzy returns as DOGE volume explodes' },
+                        { emoji: '🐋', title: 'WHALE ACCUMULATE', text: 'Whales quietly accumulate massive DOGE positions' },
+                        { emoji: '🚀', title: 'MEME SEASON', text: 'Meme coin season ignites, Doge leads the pack' }
+                    ]
+                },
+                down: {
+                    tiny: [
+                        { emoji: '📉', title: 'DOGE DIP', text: 'Dogecoin slipping slightly' },
+                        { emoji: '😅', title: 'OOPS', text: 'Such fall, not wow' },
+                        { emoji: '⚪', title: 'DOGE REST', text: 'Taking a quick breather' }
+                    ],
+                    small: [
+                        { emoji: '📊', title: 'DOGE FADING', text: 'Dogecoin losing ground' },
+                        { emoji: '⬇️', title: 'PROFIT TAKING', text: 'Some traders cashing out' },
+                        { emoji: '😔', title: 'SENTIMENT DROP', text: 'Community caution rising' }
+                    ],
+                    medium: [
+                        { emoji: '📉', title: 'DOGE DROPPING', text: 'Dogecoin declining sharply' },
+                        { emoji: '⚠️', title: 'SHARP DUMP', text: 'Significant selloff happening' },
+                        { emoji: '💔', title: 'SELL PRESSURE', text: 'Bears taking control' }
+                    ],
+                    large: [
+                        { emoji: '🗑️', title: 'ELON DELETES', text: 'Elon deletes Doge tweet, market instantly reacts' },
+                        { emoji: '💤', title: 'HYPE FADES', text: 'Meme coin hype fades, Dogecoin dumps' },
+                        { emoji: '🐋', title: 'WHALE DUMP', text: 'Whale unloads billions of DOGE on exchanges' },
+                        { emoji: '📱', title: 'SOCIAL FADE', text: 'Social media interest in Doge hits yearly low' },
+                        { emoji: '🚪', title: 'RETAIL EXIT', text: 'Retail traders exit meme coins en masse' },
+                        { emoji: '🔴', title: 'SUPPORT BREAK', text: 'Dogecoin breaks below critical support' }
+                    ]
+                }
             }
         };
 
-        // Select random headline based on crypto and direction
-        const headlines = newsHeadlines[crypto][isUp ? 'up' : 'down'];
+        // Select headline based on crypto, direction, and magnitude
+        const directionKey = isUp ? 'up' : 'down';
+        const headlines = newsHeadlines[crypto][directionKey][tier];
         const headline = headlines[Math.floor(Math.random() * headlines.length)];
 
         // Create news item element
@@ -905,6 +1014,13 @@
 
         // Add to news feed
         const newsFeed = document.getElementById('news-ticker-content');
+        if (!newsFeed) {
+            console.error('❌ News ticker content element #news-ticker-content not found in DOM');
+            console.error('Available elements:', document.querySelectorAll('[id*="news"]'));
+            return;
+        }
+
+        console.log('✅ News item added to feed:', headline.title, headline.text);
         newsFeed.insertBefore(newsItem, newsFeed.firstChild);
 
         // Limit to last 8 news items
@@ -919,6 +1035,20 @@
             }
         }, 10000);
     }
+
+    // Make showNewsPopup globally accessible
+    window.showNewsPopup = showNewsPopup;
+    console.log('✅ showNewsPopup function registered to window:', typeof window.showNewsPopup);
+
+    // Test function - call from browser console to test news ticker
+    window.testNewsPopup = function() {
+        console.log('🧪 Running news ticker test...');
+        window.showNewsPopup('btc', 4.5, true);
+        window.showNewsPopup('eth', 2.3, false);
+        window.showNewsPopup('doge', 7.8, true);
+        console.log('✅ Test news items added. Check the ticker at bottom of graph!');
+    };
+    console.log('📋 Type testNewsPopup() in console to test news ticker');
 </script>
 
 <!-- Cache busting system - forces hard refresh on code updates -->

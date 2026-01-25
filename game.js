@@ -300,8 +300,10 @@
 
             // Show news popup for big swings
             const changePercent = ((btcPrice - oldBtcPrice) / oldBtcPrice) * 100;
-            if (typeof showNewsPopup !== 'undefined') {
-                showNewsPopup('btc', changePercent, changePercent >= 0);
+            if (typeof window.showNewsPopup === 'function') {
+                window.showNewsPopup('btc', changePercent, changePercent >= 0);
+            } else {
+                console.warn('⚠️ showNewsPopup not available yet, retrying...');
             }
 
             updateUI();
@@ -322,8 +324,10 @@
 
             // Show news popup for big swings
             const changePercent = ((ethPrice - oldEthPrice) / oldEthPrice) * 100;
-            if (typeof showNewsPopup !== 'undefined') {
-                showNewsPopup('eth', changePercent, changePercent >= 0);
+            if (typeof window.showNewsPopup === 'function') {
+                window.showNewsPopup('eth', changePercent, changePercent >= 0);
+            } else {
+                console.warn('⚠️ showNewsPopup not available yet, retrying...');
             }
 
             updateUI();
@@ -344,8 +348,10 @@
 
             // Show news popup for big swings
             const changePercent = ((dogePrice - oldDogePrice) / oldDogePrice) * 100;
-            if (typeof showNewsPopup !== 'undefined') {
-                showNewsPopup('doge', changePercent, changePercent >= 0);
+            if (typeof window.showNewsPopup === 'function') {
+                window.showNewsPopup('doge', changePercent, changePercent >= 0);
+            } else {
+                console.warn('⚠️ showNewsPopup not available yet, retrying...');
             }
 
             updateUI();
@@ -2633,10 +2639,23 @@ function buyDogeBoost(i) {
             document.getElementById('nw-val').innerText = "$" + cryptoPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2});
         }
 
+        // Format balances with smart abbreviations
+        const formatCryptoBalance = (balance, decimals = 8) => {
+            if (balance >= 1e9) {
+                return (balance / 1e9).toFixed(2) + 'B';
+            } else if (balance >= 1e6) {
+                return (balance / 1e6).toFixed(2) + 'M';
+            } else if (balance >= 1e3) {
+                return (balance / 1e3).toFixed(2) + 'K';
+            } else {
+                return balance.toFixed(decimals);
+            }
+        };
+
         // Update balances
-        document.getElementById('bal-btc').innerText = btcBalance.toFixed(8);
-        document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
-        document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
+        document.getElementById('bal-btc').innerText = formatCryptoBalance(btcBalance);
+        document.getElementById('bal-eth').innerText = formatCryptoBalance(ethBalance);
+        document.getElementById('bal-doge').innerText = formatCryptoBalance(dogeBalance);
 
         // Update manual hash button text (with ascension multiplier applied)
         const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
@@ -2659,30 +2678,49 @@ function buyDogeBoost(i) {
             dogeMineBtnSpan.innerText = `+${totalDogeClick.toFixed(8)} Ð`;
         }
 
-        // Update hardware equity
+        // Update hardware equity with smart abbreviations
         let hardwareEquityDisplay = "$" + Math.floor(hardwareEquity).toLocaleString();
-        if (isMobileUI && hardwareEquity >= 1000) {
-            hardwareEquityDisplay = "$" + (hardwareEquity / 1e9 >= 1 ? (hardwareEquity / 1e9).toFixed(1) + 'b' : hardwareEquity / 1e6 >= 1 ? (hardwareEquity / 1e6).toFixed(1) + 'm' : (hardwareEquity / 1e3).toFixed(1) + 'k');
+        if (hardwareEquity >= 1000) {
+            if (hardwareEquity >= 1e9) {
+                hardwareEquityDisplay = "$" + (hardwareEquity / 1e9).toFixed(1) + 'B';
+            } else if (hardwareEquity >= 1e6) {
+                hardwareEquityDisplay = "$" + (hardwareEquity / 1e6).toFixed(1) + 'M';
+            } else {
+                hardwareEquityDisplay = "$" + (hardwareEquity / 1e3).toFixed(1) + 'K';
+            }
         }
         document.getElementById('asset-usd').innerText = hardwareEquityDisplay;
+
+        // Format hashrate with abbreviations (K, M, B, etc)
+        const formatHashrate = (hashrate) => {
+            if (hashrate >= 1e9) {
+                return (hashrate / 1e9).toFixed(2) + 'B/s';
+            } else if (hashrate >= 1e6) {
+                return (hashrate / 1e6).toFixed(2) + 'M/s';
+            } else if (hashrate >= 1e3) {
+                return (hashrate / 1e3).toFixed(2) + 'K/s';
+            } else {
+                return hashrate.toFixed(8) + '/s';
+            }
+        };
 
         // Update individual hashrate displays (old location - keep for backwards compatibility)
         const btcEl = document.getElementById('yield-btc');
         const ethEl = document.getElementById('yield-eth');
         const dogeEl = document.getElementById('yield-doge');
 
-        if (btcEl) btcEl.innerText = btcPerSec.toFixed(8) + "/s";
-        if (ethEl) ethEl.innerText = ethPerSec.toFixed(8) + "/s";
-        if (dogeEl) dogeEl.innerText = dogePerSec.toFixed(8) + "/s";
+        if (btcEl) btcEl.innerText = formatHashrate(btcPerSec);
+        if (ethEl) ethEl.innerText = formatHashrate(ethPerSec);
+        if (dogeEl) dogeEl.innerText = formatHashrate(dogePerSec);
 
         // Update hashrate displays in new location
         const btcDisplayEl = document.getElementById('yield-btc-display');
         const ethDisplayEl = document.getElementById('yield-eth-display');
         const dogeDisplayEl = document.getElementById('yield-doge-display');
 
-        if (btcDisplayEl) btcDisplayEl.innerText = btcPerSec.toFixed(8) + "/s";
-        if (ethDisplayEl) ethDisplayEl.innerText = ethPerSec.toFixed(8) + "/s";
-        if (dogeDisplayEl) dogeDisplayEl.innerText = dogePerSec.toFixed(8) + "/s";
+        if (btcDisplayEl) btcDisplayEl.innerText = formatHashrate(btcPerSec);
+        if (ethDisplayEl) ethDisplayEl.innerText = formatHashrate(ethPerSec);
+        if (dogeDisplayEl) dogeDisplayEl.innerText = formatHashrate(dogePerSec);
 
         // Update prices
         document.getElementById('btc-price').innerText = "$" + Math.floor(btcPrice).toLocaleString();
@@ -3582,8 +3620,14 @@ dogeUpgrades.forEach(u => {
                                 },
                                 maxTicksLimit: 8,
                                 callback: function(value) {
+                                    if (value >= 1000000000) {
+                                        return '$' + (value / 1000000000).toFixed(1) + 'B';
+                                    }
+                                    if (value >= 1000000) {
+                                        return '$' + (value / 1000000).toFixed(1) + 'M';
+                                    }
                                     if (value >= 1000) {
-                                        return '$' + (value / 1000).toFixed(2) + 'k';
+                                        return '$' + (value / 1000).toFixed(1) + 'k';
                                     }
                                     return '$' + value.toFixed(2);
                                 }
