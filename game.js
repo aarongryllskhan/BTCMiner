@@ -3086,6 +3086,11 @@ dogeUpgrades.forEach(u => {
 
         updateUI();
         updateAutoClickerButtonState();
+
+        // Check for rugpull milestone
+        if (typeof checkRugpullMilestone === 'function') {
+            checkRugpullMilestone();
+        }
     }, 100);
 
     // Initialize all shops after DOM is ready

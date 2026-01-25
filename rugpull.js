@@ -8,6 +8,7 @@
 
 let ascensionLevel = 0;              // Total number of times the player has ascended
 let rugpullCurrency = 0;             // "Corrupt Tokens" - earned through ascension
+let lastShownMilestoneEarnings = 0;  // Track which $1M milestone popup was shown
 let ascensionStats = {
     totalRunsCompleted: 0,           // Total times player has reset
     currencyEarned: 0,               // Lifetime total of earned currency
@@ -475,6 +476,7 @@ function getAscensionData() {
     return {
         ascensionLevel,
         rugpullCurrency,
+        lastShownMilestoneEarnings,
         ascensionStats,
         metaUpgrades,
         unlockedSystems
@@ -489,6 +491,7 @@ function loadAscensionData(data) {
 
     ascensionLevel = data.ascensionLevel || 0;
     rugpullCurrency = data.rugpullCurrency || 0;
+    lastShownMilestoneEarnings = data.lastShownMilestoneEarnings || 0;
     ascensionStats = data.ascensionStats || {
         totalRunsCompleted: 0,
         currencyEarned: 0,
@@ -503,8 +506,8 @@ function loadAscensionData(data) {
  * Check if player is eligible to rugpull
  */
 function isRugpullEligible() {
-    // Eligible if earned at least $1M lifetime or have decent progress
-    return lifetimeEarnings >= 1000000 || btcPerSec > 0.01;
+    // Eligible if earned at least $1M lifetime
+    return lifetimeEarnings >= 1000000;
 }
 
 /**
@@ -554,19 +557,29 @@ function updateAscensionUI() {
 
     // Update RUGPULL button state
     const rugpullBtn = document.getElementById('rugpull-btn');
+
     if (rugpullBtn) {
         const isEligible = isRugpullEligible();
-        rugpullBtn.style.display = 'inline-block';
         rugpullBtn.disabled = !isEligible;
 
         if (!isEligible) {
+            // Not eligible - faded/disabled state
+            rugpullBtn.style.background = '#666';
             rugpullBtn.style.opacity = '0.5';
             rugpullBtn.style.cursor = 'not-allowed';
-            rugpullBtn.title = `Rugpull requires: $1M lifetime earnings OR BTC mining speed > 0.01/sec\n\nCurrent: $${lifetimeEarnings.toLocaleString()} earnings | ${btcPerSec.toFixed(8)} ₿/sec`;
+
+            // Update tooltip with progress
+            const progressToMillion = Math.min((lifetimeEarnings / 1000000) * 100, 99.9);
+            rugpullBtn.title = `Rugpull to start fresh and earn Corrupt Tokens for permanent rewards\n\nProgress: $${lifetimeEarnings.toLocaleString()} / $1M (${progressToMillion.toFixed(1)}%)`;
         } else {
+            // Eligible - bright and clickable
+            rugpullBtn.style.background = '#9c27b0';
             rugpullBtn.style.opacity = '1';
             rugpullBtn.style.cursor = 'pointer';
-            rugpullBtn.title = `Ready to Rugpull! You will earn ${calculateRugpullReward()} Corrupt Tokens`;
+            rugpullBtn.style.boxShadow = '0 0 15px rgba(156,39,176,0.8)';
+
+            // Update tooltip with reward
+            rugpullBtn.title = `Rugpull to start fresh and earn Corrupt Tokens for permanent rewards\n\nYou'll earn: ${calculateRugpullReward()} Corrupt Tokens`;
         }
     }
 }
@@ -586,7 +599,42 @@ function handleRugpullButtonClick() {
         openMetaUpgradesModal();
     } else {
         // Not eligible and no tokens - show requirements
-        alert(`🔴 NOT READY TO RUGPULL\n\nRequirements:\n• $1,000,000 lifetime earnings\nOR\n• Bitcoin mining speed > 0.01/sec\n\nCurrent Progress:\n• Earnings: $${lifetimeEarnings.toLocaleString()}\n• BTC Speed: ${btcPerSec.toFixed(8)} ₿/sec`);
+        const progressPercent = Math.min((lifetimeEarnings / 1000000) * 100, 99.9);
+        alert(`RUGPULL LOCKED\n\nReach $1,000,000 lifetime earnings to unlock\n\nCurrent: $${lifetimeEarnings.toLocaleString()} (${progressPercent.toFixed(1)}%)`);
+    }
+}
+
+/**
+ * Check for $1M milestones and show popup (call from game loop)
+ */
+function checkRugpullMilestone() {
+    if (typeof lifetimeEarnings === 'undefined') return;
+
+    const currentMilestone = Math.floor(lifetimeEarnings / 1000000);
+    const lastMilestone = Math.floor(lastShownMilestoneEarnings / 1000000);
+
+    // Show popup if player just hit a new $1M milestone
+    if (currentMilestone > lastMilestone && currentMilestone >= 1) {
+        lastShownMilestoneEarnings = lifetimeEarnings;
+
+        // Small delay to ensure UI is ready
+        setTimeout(() => {
+            showRugpullMilestonePopup(currentMilestone);
+        }, 100);
+    }
+}
+
+/**
+ * Show popup when player reaches $1M, $2M, etc
+ */
+function showRugpullMilestonePopup(milestone) {
+    const reward = calculateRugpullReward();
+    const message = milestone === 1
+        ? `🎉 YOU'VE REACHED $1,000,000 IN LIFETIME EARNINGS! 🎉\n\nYou can now RUGPULL to:\n• Reset your progress\n• Earn ${reward} Corrupt Tokens\n• Start a new run with permanent bonuses\n\nReady to RUGPULL?`
+        : `🎉 YOU'VE REACHED $${(milestone * 1000000).toLocaleString()} IN LIFETIME EARNINGS! 🎉\n\nYou can RUGPULL again to:\n• Reset your progress\n• Earn ${reward} Corrupt Tokens\n• Unlock new bonuses\n\nReady to RUGPULL?`;
+
+    if (confirm(message)) {
+        showRugpullOffer();
     }
 }
 
