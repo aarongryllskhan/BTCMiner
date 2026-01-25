@@ -103,26 +103,27 @@
 
     <div id="main-layout">
         <div class="panel">
+            <!-- Top row: Label on left, RUGPULL centered, utility buttons on right -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap: 12px;">
                 <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important;">Crypto Portfolio Valuation</span>
-                <div style="display: flex; gap: 12px; align-items: flex-start;">
-                    <!-- RUGPULL BUTTON - LEFT SIDE, PROMINENT -->
-                    <div style="position: relative; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
-                        <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 10px 20px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
-                        <div id="rugpull-tooltip" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
-                            <span id="tooltip-text">Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
-                        </div>
-                        <div id="rugpull-progress-text" style="color: #ffeb3b; font-size: 0.65rem; font-weight: bold; margin-top: 6px; text-align: center;">$0 / $1M</div>
+
+                <!-- RUGPULL BUTTON - CENTER -->
+                <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;">
+                    <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 10px 20px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
+                    <div id="rugpull-tooltip" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
+                        <span id="tooltip-text">Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
                     </div>
-                    <!-- OTHER BUTTONS - RIGHT SIDE, VERTICAL COLUMN -->
-                    <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch;">
-                        <button id="rugpull-store-btn" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.65rem; transition: all 0.3s ease; display: none; white-space: nowrap;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
-                        <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
-                        <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
-                        <button style="background: #2196F3; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
-                        <button style="background: #ffa500; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
-                        <button style="background: #ff3344; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
-                    </div>
+                    <div id="rugpull-progress-text" style="color: #ffeb3b; font-size: 0.65rem; font-weight: bold; margin-top: 6px; text-align: center;">$0 / $1M</div>
+                </div>
+
+                <!-- OTHER BUTTONS - RIGHT SIDE, VERTICAL COLUMN -->
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto;">
+                    <button id="rugpull-store-btn" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.65rem; transition: all 0.3s ease; display: none; white-space: nowrap;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
+                    <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
+                    <button style="background: #2196F3; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
+                    <button style="background: #ffa500; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
+                    <button style="background: #ff3344; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
                 </div>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
