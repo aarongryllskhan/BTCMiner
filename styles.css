@@ -8,21 +8,43 @@
         @media (max-width: 1024px) {
             body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-top: 85px !important; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
-            .panel:last-child { overflow: visible; flex: 0 0 auto; }
+            .panel:last-child { overflow: visible; flex: 0 0 auto; padding-top: 0 !important; }
             .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
             .stat-box b { word-break: break-word; }
 
             /* Mobile portfolio section - give it proper spacing */
-            .nw-label { display: block; margin-bottom: 8px; }
+            .nw-label { display: block; margin-bottom: 8px; order: -1; position: relative; z-index: 10; }
             .nw-amount { margin-bottom: 8px; }
 
-            /* On mobile, position buttons below the portfolio section */
-            .panel > div:nth-child(2) { position: static !important; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-            .panel > div:nth-child(2) > div:first-child { position: static !important; left: auto; top: auto; transform: none; width: 100%; margin-bottom: 8px; }
-            .panel > div:nth-child(2) > div:last-child { margin-left: 0 !important; width: 100%; }
-            #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; }
+            /* On mobile, position buttons in a compact row at the very top */
+            .panel > div:nth-child(2) { position: absolute !important; top: 6px !important; left: 6px !important; right: 6px !important; height: 32px !important; display: flex !important; flex-direction: row !important; gap: 2px !important; align-items: center !important; justify-content: flex-start !important; flex-wrap: nowrap !important; z-index: 100 !important; padding: 0 !important; margin: 0 !important; background: transparent !important; pointer-events: auto !important; }
+
+            /* Hide the RUGPULL button container from the header */
+            .panel > div:nth-child(2) > div:first-child { position: static !important; left: auto !important; top: auto !important; transform: none !important; width: auto !important; margin: 0 !important; display: none !important; }
+
+            /* Show utility buttons horizontally in the header */
+            .panel > div:nth-child(2) > div:last-child { margin: 0 !important; display: flex !important; flex-direction: row !important; gap: 2px !important; flex-wrap: nowrap !important; width: 100% !important; align-items: stretch !important; }
+            .panel > div:nth-child(2) > div:last-child > button { padding: 3px 6px !important; font-size: 0.45rem !important; height: 26px !important; flex: 1 1 auto !important; white-space: nowrap !important; }
+
+            /* Move RUGPULL STORE directly below the header */
+            #rugpull-store-btn { position: absolute !important; top: 44px !important; left: 6px !important; right: 6px !important; width: auto !important; margin: 0 !important; display: block !important; padding: 6px 12px !important; font-size: 0.65rem !important; z-index: 99 !important; }
+
+            #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; gap: 4px !important; }
+            #hashrate-display .stat-box { padding: 4px 6px !important; }
+            #hashrate-display span { font-size: 0.55rem !important; line-height: 1.1 !important; margin-bottom: 1px !important; }
+            #hashrate-display b { font-size: 0.75rem !important; line-height: 1.1 !important; }
+            #crypto-prices-flex { gap: 6px !important; flex-wrap: wrap !important; overflow: visible !important; justify-content: flex-start !important; }
+            #crypto-prices-flex > div { flex: 0 0 auto !important; min-width: auto !important; }
+            #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
+            #crypto-prices-flex span { font-size: 0.5rem !important; }
+            /* Make ALL manual hash buttons smaller on mobile */
+            .mine-btn { padding: 6px 8px !important; font-size: 0.6rem !important; margin-bottom: 4px !important; }
+            /* Reduce stat boxes height and padding */
+            .stat-box { padding: 4px 8px !important; margin-bottom: 2px !important; }
+            .stat-box span { margin-bottom: 1px !important; }
+            .stat-box b { font-size: 0.9rem !important; }
         }
 
         @media (max-width: 768px) {

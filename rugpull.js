@@ -1148,8 +1148,8 @@ function updateAscensionUI() {
         } else {
             const tokenDisplay = formatTokenCost(rugpullCurrency);
             ascensionInfo.innerHTML = `
-                <div style="text-align: center; color: #ff00ff; font-weight: bold; margin-top: 10px;">
-                    💎 Rugpull Level: ${ascensionLevel} | Corrupt Tokens: ${tokenDisplay} 💎
+                <div style="text-align: center; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 6px; border: 1px solid #666; margin-top: 6px; color: #ccc; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 800;">
+                    Rugpulls: <span style="color: #f7931a; font-size: 0.9rem;">${ascensionLevel}</span> | Corrupt Tokens: <span style="color: #00ff88; font-size: 0.9rem;">${tokenDisplay}</span>
                 </div>
             `;
         }
