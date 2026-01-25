@@ -715,23 +715,21 @@
     });
 </script>
 
-<!-- Price Fluctuation News Popup -->
-<div id="news-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; border-radius: 12px; border: 2px solid #f7931a; z-index: 5000; box-shadow: 0 0 40px rgba(247,147,26,0.6); max-width: 500px; text-align: center; animation: newsSlideIn 0.5s ease;">
-  <div id="news-popup-emoji" style="font-size: 3rem; margin-bottom: 15px;"></div>
-  <h2 id="news-popup-title" style="color: #f7931a; margin: 0 0 10px 0; font-size: 1.6rem; text-transform: uppercase; letter-spacing: 2px;"></h2>
-  <p id="news-popup-text" style="color: #ccc; margin: 0 0 15px 0; font-size: 1rem; line-height: 1.5;"></p>
-  <div id="news-popup-price-info" style="background: rgba(247,147,26,0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-family: monospace;">
-    <span id="news-popup-crypto-name" style="color: #f7931a; font-weight: 800;"></span>
-    <span style="color: #888; margin: 0 8px;">|</span>
-    <span id="news-popup-price-change" style="font-weight: 800; font-size: 1.1rem;"></span>
+<!-- News Feed Ticker at top of page -->
+<div id="news-feed-ticker" style="position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); border-bottom: 2px solid #f7931a; padding: 8px 15px; z-index: 4999; overflow: hidden; max-height: 120px;">
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+    <span style="color: #f7931a; font-weight: 900; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">📰 CRYPTO NEWS</span>
+    <span style="color: #666;">|</span>
   </div>
-  <button onclick="closeNewsPopup()" style="background: #f7931a; color: #000; border: none; padding: 12px 30px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s;" onmouseover="this.style.background='#ffaa33'" onmouseout="this.style.background='#f7931a'">
-    DISMISS
-  </button>
+  <div id="news-ticker-content" style="display: flex; flex-direction: column; gap: 6px; max-height: 90px; overflow-y: auto; padding-right: 8px;">
+    <!-- News items will be added here dynamically -->
+  </div>
 </div>
 
-<!-- News Popup Overlay -->
-<div id="news-popup-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 4999; animation: fadeIn 0.3s ease;"></div>
+<!-- Adjust body padding to account for news ticker -->
+<style>
+  body { padding-top: 120px !important; }
+</style>
 
 <!-- Cookie Consent Banner -->
 <div id="cookie-consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 20px; border-top: 3px solid #f7931a; z-index: 99999; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);">
@@ -830,64 +828,56 @@
     // Cookie consent is now checked after age/terms modal is accepted
     // via the acceptAgeAndTerms() function
 
-    // Price fluctuation news popup system
+    // Price fluctuation news feed system
     function showNewsPopup(crypto, changePercent, isUp) {
-        const newsPopup = document.getElementById('news-popup');
-        const newsOverlay = document.getElementById('news-popup-overlay');
-        const emojiEl = document.getElementById('news-popup-emoji');
-        const titleEl = document.getElementById('news-popup-title');
-        const textEl = document.getElementById('news-popup-text');
-        const nameEl = document.getElementById('news-popup-crypto-name');
-        const priceChangeEl = document.getElementById('news-popup-price-change');
-
         // News headlines for different scenarios
         const newsHeadlines = {
             btc: {
                 up: [
-                    { emoji: '🚀', title: 'BTC SURGE', text: 'Bitcoin breaks through resistance level! Major institutional buying detected.' },
-                    { emoji: '📈', title: 'BULLISH SIGNAL', text: 'Satoshi Era Wallet Wakes Up! Ancient coins moving after 12 years.' },
-                    { emoji: '🪙', title: 'HODLER RALLY', text: 'Whale accumulated 1,000 BTC in single transaction!' },
-                    { emoji: '⛏️', title: 'MINING BOOM', text: 'Global mining difficulty increases as hashrate surges to new ATH!' },
-                    { emoji: '🔗', title: 'NETWORK STRENGTH', text: 'Bitcoin network reaches all-time high security levels!' }
+                    { emoji: '🚀', title: 'BTC SURGE', text: 'Bitcoin breaks through resistance!' },
+                    { emoji: '📈', title: 'BULLISH', text: 'Satoshi Era Wallet Wakes Up!' },
+                    { emoji: '🪙', title: 'HODLER RALLY', text: 'Whale accumulated 1,000 BTC!' },
+                    { emoji: '⛏️', title: 'MINING BOOM', text: 'Hashrate surges to new ATH!' },
+                    { emoji: '🔗', title: 'NETWORK', text: 'All-time high security levels!' }
                 ],
                 down: [
-                    { emoji: '📉', title: 'BTC CORRECTION', text: 'Market correction underway as traders take profits.' },
-                    { emoji: '⚠️', title: 'VOLATILITY SPIKE', text: 'Unexpected market movement detected in major exchanges.' },
-                    { emoji: '💔', title: 'SELL PRESSURE', text: 'Large wallet liquidation triggers chain reaction.' },
-                    { emoji: '🌧️', title: 'BEARISH TREND', text: 'Technical analysis shows weakness in key support levels.' },
-                    { emoji: '❄️', title: 'MARKET CHILL', text: 'Crypto winter signals appear on the horizon.' }
+                    { emoji: '📉', title: 'CORRECTION', text: 'Market taking profits.' },
+                    { emoji: '⚠️', title: 'VOLATILITY', text: 'Unexpected market movement.' },
+                    { emoji: '💔', title: 'SELL PRESSURE', text: 'Wallet liquidation detected.' },
+                    { emoji: '🌧️', title: 'BEARISH', text: 'Technical weakness forming.' },
+                    { emoji: '❄️', title: 'MARKET CHILL', text: 'Crypto winter signals.' }
                 ]
             },
             eth: {
                 up: [
-                    { emoji: '🔥', title: 'ETH ERUPTS', text: 'Ethereum Layer 2 adoption accelerates! Staking rewards spike.' },
-                    { emoji: '💎', title: 'DEFLATIONARY', text: 'Network burn increases as transaction volume explodes!' },
-                    { emoji: '⚡', title: 'LIGHTNING FAST', text: 'Transaction throughput reaches record highs on network upgrades.' },
-                    { emoji: '🌟', title: 'ETH 2.0 BOOST', text: 'Staking validators accumulate 10M+ ETH in contracts.' },
-                    { emoji: '🎯', title: 'BULL BREAKOUT', text: 'Technical analysis confirms breakout pattern forming!' }
+                    { emoji: '🔥', title: 'ETH ERUPTS', text: 'Layer 2 adoption accelerates!' },
+                    { emoji: '💎', title: 'DEFLATIONARY', text: 'Network burn explodes!' },
+                    { emoji: '⚡', title: 'LIGHTNING', text: 'Record throughput achieved!' },
+                    { emoji: '🌟', title: 'ETH 2.0 BOOST', text: '10M+ ETH staking spike!' },
+                    { emoji: '🎯', title: 'BREAKOUT', text: 'Bull pattern confirmed!' }
                 ],
                 down: [
-                    { emoji: '⛓️', title: 'ETH CORRECTION', text: 'Market consolidation phase beginning as analysts reassess.' },
-                    { emoji: '❌', title: 'STAKING CONCERNS', text: 'Large validator unstaking activity detected.' },
-                    { emoji: '🔴', title: 'RED CANDLES', text: 'Technical failure at resistance triggers sell-off.' },
-                    { emoji: '📊', title: 'DOWNTREND', text: 'Volume confirms weakness in current support zone.' },
-                    { emoji: '🛑', title: 'PAUSE BUTTON', text: 'Market needs time to find new equilibrium.' }
+                    { emoji: '⛓️', title: 'CORRECTION', text: 'Consolidation beginning.' },
+                    { emoji: '❌', title: 'STAKING CONCERNS', text: 'Validator unstaking.' },
+                    { emoji: '🔴', title: 'RED CANDLES', text: 'Resistance failure.' },
+                    { emoji: '📊', title: 'DOWNTREND', text: 'Support weakness.' },
+                    { emoji: '🛑', title: 'PAUSE', text: 'Finding equilibrium.' }
                 ]
             },
             doge: {
                 up: [
-                    { emoji: '🐕', title: 'DOGE MOON', text: 'Elon Tweets Doge meme! Community engagement at all-time high!' },
-                    { emoji: '🚀', title: 'TO THE MOON', text: 'Dogecoin community rallies with viral social media campaign!' },
-                    { emoji: '😄', title: 'MUCH PROFIT', text: 'Traders go wild on news of major exchange listings!' },
-                    { emoji: '💰', title: 'DOGE SURGE', text: 'Retail investors flood in as momentum builds!' },
-                    { emoji: '🎉', title: 'CELEBRATION', text: 'Community milestone reached - 1 billion DOGE in circulation memes!' }
+                    { emoji: '🐕', title: 'DOGE MOON', text: 'Elon Tweets Doge meme!' },
+                    { emoji: '🚀', title: 'TO THE MOON', text: 'Community rallies hard!' },
+                    { emoji: '😄', title: 'MUCH PROFIT', text: 'Major exchange listings!' },
+                    { emoji: '💰', title: 'DOGE SURGE', text: 'Retail investors flooding in!' },
+                    { emoji: '🎉', title: 'CELEBRATION', text: '1 billion DOGE milestone!' }
                 ],
                 down: [
-                    { emoji: '📉', title: 'DOGE DIP', text: 'Meme coin experiences expected volatility correction.' },
-                    { emoji: '😅', title: 'TEMPORARY DIP', text: 'Profit-taking among early holders continues.' },
-                    { emoji: '🔄', title: 'CONSOLIDATION', text: 'DOGE enters consolidation phase before next move.' },
-                    { emoji: '😔', title: 'SENTIMENT SHIFT', text: 'Meme cycle cooling as traders look elsewhere.' },
-                    { emoji: '⬇️', title: 'CORRECTION TIME', text: 'Healthy pullback in overextended positions.' }
+                    { emoji: '📉', title: 'DOGE DIP', text: 'Volatility correction.' },
+                    { emoji: '😅', title: 'TEMPORARY DIP', text: 'Profit-taking continues.' },
+                    { emoji: '🔄', title: 'CONSOLIDATION', text: 'DOGE needs rest.' },
+                    { emoji: '😔', title: 'SENTIMENT SHIFT', text: 'Meme cycle cooling.' },
+                    { emoji: '⬇️', title: 'PULLBACK', text: 'Overextended positions.' }
                 ]
             }
         };
@@ -896,30 +886,38 @@
         const headlines = newsHeadlines[crypto][isUp ? 'up' : 'down'];
         const headline = headlines[Math.floor(Math.random() * headlines.length)];
 
-        // Set content
-        emojiEl.textContent = headline.emoji;
-        titleEl.textContent = headline.title;
-        textEl.textContent = headline.text;
+        // Create news item element
+        const newsItem = document.createElement('div');
+        newsItem.className = 'news-item';
 
-        // Set crypto name and price change
-        const cryptoNames = { btc: '₿ Bitcoin', eth: 'Ξ Ethereum', doge: 'Ð Dogecoin' };
-        nameEl.textContent = cryptoNames[crypto];
-        priceChangeEl.textContent = (isUp ? '+' : '') + changePercent.toFixed(2) + '%';
-        priceChangeEl.style.color = isUp ? '#00ff88' : '#ff3344';
+        const cryptoSymbols = { btc: '₿', eth: 'Ξ', doge: 'Ð' };
+        const priceClass = isUp ? 'up' : 'down';
+        const priceText = (isUp ? '+' : '') + changePercent.toFixed(2) + '%';
 
-        // Show popup
-        newsPopup.style.display = 'block';
-        newsOverlay.style.display = 'block';
+        newsItem.innerHTML = `
+            <div class="news-item-emoji">${headline.emoji}</div>
+            <div class="news-item-content">
+                <span class="news-item-title">${headline.title}</span>
+                <span class="news-item-text">${headline.text}</span>
+                <span class="news-item-price ${priceClass}">${cryptoSymbols[crypto]} ${priceText}</span>
+            </div>
+        `;
 
-        // Auto-dismiss after 6 seconds
+        // Add to news feed
+        const newsFeed = document.getElementById('news-ticker-content');
+        newsFeed.insertBefore(newsItem, newsFeed.firstChild);
+
+        // Limit to last 8 news items
+        while (newsFeed.children.length > 8) {
+            newsFeed.removeChild(newsFeed.lastChild);
+        }
+
+        // Auto-remove after 10 seconds
         setTimeout(() => {
-            closeNewsPopup();
-        }, 6000);
-    }
-
-    function closeNewsPopup() {
-        document.getElementById('news-popup').style.display = 'none';
-        document.getElementById('news-popup-overlay').style.display = 'none';
+            if (newsItem.parentNode) {
+                newsItem.remove();
+            }
+        }, 10000);
     }
 </script>
 

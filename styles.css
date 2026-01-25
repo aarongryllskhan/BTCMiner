@@ -420,15 +420,92 @@ button:disabled:hover {
 
         @keyframes newsSlideIn {
             from {
-                transform: translate(-50%, -60%);
+                transform: translateX(-100%);
                 opacity: 0;
-                scale: 0.8;
             }
             to {
-                transform: translate(-50%, -50%);
+                transform: translateX(0);
                 opacity: 1;
-                scale: 1;
             }
+        }
+
+        /* News Feed Ticker Styles */
+        .news-item {
+            background: rgba(247, 147, 26, 0.08);
+            border-left: 3px solid #f7931a;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: newsSlideIn 0.6s ease-out forwards;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .news-item-emoji {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            min-width: 20px;
+        }
+
+        .news-item-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .news-item-title {
+            color: #f7931a;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .news-item-text {
+            color: #aaa;
+            font-size: 0.75rem;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .news-item-price {
+            font-family: monospace;
+            font-weight: 800;
+            flex-shrink: 0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+        }
+
+        .news-item-price.up {
+            color: #00ff88;
+            background: rgba(0, 255, 136, 0.15);
+        }
+
+        .news-item-price.down {
+            color: #ff3344;
+            background: rgba(255, 51, 68, 0.15);
+        }
+
+        #news-feed-ticker::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #news-feed-ticker::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        #news-feed-ticker::-webkit-scrollbar-thumb {
+            background: #f7931a;
+            border-radius: 2px;
         }
 
         /* Skill Tree Modal Styles */
