@@ -665,3 +665,38 @@ button:disabled:hover {
             }
         }
 
+        /* Export/Import Modal Styles */
+        .export-import-modal {
+            width: 550px;
+        }
+
+        #import-save-textarea {
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #import-save-textarea:focus {
+            outline: none;
+            border-color: #f7931a;
+            box-shadow: 0 0 10px rgba(247, 147, 26, 0.3);
+        }
+
+        #import-save-textarea::placeholder {
+            color: #555;
+        }
+
+        /* Export/Import button hover effects */
+        #export-import-modal button:hover:not(.modal-close) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        #export-import-modal button:active:not(.modal-close) {
+            transform: translateY(0);
+        }
+
+        /* File input label styling */
+        #export-import-modal label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+

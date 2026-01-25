@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /privacy.html
+Allow: /cookies.html
+Allow: /terms.html
+Allow: /contact.html
+Disallow: /node_modules/
+Disallow: /.env
+Disallow: /.git/
+
+Sitemap: https://idlebtcminer.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
