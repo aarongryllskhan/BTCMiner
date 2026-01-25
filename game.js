@@ -384,9 +384,9 @@
 
     // Bitcoin mining upgrades
     const btcUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000050 },
-        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.000000115 },
-        { id: 2, name: "GTX 1660 Super", baseUsd: 100, baseYield: 0.0000007 },
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.000000250 },
+        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.00000010 },
+        { id: 2, name: "GTX 1660 Super", baseUsd: 100, baseYield: 0.00000070 },
         { id: 3, name: "RTX 5090 Rig", baseUsd: 3000, baseYield: 0.000015 },
         { id: 4, name: "ASIC Mining Unit", baseUsd: 7500, baseYield: 0.000085 },
         { id: 5, name: "Liquid ASIC Rig", baseUsd: 28000, baseYield: 0.00045 },
@@ -402,45 +402,45 @@
         { id: 15, name: "Infinite Energy Extractor", baseUsd: 9500000000000, baseYield: 2500000.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
-    // Ethereum mining upgrades - Balanced by USD value per cost (price-adjusted)
+    // Ethereum mining upgrades - Balanced to match BTC/DOGE USD/sec earnings
     const ethUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00002100 },
-        { id: 1, name: "Single GPU Rig", baseUsd: 8, baseYield: 0.0000053 },
-        { id: 2, name: "RTX 4090 Miner", baseUsd: 150, baseYield: 0.0000316 },
-        { id: 3, name: "8-GPU Mining Rig", baseUsd: 4500, baseYield: 0.000684 },
-        { id: 4, name: "Professional ETH Farm", baseUsd: 12000, baseYield: 0.00378 },
-        { id: 5, name: "Staking Validator Node", baseUsd: 40000, baseYield: 0.0200 },
-        { id: 6, name: "Multi-Validator Farm", baseUsd: 175000, baseYield: 0.143 },
-        { id: 7, name: "ETH Mining Complex", baseUsd: 950000, baseYield: 2.0 },
-        { id: 8, name: "Enterprise Staking Pool", baseUsd: 7500000, baseYield: 27.7 },
-        { id: 9, name: "Layer 2 Validation Network", baseUsd: 52000000, baseYield: 258.0 },
-        { id: 10, name: "Ethereum Foundation Node", baseUsd: 700000000, baseYield: 5570.0 },
-        { id: 11, name: "Global Validator Consortium", baseUsd: 5000000000, baseYield: 40000.0 },
-        { id: 12, name: "Sharding Supernetwork", baseUsd: 36000000000, baseYield: 290000.0 },
-        { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 260000000000, baseYield: 2100000.0 },
-        { id: 14, name: "Interchain Bridge Network", baseUsd: 1900000000000, baseYield: 15000000.0 },
-        { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 14000000000000, baseYield: 110000000.0 }
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00007143 },
+        { id: 1, name: "Single GPU Rig", baseUsd: 5, baseYield: 0.0000029 },
+        { id: 2, name: "RTX 4090 Miner", baseUsd: 100, baseYield: 0.000020 },
+        { id: 3, name: "8-GPU Mining Rig", baseUsd: 3000, baseYield: 0.000428 },
+        { id: 4, name: "Professional ETH Farm", baseUsd: 7500, baseYield: 0.00243 },
+        { id: 5, name: "Staking Validator Node", baseUsd: 28000, baseYield: 0.0129 },
+        { id: 6, name: "Multi-Validator Farm", baseUsd: 110000, baseYield: 0.0914 },
+        { id: 7, name: "ETH Mining Complex", baseUsd: 680000, baseYield: 1.286 },
+        { id: 8, name: "Enterprise Staking Pool", baseUsd: 5200000, baseYield: 17.7 },
+        { id: 9, name: "Layer 2 Validation Network", baseUsd: 35000000, baseYield: 165.7 },
+        { id: 10, name: "Ethereum Foundation Node", baseUsd: 500000000, baseYield: 3571.0 },
+        { id: 11, name: "Global Validator Consortium", baseUsd: 3500000000, baseYield: 25000.0 },
+        { id: 12, name: "Sharding Supernetwork", baseUsd: 25000000000, baseYield: 185700.0 },
+        { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 180000000000, baseYield: 1343000.0 },
+        { id: 14, name: "Interchain Bridge Network", baseUsd: 1300000000000, baseYield: 9600000.0 },
+        { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 9500000000000, baseYield: 70350000.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
-    // Dogecoin mining upgrades - Balanced by USD value per cost (price-adjusted)
-    // Formula: (btcYield × btcPrice × dogeCost) / (btcCost × dogePrice)
+    // Dogecoin mining upgrades - Balanced to match BTC/ETH USD/sec earnings
+    // All three currencies earn the same USD/sec at each tier (DOGE yields are 400x higher to compensate for $0.25 price)
     const dogeUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.02 },
-        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 4.60 },
-        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 28.0 },
-        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 600.0 },
-        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 3400.0 },
-        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 18000.0 },
-        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 128000.0 },
-        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 1800000.0 },
-        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 24800000.0 },
-        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 232000000.0 },
-        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 5000000000.0 },
-        { id: 11, name: "Mars Colony Mining Base", baseUsd: 2300000000, baseYield: 36000000000.0 },
-        { id: 12, name: "Asteroid Belt DOGE Harvester", baseUsd: 16500000000, baseYield: 260000000000.0 },
-        { id: 13, name: "Jovian Satellite Network", baseUsd: 120000000000, baseYield: 1900000000000.0 },
-        { id: 14, name: "Solar System DOGE Grid", baseUsd: 870000000000, baseYield: 14000000000000.0 },
-        { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 6300000000000, baseYield: 100000000000000.0 }
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.01 },
+        { id: 1, name: "Basic Scrypt Miner", baseUsd: 5, baseYield: 0.04 },
+        { id: 2, name: "L3+ ASIC Miner", baseUsd: 100, baseYield: 0.28 },
+        { id: 3, name: "Mini DOGE Farm", baseUsd: 3000, baseYield: 6.0 },
+        { id: 4, name: "Scrypt Mining Pool", baseUsd: 7500, baseYield: 34.0 },
+        { id: 5, name: "Industrial DOGE Facility", baseUsd: 28000, baseYield: 180.0 },
+        { id: 6, name: "DOGE Megafarm", baseUsd: 110000, baseYield: 1280.0 },
+        { id: 7, name: "WOW Mining Complex", baseUsd: 680000, baseYield: 18000.0 },
+        { id: 8, name: "Moon Mining Station", baseUsd: 5200000, baseYield: 248000.0 },
+        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 35000000, baseYield: 2320000.0 },
+        { id: 10, name: "To The Moon Supercomputer", baseUsd: 500000000, baseYield: 50000000.0 },
+        { id: 11, name: "Mars Colony Mining Base", baseUsd: 3500000000, baseYield: 360000000.0 },
+        { id: 12, name: "Asteroid Belt DOGE Harvester", baseUsd: 25000000000, baseYield: 2600000000.0 },
+        { id: 13, name: "Jovian Satellite Network", baseUsd: 180000000000, baseYield: 19000000000.0 },
+        { id: 14, name: "Solar System DOGE Grid", baseUsd: 1300000000000, baseYield: 140000000000.0 },
+        { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 9500000000000, baseYield: 1000000000000.0 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Keep reference to btcUpgrades as upgrades for backward compatibility
@@ -707,9 +707,12 @@ function loadGame() {
         const cappedOfflineSeconds = Math.min(offlineSeconds, MAX_OFFLINE_SECONDS);
         const wasTimeCaped = offlineSeconds > MAX_OFFLINE_SECONDS;
 
-        const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds;
-        const offlineEthEarnings = ethPerSec * cappedOfflineSeconds;
-        const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds;
+        // Apply offline boost multiplier if purchased (2x earnings)
+        const offlineBoostMultiplier = (typeof getOfflineBoost === 'function') ? (1 + getOfflineBoost()) : 1;
+
+        const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds * offlineBoostMultiplier;
+        const offlineEthEarnings = ethPerSec * cappedOfflineSeconds * offlineBoostMultiplier;
+        const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds * offlineBoostMultiplier;
 
         // Calculate offline staking earnings (cash from staked crypto)
         const APR_RATE = 0.001; // 0.1% per 2 seconds
@@ -1256,14 +1259,81 @@ function loadGame() {
         // Safe fallback for when functions aren't available yet
         if (!powerReq || powerReq <= 0) return powerReq;
         try {
-            if (typeof getPowerEfficiency === 'function') {
-                const powerEfficiency = getPowerEfficiency();
+            if (typeof getSkillBonus === 'function') {
+                const powerEfficiency = getSkillBonus('power_efficiency');
                 return Math.max(0, powerReq * (1 - powerEfficiency));
             }
             return powerReq;
         } catch (e) {
             return powerReq; // Return base requirement if functions unavailable
         }
+    }
+
+    /**
+     * Get effective price with crypto price bonus applied
+     * Crypto price upgrades increase the value of sold crypto
+     */
+    function getEffectiveCryptoPrice(basePrice) {
+        const cryptoPriceBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('crypto_price') : 0;
+        return basePrice * (1 + cryptoPriceBonus);
+    }
+
+    /**
+     * Get cash multiplier from upgrades
+     * Increases earnings from all sources
+     */
+    function getCashMultiplier() {
+        const cashBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('cash_multiplier') : 0;
+        const cryptoDoubler = (typeof getSkillBonus === 'function') ? getSkillBonus('crypto_doubler') : 0;
+        return 1 + cashBonus + cryptoDoubler;
+    }
+
+    /**
+     * Check if auto-sell crypto is enabled and sell if needed
+     */
+    function tryAutoSellCrypto(cryptoType, amount) {
+        // Check if auto-sell is purchased and enabled
+        const metaUpgradesData = typeof window.metaUpgrades !== 'undefined' ? window.metaUpgrades : null;
+        const toggleState = typeof window.upgradeToggleState !== 'undefined' ? window.upgradeToggleState : null;
+
+        if (!metaUpgradesData || !toggleState) {
+            console.debug(`[AUTO-SELL] ${cryptoType}: Missing data objects`, { metaUpgradesData: !!metaUpgradesData, toggleState: !!toggleState });
+            return false;
+        }
+
+        const hasUpgrade = metaUpgradesData.auto_sell_crypto && metaUpgradesData.auto_sell_crypto.purchased;
+        const isEnabled = toggleState.auto_sell === true;
+        const autoSellEnabled = hasUpgrade && isEnabled;
+
+        if (!autoSellEnabled) {
+            console.debug(`[AUTO-SELL] ${cryptoType}: Disabled or not purchased`, { hasUpgrade, isEnabled, auto_sell: toggleState.auto_sell });
+            return false;
+        }
+
+        // Get the cash multiplier for earnings
+        const cashMultiplier = getCashMultiplier();
+
+        if (cryptoType === 'btc') {
+            const effectivePrice = getEffectiveCryptoPrice(btcPrice);
+            const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
+            dollarBalance += cashValue;
+            console.log(`[AUTO-SELL] BTC: Sold ${amount} BTC for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
+            return true;  // Sold instead of adding to balance
+        } else if (cryptoType === 'eth') {
+            const effectivePrice = getEffectiveCryptoPrice(ethPrice);
+            const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
+            dollarBalance += cashValue;
+            console.log(`[AUTO-SELL] ETH: Sold ${amount} ETH for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
+            return true;  // Sold instead of adding to balance
+        } else if (cryptoType === 'doge') {
+            const effectivePrice = getEffectiveCryptoPrice(dogePrice);
+            const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
+            dollarBalance += cashValue;
+            console.log(`[AUTO-SELL] DOGE: Sold ${amount} DOGE for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
+            return true;  // Sold instead of adding to balance
+        }
+
+        return false;
     }
 
     function dismissInstructions() {
@@ -1762,7 +1832,8 @@ function loadGame() {
 
     function sellAllBTC() {
         if (btcBalance <= 0) return;
-        const saleValue = btcBalance * btcPrice * 0.95; // 5% fee
+        const effectivePrice = getEffectiveCryptoPrice(btcPrice);
+        const saleValue = btcBalance * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
         btcBalance = 0;
         updateUI();
@@ -1776,7 +1847,8 @@ function loadGame() {
             return;
         }
         ethBalance -= amount;
-        const saleValue = amount * ethPrice * 0.95; // 5% fee
+        const effectivePrice = getEffectiveCryptoPrice(ethPrice);
+        const saleValue = amount * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
         updateUI();
         saveGame();
@@ -1785,7 +1857,8 @@ function loadGame() {
 
     function sellAllETH() {
         if (ethBalance <= 0) return;
-        const saleValue = ethBalance * ethPrice * 0.95; // 5% fee
+        const effectivePrice = getEffectiveCryptoPrice(ethPrice);
+        const saleValue = ethBalance * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
         ethBalance = 0;
         updateUI();
@@ -1800,7 +1873,8 @@ function loadGame() {
             return;
         }
         dogeBalance -= amount;
-        const saleValue = amount * dogePrice * 0.95; // 5% fee
+        const effectivePrice = getEffectiveCryptoPrice(dogePrice);
+        const saleValue = amount * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
         updateUI();
         saveGame();
@@ -1809,8 +1883,48 @@ function loadGame() {
 
     function sellAllDOGE() {
         if (dogeBalance <= 0) return;
-        dollarBalance += dogeBalance * dogePrice;
+        const effectivePrice = getEffectiveCryptoPrice(dogePrice);
+        dollarBalance += dogeBalance * effectivePrice;
         dogeBalance = 0;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
+    }
+
+    /**
+     * Quick sell functions that use percentages (like staking)
+     */
+    function quickSellBTC(percentage) {
+        if (btcBalance <= 0) return;
+        const amountToSell = btcBalance * (percentage / 100);
+        const effectivePrice = getEffectiveCryptoPrice(btcPrice);
+        const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
+        btcBalance -= amountToSell;
+        dollarBalance += saleValue;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
+    }
+
+    function quickSellETH(percentage) {
+        if (ethBalance <= 0) return;
+        const amountToSell = ethBalance * (percentage / 100);
+        const effectivePrice = getEffectiveCryptoPrice(ethPrice);
+        const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
+        ethBalance -= amountToSell;
+        dollarBalance += saleValue;
+        updateUI();
+        saveGame();
+        playUpgradeSound();
+    }
+
+    function quickSellDOGE(percentage) {
+        if (dogeBalance <= 0) return;
+        const amountToSell = dogeBalance * (percentage / 100);
+        const effectivePrice = getEffectiveCryptoPrice(dogePrice);
+        const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
+        dogeBalance -= amountToSell;
+        dollarBalance += saleValue;
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -1913,23 +2027,75 @@ function loadGame() {
         });
     }
 
+function updateAutoSellButtonUI() {
+    const btn = document.getElementById('auto-sell-toggle-btn');
+    const statusEl = document.getElementById('auto-sell-status');
+    if (!btn || !statusEl) return;
+
+    const metaUpgrades = typeof window.metaUpgrades !== 'undefined' ? window.metaUpgrades : null;
+    const upgradeToggleState = typeof window.upgradeToggleState !== 'undefined' ? window.upgradeToggleState : null;
+
+    const isPurchased = metaUpgrades && metaUpgrades.auto_sell_crypto && metaUpgrades.auto_sell_crypto.purchased;
+
+    if (isPurchased) {
+        const isEnabled = upgradeToggleState && upgradeToggleState.auto_sell === true;
+        // Enable the button
+        btn.disabled = false;
+        btn.style.cursor = 'pointer';
+        btn.style.background = isEnabled ? 'rgba(0,255,136,0.2)' : 'rgba(255,100,255,0.15)';
+        btn.style.borderColor = isEnabled ? '#00ff88' : '#ff64ff';
+        btn.style.color = isEnabled ? '#00ff88' : '#ff64ff';
+        btn.innerHTML = (isEnabled ? '🟢' : '⭕') + ' Auto-Sell: <span id="auto-sell-status">' + (isEnabled ? 'ON' : 'OFF') + '</span>';
+        btn.title = 'Click to toggle automatic crypto to USD conversion';
+    } else {
+        // Keep disabled
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+        btn.style.background = 'rgba(100,100,100,0.3)';
+        btn.style.borderColor = '#666';
+        btn.style.color = '#999';
+        statusEl.innerText = 'LOCKED';
+        btn.title = 'Purchase "Auto-Sell Crypto to USD" upgrade to enable';
+    }
+}
+
+function toggleAutoSellButton() {
+    // Check if upgrade is purchased
+    const metaUpgrades = typeof window.metaUpgrades !== 'undefined' ? window.metaUpgrades : null;
+    if (!metaUpgrades || !metaUpgrades.auto_sell_crypto || !metaUpgrades.auto_sell_crypto.purchased) {
+        alert('Purchase the "Auto-Sell Crypto to USD" upgrade first!');
+        return;
+    }
+
+    // Call the actual toggle function
+    if (typeof toggleAutoSell === 'function') {
+        toggleAutoSell();
+        updateAutoSellButtonUI();
+    }
+}
+
 function manualHash() {
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
 
-    // Apply ascension click bonus (2x per ascension)
-    const ascensionClickBonus = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? 1.0 : 0;
+    // Apply ascension click multiplier (2x per ascension)
+    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
 
-    const actualClickValue = btcClickValue * clickBonus * (1 + ascensionClickBonus);
+    const actualClickValue = btcClickValue * clickBonus * ascensionClickMultiplier;
 
-    // This adds your current click power to your spendable balance
-    btcBalance += actualClickValue;
+    // Try auto-sell first (before adding to balance)
+    const btcAutoSold = tryAutoSellCrypto('btc', actualClickValue);
+
+    // If not auto-sold, add to balance
+    if (!btcAutoSold) {
+        btcBalance += actualClickValue;
+    }
 
     // This ensures every manual click also increases your Lifetime Total
     btcLifetime += actualClickValue;
 
-    // Track lifetime and session earnings in USD
-    const usdValue = btcClickValue * btcPrice;
+    // Track lifetime and session earnings in USD (including ascension multiplier)
+    const usdValue = actualClickValue * btcPrice;
     lifetimeEarnings += usdValue;
     sessionEarnings += usdValue;
 
@@ -1950,10 +2116,17 @@ function manualHash() {
 function manualEthHash() {
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-    const actualClickValue = ethClickValue * clickBonus;
+    // Apply ascension click multiplier (2x per ascension)
+    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
+    const actualClickValue = ethClickValue * clickBonus * ascensionClickMultiplier;
 
-    // Add ETH to balance
-    ethBalance += actualClickValue;
+    // Try auto-sell first (before adding to balance)
+    const ethAutoSold = tryAutoSellCrypto('eth', actualClickValue);
+
+    // If not auto-sold, add to balance
+    if (!ethAutoSold) {
+        ethBalance += actualClickValue;
+    }
     ethLifetime += actualClickValue;
 
     // Track lifetime and session earnings in USD
@@ -1978,10 +2151,17 @@ function manualEthHash() {
 function manualDogeHash() {
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-    const actualClickValue = dogeClickValue * clickBonus;
+    // Apply ascension click multiplier (2x per ascension)
+    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
+    const actualClickValue = dogeClickValue * clickBonus * ascensionClickMultiplier;
 
-    // Add DOGE to balance
-    dogeBalance += actualClickValue;
+    // Try auto-sell first (before adding to balance)
+    const dogeAutoSold = tryAutoSellCrypto('doge', actualClickValue);
+
+    // If not auto-sold, add to balance
+    if (!dogeAutoSold) {
+        dogeBalance += actualClickValue;
+    }
     dogeLifetime += actualClickValue;
 
     // Track lifetime and session earnings in USD
@@ -2038,7 +2218,8 @@ function buyLevel(i) {
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
         }
 
-        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
         updateUI();
         saveGame();
 
@@ -2147,7 +2328,8 @@ function buyEthBoost(i) {
         // Double the boost cost for next purchase
         u.boostCost *= 2;
 
-        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
         updateUI();
         saveGame();
 
@@ -2177,7 +2359,8 @@ function buyDogeBoost(i) {
         // Double the boost cost for next purchase
         u.boostCost *= 2;
 
-        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
         updateUI();
         saveGame();
 
@@ -2228,7 +2411,8 @@ function buyDogeBoost(i) {
         }
 
         if (purchased > 0) {
-            ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+            ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
             updateUI();
             saveGame();
             playUpgradeSound();
@@ -2277,7 +2461,8 @@ function buyDogeBoost(i) {
         }
 
         if (purchased > 0) {
-            dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+            dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
             updateUI();
             saveGame();
             playUpgradeSound();
@@ -2299,46 +2484,112 @@ function buyDogeBoost(i) {
 
         document.getElementById('session-time').innerText = timeStr;
 
-        // Display session earnings (tracked directly from mining/staking)
+        // Display session earnings (with abbreviations for large numbers)
         const sessionEarningEl = document.getElementById('session-earning');
         if (sessionEarningEl) {
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile && sessionEarnings >= 1000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e6 >= 1 ? (sessionEarnings / 1e6).toFixed(1) + 'm' : sessionEarnings / 1e3 >= 1 ? (sessionEarnings / 1e3).toFixed(1) + 'k' : sessionEarnings.toFixed(2));
+            if (sessionEarnings >= 1000000000000000000000000000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e30).toFixed(1) + 'N';
+            } else if (sessionEarnings >= 1000000000000000000000000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e27).toFixed(1) + 'O';
+            } else if (sessionEarnings >= 1000000000000000000000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e24).toFixed(1) + 'Sep';
+            } else if (sessionEarnings >= 1000000000000000000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e21).toFixed(1) + 'S';
+            } else if (sessionEarnings >= 1000000000000000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e18).toFixed(1) + 'Qa';
+            } else if (sessionEarnings >= 1000000000000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e15).toFixed(1) + 'Q';
+            } else if (sessionEarnings >= 1000000000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e12).toFixed(1) + 'T';
+            } else if (sessionEarnings >= 1000000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e9).toFixed(1) + 'B';
+            } else if (sessionEarnings >= 1000000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e6).toFixed(1) + 'M';
+            } else if (sessionEarnings >= 1000) {
+                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e3).toFixed(1) + 'K';
             } else {
                 sessionEarningEl.innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             }
         }
 
-        // Update lifetime earnings display (earnings are now tracked directly when crypto is mined/staked)
+        // Update lifetime earnings display (with abbreviations for large numbers)
         const lifetimeEarningEl = document.getElementById('lifetime-earning');
         if (lifetimeEarningEl) {
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile && lifetimeEarnings >= 1000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e6 >= 1 ? (lifetimeEarnings / 1e6).toFixed(1) + 'm' : lifetimeEarnings / 1e3 >= 1 ? (lifetimeEarnings / 1e3).toFixed(1) + 'k' : lifetimeEarnings.toFixed(2));
+            if (lifetimeEarnings >= 1000000000000000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e30).toFixed(1) + 'N';
+            } else if (lifetimeEarnings >= 1000000000000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e27).toFixed(1) + 'O';
+            } else if (lifetimeEarnings >= 1000000000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e24).toFixed(1) + 'Sep';
+            } else if (lifetimeEarnings >= 1000000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e21).toFixed(1) + 'S';
+            } else if (lifetimeEarnings >= 1000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e18).toFixed(1) + 'Qa';
+            } else if (lifetimeEarnings >= 1000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e15).toFixed(1) + 'Q';
+            } else if (lifetimeEarnings >= 1000000000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e12).toFixed(1) + 'T';
+            } else if (lifetimeEarnings >= 1000000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e9).toFixed(1) + 'B';
+            } else if (lifetimeEarnings >= 1000000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e6).toFixed(1) + 'M';
+            } else if (lifetimeEarnings >= 1000) {
+                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e3).toFixed(1) + 'K';
             } else {
                 lifetimeEarningEl.innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             }
         }
     }
 
-    // Helper function to abbreviate large numbers only on mobile
+    // Helper function to abbreviate large numbers (mobile always, desktop at 1B+)
     function formatNumberForDisplay(num) {
         // Check if viewport is mobile (max-width: 768px)
         const isMobile = window.innerWidth <= 768;
+        const abs = Math.abs(num);
 
+        // Desktop: abbreviate only at 1B+, otherwise use locale string
         if (!isMobile) {
+            if (abs >= 1e30) {
+                return (num / 1e30).toFixed(1) + 'N';
+            } else if (abs >= 1e27) {
+                return (num / 1e27).toFixed(1) + 'O';
+            } else if (abs >= 1e24) {
+                return (num / 1e24).toFixed(1) + 'Sep';
+            } else if (abs >= 1e21) {
+                return (num / 1e21).toFixed(1) + 'S';
+            } else if (abs >= 1e18) {
+                return (num / 1e18).toFixed(1) + 'Qa';
+            } else if (abs >= 1e15) {
+                return (num / 1e15).toFixed(1) + 'Q';
+            } else if (abs >= 1e12) {
+                return (num / 1e12).toFixed(1) + 'T';
+            } else if (abs >= 1e9) {
+                return (num / 1e9).toFixed(1) + 'B';
+            }
             return Math.floor(num).toLocaleString();
         }
 
-        // Mobile abbreviation: 1k, 1m, 1b, etc
-        const abs = Math.abs(num);
-        if (abs >= 1e9) {
-            return (num / 1e9).toFixed(1) + 'b';
+        // Mobile abbreviation: 1k, 1m, 1b, 1t, 1q, 1qa, 1s, 1sep, 1o, 1n, etc
+        if (abs >= 1e30) {
+            return (num / 1e30).toFixed(1) + 'N';
+        } else if (abs >= 1e27) {
+            return (num / 1e27).toFixed(1) + 'O';
+        } else if (abs >= 1e24) {
+            return (num / 1e24).toFixed(1) + 'Sep';
+        } else if (abs >= 1e21) {
+            return (num / 1e21).toFixed(1) + 'S';
+        } else if (abs >= 1e18) {
+            return (num / 1e18).toFixed(1) + 'Qa';
+        } else if (abs >= 1e15) {
+            return (num / 1e15).toFixed(1) + 'Q';
+        } else if (abs >= 1e12) {
+            return (num / 1e12).toFixed(1) + 'T';
+        } else if (abs >= 1e9) {
+            return (num / 1e9).toFixed(1) + 'B';
         } else if (abs >= 1e6) {
-            return (num / 1e6).toFixed(1) + 'm';
+            return (num / 1e6).toFixed(1) + 'M';
         } else if (abs >= 1e3) {
-            return (num / 1e3).toFixed(1) + 'k';
+            return (num / 1e3).toFixed(1) + 'K';
         }
         return Math.floor(num).toLocaleString();
     }
@@ -2347,7 +2598,9 @@ function buyDogeBoost(i) {
         // Crypto portfolio value = value of all crypto holdings only
         let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
         const isMobileUI = window.innerWidth <= 768;
-        if (isMobileUI && cryptoPortfolioValue >= 1000) {
+
+        // Abbreviate on mobile always, or on desktop when $1B+
+        if ((isMobileUI && cryptoPortfolioValue >= 1000) || (cryptoPortfolioValue >= 1000000000)) {
             const abbrev = cryptoPortfolioValue / 1e9 >= 1 ? (cryptoPortfolioValue / 1e9).toFixed(1) + 'b' : cryptoPortfolioValue / 1e6 >= 1 ? (cryptoPortfolioValue / 1e6).toFixed(1) + 'm' : (cryptoPortfolioValue / 1e3).toFixed(1) + 'k';
             document.getElementById('nw-val').innerText = "$" + abbrev;
         } else {
@@ -2359,25 +2612,24 @@ function buyDogeBoost(i) {
         document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
         document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
 
-        // Update manual hash button text (with ascension bonus applied)
-        const ascensionClickBonus = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? 1.0 : 0;
-        const btcClickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-        const ethClickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-        const dogeClickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
+        // Update manual hash button text (with ascension multiplier applied)
+        const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
+        const clickSpeedBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('click_speed') : 0;
+        const clickMultiplier = 1 + clickSpeedBonus;
 
         const mineBtnSpan = document.querySelector('.mine-btn span');
         if (mineBtnSpan) {
-            const totalBtcClick = btcClickValue * btcClickBonus * (1 + ascensionClickBonus);
+            const totalBtcClick = btcClickValue * clickMultiplier * ascensionClickMultiplier;
             mineBtnSpan.innerText = `+${totalBtcClick.toFixed(8)} ₿`;
         }
         const ethMineBtnSpan = document.querySelectorAll('.mine-btn span')[1];
         if (ethMineBtnSpan) {
-            const totalEthClick = ethClickValue * ethClickBonus * (1 + ascensionClickBonus);
+            const totalEthClick = ethClickValue * clickMultiplier * ascensionClickMultiplier;
             ethMineBtnSpan.innerText = `+${totalEthClick.toFixed(8)} Ξ`;
         }
         const dogeMineBtnSpan = document.querySelectorAll('.mine-btn span')[2];
         if (dogeMineBtnSpan) {
-            const totalDogeClick = dogeClickValue * dogeClickBonus * (1 + ascensionClickBonus);
+            const totalDogeClick = dogeClickValue * clickMultiplier * ascensionClickMultiplier;
             dogeMineBtnSpan.innerText = `+${totalDogeClick.toFixed(8)} Ð`;
         }
 
@@ -3067,6 +3319,7 @@ dogeUpgrades.forEach(u => {
     }
     }
 
+    // Mining loop - runs every 100ms
     setInterval(() => {
         const now = Date.now();
         const deltaTime = (now - lastTickTime) / 1000;
@@ -3078,31 +3331,58 @@ dogeUpgrades.forEach(u => {
         // BTC mining gains
         if (btcPerSec > 0) {
             let gain = btcPerSec * deltaTime * miningBonus;
-            let usdValue = gain * btcPrice;
-            btcBalance += gain;
+            let effectivePrice = getEffectiveCryptoPrice(btcPrice);
+            let usdValue = gain * effectivePrice;
+
+            // Try auto-sell first (before adding to balance)
+            const btcAutoSold = tryAutoSellCrypto('btc', gain);
+
+            // If not auto-sold, add to balance
+            if (!btcAutoSold) {
+                btcBalance += gain;
+            }
+
             btcLifetime += gain;
-            lifetimeEarnings += usdValue; // Track USD value of mined BTC
-            sessionEarnings += usdValue; // Track session earnings
+            lifetimeEarnings += usdValue;
+            sessionEarnings += usdValue;
         }
 
         // ETH mining gains
         if (ethPerSec > 0) {
             let gain = ethPerSec * deltaTime * miningBonus;
-            let usdValue = gain * ethPrice;
-            ethBalance += gain;
+            let effectivePrice = getEffectiveCryptoPrice(ethPrice);
+            let usdValue = gain * effectivePrice;
+
+            // Try auto-sell first (before adding to balance)
+            const ethAutoSold = tryAutoSellCrypto('eth', gain);
+
+            // If not auto-sold, add to balance
+            if (!ethAutoSold) {
+                ethBalance += gain;
+            }
+
             ethLifetime += gain;
-            lifetimeEarnings += usdValue; // Track USD value of mined ETH
-            sessionEarnings += usdValue; // Track session earnings
+            lifetimeEarnings += usdValue;
+            sessionEarnings += usdValue;
         }
 
         // DOGE mining gains
         if (dogePerSec > 0) {
             let gain = dogePerSec * deltaTime * miningBonus;
-            let usdValue = gain * dogePrice;
-            dogeBalance += gain;
+            let effectivePrice = getEffectiveCryptoPrice(dogePrice);
+            let usdValue = gain * effectivePrice;
+
+            // Try auto-sell first (before adding to balance)
+            const dogeAutoSold = tryAutoSellCrypto('doge', gain);
+
+            // If not auto-sold, add to balance
+            if (!dogeAutoSold) {
+                dogeBalance += gain;
+            }
+
             dogeLifetime += gain;
-            lifetimeEarnings += usdValue; // Track USD value of mined DOGE
-            sessionEarnings += usdValue; // Track session earnings
+            lifetimeEarnings += usdValue;
+            sessionEarnings += usdValue;
         }
 
         updateUI();
@@ -3113,10 +3393,6 @@ dogeUpgrades.forEach(u => {
             checkRugpullMilestone();
         }
 
-        // Try auto-buying basic upgrades if enabled
-        if (typeof tryAutoBuyBasicUpgrades === 'function') {
-            tryAutoBuyBasicUpgrades();
-        }
     }, 100);
 
     // Initialize all shops after DOM is ready
@@ -3142,6 +3418,9 @@ dogeUpgrades.forEach(u => {
         loadGame(); // This calls updateUI() internally
         updateAutoClickerButtonState(); // Update button state immediately after loading
         setBuyQuantity(1); // Highlight the 1x button on page load
+
+        // Update auto-sell status button
+        updateAutoSellButtonUI();
 
         // Initialize staking system
         initStaking();
@@ -3492,6 +3771,27 @@ dogeUpgrades.forEach(u => {
     window.exportSaveToFile = exportSaveToFile;
     window.importSaveFromText = importSaveFromText;
     window.importSaveFromFile = importSaveFromFile;
+
+    // Test helper - set lifetime earnings for testing rugpull feature
+    window.setTestEarnings = function(amount) {
+        lifetimeEarnings = amount;
+        sessionEarnings = amount;
+        console.log('TEST: Set lifetimeEarnings to $' + amount.toLocaleString());
+    };
+
+    // Test function to set earnings to $1 billion and show rugpull modal
+    window.test1Billion = function() {
+        lifetimeEarnings = 1000000000;  // $1B
+        dollarBalance = 1000000000;     // $1B cash too
+        sessionEarnings = 1000000000;
+        console.log('✓ TEST: Set earnings to $1,000,000,000');
+        console.log('✓ Rugpull eligible! First rugpull reward: ~20 tokens');
+        updateUI();
+        // Auto-show rugpull modal
+        if (typeof showRugpullOffer === 'function') {
+            setTimeout(() => showRugpullOffer(), 500);
+        }
+    };
 
     // Debug function to check localStorage directly
     window.debugCheckSave = function() {

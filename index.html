@@ -104,11 +104,11 @@
     <div id="main-layout">
         <div class="panel">
             <!-- Top row: Label on left, RUGPULL centered, utility buttons on right -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap: 12px;">
+            <div style="position: relative; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap: 12px; min-height: 50px;">
                 <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important;">Crypto Portfolio Valuation</span>
 
                 <!-- RUGPULL BUTTON - CENTER -->
-                <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;">
+                <div style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 5;">
                     <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 10px 20px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
                     <div id="rugpull-tooltip" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
                         <span id="tooltip-text">Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
@@ -246,6 +246,13 @@
                 <b style="color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
             </div>
 
+            <!-- Auto-Sell Toggle Button -->
+            <div style="margin-bottom: 8px;">
+                <button id="auto-sell-toggle-btn" onclick="toggleAutoSellButton()" style="width: 100%; padding: 8px 12px; background: rgba(100,100,100,0.3); border: 2px solid #666; color: #999; border-radius: 6px; font-weight: 800; cursor: not-allowed; font-size: 0.8rem; text-transform: uppercase; transition: 0.2s;" title="Purchase 'Auto-Sell Crypto to USD' upgrade to enable" disabled>
+                    🔒 Auto-Sell: <span id="auto-sell-status">LOCKED</span>
+                </button>
+            </div>
+
             <!-- Tab Buttons -->
             <div class="tab-buttons" style="margin-bottom: 6px;">
                 <button class="tab-btn active" onclick="switchTab('btc-mining')" style="border-color: #f7931a; color: #f7931a;">BTC</button>
@@ -331,10 +338,10 @@
                             <span style="color: #888; font-size: 0.8rem;">$<span id="market-btc-price">100,000</span> each</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                            <button onclick="sellBTC(0.001)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.001</button>
-                            <button onclick="sellBTC(0.01)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.01</button>
-                            <button onclick="sellBTC(0.1)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.1</button>
-                            <button onclick="sellBTC(1)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 1</button>
+                            <button onclick="quickSellBTC(10)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
+                            <button onclick="quickSellBTC(25)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
+                            <button onclick="quickSellBTC(50)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
+                            <button onclick="quickSellBTC(75)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
                         <button onclick="sellAllBTC()" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
@@ -346,10 +353,10 @@
                             <span style="color: #888; font-size: 0.8rem;">$<span id="market-eth-price">3,500</span> each</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                            <button onclick="sellETH(0.01)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.01</button>
-                            <button onclick="sellETH(0.1)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 0.1</button>
-                            <button onclick="sellETH(1)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 1</button>
-                            <button onclick="sellETH(10)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10</button>
+                            <button onclick="quickSellETH(10)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
+                            <button onclick="quickSellETH(25)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
+                            <button onclick="quickSellETH(50)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
+                            <button onclick="quickSellETH(75)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
                         <button onclick="sellAllETH()" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
@@ -361,16 +368,16 @@
                             <span style="color: #888; font-size: 0.8rem;">$<span id="market-doge-price">0.25</span> each</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                            <button onclick="sellDOGE(1)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 1</button>
-                            <button onclick="sellDOGE(10)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10</button>
-                            <button onclick="sellDOGE(100)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 100</button>
-                            <button onclick="sellDOGE(1000)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 1000</button>
+                            <button onclick="quickSellDOGE(10)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
+                            <button onclick="quickSellDOGE(25)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
+                            <button onclick="quickSellDOGE(50)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
+                            <button onclick="quickSellDOGE(75)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
                         <button onclick="sellAllDOGE()" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
 
                     <!-- Staking Section -->
-                    <div style="margin: 25px 0 15px 0; padding-top: 20px; border-top: 2px solid #222;">
+                    <div style="margin: 25px 0 15px 0; padding-top: 20px; padding-bottom: 200px; border-top: 2px solid #222;">
                         <h3 style="color: #ffaa33; margin: 0 0 10px 0; font-size: 1.2rem;">🏦 Crypto Staking Bank</h3>
                         <p style="color: #888; font-size: 0.75rem; margin: 0 0 15px 0;">Lock your crypto to earn 0.1% APR every 2 seconds, paid directly to your cash balance!</p>
                     </div>

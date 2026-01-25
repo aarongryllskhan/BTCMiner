@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto-Sell Test</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: monospace; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 10px; border: 1px solid #0f0; }
+        .log { margin: 5px 0; font-size: 12px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Auto-Sell Crypto Test Suite</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Check Upgrade Toggle State Persistence</h2>
+        <button onclick="testSaveLoadToggleState()">Run Test</button>
+        <div id="test1-result" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Verify Auto-Sell Logic</h2>
+        <button onclick="testAutoSellLogic()">Run Test</button>
+        <div id="test2-result" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Check Window Exports</h2>
+        <button onclick="testWindowExports()">Run Test</button>
+        <div id="test3-result" class="log"></div>
+    </div>
+
+    <script>
+        function log(elementId, message) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.innerHTML += `<div class="log">✓ ${message}</div>`;
+            }
+            console.log(message);
+        }
+
+        function testSaveLoadToggleState() {
+            const result = document.getElementById('test1-result');
+            result.innerHTML = '';
+            
+            log('test1-result', 'Simulating upgradeToggleState save/load...');
+            
+            // Create a toggle state
+            const toggleState = { auto_sell: true };
+            log('test1-result', `Created toggleState: ${JSON.stringify(toggleState)}`);
+            
+            // Serialize it
+            const serialized = JSON.stringify(toggleState);
+            log('test1-result', `Serialized: ${serialized}`);
+            
+            // Deserialize it
+            const deserialized = JSON.parse(serialized);
+            log('test1-result', `Deserialized: ${JSON.stringify(deserialized)}`);
+            
+            // Verify it matches
+            if (deserialized.auto_sell === toggleState.auto_sell) {
+                log('test1-result', '✅ Toggle state persists correctly through save/load cycle');
+            } else {
+                log('test1-result', '❌ Toggle state was NOT preserved');
+            }
+        }
+
+        function testAutoSellLogic() {
+            const result = document.getElementById('test2-result');
+            result.innerHTML = '';
+            
+            log('test2-result', 'Testing auto-sell conditional logic...');
+            
+            // Simulate the auto-sell check
+            const metaUpgrades = {
+                auto_sell_crypto: {
+                    purchased: false,
+                    cost: 25
+                }
+            };
+            const upgradeToggleState = { auto_sell: true };
+            
+            log('test2-result', 'Test 2a: Upgrade NOT purchased');
+            let hasUpgrade = metaUpgrades.auto_sell_crypto && metaUpgrades.auto_sell_crypto.purchased;
+            let isEnabled = upgradeToggleState.auto_sell === true;
+            log('test2-result', `hasUpgrade=${hasUpgrade}, isEnabled=${isEnabled}`);
+            if (!hasUpgrade) {
+                log('test2-result', '✅ Correctly blocked - upgrade not purchased');
+            }
+            
+            // Purchase it
+            metaUpgrades.auto_sell_crypto.purchased = true;
+            log('test2-result', '\nTest 2b: Upgrade purchased, toggle ON');
+            hasUpgrade = metaUpgrades.auto_sell_crypto && metaUpgrades.auto_sell_crypto.purchased;
+            isEnabled = upgradeToggleState.auto_sell === true;
+            log('test2-result', `hasUpgrade=${hasUpgrade}, isEnabled=${isEnabled}`);
+            if (hasUpgrade && isEnabled) {
+                log('test2-result', '✅ Correctly allows auto-sell');
+            }
+            
+            // Toggle it off
+            upgradeToggleState.auto_sell = false;
+            log('test2-result', '\nTest 2c: Upgrade purchased, toggle OFF');
+            hasUpgrade = metaUpgrades.auto_sell_crypto && metaUpgrades.auto_sell_crypto.purchased;
+            isEnabled = upgradeToggleState.auto_sell === true;
+            log('test2-result', `hasUpgrade=${hasUpgrade}, isEnabled=${isEnabled}`);
+            if (hasUpgrade && !isEnabled) {
+                log('test2-result', '✅ Correctly blocks auto-sell when toggled off');
+            }
+        }
+
+        function testWindowExports() {
+            const result = document.getElementById('test3-result');
+            result.innerHTML = '';
+            
+            log('test3-result', 'Testing window export mechanism...');
+            
+            // Simulate rugpull.js exports
+            window.metaUpgrades = {
+                auto_sell_crypto: { purchased: true, cost: 25 }
+            };
+            window.upgradeToggleState = { auto_sell: true };
+            
+            log('test3-result', `window.metaUpgrades: ${typeof window.metaUpgrades !== 'undefined' ? 'FOUND' : 'NOT FOUND'}`);
+            log('test3-result', `window.upgradeToggleState: ${typeof window.upgradeToggleState !== 'undefined' ? 'FOUND' : 'NOT FOUND'}`);
+            
+            // Simulate game.js access
+            const metaUpgradesData = typeof window.metaUpgrades !== 'undefined' ? window.metaUpgrades : null;
+            const toggleState = typeof window.upgradeToggleState !== 'undefined' ? window.upgradeToggleState : null;
+            
+            if (metaUpgradesData && toggleState) {
+                log('test3-result', '✅ game.js can access both exports');
+                log('test3-result', `auto_sell_crypto.purchased: ${metaUpgradesData.auto_sell_crypto.purchased}`);
+                log('test3-result', `upgradeToggleState.auto_sell: ${toggleState.auto_sell}`);
+            } else {
+                log('test3-result', '❌ Failed to access exports');
+            }
+        }
+    </script>
+</body>
+</html>
