@@ -528,6 +528,7 @@
             console.log('=== ATTEMPTING SAVE ===');
             console.log('BTC Balance:', btcBalance);
             console.log('Dollar Balance:', dollarBalance);
+            console.log('Ascension Data:', gameState.ascensionData);
             console.log('Save string length:', saveString.length, 'bytes');
 
             localStorage.setItem('satoshiTerminalSave', saveString);
@@ -1286,9 +1287,6 @@ function loadGame() {
 
     function resetGame() {
         if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
-            // Save ascension data BEFORE clearing (if rugpull system exists)
-            const savedAscensionData = (typeof getAscensionData === 'function') ? getAscensionData() : null;
-
             localStorage.removeItem('satoshiTerminalSave');
             localStorage.removeItem('instructionsDismissed');
             // Reset all variables to defaults
@@ -1354,14 +1352,19 @@ function loadGame() {
             stakedBTC = 0;
             stakedETH = 0;
             stakedDOGE = 0;
-            // Reset skill tree
-            resetSkillTree();
-
-            // Restore ascension data AFTER reset
-            if (savedAscensionData && typeof loadAscensionData === 'function') {
-                loadAscensionData(savedAscensionData);
+            // Reset skill tree (if skill tree system exists)
+            if (typeof resetSkillTree === 'function') {
+                resetSkillTree();
             }
 
+            // Reset ascension/rugpull data completely
+            if (typeof resetAscensionData === 'function') {
+                console.log('Calling resetAscensionData()...');
+                resetAscensionData();
+                console.log('After reset - rugpullCurrency:', typeof rugpullCurrency !== 'undefined' ? rugpullCurrency : 'undefined');
+            }
+
+            console.log('Calling saveGame() after reset...');
             saveGame();
             updateUI();
             updateStakingUI(); // Update staking display
@@ -1913,7 +1916,11 @@ function loadGame() {
 function manualHash() {
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-    const actualClickValue = btcClickValue * clickBonus;
+
+    // Apply ascension click bonus (2x per ascension)
+    const ascensionClickBonus = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? 1.0 : 0;
+
+    const actualClickValue = btcClickValue * clickBonus * (1 + ascensionClickBonus);
 
     // This adds your current click power to your spendable balance
     btcBalance += actualClickValue;
@@ -2352,18 +2359,26 @@ function buyDogeBoost(i) {
         document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
         document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
 
-        // Update manual hash button text
+        // Update manual hash button text (with ascension bonus applied)
+        const ascensionClickBonus = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? 1.0 : 0;
+        const btcClickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
+        const ethClickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
+        const dogeClickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
+
         const mineBtnSpan = document.querySelector('.mine-btn span');
         if (mineBtnSpan) {
-            mineBtnSpan.innerText = `+${btcClickValue.toFixed(8)} ₿`;
+            const totalBtcClick = btcClickValue * btcClickBonus * (1 + ascensionClickBonus);
+            mineBtnSpan.innerText = `+${totalBtcClick.toFixed(8)} ₿`;
         }
         const ethMineBtnSpan = document.querySelectorAll('.mine-btn span')[1];
         if (ethMineBtnSpan) {
-            ethMineBtnSpan.innerText = `+${ethClickValue.toFixed(8)} Ξ`;
+            const totalEthClick = ethClickValue * ethClickBonus * (1 + ascensionClickBonus);
+            ethMineBtnSpan.innerText = `+${totalEthClick.toFixed(8)} Ξ`;
         }
         const dogeMineBtnSpan = document.querySelectorAll('.mine-btn span')[2];
         if (dogeMineBtnSpan) {
-            dogeMineBtnSpan.innerText = `+${dogeClickValue.toFixed(8)} Ð`;
+            const totalDogeClick = dogeClickValue * dogeClickBonus * (1 + ascensionClickBonus);
+            dogeMineBtnSpan.innerText = `+${totalDogeClick.toFixed(8)} Ð`;
         }
 
         // Update hardware equity
@@ -2423,11 +2438,12 @@ function buyDogeBoost(i) {
         if (u.isClickUpgrade) {
             yEl.innerText = `+10% MANUAL HASH RATE`;
         } else {
-            // Show the current speed WITH skill bonuses applied
+            // Show the current speed WITH skill bonuses AND ascension bonus applied
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus);
+            const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus + ascensionBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} ₿/s - Current Speed`;
         }
     }
@@ -2440,8 +2456,9 @@ function buyDogeBoost(i) {
         } else {
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus);
+            const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus + ascensionBonus);
             increaseEl.innerText = `+${perLevelIncrease.toFixed(8)} ₿/s per level`;
             increaseEl.style.display = 'block';
         }
@@ -2647,11 +2664,12 @@ ethUpgrades.forEach(u => {
         if (u.isClickUpgrade) {
             yEl.innerText = `+10% MANUAL ETH RATE`;
         } else {
-            // Show the current speed WITH skill bonuses applied
+            // Show the current speed WITH skill bonuses AND ascension bonus applied
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus);
+            const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus + ascensionBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} Ξ/s - Current Speed`;
         }
     }
@@ -2664,8 +2682,9 @@ ethUpgrades.forEach(u => {
         } else {
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus);
+            const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus + ascensionBonus);
             ethIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ξ/s per level`;
             ethIncreaseEl.style.display = 'block';
         }
@@ -2845,11 +2864,12 @@ dogeUpgrades.forEach(u => {
         if (u.isClickUpgrade) {
             yEl.innerText = `+10% MANUAL DOGE RATE`;
         } else {
-            // Show the current speed WITH skill bonuses applied
+            // Show the current speed WITH skill bonuses AND ascension bonus applied
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus);
+            const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus + ascensionBonus);
             yEl.innerText = `+${currentSpeed.toFixed(8)} Ð/s - Current Speed`;
         }
     }
@@ -2862,8 +2882,9 @@ dogeUpgrades.forEach(u => {
         } else {
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus);
+            const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus + ascensionBonus);
             dogeIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ð/s per level`;
             dogeIncreaseEl.style.display = 'block';
         }
@@ -3091,6 +3112,11 @@ dogeUpgrades.forEach(u => {
         if (typeof checkRugpullMilestone === 'function') {
             checkRugpullMilestone();
         }
+
+        // Try auto-buying basic upgrades if enabled
+        if (typeof tryAutoBuyBasicUpgrades === 'function') {
+            tryAutoBuyBasicUpgrades();
+        }
     }, 100);
 
     // Initialize all shops after DOM is ready
@@ -3121,11 +3147,14 @@ dogeUpgrades.forEach(u => {
         initStaking();
         updateStakingUI();
 
-        // Show instructions modal if not dismissed
+        // Show instructions modal if not dismissed and player hasn't ascended yet
         if (localStorage.getItem('instructionsDismissed') !== 'true') {
-            const instructionsEl = document.getElementById('game-instructions');
-            if (instructionsEl) {
-                instructionsEl.style.display = 'flex';
+            const hasAscended = typeof ascensionLevel !== 'undefined' && ascensionLevel > 0;
+            if (!hasAscended) {
+                const instructionsEl = document.getElementById('game-instructions');
+                if (instructionsEl) {
+                    instructionsEl.style.display = 'flex';
+                }
             }
         }
 

@@ -9,6 +9,7 @@
 let ascensionLevel = 0;              // Total number of times the player has ascended
 let rugpullCurrency = 0;             // "Corrupt Tokens" - earned through ascension
 let lastShownMilestoneEarnings = 0;  // Track which $1M milestone popup was shown
+let rugpullButtonListenersAttached = false;  // Flag to prevent duplicate event listeners
 let ascensionStats = {
     totalRunsCompleted: 0,           // Total times player has reset
     currencyEarned: 0,               // Lifetime total of earned currency
@@ -18,16 +19,16 @@ let ascensionStats = {
 
 // Meta-upgrades purchased by the player (persists across resets)
 let metaUpgrades = {
-    mining_speed_5: { purchased: false, cost: 50 },      // +5% mining speed
-    mining_speed_10: { purchased: false, cost: 150 },    // +10% mining speed
-    mining_speed_25: { purchased: false, cost: 500 },    // +25% mining speed
-    mining_speed_50: { purchased: false, cost: 2000 },   // +50% mining speed
-    starter_miners: { purchased: false, cost: 100 },     // Start with 1 of each basic miner
-    auto_buy_basic: { purchased: false, cost: 200 },     // Auto-buy basic miners when affordable
-    power_efficiency: { purchased: false, cost: 300 },   // 20% better power efficiency
-    offline_boost: { purchased: false, cost: 400 },      // 2x offline earnings
-    advanced_quantum: { purchased: false, cost: 1500 },  // Unlock quantum miners at start
-    prestige_tokens: { purchased: false, cost: 5000 }    // +1% per token spent lifetime
+    mining_speed_5: { purchased: false, cost: 1 },       // +5% mining speed - first upgrade
+    starter_miners: { purchased: false, cost: 1 },       // Start with 1 of each basic miner - first upgrade
+    mining_speed_10: { purchased: false, cost: 1 },      // +10% mining speed
+    auto_buy_basic: { purchased: false, cost: 1 },       // Auto-buy basic miners when affordable
+    power_efficiency: { purchased: false, cost: 1 },     // 20% better power efficiency
+    offline_boost: { purchased: false, cost: 2 },        // 2x offline earnings
+    mining_speed_25: { purchased: false, cost: 2 },      // +25% mining speed
+    advanced_quantum: { purchased: false, cost: 3 },     // Unlock quantum miners at start
+    mining_speed_50: { purchased: false, cost: 4 },      // +50% mining speed
+    prestige_tokens: { purchased: false, cost: 5 }       // +1% per token spent lifetime
 };
 
 // Unlocked systems (unlock new content after ascensions)
@@ -63,32 +64,70 @@ function calculateRugpullReward() {
  * Show the rugpull confirmation modal
  */
 function showRugpullOffer() {
-    const reward = calculateRugpullReward();
-    const title = `🔓 HARD FORK DETECTED`;
-    const message = `Your network has detected an opportunity for optimization.
+    // Calculate token breakdown
+    const baseFromEarnings = Math.floor(lifetimeEarnings / 1000000);
+    const baseFromCash = Math.floor(dollarBalance / 100000);
+    const baseReward = baseFromEarnings + baseFromCash;
+    const ascensionBonus = 1 + (ascensionLevel * 0.05);
+    const reward = Math.max(1, Math.floor(baseReward * ascensionBonus));
 
-Current Progress:
-• Lifetime Earnings: $${lifetimeEarnings.toLocaleString()}
-• Current Cash: $${dollarBalance.toLocaleString()}
-• Ascensions Completed: ${ascensionLevel}
+    const starterCash = 1500 + (ascensionLevel * 500);
 
-═══════════════════════════════════
+    // Create modal instead of using confirm()
+    const modal = document.getElementById('rugpull-milestone-modal');
+    const modalText = document.getElementById('milestone-modal-text');
+    const confirmBtn = document.getElementById('milestone-confirm-btn');
 
-RUGPULL NOW to gain ${reward} Corrupt Tokens
+    if (modal && modalText && confirmBtn) {
+        modalText.innerHTML = `
+            <div style="color: #ffeb3b; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">🔓 HARD FORK DETECTED</div>
+            <div style="color: #fff; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.8;">
+                <div style="color: #ccc; margin-bottom: 15px;">Current Progress:</div>
+                <div style="margin-bottom: 10px;">
+                    • Lifetime Earnings: <span style="color: #4CAF50; font-weight: bold;">$${lifetimeEarnings.toLocaleString()}</span><br>
+                    • Current Cash: <span style="color: #4CAF50; font-weight: bold;">$${dollarBalance.toLocaleString()}</span><br>
+                    • Ascensions Completed: <span style="color: #4CAF50; font-weight: bold;">${ascensionLevel}</span>
+                </div>
+                <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
+                    <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 10px;">TOKEN CALCULATION:</div>
+                    <div style="margin-bottom: 15px; color: #ddd; font-size: 0.85rem;">
+                        • $${lifetimeEarnings.toLocaleString()} ÷ $1M = <span style="color: #4CAF50;">${baseFromEarnings}</span> tokens<br>
+                        • $${dollarBalance.toLocaleString()} ÷ $100k = <span style="color: #4CAF50;">${baseFromCash}</span> tokens<br>
+                        • Base Reward: <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
+                        • Ascension Bonus (${ascensionLevel > 0 ? '+' + (ascensionLevel * 5) + '%' : 'N/A'}): <span style="color: #4CAF50;">×${ascensionBonus.toFixed(2)}</span><br>
+                        <span style="border-top: 1px solid #555; padding-top: 10px; margin-top: 10px; display: block;">
+                            <span style="color: #ffeb3b; font-weight: bold;">TOTAL: ${reward} Corrupt Tokens</span>
+                        </span>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
+                    <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 10px;">RUGPULL REWARDS:</div>
+                    <div style="margin-bottom: 10px;">
+                        • Earn <span style="color: #ffeb3b; font-weight: bold;">${reward} Corrupt Tokens</span><br>
+                        • Start with <span style="color: #ffeb3b; font-weight: bold;">$${starterCash}</span> cash<br>
+                        • +2x mining speed bonus <span style="color: #ffeb3b;">(${2 + ascensionLevel * 2}x total)</span><br>
+                        • +2x manual hash bonus <span style="color: #ffeb3b;">(${2 + ascensionLevel * 2}x total)</span><br>
+                        <div style="font-size: 0.8rem; color: #999; margin-top: 8px;">💡 Bonuses stack additively: each ascension adds +2x</div>
+                    </div>
+                    <div style="border-top: 1px solid #555; padding-top: 10px; margin-top: 10px; color: #ccc; font-size: 0.85rem;">
+                        This will:<br>
+                        ✗ Reset all coins and miners<br>
+                        ✗ Clear all upgrades<br>
+                        ✗ Reset production speed<br>
+                        ✓ Keep all meta-upgrades<br>
+                        ✓ Maintain permanent bonuses
+                    </div>
+                </div>
+            </div>
+        `;
 
-This will:
-✗ Reset all coins and miners
-✗ Clear all upgrades
-✗ Reset production speed
-✓ Keep all meta-upgrades
-✓ Grant permanent bonuses
-✓ Start new run with 2x speed
+        // Update button to confirm
+        confirmBtn.textContent = 'RUGPULL NOW';
+        confirmBtn.onclick = function() {
+            executeRugpull(reward);
+        };
 
-═══════════════════════════════════`;
-
-    const confirmed = confirm(title + "\n\n" + message + "\n\n[OK] to RUGPULL, [Cancel] to continue");
-    if (confirmed) {
-        executeRugpull(reward);
+        modal.style.display = 'flex';
     }
 }
 
@@ -98,6 +137,9 @@ This will:
 function executeRugpull(reward) {
     // Prevent execution during import
     importInProgress = true;
+
+    // Close any open modals immediately
+    closeRugpullMilestoneModal();
 
     // Award the currency
     rugpullCurrency += reward;
@@ -131,6 +173,9 @@ function executeRugpull(reward) {
     ascensionStats = savedAscensionData.ascensionStats;
     unlockedSystems = savedAscensionData.unlockedSystems;
 
+    // Reset milestone tracker so next $1M milestone will trigger popup
+    lastShownMilestoneEarnings = 0;
+
     // Initialize new run with bonuses
     initializeNewRun();
 
@@ -143,18 +188,19 @@ function executeRugpull(reward) {
     updateUI();
     updateStakingUI();
 
-    // Show success message
-    alert(`🎉 RUGPULL COMPLETE!\n\n+${reward} Corrupt Tokens earned\n\nTotal Tokens: ${rugpullCurrency}\n\nNew run starting with bonuses...\n\nOpen the Meta-Upgrades to spend your tokens!`);
+    // Show success message as modal
+    showRugpullCompleteModal(reward);
 
     // Open meta-upgrades modal so player can spend tokens immediately
     setTimeout(() => {
+        closeRugpullCompleteModal();
         openMetaUpgradesModal();
-    }, 500);
-
-    // Reload to show new UI state after a delay (gives time to see modal)
-    setTimeout(() => {
-        window.location.reload(true);
     }, 3000);
+
+    // Don't reload - keep modals visible for player to interact with store
+    // setTimeout(() => {
+    //     window.location.reload(true);
+    // }, 3000);
 }
 
 /**
@@ -261,10 +307,11 @@ function initializeNewRun() {
         dogeUpgrades[1].currentYield = dogeUpgrades[1].baseYield;
         dogeUpgrades[1].currentUsd = dogeUpgrades[1].baseUsd * Math.pow(1.12, 1);
 
-        // Recalculate per-second rates
-        btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        // Recalculate per-second rates WITH ascension bonuses stacking
+        const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+        btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
     }
 
     // Apply power bonuses
@@ -309,12 +356,18 @@ function purchaseMetaUpgrade(upgradeKey) {
 
     const upgrade = metaUpgrades[upgradeKey];
     if (upgrade.purchased) {
-        alert('Already purchased!');
+        showGenericMessageModal('Already Purchased', `<div style="color: #ff9800;">You already own this upgrade!</div>`);
         return;
     }
 
     if (rugpullCurrency < upgrade.cost) {
-        alert(`Not enough Corrupt Tokens!\nNeed: ${upgrade.cost}, Have: ${rugpullCurrency}`);
+        showGenericMessageModal('Not Enough Tokens', `
+            <div>Not enough Corrupt Tokens!</div>
+            <div style="margin-top: 10px; color: #ffeb3b;">
+                Need: <span style="font-weight: bold;">${upgrade.cost}</span><br>
+                Have: <span style="font-weight: bold;">${rugpullCurrency}</span>
+            </div>
+        `);
         return;
     }
 
@@ -329,7 +382,10 @@ function purchaseMetaUpgrade(upgradeKey) {
     // Save and update UI
     saveGame();
     updateMetaUpgradesUI();
-    alert(`✓ Purchased: ${getUpgradeName(upgradeKey)}`);
+    showGenericMessageModal('Purchase Successful', `
+        <div style="color: #4CAF50; font-weight: bold; font-size: 1.1rem;">✓ Purchased</div>
+        <div style="margin-top: 10px; color: #fff;">${getUpgradeName(upgradeKey)}</div>
+    `);
 }
 
 /**
@@ -367,6 +423,12 @@ function applyMetaUpgradeEffect(upgradeKey) {
 function getAscensionMiningBonus() {
     let bonus = 0;
 
+    // Built-in 2x bonus for completing first ascension
+    if (ascensionLevel > 0) {
+        bonus = 1.0;  // 100% = 2x total speed
+    }
+
+    // Additional bonuses from purchased upgrades
     if (metaUpgrades.mining_speed_5.purchased) bonus += 0.05;
     if (metaUpgrades.mining_speed_10.purchased) bonus += 0.10;
     if (metaUpgrades.mining_speed_25.purchased) bonus += 0.25;
@@ -414,6 +476,28 @@ function updateMetaUpgradesUI() {
     title.style.textAlign = 'center';
     title.style.marginBottom = '20px';
     container.appendChild(title);
+
+    // Display current bonuses
+    const totalMiningBonus = 2 + (ascensionLevel * 2);
+    const totalClickBonus = 2 + (ascensionLevel * 2);
+
+    const bonusesDiv = document.createElement('div');
+    bonusesDiv.style.background = '#1a2e2e';
+    bonusesDiv.style.border = '2px solid #4CAF50';
+    bonusesDiv.style.borderRadius = '6px';
+    bonusesDiv.style.padding = '15px';
+    bonusesDiv.style.marginBottom = '20px';
+    bonusesDiv.style.textAlign = 'center';
+    bonusesDiv.style.color = '#fff';
+
+    let bonusText = `<div style="color: #4CAF50; font-weight: bold; margin-bottom: 8px;">YOUR CURRENT BONUSES</div>`;
+    bonusText += `<div style="font-size: 0.9rem; line-height: 1.8;">`;
+    bonusText += `🔷 Ascensions: <span style="color: #ffeb3b; font-weight: bold;">${ascensionLevel}</span><br>`;
+    bonusText += `⚡ Mining Speed: <span style="color: #ffeb3b; font-weight: bold;">${totalMiningBonus}x</span> (base ${2} + ${ascensionLevel}×${2})<br>`;
+    bonusText += `🖱️ Manual Hash: <span style="color: #ffeb3b; font-weight: bold;">${totalClickBonus}x</span> (base ${2} + ${ascensionLevel}×${2})<br>`;
+    bonusText += `</div>`;
+    bonusesDiv.innerHTML = bonusText;
+    container.appendChild(bonusesDiv);
 
     // Group upgrades by tier
     const tiers = [
@@ -487,8 +571,12 @@ function getAscensionData() {
  * Load ascension data from save
  */
 function loadAscensionData(data) {
-    if (!data) return;
+    if (!data) {
+        console.log('loadAscensionData: No data provided');
+        return;
+    }
 
+    console.log('loadAscensionData called with:', data);
     ascensionLevel = data.ascensionLevel || 0;
     rugpullCurrency = data.rugpullCurrency || 0;
     lastShownMilestoneEarnings = data.lastShownMilestoneEarnings || 0;
@@ -500,6 +588,85 @@ function loadAscensionData(data) {
     };
     metaUpgrades = data.metaUpgrades || metaUpgrades;
     unlockedSystems = data.unlockedSystems || unlockedSystems;
+    console.log('After load - rugpullCurrency:', rugpullCurrency, 'ascensionLevel:', ascensionLevel);
+}
+
+/**
+ * Reset ascension data completely (called when user does RESET SAVE)
+ */
+function resetAscensionData() {
+    ascensionLevel = 0;
+    rugpullCurrency = 0;
+    lastShownMilestoneEarnings = 0;
+    ascensionStats = {
+        totalRunsCompleted: 0,
+        currencyEarned: 0,
+        bestRunEarnings: 0,
+        totalGlobalBonus: 0
+    };
+    // Reset all meta-upgrades to unpurchased
+    for (const key in metaUpgrades) {
+        metaUpgrades[key].purchased = false;
+    }
+    // Reset unlocked systems
+    unlockedSystems = {
+        basicAscension: true,
+        advancedMetaUpgrades: false,
+        quantumBranch: false,
+        infinityGates: false
+    };
+}
+
+/**
+ * Auto-buy basic upgrades when affordable (if upgrade purchased)
+ * Only buys if: (1) auto_buy_basic upgrade is purchased, (2) player has enough USD
+ */
+function tryAutoBuyBasicUpgrades() {
+    if (!metaUpgrades.auto_buy_basic.purchased) return;
+
+    // Try to buy BTC basic miners (ID 0-3 are basic ones)
+    const basicBtcUpgrades = btcUpgrades.filter(u => u.id <= 3);
+    basicBtcUpgrades.forEach(upgrade => {
+        // Keep buying until we can't afford it
+        while (dollarBalance >= upgrade.currentUsd && upgrade.level < 100) {
+            dollarBalance -= upgrade.currentUsd;
+            upgrade.level++;
+            upgrade.currentUsd = upgrade.baseUsd * Math.pow(1.15, upgrade.level);
+            upgrade.currentYield = upgrade.baseYield * upgrade.level;
+
+            // Recalculate BTC per second
+            btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+            btcPerSec *= (1 + ascensionBonus);
+        }
+    });
+
+    // Same for ETH and DOGE basic miners
+    const basicEthUpgrades = ethUpgrades.filter(u => u.id <= 3);
+    basicEthUpgrades.forEach(upgrade => {
+        while (dollarBalance >= upgrade.currentUsd && upgrade.level < 100) {
+            dollarBalance -= upgrade.currentUsd;
+            upgrade.level++;
+            upgrade.currentUsd = upgrade.baseUsd * Math.pow(1.15, upgrade.level);
+            upgrade.currentYield = upgrade.baseYield * upgrade.level;
+            ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+            ethPerSec *= (1 + ascensionBonus);
+        }
+    });
+
+    const basicDogeUpgrades = dogeUpgrades.filter(u => u.id <= 3);
+    basicDogeUpgrades.forEach(upgrade => {
+        while (dollarBalance >= upgrade.currentUsd && upgrade.level < 100) {
+            dollarBalance -= upgrade.currentUsd;
+            upgrade.level++;
+            upgrade.currentUsd = upgrade.baseUsd * Math.pow(1.15, upgrade.level);
+            upgrade.currentYield = upgrade.baseYield * upgrade.level;
+            dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+            const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+            dogePerSec *= (1 + ascensionBonus);
+        }
+    });
 }
 
 /**
@@ -539,6 +706,29 @@ function closeMetaUpgradesModal() {
 }
 
 /**
+ * Show rugpull tooltip on hover - shows mechanic explanation
+ */
+function showRugpullTooltip() {
+    const tooltipDiv = document.getElementById('rugpull-tooltip');
+
+    if (tooltipDiv) {
+        tooltipDiv.style.visibility = 'visible';
+        tooltipDiv.style.opacity = '1';
+    }
+}
+
+/**
+ * Hide rugpull tooltip on mouse leave
+ */
+function hideRugpullTooltip() {
+    const tooltipDiv = document.getElementById('rugpull-tooltip');
+    if (tooltipDiv) {
+        tooltipDiv.style.visibility = 'hidden';
+        tooltipDiv.style.opacity = '0';
+    }
+}
+
+/**
  * Display rugpull info in main UI (call from updateUI)
  */
 function updateAscensionUI() {
@@ -557,6 +747,7 @@ function updateAscensionUI() {
 
     // Update RUGPULL button state
     const rugpullBtn = document.getElementById('rugpull-btn');
+    const progressText = document.getElementById('rugpull-progress-text');
 
     if (rugpullBtn) {
         const isEligible = isRugpullEligible();
@@ -567,19 +758,27 @@ function updateAscensionUI() {
             rugpullBtn.style.background = '#666';
             rugpullBtn.style.opacity = '0.5';
             rugpullBtn.style.cursor = 'not-allowed';
-
-            // Update tooltip with progress
-            const progressToMillion = Math.min((lifetimeEarnings / 1000000) * 100, 99.9);
-            rugpullBtn.title = `Rugpull to start fresh and earn Corrupt Tokens for permanent rewards\n\nProgress: $${lifetimeEarnings.toLocaleString()} / $1M (${progressToMillion.toFixed(1)}%)`;
         } else {
             // Eligible - bright and clickable
             rugpullBtn.style.background = '#9c27b0';
             rugpullBtn.style.opacity = '1';
             rugpullBtn.style.cursor = 'pointer';
             rugpullBtn.style.boxShadow = '0 0 15px rgba(156,39,176,0.8)';
+        }
+    }
 
-            // Update tooltip with reward
-            rugpullBtn.title = `Rugpull to start fresh and earn Corrupt Tokens for permanent rewards\n\nYou'll earn: ${calculateRugpullReward()} Corrupt Tokens`;
+    // Update progress text below button - always show
+    if (progressText) {
+        progressText.textContent = `$${Math.floor(lifetimeEarnings).toLocaleString()} / $1M`;
+    }
+
+    // Show/hide Rugpull Store button based on tokens
+    const storeBtn = document.getElementById('rugpull-store-btn');
+    if (storeBtn) {
+        if (rugpullCurrency > 0) {
+            storeBtn.style.display = 'block';
+        } else {
+            storeBtn.style.display = 'none';
         }
     }
 }
@@ -600,7 +799,13 @@ function handleRugpullButtonClick() {
     } else {
         // Not eligible and no tokens - show requirements
         const progressPercent = Math.min((lifetimeEarnings / 1000000) * 100, 99.9);
-        alert(`RUGPULL LOCKED\n\nReach $1,000,000 lifetime earnings to unlock\n\nCurrent: $${lifetimeEarnings.toLocaleString()} (${progressPercent.toFixed(1)}%)`);
+        showGenericMessageModal('RUGPULL LOCKED', `
+            <div style="color: #ff9800; font-weight: bold; margin-bottom: 15px;">Reach $1,000,000 lifetime earnings to unlock</div>
+            <div style="color: #fff; line-height: 1.8;">
+                Current: <span style="color: #4CAF50; font-weight: bold;">$${lifetimeEarnings.toLocaleString()}</span><br>
+                Progress: <span style="color: #ffeb3b; font-weight: bold;">${progressPercent.toFixed(1)}%</span>
+            </div>
+        `);
     }
 }
 
@@ -608,33 +813,188 @@ function handleRugpullButtonClick() {
  * Check for $1M milestones and show popup (call from game loop)
  */
 function checkRugpullMilestone() {
-    if (typeof lifetimeEarnings === 'undefined') return;
+    if (typeof lifetimeEarnings === 'undefined') {
+        console.log('checkRugpullMilestone: lifetimeEarnings undefined');
+        return;
+    }
 
     const currentMilestone = Math.floor(lifetimeEarnings / 1000000);
     const lastMilestone = Math.floor(lastShownMilestoneEarnings / 1000000);
 
+    // Debug every 60 ticks (6 seconds)
+    if (window._debugCounter === undefined) window._debugCounter = 0;
+    if (window._debugCounter++ % 60 === 0) {
+        console.log(`checkRugpullMilestone: lifetime=${lifetimeEarnings}, current=${currentMilestone}, last=${lastMilestone}, show=${currentMilestone > lastMilestone && currentMilestone >= 1}`);
+    }
+
     // Show popup if player just hit a new $1M milestone
     if (currentMilestone > lastMilestone && currentMilestone >= 1) {
+        console.log('MILESTONE DETECTED!', currentMilestone);
         lastShownMilestoneEarnings = lifetimeEarnings;
 
         // Small delay to ensure UI is ready
         setTimeout(() => {
+            console.log('Calling showRugpullMilestonePopup for milestone', currentMilestone);
             showRugpullMilestonePopup(currentMilestone);
         }, 100);
     }
 }
 
 /**
- * Show popup when player reaches $1M, $2M, etc
+ * Show popup when player reaches $1M, $2M, etc (as in-game modal)
  */
 function showRugpullMilestonePopup(milestone) {
     const reward = calculateRugpullReward();
-    const message = milestone === 1
-        ? `🎉 YOU'VE REACHED $1,000,000 IN LIFETIME EARNINGS! 🎉\n\nYou can now RUGPULL to:\n• Reset your progress\n• Earn ${reward} Corrupt Tokens\n• Start a new run with permanent bonuses\n\nReady to RUGPULL?`
-        : `🎉 YOU'VE REACHED $${(milestone * 1000000).toLocaleString()} IN LIFETIME EARNINGS! 🎉\n\nYou can RUGPULL again to:\n• Reset your progress\n• Earn ${reward} Corrupt Tokens\n• Unlock new bonuses\n\nReady to RUGPULL?`;
+    const modalText = document.getElementById('milestone-modal-text');
+    const modal = document.getElementById('rugpull-milestone-modal');
+    const confirmBtn = document.getElementById('milestone-confirm-btn');
 
-    if (confirm(message)) {
-        showRugpullOffer();
+    // Calculate token breakdown for display
+    const baseFromEarnings = Math.floor(lifetimeEarnings / 1000000);
+    const baseFromCash = Math.floor(dollarBalance / 100000);
+    const baseReward = baseFromEarnings + baseFromCash;
+    const ascensionBonus = 1 + (ascensionLevel * 0.05);
+    const starterCash = 1500 + (ascensionLevel * 500);
+
+    if (modalText && modal) {
+        if (milestone === 1) {
+            const totalBonus = 2 + (ascensionLevel * 2);
+            modalText.innerHTML = `
+                <div style="color: #ffeb3b; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">🔓 HARD FORK DETECTED - $1,000,000 REACHED!</div>
+                <div style="color: #fff; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.8;">
+                    <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 8px;">TOKEN CALCULATION:</div>
+                    <div style="margin-bottom: 15px; color: #ddd; font-size: 0.85rem;">
+                        • Lifetime Earnings: $${lifetimeEarnings.toLocaleString()} ÷ $1M = <span style="color: #4CAF50;">${baseFromEarnings}</span> tokens<br>
+                        • Current Cash Bonus: $${dollarBalance.toLocaleString()} ÷ $100k = <span style="color: #4CAF50;">${baseFromCash}</span> tokens<br>
+                        • Base Total: <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
+                        • Ascension Bonus: <span style="color: #4CAF50;">×${ascensionBonus.toFixed(2)}</span><br>
+                        <span style="border-top: 1px solid #555; padding-top: 8px; margin-top: 8px; display: block;">
+                            <span style="color: #ffeb3b; font-weight: bold;">FINAL REWARD: ${reward} Corrupt Tokens</span>
+                        </span>
+                    </div>
+                    <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
+                        <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 8px;">RUGPULL REWARDS:</div>
+                        <div style="margin-bottom: 10px; color: #ccc;">
+                            • Earn <span style="color: #ffeb3b; font-weight: bold;">${reward} Corrupt Tokens</span><br>
+                            • Start with <span style="color: #ffeb3b; font-weight: bold;">$${starterCash}</span> cash<br>
+                            • +2x mining speed bonus <span style="color: #ffeb3b;">(New Total: ${totalBonus}x)</span><br>
+                            • +2x manual hash bonus <span style="color: #ffeb3b;">(New Total: ${totalBonus}x)</span><br>
+                            <div style="font-size: 0.8rem; color: #999; margin-top: 8px;">💡 Each ascension adds +2x (stacks additively, not multiplicatively)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            const totalBonus = 2 + (ascensionLevel * 2);
+            modalText.innerHTML = `
+                <div style="color: #ffeb3b; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">🔓 HARD FORK DETECTED - $${(milestone * 1000000).toLocaleString()} REACHED!</div>
+                <div style="color: #fff; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.8;">
+                    <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 8px;">TOKEN CALCULATION:</div>
+                    <div style="margin-bottom: 15px; color: #ddd; font-size: 0.85rem;">
+                        • Lifetime Earnings: $${lifetimeEarnings.toLocaleString()} ÷ $1M = <span style="color: #4CAF50;">${baseFromEarnings}</span> tokens<br>
+                        • Current Cash Bonus: $${dollarBalance.toLocaleString()} ÷ $100k = <span style="color: #4CAF50;">${baseFromCash}</span> tokens<br>
+                        • Base Total: <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
+                        • Ascension Bonus: <span style="color: #4CAF50;">×${ascensionBonus.toFixed(2)}</span><br>
+                        <span style="border-top: 1px solid #555; padding-top: 8px; margin-top: 8px; display: block;">
+                            <span style="color: #ffeb3b; font-weight: bold;">FINAL REWARD: ${reward} Corrupt Tokens</span>
+                        </span>
+                    </div>
+                    <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
+                        <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 8px;">RUGPULL REWARDS:</div>
+                        <div style="margin-bottom: 10px; color: #ccc;">
+                            • Earn <span style="color: #ffeb3b; font-weight: bold;">${reward} Corrupt Tokens</span><br>
+                            • Start with <span style="color: #ffeb3b; font-weight: bold;">$${starterCash}</span> cash<br>
+                            • +2x mining speed bonus <span style="color: #ffeb3b;">(New Total: ${totalBonus}x)</span><br>
+                            • +2x manual hash bonus <span style="color: #ffeb3b;">(New Total: ${totalBonus}x)</span><br>
+                            <div style="font-size: 0.8rem; color: #999; margin-top: 8px;">💡 Each ascension adds +2x (stacks additively, not multiplicatively)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Reset button to call confirmRugpullFromModal
+        if (confirmBtn) {
+            confirmBtn.textContent = 'RUGPULL NOW';
+            confirmBtn.onclick = function() {
+                confirmRugpullFromModal();
+            };
+        }
+
+        modal.style.display = 'flex';
+    }
+}
+
+/**
+ * Close rugpull milestone modal
+ */
+function closeRugpullMilestoneModal() {
+    const modal = document.getElementById('rugpull-milestone-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Confirm rugpull from milestone modal
+ */
+function confirmRugpullFromModal() {
+    closeRugpullMilestoneModal();
+    showRugpullOffer();
+}
+
+/**
+ * Show rugpull complete message as modal
+ */
+function showRugpullCompleteModal(reward) {
+    const modal = document.getElementById('rugpull-complete-modal');
+    const text = document.getElementById('complete-modal-text');
+
+    if (modal && text) {
+        text.innerHTML = `
+            <div style="color: #ffeb3b; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px;">+${reward} Corrupt Tokens earned</div>
+            <div>Total Tokens: <span style="color: #ffeb3b; font-weight: bold;">${rugpullCurrency}</span></div>
+            <div style="margin-top: 15px; line-height: 1.8;">
+                New run starting with bonuses...<br>
+                <span style="font-size: 0.9rem;">Open the Rugpull Store to spend your tokens!</span>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    }
+}
+
+/**
+ * Close rugpull complete modal
+ */
+function closeRugpullCompleteModal() {
+    const modal = document.getElementById('rugpull-complete-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Show generic message modal
+ */
+function showGenericMessageModal(title, message) {
+    const modal = document.getElementById('generic-message-modal');
+    const titleEl = document.getElementById('generic-modal-title');
+    const textEl = document.getElementById('generic-modal-text');
+
+    if (modal && titleEl && textEl) {
+        titleEl.textContent = title;
+        textEl.innerHTML = message;
+        modal.style.display = 'flex';
+    }
+}
+
+/**
+ * Close generic message modal
+ */
+function closeGenericMessageModal() {
+    const modal = document.getElementById('generic-message-modal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 }
 
@@ -648,4 +1008,16 @@ function testRugpull() {
     console.log('Lifetime earnings:', lifetimeEarnings);
     console.log('BTC per second:', btcPerSec);
     showRugpullOffer();
+}
+
+/**
+ * Test function - give $1M for testing rugpull feature
+ * Type in console: giveTestMillion()
+ */
+function giveTestMillion() {
+    lifetimeEarnings = 1000000;
+    lastShownMilestoneEarnings = 0;  // Reset so milestone will trigger
+    console.log('TEST: Set lifetimeEarnings to $1M');
+    console.log('Rugpull eligible:', isRugpullEligible());
+    updateUI();
 }
