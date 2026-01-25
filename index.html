@@ -101,6 +101,38 @@
         </div>
     </div>
 
+    <!-- Backup Reminder Modal -->
+    <div id="backup-reminder-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9500; justify-content: center; align-items: center; overflow: auto;">
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; border-radius: 12px; max-width: 600px; width: 90%; border: 2px solid #FFD700; box-shadow: 0 0 30px rgba(255,215,0,0.3);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 3rem; margin-bottom: 15px;">💾</div>
+                <h2 style="color: #FFD700; font-size: 1.8rem; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px;">Backup Your Game</h2>
+                <p style="color: #ccc; font-size: 0.95rem; margin: 0; line-height: 1.6;">
+                    It's recommended to back up your game progress regularly using the import/export feature. This protects your progress in case of data loss.
+                </p>
+            </div>
+            <div style="background: rgba(255,215,0,0.05); border-left: 4px solid #FFD700; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                <p style="color: #FFD700; font-weight: 700; margin: 0 0 8px 0; font-size: 0.9rem;">💡 How to Backup:</p>
+                <ol style="color: #ccc; margin: 0; padding-left: 20px; font-size: 0.85rem; line-height: 1.6;">
+                    <li>Click the <strong>EXPORT/IMPORT</strong> button in the utilities panel</li>
+                    <li>Copy the generated code to a safe location (notepad, email, cloud storage)</li>
+                    <li>To restore, paste the code and click <strong>IMPORT</strong></li>
+                </ol>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="closeBackupReminder()" style="background: #FFD700; color: #000; border: none; padding: 12px 25px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;">
+                    Got It
+                </button>
+                <button onclick="openExportImportModal(); closeBackupReminder();" style="background: rgba(255,215,0,0.2); color: #FFD700; border: 2px solid #FFD700; padding: 10px 25px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;">
+                    Export Now
+                </button>
+                <button onclick="dismissBackupReminderPermanently()" style="background: rgba(255,215,0,0.1); color: #999; border: 2px solid #666; padding: 10px 25px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;">
+                    Never Show Again
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="main-layout">
         <div class="panel">
             <!-- Title -->
@@ -618,15 +650,17 @@
             <div style="font-size: 0.95rem; color: #ccc; line-height: 1.8; text-align: left;">
                 <p><strong>Getting Started:</strong></p>
                 <ol style="margin: 10px 0; padding-left: 20px; color: #bbb;">
-                    <li>Begin by <strong style="color: #f7931a;">Manually Hashing BTC, ETH or DOGE</strong> to earn your first crypto</li>
-                    <li>Once you have crypto, go to the <strong style="color: #00ff88;">CRYPTO EXCHANGE</strong> tab to <strong>Sell</strong> or <strong>Stake</strong> it for cash</li>
-                    <li>Use your cash to buy <strong>Miners</strong> in the BTC, ETH, and DOGE tabs</li>
-                    <li><strong style="color: #ff3344;">⚡ DON'T FORGET ABOUT POWER!</strong> Miners need power capacity to run</li>
+                    <li>Begin by <strong style="color: #FFD700;">Manually Hashing</strong> <span style="color: #f7931a;">BTC</span>, <span style="color: #627eea;">ETH</span> or <span style="color: #f1a91a;">DOGE</span> to earn your first crypto</li>
+                    <li>Once you have crypto, go to the <strong style="color: #00ff88;">CRYPTO EXCHANGE</strong> tab to <strong>Sell</strong> for cash or <strong>Stake</strong> for passive income</li>
+                    <li>Use your cash to buy <strong>Miners</strong> in the <span style="color: #f7931a;">BTC</span>, <span style="color: #627eea;">ETH</span>, and <span style="color: #f1a91a;">DOGE</span> tabs - they auto-generate crypto 24/7</li>
+                    <li><strong style="color: #ff3344;">⚡ DON'T FORGET ABOUT POWER!</strong> Miners need power capacity to run - upgrade your power supply regularly</li>
                 </ol>
                 <p><strong>Tips:</strong></p>
                 <ul style="margin: 10px 0; padding-left: 20px; color: #bbb;">
                     <li>Upgrade your power supply to run more miners</li>
                     <li>Balance your investments across all three cryptocurrencies</li>
+                    <li>Higher miner levels generate more crypto</li>
+                    <li>Once you hit your first <strong>$1 Billion</strong>, use <strong>RUGPULL</strong> to reset your progress and gain permanent bonuses that make everything grow faster</li>
                 </ul>
             </div>
         </div>

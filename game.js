@@ -3555,9 +3555,17 @@ dogeUpgrades.forEach(u => {
                     window.offlineEarningsToShow.cappedSeconds || window.offlineEarningsToShow.seconds
                 );
                 window.offlineEarningsToShow = null;
+                // Show backup reminder after offline earnings modal
+                setTimeout(() => {
+                    showBackupReminder();
+                }, 36000);
             }, 500);
         } else {
             console.log('✗ No offline earnings data - modal will not show');
+            // Show backup reminder anyway on every load
+            setTimeout(() => {
+                showBackupReminder();
+            }, 30000);
         }
 
         const canvasElement = document.getElementById('nwChart');
@@ -3862,11 +3870,43 @@ dogeUpgrades.forEach(u => {
         document.getElementById('privacy-modal').style.display = 'none';
     }
 
+    // Backup Reminder Modal functions
+    function showBackupReminder() {
+        // Don't show if permanently dismissed by user
+        if (localStorage.getItem('backupReminderDismissed') === 'true') {
+            return;
+        }
+        // Don't show if already shown this session
+        if (window.backupReminderShownThisSession) {
+            return;
+        }
+        window.backupReminderShownThisSession = true;
+        const modal = document.getElementById('backup-reminder-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function dismissBackupReminderPermanently() {
+        localStorage.setItem('backupReminderDismissed', 'true');
+        closeBackupReminder();
+    }
+
+    function closeBackupReminder() {
+        const modal = document.getElementById('backup-reminder-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
     // Make functions available globally
     window.acceptAgeAndTerms = acceptAgeAndTerms;
     window.openAgeAndTermsModal = openAgeAndTermsModal;
     window.openPrivacyModal = openPrivacyModal;
     window.closePrivacyModal = closePrivacyModal;
+    window.showBackupReminder = showBackupReminder;
+    window.closeBackupReminder = closeBackupReminder;
+    window.dismissBackupReminderPermanently = dismissBackupReminderPermanently;
 
     // Export/Import functions
     window.openExportImportModal = openExportImportModal;
