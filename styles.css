@@ -901,3 +901,167 @@ button:disabled:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
+        /* ========== ACHIEVEMENT SYSTEM STYLES ========== */
+
+        /* Achievement notification popup */
+        .achievement-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border: 2px solid #FFD700;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 350px;
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+            z-index: 9999;
+            animation: slideIn 0.5s ease, slideOut 5s ease forwards;
+            pointer-events: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            90% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .achievement-notification-content {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .achievement-notification-emoji {
+            font-size: 2.5rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .achievement-notification-text {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .achievement-notification-name {
+            color: #FFD700;
+            font-weight: 900;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .achievement-notification-desc {
+            color: #ccc;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        /* Achievements modal */
+        #achievements-modal .modal-content {
+            max-width: 900px;
+        }
+
+        .achievement-category {
+            margin-bottom: 25px;
+        }
+
+        .achievement-category h3 {
+            color: #FFD700;
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        /* Achievement item styling */
+        .achievement-item {
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid #FFD700;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-item:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #FFF;
+        }
+
+        .achievement-item.achievement-locked {
+            background: rgba(100, 100, 100, 0.2);
+            border-color: #555;
+            opacity: 0.6;
+        }
+
+        .achievement-item.achievement-locked:hover {
+            background: rgba(100, 100, 100, 0.3);
+            border-color: #666;
+            opacity: 0.6;
+        }
+
+        .achievement-emoji {
+            font-size: 1.8rem;
+            min-width: 50px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .achievement-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .achievement-name {
+            color: #FFD700;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        .achievement-locked .achievement-name {
+            color: #888;
+        }
+
+        .achievement-desc {
+            color: #aaa;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .achievement-locked .achievement-desc {
+            color: #666;
+        }
+
+        .achievement-date {
+            color: #00ff88;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+

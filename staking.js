@@ -95,6 +95,9 @@ function stakeCrypto(crypto, percentage) {
 
     const fraction = percentage / 100;
 
+    // Mark first stake for achievements
+    const isFirstStake = stakedBTC === 0 && stakedETH === 0 && stakedDOGE === 0;
+
     switch(crypto) {
         case 'BTC':
             if (btcBalance <= 0) {
@@ -129,6 +132,11 @@ function stakeCrypto(crypto, percentage) {
         default:
             alert('Invalid cryptocurrency!');
             return;
+    }
+
+    // Achievement: First stake
+    if (isFirstStake && typeof markFirstStake === 'function') {
+        markFirstStake();
     }
 
     updateUI();

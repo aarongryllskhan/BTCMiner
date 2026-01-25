@@ -187,14 +187,24 @@ function executeRugpull(reward) {
     // Save lifetime earnings before reset (needed for next milestone tracking)
     const savedLifetimeEarnings = lifetimeEarnings;
 
+    // Achievement: First rugpull and ascension count
+    const newAscensionLevel = ascensionLevel + 1;
+    if (newAscensionLevel === 1 && typeof markFirstRugpull === 'function') {
+        markFirstRugpull();
+    }
+
+    // SAVE ACHIEVEMENTS DATA BEFORE CLEARING LOCALSTORAGE
+    const savedAchievements = (typeof achievementsData !== 'undefined') ? JSON.parse(JSON.stringify(achievementsData.achievements)) : {};
+
     // Reset the game (this will preserve ascensionData through modified resetGame)
     // Save ascension data before reset
     const savedAscensionData = {
-        ascensionLevel: ascensionLevel + 1,
+        ascensionLevel: newAscensionLevel,
         rugpullCurrency: rugpullCurrency,
         metaUpgrades: JSON.parse(JSON.stringify(metaUpgrades)),
         ascensionStats: JSON.parse(JSON.stringify(ascensionStats)),
-        unlockedSystems: JSON.parse(JSON.stringify(unlockedSystems))
+        unlockedSystems: JSON.parse(JSON.stringify(unlockedSystems)),
+        achievements: savedAchievements
     };
 
     // Clear localStorage but prepare to restore ascension data
@@ -208,7 +218,7 @@ function executeRugpull(reward) {
     // lifetimeEarnings stays at 0 for the new run
 
     // Restore ascension data
-    ascensionLevel = savedAscensionData.ascensionLevel;
+    ascensionLevel = newAscensionLevel;
     rugpullCurrency = savedAscensionData.rugpullCurrency;
     metaUpgrades = savedAscensionData.metaUpgrades;
     ascensionStats = savedAscensionData.ascensionStats;
@@ -216,6 +226,12 @@ function executeRugpull(reward) {
     // Sync window references after restoring ascension data
     window.metaUpgrades = metaUpgrades;
     window.upgradeToggleState = upgradeToggleState;
+
+    // RESTORE ACHIEVEMENTS DATA (persist across rugpulls)
+    if (typeof achievementsData !== 'undefined' && savedAscensionData.achievements) {
+        achievementsData.achievements = savedAscensionData.achievements;
+        console.log('✓ Achievements restored after rugpull:', Object.values(achievementsData.achievements).filter(a => a.unlocked).length, 'unlocked');
+    }
 
     // Reset milestone tracker so next $1M milestone will trigger popup
     lastShownMilestoneEarnings = 0;

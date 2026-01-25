@@ -552,7 +552,9 @@
                 boostLevel: u.boostLevel
             })),
             // Ascension/Rugpull data
-            ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {}
+            ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {},
+            // Achievements data
+            achievements: (typeof achievementsData !== 'undefined') ? achievementsData.achievements : {}
         };
 
         try {
@@ -830,6 +832,16 @@ function loadGame() {
             console.log('No saved chart data, starting fresh');
         }
 
+        // Load achievements data
+        if (state.achievements && typeof achievementsData !== 'undefined') {
+            Object.keys(state.achievements).forEach(id => {
+                if (achievementsData.achievements[id]) {
+                    achievementsData.achievements[id] = state.achievements[id];
+                }
+            });
+            console.log('✓ Achievements loaded:', Object.values(achievementsData.achievements).filter(a => a.unlocked).length, 'unlocked');
+        }
+
         // Debug log
         console.log('✓ LOAD COMPLETE');
         console.log('Final balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
@@ -915,7 +927,9 @@ function loadGame() {
                 boostLevel: u.boostLevel
             })),
             // Ascension/Rugpull data
-            ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {}
+            ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {},
+            // Achievements data
+            achievements: (typeof achievementsData !== 'undefined') ? achievementsData.achievements : {}
         };
     }
 
@@ -2626,7 +2640,22 @@ function buyDogeBoost(i) {
         return Math.floor(num).toLocaleString();
     }
 
+    // Format watts to power units: W, KW, MW, GW, TW, PW
+    function formatPower(watts) {
+        if (watts >= 1e15) return (watts / 1e15).toFixed(2) + ' PW';  // Petawatt
+        if (watts >= 1e12) return (watts / 1e12).toFixed(2) + ' TW';  // Terawatt
+        if (watts >= 1e9)  return (watts / 1e9).toFixed(2) + ' GW';   // Gigawatt
+        if (watts >= 1e6)  return (watts / 1e6).toFixed(2) + ' MW';   // Megawatt
+        if (watts >= 1e3)  return (watts / 1e3).toFixed(2) + ' KW';   // Kilowatt
+        return watts.toFixed(2) + ' W';  // Watts
+    }
+
     function updateUI() {
+        // Check achievements every UI update
+        if (typeof checkAchievements === 'function') {
+            checkAchievements();
+        }
+
         // Crypto portfolio value = value of all crypto holdings only
         let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
         const isMobileUI = window.innerWidth <= 768;
@@ -3482,6 +3511,12 @@ dogeUpgrades.forEach(u => {
         loadGame(); // This calls updateUI() internally
         updateAutoClickerButtonState(); // Update button state immediately after loading
         setBuyQuantity(1); // Highlight the 1x button on page load
+
+        // Initialize achievements system
+        if (typeof initAchievements === 'function') {
+            initAchievements();
+            console.log('✓ Achievements system initialized');
+        }
 
         // Update auto-sell status button
         updateAutoSellButtonUI();
