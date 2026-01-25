@@ -745,17 +745,10 @@
     }
 </script>
 
-<!-- Load game files in dependency order -->
-<!-- 1. Data (constants and upgrade definitions) -->
-<script src="data.js?v=1.2.0"></script>
+<!-- Load main game -->
+<script src="game.js?v=1.1.0"></script>
 
-<!-- 2. Game Logic (core mechanics, calculations, save/load) -->
-<script src="game-logic.js?v=1.2.0"></script>
-
-<!-- 3. UI (rendering and event handling) -->
-<script src="ui.js?v=1.2.0"></script>
-
-<!-- 4. Staking system (requires game variables to be defined) -->
+<!-- Load staking system after main game variables are defined -->
 <script src="staking.js?v=1.1.0"></script>
 
 </body>
