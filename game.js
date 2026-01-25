@@ -518,7 +518,9 @@
                 currentYield: u.currentYield,
                 boostCost: u.boostCost,
                 boostLevel: u.boostLevel
-            }))
+            })),
+            // Ascension/Rugpull data
+            ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {}
         };
 
         try {
@@ -668,13 +670,19 @@ function loadGame() {
             });
         }
 
+        // Load ascension data
+        if (state.ascensionData && typeof loadAscensionData === 'function') {
+            loadAscensionData(state.ascensionData);
+        }
+
         // Calculate total power used
         calculateTotalPowerUsed();
 
-        // Recalculate totals for all cryptos
-        btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+        // Recalculate totals for all cryptos (with ascension bonus if available)
+        const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+        btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
 
         // Restore autoclicker cooldown
         autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
@@ -869,7 +877,9 @@ function loadGame() {
                 currentYield: u.currentYield,
                 boostCost: u.boostCost,
                 boostLevel: u.boostLevel
-            }))
+            })),
+            // Ascension/Rugpull data
+            ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {}
         };
     }
 
@@ -1276,6 +1286,9 @@ function loadGame() {
 
     function resetGame() {
         if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
+            // Save ascension data BEFORE clearing (if rugpull system exists)
+            const savedAscensionData = (typeof getAscensionData === 'function') ? getAscensionData() : null;
+
             localStorage.removeItem('satoshiTerminalSave');
             localStorage.removeItem('instructionsDismissed');
             // Reset all variables to defaults
@@ -1343,6 +1356,12 @@ function loadGame() {
             stakedDOGE = 0;
             // Reset skill tree
             resetSkillTree();
+
+            // Restore ascension data AFTER reset
+            if (savedAscensionData && typeof loadAscensionData === 'function') {
+                loadAscensionData(savedAscensionData);
+            }
+
             saveGame();
             updateUI();
             updateStakingUI(); // Update staking display

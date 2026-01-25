@@ -109,6 +109,7 @@
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="toggleMute()">SOUND ON</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #2196F3; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
+                    <button style="background: #ff00ff; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; display: none;" id="ascension-btn" onclick="openMetaUpgradesModal()">🌟 ASCEND</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 4px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem;" onclick="resetGame()">RESET SAVE</button>
                 </div>
@@ -121,6 +122,9 @@
                 <div style="font-size: 1.4rem; color: #627eea; font-weight: bold; font-family: monospace;">Ξ <span id="bal-eth">0.00000000</span></div>
                 <div style="font-size: 1.4rem; color: #c2a633; font-weight: bold; font-family: monospace;">Ð <span id="bal-doge">0.00</span></div>
             </div>
+
+            <!-- Ascension Info -->
+            <div id="ascension-info"></div>
 
             <div class="mini-stats">
                 <div class="stat-item">
@@ -499,6 +503,21 @@
     </div>
 </div>
 
+<!-- Meta-Upgrades Modal (Rugpull/Ascension System) -->
+<div id="meta-upgrades-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h2>🌟 Meta Upgrades - Ascension Rewards</h2>
+            <button onclick="closeMetaUpgradesModal()" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 20px;">
+            <div id="meta-upgrades-container" style="color: #ccc; font-size: 0.9rem;">
+                <!-- Populated dynamically by rugpull.js -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Game Instructions Modal -->
 <div id="game-instructions" class="modal-overlay" style="display: none;">
     <div class="modal-content" style="max-width: 500px;">
@@ -750,6 +769,9 @@
 
 <!-- Load staking system after main game variables are defined -->
 <script src="staking.js?v=1.1.0"></script>
+
+<!-- Load rugpull/ascension system after main game variables are defined -->
+<script src="rugpull.js?v=1.1.0"></script>
 
 </body>
 
