@@ -5,6 +5,9 @@ let achievementsData = {
     achievements: {}
 };
 
+// Track which achievements we've shown notifications for this session
+let notificationsShownThisSession = new Set();
+
 // Miner names for all cryptos
 const minerNames = {
     btc: ['Manual Hash Rate', 'USB Miner', 'GTX 1660 Super', 'RTX 5090 Rig', 'ASIC Mining Unit', 'Liquid ASIC Rig', 'Mobile Mining Container', 'Geothermal Mining Farm', 'Data Center Facility', 'Orbital Data Relay', 'Quantum Computer', 'Advanced Quantum Rig', 'Superintelligent AI Network', 'Dimensional Mining Array', 'Multiversal Hash Grid', 'Infinite Energy Extractor'],
@@ -147,10 +150,27 @@ function initAchievements() {
             achievementsData.achievements[id] = {
                 unlocked: false,
                 unlockedAt: null,
-                progress: 0
+                progress: 0,
+                notificationShown: false
             };
+        } else {
+            // Preserve existing achievement data, especially notificationShown flag
+            const existing = achievementsData.achievements[id];
+            // Ensure notificationShown is set properly
+            // If achievement was previously unlocked, mark notification as shown (don't show it again)
+            if (existing.unlocked && typeof existing.notificationShown === 'undefined') {
+                existing.notificationShown = true;
+            }
+            // If notificationShown is still undefined, set it based on unlocked status
+            if (typeof existing.notificationShown === 'undefined') {
+                existing.notificationShown = existing.unlocked ? true : false;
+            }
         }
     });
+
+    // Debug: log achievements that are unlocked on init
+    const unlockedCount = Object.values(achievementsData.achievements).filter(a => a.unlocked).length;
+    console.log('🏆 initAchievements() complete:', unlockedCount, 'achievements unlocked');
 }
 
 // Check all achievement conditions and unlock if conditions are met
@@ -159,6 +179,8 @@ function checkAchievements() {
         const achievement = achievementDefinitions[id];
         const state = achievementsData.achievements[id];
 
+        // Skip if state doesn't exist yet (happens before initAchievements)
+        if (!state) return;
         if (state.unlocked) return;
 
         let unlocked = false;
@@ -264,21 +286,37 @@ function checkAchievements() {
             unlocked = true;
         }
 
-        // Unlock achievement if condition met
+        // Unlock achievement if condition met (only on first unlock)
         if (unlocked && !state.unlocked) {
+            console.log('🏆 UNLOCKING ACHIEVEMENT:', id, 'notificationShown was:', state.notificationShown);
             state.unlocked = true;
             state.unlockedAt = Date.now();
-            showAchievementNotification(id);
+            state.notificationShown = false; // Will be set to true after showing notification
             saveGame();
+
+            // Show notification immediately when first unlocking
+            showAchievementNotification(id);
+            state.notificationShown = true;
+            saveGame(); // Save the notificationShown flag
         }
     });
 }
+
+// Track active notifications for positioning
+let activeNotifications = [];
 
 // Display achievement unlock notification
 function showAchievementNotification(achievementId) {
     const achievement = achievementDefinitions[achievementId];
     if (!achievement) return;
 
+    // Check if we've already shown this notification (prevent duplicates)
+    if (notificationsShownThisSession.has(achievementId)) {
+        console.log('🏆 BLOCKED duplicate notification:', achievementId);
+        return;
+    }
+
+    console.log('🏆 SHOWING notification:', achievementId, achievement.name);
     const notification = document.createElement('div');
     notification.className = 'achievement-notification';
     notification.innerHTML = `
@@ -291,10 +329,28 @@ function showAchievementNotification(achievementId) {
         </div>
     `;
 
+    // Mark as shown BEFORE adding to DOM to prevent duplicate calls
+    notificationsShownThisSession.add(achievementId);
+
     document.body.appendChild(notification);
+    activeNotifications.push(notification);
+
+    // Update positions of all active notifications
+    updateNotificationPositions();
+
     setTimeout(() => {
         notification.remove();
+        activeNotifications = activeNotifications.filter(n => n !== notification);
+        updateNotificationPositions();
     }, 5000);
+}
+
+// Update positions of all active notifications
+function updateNotificationPositions() {
+    activeNotifications.forEach((notification, index) => {
+        const offset = index * 130; // 130px spacing between notifications
+        notification.style.top = (20 + offset) + 'px';
+    });
 }
 
 // Open achievements modal
@@ -342,9 +398,10 @@ function populateAchievementsModal() {
     };
 
     Object.keys(categories).forEach(category => {
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'achievement-category';
-        categoryDiv.innerHTML = `<h3>${categoryLabels[category] || category}</h3>`;
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'achievement-category-header';
+        categoryHeader.innerHTML = `<h3>${categoryLabels[category] || category}</h3>`;
+        container.appendChild(categoryHeader);
 
         categories[category].forEach(achievement => {
             const state = achievementsData.achievements[achievement.id];
@@ -374,10 +431,8 @@ function populateAchievementsModal() {
                 `;
             }
 
-            categoryDiv.appendChild(achievementDiv);
+            container.appendChild(achievementDiv);
         });
-
-        container.appendChild(categoryDiv);
     });
 }
 

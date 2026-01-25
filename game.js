@@ -597,6 +597,14 @@ function loadGame() {
         console.log('Loaded BTC balance:', state.btcBalance);
         console.log('Loaded dollar balance:', state.dollarBalance);
 
+        // Load achievements data FIRST before any game logic
+        if (state.achievements && typeof achievementsData !== 'undefined') {
+            Object.keys(state.achievements).forEach(id => {
+                achievementsData.achievements[id] = state.achievements[id];
+            });
+            console.log('🏆 Achievements loaded early:', Object.values(achievementsData.achievements).filter(a => a.unlocked).length, 'unlocked');
+        }
+
         // Load Bitcoin data
         btcBalance = state.btcBalance || 0;
         btcLifetime = state.btcLifetime || 0;
@@ -830,16 +838,6 @@ function loadGame() {
             chartHistory = [];
             chartTimestamps = [];
             console.log('No saved chart data, starting fresh');
-        }
-
-        // Load achievements data
-        if (state.achievements && typeof achievementsData !== 'undefined') {
-            Object.keys(state.achievements).forEach(id => {
-                if (achievementsData.achievements[id]) {
-                    achievementsData.achievements[id] = state.achievements[id];
-                }
-            });
-            console.log('✓ Achievements loaded:', Object.values(achievementsData.achievements).filter(a => a.unlocked).length, 'unlocked');
         }
 
         // Debug log
@@ -3508,15 +3506,16 @@ dogeUpgrades.forEach(u => {
         } catch (e) {
             console.error('Error initializing shops:', e);
         }
-        loadGame(); // This calls updateUI() internally
-        updateAutoClickerButtonState(); // Update button state immediately after loading
-        setBuyQuantity(1); // Highlight the 1x button on page load
 
-        // Initialize achievements system
+        // Initialize achievements system BEFORE loading game so loadGame() can populate them
         if (typeof initAchievements === 'function') {
             initAchievements();
             console.log('✓ Achievements system initialized');
         }
+
+        loadGame(); // This calls updateUI() internally
+        updateAutoClickerButtonState(); // Update button state immediately after loading
+        setBuyQuantity(1); // Highlight the 1x button on page load
 
         // Update auto-sell status button
         updateAutoSellButtonUI();

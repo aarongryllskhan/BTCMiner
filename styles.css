@@ -678,6 +678,10 @@ button:disabled:hover {
             cursor: pointer;
             font-weight: bold;
             transition: 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-close:hover {
@@ -906,7 +910,6 @@ button:disabled:hover {
         /* Achievement notification popup */
         .achievement-notification {
             position: fixed;
-            top: 20px;
             right: 20px;
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             border: 2px solid #FFD700;
@@ -917,6 +920,7 @@ button:disabled:hover {
             z-index: 9999;
             animation: slideIn 0.5s ease, slideOut 5s ease forwards;
             pointer-events: none;
+            transition: top 0.3s ease;
         }
 
         @keyframes slideIn {
@@ -982,11 +986,38 @@ button:disabled:hover {
             max-width: 900px;
         }
 
-        .achievement-category {
-            margin-bottom: 25px;
+        /* Achievement items grid - responsive */
+        #achievements-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            grid-auto-flow: dense;
         }
 
-        .achievement-category h3 {
+        /* Desktop: 6 columns */
+        @media (min-width: 1200px) {
+            #achievements-container {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        /* Tablet: 3 columns */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            #achievements-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .achievement-category-header {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        .achievement-category-header:first-child {
+            margin-top: 0;
+        }
+
+        .achievement-category-header h3 {
             color: #FFD700;
             margin: 0 0 15px 0;
             font-size: 1.2rem;
@@ -1000,10 +1031,9 @@ button:disabled:hover {
             border: 1px solid #FFD700;
             border-radius: 8px;
             padding: 12px;
-            margin-bottom: 10px;
             display: flex;
+            flex-direction: column;
             gap: 12px;
-            align-items: flex-start;
             transition: all 0.3s ease;
         }
 
