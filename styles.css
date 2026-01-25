@@ -13,6 +13,15 @@
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
             .stat-box b { word-break: break-word; }
+
+            /* Mobile portfolio section - give it proper spacing */
+            .nw-label { display: block; margin-bottom: 8px; }
+            .nw-amount { margin-bottom: 8px; }
+
+            /* On mobile, position buttons below the portfolio section */
+            .panel > div:nth-child(2) { position: static !important; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+            .panel > div:nth-child(2) > div:first-child { position: static !important; left: auto; top: auto; transform: none; width: 100%; margin-bottom: 8px; }
+            .panel > div:nth-child(2) > div:last-child { margin-left: 0 !important; width: 100%; }
             #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; }
         }
 
