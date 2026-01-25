@@ -106,3 +106,14 @@ const dogeUpgrades = [
 
 // Keep reference to btcUpgrades as upgrades for backward compatibility
 const upgrades = btcUpgrades;
+
+// ============================================================================
+// EXPORT TO WINDOW SCOPE
+// Make all arrays available globally so other scripts can access them
+// ============================================================================
+window.powerUpgrades = powerUpgrades;
+window.equipmentPowerReqs = equipmentPowerReqs;
+window.btcUpgrades = btcUpgrades;
+window.ethUpgrades = ethUpgrades;
+window.dogeUpgrades = dogeUpgrades;
+window.upgrades = upgrades;

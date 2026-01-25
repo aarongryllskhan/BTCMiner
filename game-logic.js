@@ -68,40 +68,9 @@ let lastChartUpdateTime = Date.now();
 let chartStartTime = Date.now();
 
 // Power system - Rebalanced for strategic gameplay
+// Note: powerUpgrades and equipmentPowerReqs are now loaded from data.js
 let totalPowerAvailable = 0; // Total watts available
 let totalPowerUsed = 0; // Total watts being used
-const powerUpgrades = [
-    { id: 0, name: "Basic Power Strip", baseUsd: 25, basePower: 10 },
-    { id: 1, name: "Regulated PSU", baseUsd: 350, basePower: 100 },
-    { id: 2, name: "High-Efficiency PSU", baseUsd: 2100, basePower: 500 },
-    { id: 3, name: "Server-Grade PSU", baseUsd: 12000, basePower: 2500 },
-    { id: 4, name: "Mining Power Distribution Unit", baseUsd: 60000, basePower: 12000 },
-    { id: 5, name: "Modular Data Center Power System", baseUsd: 320000, basePower: 60000 },
-    { id: 6, name: "Dedicated Substation Power Unit", baseUsd: 1600000, basePower: 280000 },
-    { id: 7, name: "Industrial Grid Connection", baseUsd: 8000000, basePower: 1400000 },
-    { id: 8, name: "Hydroelectric Power Station", baseUsd: 40000000, basePower: 7000000 },
-    { id: 9, name: "Nuclear Reactor Array", baseUsd: 200000000, basePower: 35000000 }
-].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentPower: 0 }));
-
-// Power requirements for mining equipment (in watts)
-const equipmentPowerReqs = {
-    0: 0, // Manual hash uses no power
-    1: 2.5, // USB Miner
-    2: 75, // GTX 1660
-    3: 450, // RTX 5090
-    4: 1200, // ASIC
-    5: 3500, // Liquid ASIC
-    6: 12000, // Container
-    7: 45000, // Geothermal Farm
-    8: 300000, // Data Center
-    9: 1500000, // Orbital
-    10: 5000000, // Quantum
-    11: 25000000, // AI-Optimized Mining Network
-    12: 125000000, // Planetary Mining Grid
-    13: 625000000, // Dyson Sphere Mining Array
-    14: 3125000000, // Galactic Hash Network
-    15: 15625000000 // Universal Computation Matrix
-};
 
 // ============================================================================
 // PRICE SWING FUNCTIONS
@@ -2475,6 +2444,10 @@ window.manualHash = manualHash;
 window.manualEthHash = manualEthHash;
 window.manualDogeHash = manualDogeHash;
 window.buyLevel = buyLevel;
+window.buyLevelMultiple = buyLevelMultiple;
 window.buyBoost = buyBoost;
+window.buyEthLevel = buyEthLevel;
 window.buyEthBoost = buyEthBoost;
+window.buyDogeLevel = buyDogeLevel;
 window.buyDogeBoost = buyDogeBoost;
+window.debugCheckSave = debugCheckSave;
