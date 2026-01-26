@@ -1545,6 +1545,25 @@ function loadGame() {
                 console.log('After reset - rugpullCurrency:', typeof rugpullCurrency !== 'undefined' ? rugpullCurrency : 'undefined');
             }
 
+            // Reset hacking minigame data
+            hackingGameActive = false;
+            hackingGameDifficulty = 'EASY';
+            hackingVulnerabilitiesToFind = [];
+            hackingVulnerabilitiesFound = [];
+            hackingGameStartTime = 0;
+            hackingGameTimeLimit = 30000;
+            hackingLivesRemaining = 0;
+            hackingMaxLives = 0;
+            speedBoostActive = false;
+            speedBoostEndTime = 0;
+            speedBoostMultiplier = 1.0;
+            hackingGamesPlayed = 0;
+            hackingGamesWon = 0;
+            hackingConsecutiveWins = 0;
+            hackingNextNotificationTime = 0;
+            hackingTotalRewardsEarned = 0;
+            hackingCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 };
+
             // Reset achievements on full save reset
             if (typeof achievementsData !== 'undefined') {
                 // Clear achievements object completely
@@ -2141,15 +2160,15 @@ function loadGame() {
     // Code templates for hacking minigame
     const codeTemplates = {
         'EASY': [
-            `pragma solidity ^0.8.0;\ncontract Vault {\n    mapping(address => uint) balances;\n    \n    function withdraw(uint amount) public {\n        require(balances[msg.sender] > 0);        // [V] Missing amount check\n        balances[msg.sender] -= amount;\n        (bool success, ) = msg.sender.call{value: amount}("");  // [V] Reentrancy risk\n        require(success);\n    }\n    \n    function deposit() external payable {\n        balances[msg.sender] = msg.value;         // [V] Should use +=\n    }\n}`,
-            `contract Token {\n    mapping(address => uint) public balances;\n    \n    function transfer(address to, uint amount) public {\n        balances[msg.sender] -= amount;           // [V] No balance check\n        balances[to] += amount;                    // [V] No overflow check\n    }\n    \n    function mint(uint amount) public {\n        balances[msg.sender] += amount;            // [V] Anyone can mint\n    }\n}`,
+            `pragma solidity ^0.8.0;\ncontract Vault {\n    mapping(address => uint) balances;\n    \n    function withdraw(uint amount) public {\n        require(balances[msg.sender] > 0);        [V]\n        balances[msg.sender] -= amount;\n        (bool success, ) = msg.sender.call{value: amount}("");  [V]\n        require(success);\n    }\n    \n    function deposit() external payable {\n        balances[msg.sender] = msg.value;         [V]\n    }\n}`,
+            `contract Token {\n    mapping(address => uint) public balances;\n    \n    function transfer(address to, uint amount) public {\n        balances[msg.sender] -= amount;           [V]\n        balances[to] += amount;                    [V]\n    }\n    \n    function mint(uint amount) public {\n        balances[msg.sender] += amount;            [V]\n    }\n}`,
         ],
         'MEDIUM': [
-            `contract Auction {\n    address public highestBidder;\n    uint public highestBid;\n    \n    function bid() public payable {\n        require(msg.value > highestBid);\n        if (highestBidder != address(0)) {\n            payable(highestBidder).transfer(highestBid);  // [V] DoS if transfer fails\n        }\n        highestBidder = msg.sender;                // [V] State change after external call\n        highestBid = msg.value;                    // [V] State change after external call\n    }\n    \n    function claimPrize() public {\n        require(msg.sender == highestBidder);      // [V] Missing access control\n        payable(msg.sender).transfer(address(this).balance);\n    }\n}`,
-            `contract Lottery {\n    address[] public players;\n    \n    function enter() public payable {\n        require(msg.value == 0.1 ether);           // [V] Fixed price vulnerability\n        players.push(msg.sender);\n    }\n    \n    function random() private view returns (uint) {\n        return uint(keccak256(abi.encodePacked(block.timestamp)));  // [V] Predictable randomness\n    }\n    \n    function pickWinner() public {\n        uint index = random() % players.length;    // [V] No access control\n        payable(players[index]).transfer(address(this).balance);  // [V] Unsafe transfer\n        delete players;                             // [V] Resets without distributing\n    }\n}`,
+            `contract Auction {\n    address public highestBidder;\n    uint public highestBid;\n    \n    function bid() public payable {\n        require(msg.value > highestBid);\n        if (highestBidder != address(0)) {\n            payable(highestBidder).transfer(highestBid);  [V]\n        }\n        highestBidder = msg.sender;                [V]\n        highestBid = msg.value;                    [V]\n    }\n    \n    function claimPrize() public {\n        require(msg.sender == highestBidder);      [V]\n        payable(msg.sender).transfer(address(this).balance);\n    }\n}`,
+            `contract Lottery {\n    address[] public players;\n    \n    function enter() public payable {\n        require(msg.value == 0.1 ether);           [V]\n        players.push(msg.sender);\n    }\n    \n    function random() private view returns (uint) {\n        return uint(keccak256(abi.encodePacked(block.timestamp)));  [V]\n    }\n    \n    function pickWinner() public {\n        uint index = random() % players.length;    [V]\n        payable(players[index]).transfer(address(this).balance);  [V]\n        delete players;                             [V]\n    }\n}`,
         ],
         'HARD': [
-            `contract Exchange {\n    mapping(address => uint) public ethBalances;\n    mapping(address => uint) public tokenBalances;\n    uint public ethToTokenRate = 100;\n    \n    function depositEth() public payable {\n        ethBalances[msg.sender] += msg.value;      // [V] No overflow check\n    }\n    \n    function swapEthForTokens(uint ethAmount) public {\n        require(ethBalances[msg.sender] >= ethAmount);\n        uint tokens = ethAmount * ethToTokenRate;   // [V] No overflow check\n        ethBalances[msg.sender] -= ethAmount;       // [V] State before external call\n        tokenBalances[msg.sender] += tokens;        // [V] No balance limit\n        (bool success, ) = msg.sender.call{value: ethAmount}("");  // [V] Reentrancy\n        require(success);\n    }\n    \n    function updateRate(uint newRate) public {\n        ethToTokenRate = newRate;                   // [V] No access control\n    }\n}`,
+            `contract Exchange {\n    mapping(address => uint) public ethBalances;\n    mapping(address => uint) public tokenBalances;\n    uint public ethToTokenRate = 100;\n    \n    function depositEth() public payable {\n        ethBalances[msg.sender] += msg.value;      [V]\n    }\n    \n    function swapEthForTokens(uint ethAmount) public {\n        require(ethBalances[msg.sender] >= ethAmount);\n        uint tokens = ethAmount * ethToTokenRate;   [V]\n        ethBalances[msg.sender] -= ethAmount;       [V]\n        tokenBalances[msg.sender] += tokens;        [V]\n        (bool success, ) = msg.sender.call{value: ethAmount}("");  [V]\n        require(success);\n    }\n    \n    function updateRate(uint newRate) public {\n        ethToTokenRate = newRate;                   [V]\n    }\n}`,
         ]
     };
 
