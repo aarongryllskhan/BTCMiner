@@ -303,6 +303,7 @@
             </div>
             <div class="tab-buttons">
                 <button id="crypto-exchange-btn" class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
+                <button id="hacking-tab-btn" class="tab-btn" onclick="switchTab('hacking')" style="border-color: #ff00ff; color: #ff00ff;">HACKING</button>
             </div>
 
             <!-- BTC Mining Tab -->
@@ -511,6 +512,82 @@
                                 <button onclick="quickUnstake('DOGE', 75)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
                                 <button onclick="quickUnstake('DOGE', 100)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HACKING Tab -->
+            <div id="hacking-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <div class="upgrade-list" style="flex: 1; min-height: 0; overflow-y: auto; padding: 10px;">
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #ff00ff; margin: 0 0 10px 0; font-size: 1.3rem;">⚡ Blockchain Hacking Minigame</h3>
+                        <p style="color: #888; font-size: 0.8rem; margin: 0;">Find vulnerabilities in smart contract code to earn crypto rewards and mining speed boosts!</p>
+                    </div>
+
+                    <!-- Stats Display -->
+                    <div id="hacking-stats-content" style="background: rgba(255, 0, 255, 0.1); border: 1px solid #ff00ff; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <!-- Stats will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Difficulty Selector -->
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #fff; margin: 0 0 10px 0; font-size: 1rem;">Select Difficulty</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                            <button id="hacking-easy-btn" onclick="initHackingMinigame('EASY')" style="background: #00ff88; color: #000; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative;">
+                                <div style="margin-bottom: 5px;">EASY</div>
+                                <div style="font-size: 0.7rem; font-weight: 400;">3 bugs | 30s | 6 lives</div>
+                                <div style="font-size: 0.65rem; margin-top: 5px;">+10% speed | 2m</div>
+                                <div id="hacking-easy-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700;"></div>
+                            </button>
+                            <button id="hacking-medium-btn" onclick="initHackingMinigame('MEDIUM')" style="background: #ffaa33; color: #000; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative;">
+                                <div style="margin-bottom: 5px;">MEDIUM</div>
+                                <div style="font-size: 0.7rem; font-weight: 400;">4 bugs | 20s | 8 lives</div>
+                                <div style="font-size: 0.65rem; margin-top: 5px;">+25% speed | 2m</div>
+                                <div id="hacking-medium-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700;"></div>
+                            </button>
+                            <button id="hacking-hard-btn" onclick="initHackingMinigame('HARD')" style="background: #ff3344; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative;">
+                                <div style="margin-bottom: 5px;">HARD</div>
+                                <div style="font-size: 0.7rem; font-weight: 400;">5 bugs | 12s | 10 lives</div>
+                                <div style="font-size: 0.65rem; margin-top: 5px;">+50% speed | 2m</div>
+                                <div id="hacking-hard-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700;"></div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rewards Info -->
+                    <div style="background: rgba(247, 147, 26, 0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 15px;">
+                        <h4 style="color: #f7931a; margin: 0 0 10px 0; font-size: 1rem;">💰 Crypto Price-Based Rewards!</h4>
+                        <div style="color: #888; font-size: 0.85rem; margin-bottom: 12px;">
+                            Rewards scale with crypto market prices! Higher prices = bigger rewards!
+                        </div>
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                            <div style="color: #fff; font-weight: 700; margin-bottom: 8px;">Base Formula: (BTC + ETH + DOGE prices) × Multiplier</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.75rem;">
+                                <div style="text-align: center;">
+                                    <div style="color: #00ff88; font-weight: 700;">EASY</div>
+                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">0.1x - 0.5x</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">crypto prices</div>
+                                    <div style="color: #666; font-size: 0.65rem;">6 lives | 5m cooldown</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="color: #ffaa33; font-weight: 700;">MEDIUM</div>
+                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">0.5x - 1x</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">crypto prices</div>
+                                    <div style="color: #666; font-size: 0.65rem;">8 lives | 15m cooldown</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="color: #ff3344; font-weight: 700;">HARD</div>
+                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">1x - 2x</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">crypto prices</div>
+                                    <div style="color: #666; font-size: 0.65rem;">10 lives | 30m cooldown</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.7rem; color: #888; line-height: 1.5;">
+                            💎 Rewards paid as BTC (40%), ETH (35%), DOGE (20%), Cash (5%)<br>
+                            ⚡ Speed boosts: +10%, +25%, +50% (can stack!)<br>
+                            🚀 POWERFUL Rugpull: 10x reward per rugpull level!
                         </div>
                     </div>
                 </div>
@@ -1107,6 +1184,68 @@
 <!-- Load main game -->
 <!-- Load tutorial system before game.js so tutorial is available when game initializes -->
 <script src="tutorial.js?v=1.1.0"></script>
+
+<!-- Hacking Minigame Modal -->
+<div id="hacking-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10002; justify-content: center; align-items: center; overflow: auto;">
+    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #ff00ff; box-shadow: 0 0 30px rgba(255,0,255,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: #ff00ff; margin: 0; font-size: 1.5rem;">🔐 SMART CONTRACT AUDIT</h2>
+            <div style="text-align: right;">
+                <div style="color: #00ff88; font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">
+                    <span id="hacking-difficulty-display">EASY</span>
+                </div>
+                <div style="color: #fff; font-size: 1rem;">
+                    <span id="hacking-timer">30s</span>
+                </div>
+                <div style="color: #888; font-size: 0.8rem; margin-top: 3px;">
+                    Found: <span id="hacking-found-count">0/3</span>
+                </div>
+                <div style="color: #ff3344; font-size: 0.9rem; margin-top: 5px; font-weight: 800;">
+                    Lives: <span id="hacking-lives-display">❤️ 3/3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Container -->
+        <div id="hacking-code-container" style="background: #0a0a0a; border: 1px solid #ff00ff; border-radius: 8px; padding: 15px; font-family: 'Courier New', monospace; font-size: 0.8rem; line-height: 1.4; max-height: 65vh; overflow-y: auto; overflow-x: hidden; margin-bottom: 20px; word-wrap: break-word; white-space: pre-wrap;">
+            <!-- Code lines will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Result Message (hidden initially) -->
+        <div id="hacking-result-message" style="display: none; text-align: center; padding: 30px; margin-bottom: 20px;">
+            <!-- Result will be shown here -->
+        </div>
+
+        <!-- Close Button (hidden initially, shown after game ends) -->
+        <div style="text-align: center;">
+            <button id="hacking-close-btn" onclick="closeHackingModal()" style="display: none; background: #ff00ff; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+                CLOSE
+            </button>
+        </div>
+
+        <div style="color: #888; font-size: 0.75rem; text-align: center; margin-top: 15px;">
+            Click on lines with security vulnerabilities to patch them!
+        </div>
+    </div>
+</div>
+
+<!-- Hacking Notification Banner -->
+<div id="hacking-notification" style="display: none; position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #ff00ff 0%, #ff00aa 100%); padding: 20px; border-radius: 12px; box-shadow: 0 0 30px rgba(255,0,255,0.5); z-index: 9999; max-width: 350px; border: 2px solid #ff00ff; animation: pulse 2s infinite;">
+    <div style="color: #fff; font-weight: 800; font-size: 1.1rem; margin-bottom: 10px;">
+        ⚠️ HACKING OPPORTUNITY!
+    </div>
+    <div style="color: #fff; font-size: 0.9rem; margin-bottom: 15px;">
+        A vulnerable smart contract has been detected on the network!
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="dismissHackingNotification(); initHackingMinigame('EASY')" style="background: #fff; color: #ff00ff; border: none; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.9rem; flex: 1;">
+            START HACK
+        </button>
+        <button onclick="dismissHackingNotification()" style="background: rgba(0,0,0,0.3); color: #fff; border: 1px solid #fff; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+            DISMISS
+        </button>
+    </div>
+</div>
 
 <script src="game.js?v=1.1.0"></script>
 

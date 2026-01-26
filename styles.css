@@ -1301,3 +1301,78 @@ button:disabled:hover {
             font-weight: 600;
         }
 
+        /* ============ HACKING MINIGAME STYLES ============ */
+
+        .hacking-code-line {
+            padding: 5px 10px;
+            margin: 2px 0;
+            border-radius: 4px;
+            transition: all 0.2s;
+            color: #0f0;
+            white-space: pre;
+        }
+
+        .hacking-code-line:hover {
+            background: rgba(255, 0, 255, 0.2);
+        }
+
+        .vulnerability-found {
+            background: rgba(0, 255, 136, 0.3) !important;
+            border: 1px solid #00ff88 !important;
+            animation: foundPulse 0.5s;
+        }
+
+        @keyframes foundPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,0,255,0.5); }
+            50% { box-shadow: 0 0 40px rgba(255,0,255,0.8); }
+        }
+
+        @keyframes modalShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        .modal-shake {
+            animation: modalShake 0.5s;
+        }
+
+        /* Mobile Responsive for Hacking */
+        @media (max-width: 768px) {
+            #hacking-modal > div {
+                padding: 15px;
+                width: 95%;
+            }
+
+            #hacking-code-container {
+                font-size: 0.55rem;
+                padding: 8px;
+                max-height: 50vh;
+                line-height: 1.3;
+                overflow-x: hidden;
+                word-wrap: break-word;
+                white-space: pre-wrap;
+            }
+
+            .hacking-code-line {
+                padding: 2px 4px;
+                font-size: 0.55rem;
+                word-wrap: break-word;
+                white-space: pre-wrap;
+                overflow-wrap: break-word;
+            }
+
+            #hacking-notification {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                max-width: none;
+                padding: 15px;
+            }
+        }
+

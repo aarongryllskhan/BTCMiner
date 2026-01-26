@@ -134,6 +134,16 @@ Object.assign(achievementDefinitions, {
     five_rugpulls: { id: 'five_rugpulls', name: 'Serial Ascender', description: 'Execute 5 rugpulls', emoji: '🔄', category: 'ascension', threshold: 5, type: 'ascension_count' },
     ten_rugpulls: { id: 'ten_rugpulls', name: 'Prestige Master', description: 'Execute 10 rugpulls', emoji: '🔄', category: 'ascension', threshold: 10, type: 'ascension_count' },
 
+    // ============ HACKING MINIGAME ============
+    first_hack: { id: 'first_hack', name: 'First Hack', description: 'Complete your first hacking minigame', emoji: '🔐', category: 'hacking' },
+    hack_master_easy: { id: 'hack_master_easy', name: 'Easy Hack Master', description: 'Win 10 EASY hacking games', emoji: '🟢', category: 'hacking', threshold: 10, difficulty: 'EASY' },
+    hack_master_medium: { id: 'hack_master_medium', name: 'Medium Hack Master', description: 'Win 10 MEDIUM hacking games', emoji: '🟡', category: 'hacking', threshold: 10, difficulty: 'MEDIUM' },
+    hack_master_hard: { id: 'hack_master_hard', name: 'Hard Hack Master', description: 'Win 5 HARD hacking games', emoji: '🔴', category: 'hacking', threshold: 5, difficulty: 'HARD' },
+    hack_perfectionist: { id: 'hack_perfectionist', name: 'Perfectionist', description: 'Win 3 HARD games in a row', emoji: '💯', category: 'hacking', threshold: 3, type: 'consecutive_hard' },
+    hacked_1k: { id: 'hacked_1k', name: 'Hacker Novice', description: 'Earn $1,000 from hacking', emoji: '💰', category: 'hacking', threshold: 1000, type: 'hacking_rewards' },
+    hacked_100k: { id: 'hacked_100k', name: 'Professional Hacker', description: 'Earn $100,000 from hacking', emoji: '💵', category: 'hacking', threshold: 100000, type: 'hacking_rewards' },
+    hacked_1m: { id: 'hacked_1m', name: 'Elite Hacker', description: 'Earn $1,000,000 from hacking', emoji: '🏆', category: 'hacking', threshold: 1000000, type: 'hacking_rewards' },
+
     // ============ SESSION-BASED ============
     lightning_fast: { id: 'lightning_fast', name: 'Lightning Fast', description: 'Earn $1M in a single session', emoji: '⚡', category: 'session', threshold: 1000000, type: 'session_earnings' },
     session_10m: { id: 'session_10m', name: 'Speed Racer', description: 'Earn $10M in a single session', emoji: '🏎️', category: 'session', threshold: 10000000, type: 'session_earnings' },
@@ -283,6 +293,19 @@ function checkAchievements() {
             unlocked = true;
         }
 
+        // ========== HACKING ==========
+        else if (id === 'first_hack' && typeof hackingGamesWon !== 'undefined' && hackingGamesWon >= 1) {
+            unlocked = true;
+        }
+        else if (achievement.category === 'hacking' && achievement.type === 'hacking_rewards' && achievement.threshold) {
+            if (typeof hackingTotalRewardsEarned !== 'undefined' && hackingTotalRewardsEarned >= achievement.threshold) {
+                unlocked = true;
+            }
+        }
+        else if (id === 'hack_perfectionist' && typeof hackingConsecutiveWins !== 'undefined' && hackingConsecutiveWins >= 3) {
+            unlocked = true;
+        }
+
         // Unlock achievement if condition met (only on first unlock)
         if (unlocked && !state.unlocked) {
             console.log('🏆 UNLOCKING ACHIEVEMENT:', id, 'notificationShown was:', state.notificationShown);
@@ -391,6 +414,7 @@ function populateAchievementsModal() {
         holdings: '₿ Crypto Holdings',
         staking: '📦 Staking',
         ascension: '🔄 Ascension',
+        hacking: '🔐 Hacking',
         session: '⚡ Session Challenges'
     };
 

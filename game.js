@@ -50,6 +50,25 @@
     let lastChartUpdateTime = Date.now();
     let chartStartTime = Date.now();
 
+    // Hacking Minigame State
+    let hackingGameActive = false;
+    let hackingGameDifficulty = 'EASY';
+    let hackingVulnerabilitiesToFind = [];
+    let hackingVulnerabilitiesFound = [];
+    let hackingGameStartTime = 0;
+    let hackingGameTimeLimit = 30000; // milliseconds
+    let hackingLivesRemaining = 0;
+    let hackingMaxLives = 0;
+    let speedBoostActive = false;
+    let speedBoostEndTime = 0;
+    let speedBoostMultiplier = 1.0;
+    let hackingGamesPlayed = 0;
+    let hackingGamesWon = 0;
+    let hackingConsecutiveWins = 0;
+    let hackingNextNotificationTime = 0;
+    let hackingTotalRewardsEarned = 0;
+    let hackingCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 }; // Track cooldown end times
+
     // Power system - Rebalanced for strategic gameplay
     let totalPowerAvailable = 0; // Total watts available
     let totalPowerUsed = 0; // Total watts being used
@@ -554,7 +573,18 @@
             // Ascension/Rugpull data
             ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {},
             // Achievements data
-            achievements: (typeof achievementsData !== 'undefined') ? achievementsData.achievements : {}
+            achievements: (typeof achievementsData !== 'undefined') ? achievementsData.achievements : {},
+            // Hacking minigame data
+            hackingData: {
+                gamesPlayed: hackingGamesPlayed,
+                gamesWon: hackingGamesWon,
+                consecutiveWins: hackingConsecutiveWins,
+                totalRewardsEarned: hackingTotalRewardsEarned,
+                speedBoostEndTime: speedBoostActive ? speedBoostEndTime : 0,
+                speedBoostMultiplier: speedBoostActive ? speedBoostMultiplier : 1.0,
+                nextNotificationTime: hackingNextNotificationTime,
+                cooldowns: hackingCooldowns
+            }
         };
 
         try {
@@ -716,6 +746,31 @@ function loadGame() {
         // Load ascension data
         if (state.ascensionData && typeof loadAscensionData === 'function') {
             loadAscensionData(state.ascensionData);
+        }
+
+        // Load hacking minigame data
+        if (state.hackingData) {
+            hackingGamesPlayed = state.hackingData.gamesPlayed || 0;
+            hackingGamesWon = state.hackingData.gamesWon || 0;
+            hackingConsecutiveWins = state.hackingData.consecutiveWins || 0;
+            hackingTotalRewardsEarned = state.hackingData.totalRewardsEarned || 0;
+            hackingNextNotificationTime = state.hackingData.nextNotificationTime || 0;
+
+            // Load cooldowns
+            if (state.hackingData.cooldowns) {
+                hackingCooldowns = state.hackingData.cooldowns;
+            }
+
+            // Check if speed boost is still active
+            const savedBoostEnd = state.hackingData.speedBoostEndTime || 0;
+            if (savedBoostEnd > Date.now()) {
+                speedBoostActive = true;
+                speedBoostEndTime = savedBoostEnd;
+                speedBoostMultiplier = state.hackingData.speedBoostMultiplier || 1.0;
+            } else {
+                speedBoostActive = false;
+                speedBoostMultiplier = 1.0;
+            }
         }
 
         // Calculate total power used
@@ -927,7 +982,18 @@ function loadGame() {
             // Ascension/Rugpull data
             ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {},
             // Achievements data
-            achievements: (typeof achievementsData !== 'undefined') ? achievementsData.achievements : {}
+            achievements: (typeof achievementsData !== 'undefined') ? achievementsData.achievements : {},
+            // Hacking minigame data
+            hackingData: {
+                gamesPlayed: hackingGamesPlayed,
+                gamesWon: hackingGamesWon,
+                consecutiveWins: hackingConsecutiveWins,
+                totalRewardsEarned: hackingTotalRewardsEarned,
+                speedBoostEndTime: speedBoostActive ? speedBoostEndTime : 0,
+                speedBoostMultiplier: speedBoostActive ? speedBoostMultiplier : 1.0,
+                nextNotificationTime: hackingNextNotificationTime,
+                cooldowns: hackingCooldowns
+            }
         };
     }
 
@@ -2036,6 +2102,517 @@ function loadGame() {
         }
     }
 
+    // ============== HACKING MINIGAME FUNCTIONS ==============
+
+    // Difficulty configurations - rewards are USD values, converted to crypto based on current prices
+    const hackingDifficultyConfig = {
+        'EASY': {
+            vulnerabilities: 3,
+            timeLimit: 30000,
+            codeLines: 12,
+            lives: 6,
+            baseUsdValue: 1000,  // $1K base - scales with progression
+            speedBoost: 1.10,
+            boostDuration: 120000, // 2 minutes
+            cooldown: 300000 // 5 minute cooldown
+        },
+        'MEDIUM': {
+            vulnerabilities: 4,
+            timeLimit: 20000,
+            codeLines: 16,
+            lives: 8,
+            baseUsdValue: 5000,  // $5K base - scales with progression
+            speedBoost: 1.25,
+            boostDuration: 120000, // 2 minutes
+            cooldown: 900000 // 15 minute cooldown
+        },
+        'HARD': {
+            vulnerabilities: 5,
+            timeLimit: 12000,
+            codeLines: 18,
+            lives: 10,
+            baseUsdValue: 20000,  // $20K base - scales with progression
+            speedBoost: 1.50,
+            boostDuration: 120000, // 2 minutes
+            cooldown: 1800000 // 30 minute cooldown
+        }
+    };
+
+    // Code templates for hacking minigame
+    const codeTemplates = {
+        'EASY': [
+            `pragma solidity ^0.8.0;\ncontract Vault {\n    mapping(address => uint) balances;\n    \n    function withdraw(uint amount) public {\n        require(balances[msg.sender] > 0);        // [V] Missing amount check\n        balances[msg.sender] -= amount;\n        (bool success, ) = msg.sender.call{value: amount}("");  // [V] Reentrancy risk\n        require(success);\n    }\n    \n    function deposit() external payable {\n        balances[msg.sender] = msg.value;         // [V] Should use +=\n    }\n}`,
+            `contract Token {\n    mapping(address => uint) public balances;\n    \n    function transfer(address to, uint amount) public {\n        balances[msg.sender] -= amount;           // [V] No balance check\n        balances[to] += amount;                    // [V] No overflow check\n    }\n    \n    function mint(uint amount) public {\n        balances[msg.sender] += amount;            // [V] Anyone can mint\n    }\n}`,
+        ],
+        'MEDIUM': [
+            `contract Auction {\n    address public highestBidder;\n    uint public highestBid;\n    \n    function bid() public payable {\n        require(msg.value > highestBid);\n        if (highestBidder != address(0)) {\n            payable(highestBidder).transfer(highestBid);  // [V] DoS if transfer fails\n        }\n        highestBidder = msg.sender;                // [V] State change after external call\n        highestBid = msg.value;                    // [V] State change after external call\n    }\n    \n    function claimPrize() public {\n        require(msg.sender == highestBidder);      // [V] Missing access control\n        payable(msg.sender).transfer(address(this).balance);\n    }\n}`,
+            `contract Lottery {\n    address[] public players;\n    \n    function enter() public payable {\n        require(msg.value == 0.1 ether);           // [V] Fixed price vulnerability\n        players.push(msg.sender);\n    }\n    \n    function random() private view returns (uint) {\n        return uint(keccak256(abi.encodePacked(block.timestamp)));  // [V] Predictable randomness\n    }\n    \n    function pickWinner() public {\n        uint index = random() % players.length;    // [V] No access control\n        payable(players[index]).transfer(address(this).balance);  // [V] Unsafe transfer\n        delete players;                             // [V] Resets without distributing\n    }\n}`,
+        ],
+        'HARD': [
+            `contract Exchange {\n    mapping(address => uint) public ethBalances;\n    mapping(address => uint) public tokenBalances;\n    uint public ethToTokenRate = 100;\n    \n    function depositEth() public payable {\n        ethBalances[msg.sender] += msg.value;      // [V] No overflow check\n    }\n    \n    function swapEthForTokens(uint ethAmount) public {\n        require(ethBalances[msg.sender] >= ethAmount);\n        uint tokens = ethAmount * ethToTokenRate;   // [V] No overflow check\n        ethBalances[msg.sender] -= ethAmount;       // [V] State before external call\n        tokenBalances[msg.sender] += tokens;        // [V] No balance limit\n        (bool success, ) = msg.sender.call{value: ethAmount}("");  // [V] Reentrancy\n        require(success);\n    }\n    \n    function updateRate(uint newRate) public {\n        ethToTokenRate = newRate;                   // [V] No access control\n    }\n}`,
+        ]
+    };
+
+    function generateVulnerableCode(difficulty) {
+        const templates = codeTemplates[difficulty];
+        const selectedTemplate = templates[Math.floor(Math.random() * templates.length)];
+        const lines = selectedTemplate.split('\n');
+
+        // Find vulnerable lines (marked with [V])
+        const vulnerableIndices = [];
+        lines.forEach((line, index) => {
+            if (line.includes('[V]')) {
+                vulnerableIndices.push(index);
+                // Clean the marker from display
+                lines[index] = line.replace('[V]', '').trim();
+            }
+        });
+
+        return { lines, vulnerableIndices };
+    }
+
+    function initHackingMinigame(difficulty) {
+        // Check cooldown
+        const now = Date.now();
+        const cooldownEnd = hackingCooldowns[difficulty] || 0;
+
+        if (now < cooldownEnd) {
+            const remainingSeconds = Math.ceil((cooldownEnd - now) / 1000);
+            alert(`⏱️ ${difficulty} difficulty is on cooldown!\n\nTry again in ${remainingSeconds} seconds.`);
+            return;
+        }
+
+        hackingGameDifficulty = difficulty;
+        hackingGameActive = true;
+        const config = hackingDifficultyConfig[difficulty];
+        hackingGameTimeLimit = config.timeLimit;
+        hackingGameStartTime = Date.now();
+
+        const { lines, vulnerableIndices } = generateVulnerableCode(difficulty);
+        hackingVulnerabilitiesToFind = vulnerableIndices.slice(0, config.vulnerabilities);
+        hackingVulnerabilitiesFound = [];
+
+        // Set lives from config
+        hackingMaxLives = config.lives;
+        hackingLivesRemaining = hackingMaxLives;
+
+        // Hide notification if visible
+        const notification = document.getElementById('hacking-notification');
+        if (notification) notification.style.display = 'none';
+
+        // Show modal
+        const modal = document.getElementById('hacking-modal');
+        if (!modal) return;
+
+        modal.style.display = 'flex';
+
+        // Update modal content
+        document.getElementById('hacking-difficulty-display').textContent = difficulty;
+        document.getElementById('hacking-found-count').textContent = `0/${config.vulnerabilities}`;
+        document.getElementById('hacking-lives-display').textContent = `❤️ ${hackingLivesRemaining}/${hackingMaxLives}`;
+
+        // Display code
+        const codeContainer = document.getElementById('hacking-code-container');
+        codeContainer.innerHTML = '';
+        lines.forEach((line, index) => {
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'hacking-code-line';
+            lineDiv.textContent = `${String(index + 1).padStart(2, ' ')} | ${line}`;
+            lineDiv.setAttribute('data-line-index', index);
+
+            // All lines are clickable (even non-vulnerable ones)
+            lineDiv.style.cursor = 'pointer';
+            lineDiv.onclick = () => checkHackingVulnerability(index);
+
+            codeContainer.appendChild(lineDiv);
+        });
+
+        // Start timer update
+        updateHackingTimer();
+    }
+
+    function checkHackingVulnerability(lineIndex) {
+        if (!hackingGameActive) return;
+        if (hackingVulnerabilitiesFound.includes(lineIndex)) return;
+
+        const lineElement = document.querySelector(`[data-line-index="${lineIndex}"]`);
+
+        if (hackingVulnerabilitiesToFind.includes(lineIndex)) {
+            // Correct vulnerability found
+            hackingVulnerabilitiesFound.push(lineIndex);
+            lineElement.classList.add('vulnerability-found');
+            lineElement.style.background = 'rgba(0, 255, 136, 0.3)';
+            lineElement.style.border = '1px solid #00ff88';
+
+            const config = hackingDifficultyConfig[hackingGameDifficulty];
+            document.getElementById('hacking-found-count').textContent =
+                `${hackingVulnerabilitiesFound.length}/${config.vulnerabilities}`;
+
+            // Check if all found
+            if (hackingVulnerabilitiesFound.length === config.vulnerabilities) {
+                endHackingGame(true);
+            }
+        } else {
+            // Wrong line clicked - lose a life!
+            hackingLivesRemaining--;
+
+            // Show red feedback
+            lineElement.style.background = 'rgba(255, 51, 68, 0.6)';
+            lineElement.style.border = '2px solid #ff3344';
+            setTimeout(() => {
+                lineElement.style.background = '';
+                lineElement.style.border = '';
+            }, 500);
+
+            // Shake the modal!
+            const modal = document.getElementById('hacking-modal');
+            const modalContent = modal.querySelector('div');
+            modalContent.classList.add('modal-shake');
+            setTimeout(() => {
+                modalContent.classList.remove('modal-shake');
+            }, 500);
+
+            // Update lives display
+            document.getElementById('hacking-lives-display').textContent = `❤️ ${hackingLivesRemaining}/${hackingMaxLives}`;
+
+            // Check if game over
+            if (hackingLivesRemaining <= 0) {
+                endHackingGame(false);
+            }
+        }
+    }
+
+    function updateHackingTimer() {
+        if (!hackingGameActive) return;
+
+        const elapsed = Date.now() - hackingGameStartTime;
+        const remaining = Math.max(0, hackingGameTimeLimit - elapsed);
+        const seconds = Math.ceil(remaining / 1000);
+
+        const timerEl = document.getElementById('hacking-timer');
+        if (timerEl) {
+            timerEl.textContent = `${seconds}s`;
+
+            // Change color based on time
+            if (seconds <= 3) {
+                timerEl.style.color = '#ff3344';
+            } else if (seconds <= 5) {
+                timerEl.style.color = '#ff9500';
+            } else {
+                timerEl.style.color = '#00ff88';
+            }
+        }
+
+        if (remaining <= 0) {
+            endHackingGame(false);
+        } else {
+            setTimeout(updateHackingTimer, 100);
+        }
+    }
+
+    function endHackingGame(won) {
+        hackingGameActive = false;
+        hackingGamesPlayed++;
+
+        const modal = document.getElementById('hacking-modal');
+        const config = hackingDifficultyConfig[hackingGameDifficulty];
+
+        // Set cooldown for this difficulty
+        hackingCooldowns[hackingGameDifficulty] = Date.now() + config.cooldown;
+
+        if (won) {
+            hackingGamesWon++;
+            hackingConsecutiveWins++;
+
+            // Calculate multipliers
+            const completionTime = Date.now() - hackingGameStartTime;
+            const timeBonus = Math.max(1, 1.5 - (completionTime / hackingGameTimeLimit));
+            const consecutiveMultiplier = 1 + (Math.min(hackingConsecutiveWins, 5) * 0.1);
+            const finalMultiplier = timeBonus * consecutiveMultiplier;
+
+            // Award rewards and get the amounts
+            const rewards = awardHackingRewards(hackingGameDifficulty, finalMultiplier);
+
+            // Apply speed boost - ADDITIVE stacking
+            if (speedBoostActive) {
+                // Add the boost percentage (e.g., 1.10 - 1 = 0.10, so add 10%)
+                const currentBonus = speedBoostMultiplier - 1;
+                const newBonus = config.speedBoost - 1;
+                speedBoostMultiplier = 1 + currentBonus + newBonus;
+                // Extend the duration (take the longer of current remaining time or new duration)
+                const remainingTime = Math.max(0, speedBoostEndTime - Date.now());
+                speedBoostEndTime = Date.now() + Math.max(remainingTime, config.boostDuration);
+                console.log(`⚡ Speed boost STACKED: +${((speedBoostMultiplier - 1) * 100).toFixed(0)}% for ${Math.ceil((speedBoostEndTime - Date.now())/60000)} minutes`);
+            } else {
+                // New boost
+                speedBoostMultiplier = config.speedBoost;
+                speedBoostEndTime = Date.now() + config.boostDuration;
+                speedBoostActive = true;
+                console.log(`⚡ Speed boost activated: +${((speedBoostMultiplier - 1) * 100).toFixed(0)}% for ${config.boostDuration/60000} minutes`);
+            }
+
+            // Show success message with actual rewards
+            const result = document.getElementById('hacking-result-message');
+            if (result) {
+                // Format crypto amounts
+                const formatCrypto = (amount, decimals = 4) => {
+                    if (amount >= 1) return amount.toFixed(decimals);
+                    return amount.toFixed(8);
+                };
+
+                // Calculate speed boost percentage (subtract 1 and convert to %)
+                const speedBoostPercent = ((speedBoostMultiplier - 1) * 100).toFixed(0);
+                const boostMinutesRemaining = Math.ceil((speedBoostEndTime - Date.now()) / 60000);
+
+                result.innerHTML = `<span style="color: #00ff88; font-size: 1.5rem;">✓ VULNERABILITIES PATCHED!</span><br>
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
+                        <div style="color: #fff; font-size: 0.9rem;">
+                            ₿ ${formatCrypto(rewards.btc)} BTC<br>
+                            Ξ ${formatCrypto(rewards.eth)} ETH<br>
+                            Ð ${formatCrypto(rewards.doge)} DOGE<br>
+                            💵 $${rewards.usd.toFixed(2)}
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; color: #00ff88; font-weight: 700;">
+                        ⚡ Speed Boost: +${speedBoostPercent}% for ${boostMinutesRemaining}m
+                    </div>`;
+            }
+
+            // Check achievements
+            if (typeof checkAchievements === 'function') {
+                checkAchievements();
+            }
+        } else {
+            hackingConsecutiveWins = 0;
+
+            const result = document.getElementById('hacking-result-message');
+            if (result) {
+                result.innerHTML = `<span style="color: #ff3344; font-size: 1.5rem;">✗ TIME EXPIRED</span><br>
+                    <span style="color: #888;">Better luck next time!</span>`;
+            }
+        }
+
+        // Update stats
+        updateHackingStats();
+
+        // Hide code, show result
+        document.getElementById('hacking-code-container').style.display = 'none';
+        document.getElementById('hacking-result-message').style.display = 'block';
+        document.getElementById('hacking-close-btn').style.display = 'block';
+
+        // Schedule next notification
+        scheduleHackingNotification();
+
+        saveGame();
+    }
+
+    function awardHackingRewards(difficulty, multiplier) {
+        const config = hackingDifficultyConfig[difficulty];
+
+        // Get current ascension level
+        const ascensionLevel = (typeof getAscensionLevel === 'function') ? getAscensionLevel() : 0;
+
+        // Define crypto price multiplier ranges per difficulty
+        // EASY: 0.1x - 0.5x of total crypto prices
+        // MEDIUM: 0.5x - 1x of total crypto prices
+        // HARD: 1x - 2x of total crypto prices
+        let minMultiplier, maxMultiplier;
+        if (difficulty === 'HARD') {
+            minMultiplier = 1.0;
+            maxMultiplier = 2.0;
+        } else if (difficulty === 'MEDIUM') {
+            minMultiplier = 0.5;
+            maxMultiplier = 1.0;
+        } else { // EASY
+            minMultiplier = 0.1;
+            maxMultiplier = 0.5;
+        }
+
+        // Random multiplier within the range
+        const cryptoPriceMultiplier = minMultiplier + (Math.random() * (maxMultiplier - minMultiplier));
+
+        // Calculate total crypto prices (BTC + ETH + DOGE)
+        const totalCryptoPrices = btcPrice + ethPrice + dogePrice;
+
+        // Calculate base USD value from crypto prices
+        let baseUsdValue = totalCryptoPrices * cryptoPriceMultiplier;
+
+        // Time bonus and consecutive wins bonus (already in multiplier parameter)
+        const totalMultiplier = multiplier;
+
+        // POWERFUL Ascension multiplier: 10x per ascension level
+        // Ascension 1 = 10x, Ascension 2 = 20x, Ascension 5 = 50x
+        const ascensionMultiplier = ascensionLevel > 0 ? (ascensionLevel * 10) : 1;
+
+        // Calculate total USD value after all multipliers
+        const totalUsdValue = baseUsdValue * totalMultiplier * ascensionMultiplier;
+
+        // Award BTC (40% of total USD value, converted to BTC at current price)
+        const btcUsdValue = totalUsdValue * 0.40;
+        const btcReward = btcUsdValue / btcPrice;
+        btcBalance += btcReward;
+        btcLifetime += btcReward;
+
+        // Award ETH (35% of total USD value, converted to ETH at current price)
+        const ethUsdValue = totalUsdValue * 0.35;
+        const ethReward = ethUsdValue / ethPrice;
+        ethBalance += ethReward;
+        ethLifetime += ethReward;
+
+        // Award DOGE (20% of total USD value, converted to DOGE at current price)
+        const dogeUsdValue = totalUsdValue * 0.20;
+        const dogeReward = dogeUsdValue / dogePrice;
+        dogeBalance += dogeReward;
+        dogeLifetime += dogeReward;
+
+        // Award USD (5% as direct cash)
+        const usdReward = totalUsdValue * 0.05;
+        dollarBalance += usdReward;
+
+        // Track total rewards
+        hackingTotalRewardsEarned += totalUsdValue;
+        lifetimeEarnings += totalUsdValue;
+        sessionEarnings += totalUsdValue;
+
+        // Return the rewards for display
+        return {
+            btc: btcReward,
+            eth: ethReward,
+            doge: dogeReward,
+            usd: usdReward,
+            totalUsd: totalUsdValue
+        };
+    }
+
+    function getHackingSpeedBoost() {
+        if (!speedBoostActive) return 1.0;
+
+        const now = Date.now();
+        if (now >= speedBoostEndTime) {
+            speedBoostActive = false;
+            speedBoostMultiplier = 1.0;
+            return 1.0;
+        }
+
+        return speedBoostMultiplier;
+    }
+
+    function scheduleHackingNotification() {
+        // Schedule next notification in 30-60 minutes
+        const delay = (30 + Math.random() * 30) * 60 * 1000;
+        hackingNextNotificationTime = Date.now() + delay;
+    }
+
+    function displayHackingNotification() {
+        const notification = document.getElementById('hacking-notification');
+        if (!notification) return;
+
+        notification.style.display = 'flex';
+    }
+
+    function closeHackingModal() {
+        const modal = document.getElementById('hacking-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+
+        // Reset modal state
+        document.getElementById('hacking-code-container').style.display = 'block';
+        document.getElementById('hacking-result-message').style.display = 'none';
+        document.getElementById('hacking-close-btn').style.display = 'none';
+    }
+
+    function dismissHackingNotification() {
+        const notification = document.getElementById('hacking-notification');
+        if (notification) {
+            notification.style.display = 'none';
+        }
+
+        // Schedule next notification
+        scheduleHackingNotification();
+    }
+
+    function updateHackingStats() {
+        const statsContainer = document.getElementById('hacking-stats-content');
+        if (!statsContainer) return;
+
+        const winRate = hackingGamesPlayed > 0 ? ((hackingGamesWon / hackingGamesPlayed) * 100).toFixed(1) : '0.0';
+
+        // Abbreviate total rewards
+        let rewardsDisplay = '';
+        if (hackingTotalRewardsEarned >= 1e12) {
+            rewardsDisplay = '$' + (hackingTotalRewardsEarned / 1e12).toFixed(2) + 'T';
+        } else if (hackingTotalRewardsEarned >= 1e9) {
+            rewardsDisplay = '$' + (hackingTotalRewardsEarned / 1e9).toFixed(2) + 'B';
+        } else if (hackingTotalRewardsEarned >= 1e6) {
+            rewardsDisplay = '$' + (hackingTotalRewardsEarned / 1e6).toFixed(2) + 'M';
+        } else if (hackingTotalRewardsEarned >= 1e3) {
+            rewardsDisplay = '$' + (hackingTotalRewardsEarned / 1e3).toFixed(2) + 'K';
+        } else {
+            rewardsDisplay = '$' + hackingTotalRewardsEarned.toFixed(2);
+        }
+
+        statsContainer.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <span style="color: #888; font-size: 0.8rem;">Games Played:</span>
+                <span style="color: #fff; font-weight: 700; margin-left: 10px;">${hackingGamesPlayed}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span style="color: #888; font-size: 0.8rem;">Win Rate:</span>
+                <span style="color: #00ff88; font-weight: 700; margin-left: 10px;">${winRate}%</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span style="color: #888; font-size: 0.8rem;">Consecutive Wins:</span>
+                <span style="color: #f7931a; font-weight: 700; margin-left: 10px;">${hackingConsecutiveWins}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span style="color: #888; font-size: 0.8rem;">Total Rewards:</span>
+                <span style="color: #fff; font-weight: 700; margin-left: 10px;">${rewardsDisplay}</span>
+            </div>
+            ${speedBoostActive ? `
+            <div style="margin-top: 15px; padding: 10px; background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 6px;">
+                <div style="color: #00ff88; font-weight: 700; margin-bottom: 5px;">⚡ ACTIVE SPEED BOOST</div>
+                <div style="color: #fff; font-size: 0.9rem;">+${((speedBoostMultiplier - 1) * 100).toFixed(0)}% Mining Speed</div>
+                <div style="color: #888; font-size: 0.8rem;">${Math.ceil((speedBoostEndTime - Date.now()) / 60000)} minutes remaining</div>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    function updateHackingCooldownDisplays() {
+        const now = Date.now();
+
+        // Update each difficulty button's cooldown overlay
+        ['EASY', 'MEDIUM', 'HARD'].forEach(difficulty => {
+            const cooldownEnd = hackingCooldowns[difficulty] || 0;
+            const cooldownElement = document.getElementById(`hacking-${difficulty.toLowerCase()}-cooldown`);
+            const buttonElement = document.getElementById(`hacking-${difficulty.toLowerCase()}-btn`);
+
+            if (!cooldownElement || !buttonElement) return;
+
+            if (now < cooldownEnd) {
+                // Cooldown active - show overlay
+                const remainingMs = cooldownEnd - now;
+                const remainingSeconds = Math.ceil(remainingMs / 1000);
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+
+                cooldownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                cooldownElement.style.display = 'flex';
+                buttonElement.style.cursor = 'not-allowed';
+                buttonElement.style.opacity = '0.6';
+            } else {
+                // Cooldown finished - hide overlay
+                cooldownElement.style.display = 'none';
+                buttonElement.style.cursor = 'pointer';
+                buttonElement.style.opacity = '1';
+            }
+        });
+    }
+
+    // ============== END HACKING MINIGAME FUNCTIONS ==============
+
     function updatePowerDisplay() {
         const powerUsedEl = document.getElementById('power-used');
         if (powerUsedEl) {
@@ -2847,23 +3424,95 @@ function buyDogeBoost(i) {
             }
         };
 
+        // Get mining bonuses for display
+        const miningBonus = (typeof getSkillBonus === 'function') ? (1 + getSkillBonus('mining_speed')) : 1;
+        const hackingBoost = getHackingSpeedBoost();
+        const totalMiningMultiplier = miningBonus * hackingBoost;
+        const isSpeedBoosted = hackingBoost > 1.0;
+
         // Update individual hashrate displays (old location - keep for backwards compatibility)
         const btcEl = document.getElementById('yield-btc');
         const ethEl = document.getElementById('yield-eth');
         const dogeEl = document.getElementById('yield-doge');
 
-        if (btcEl) btcEl.innerText = formatHashrate(btcPerSec);
-        if (ethEl) ethEl.innerText = formatHashrate(ethPerSec);
-        if (dogeEl) dogeEl.innerText = formatHashrate(dogePerSec);
+        if (btcEl) {
+            btcEl.innerText = formatHashrate(btcPerSec * totalMiningMultiplier);
+            if (isSpeedBoosted) {
+                btcEl.style.color = '#00ff88';
+                btcEl.style.textShadow = '0 0 10px #00ff88, 0 0 20px #00ff88';
+                btcEl.style.fontWeight = 'bold';
+            } else {
+                btcEl.style.color = '';
+                btcEl.style.textShadow = '';
+                btcEl.style.fontWeight = '';
+            }
+        }
+        if (ethEl) {
+            ethEl.innerText = formatHashrate(ethPerSec * totalMiningMultiplier);
+            if (isSpeedBoosted) {
+                ethEl.style.color = '#00ff88';
+                ethEl.style.textShadow = '0 0 10px #00ff88, 0 0 20px #00ff88';
+                ethEl.style.fontWeight = 'bold';
+            } else {
+                ethEl.style.color = '';
+                ethEl.style.textShadow = '';
+                ethEl.style.fontWeight = '';
+            }
+        }
+        if (dogeEl) {
+            dogeEl.innerText = formatHashrate(dogePerSec * totalMiningMultiplier);
+            if (isSpeedBoosted) {
+                dogeEl.style.color = '#00ff88';
+                dogeEl.style.textShadow = '0 0 10px #00ff88, 0 0 20px #00ff88';
+                dogeEl.style.fontWeight = 'bold';
+            } else {
+                dogeEl.style.color = '';
+                dogeEl.style.textShadow = '';
+                dogeEl.style.fontWeight = '';
+            }
+        }
 
         // Update hashrate displays in new location
         const btcDisplayEl = document.getElementById('yield-btc-display');
         const ethDisplayEl = document.getElementById('yield-eth-display');
         const dogeDisplayEl = document.getElementById('yield-doge-display');
 
-        if (btcDisplayEl) btcDisplayEl.innerText = formatHashrate(btcPerSec);
-        if (ethDisplayEl) ethDisplayEl.innerText = formatHashrate(ethPerSec);
-        if (dogeDisplayEl) dogeDisplayEl.innerText = formatHashrate(dogePerSec);
+        if (btcDisplayEl) {
+            btcDisplayEl.innerText = formatHashrate(btcPerSec * totalMiningMultiplier);
+            if (isSpeedBoosted) {
+                btcDisplayEl.style.color = '#00ff88';
+                btcDisplayEl.style.textShadow = '0 0 10px #00ff88, 0 0 20px #00ff88';
+                btcDisplayEl.style.fontWeight = 'bold';
+            } else {
+                btcDisplayEl.style.color = '';
+                btcDisplayEl.style.textShadow = '';
+                btcDisplayEl.style.fontWeight = '';
+            }
+        }
+        if (ethDisplayEl) {
+            ethDisplayEl.innerText = formatHashrate(ethPerSec * totalMiningMultiplier);
+            if (isSpeedBoosted) {
+                ethDisplayEl.style.color = '#00ff88';
+                ethDisplayEl.style.textShadow = '0 0 10px #00ff88, 0 0 20px #00ff88';
+                ethDisplayEl.style.fontWeight = 'bold';
+            } else {
+                ethDisplayEl.style.color = '';
+                ethDisplayEl.style.textShadow = '';
+                ethDisplayEl.style.fontWeight = '';
+            }
+        }
+        if (dogeDisplayEl) {
+            dogeDisplayEl.innerText = formatHashrate(dogePerSec * totalMiningMultiplier);
+            if (isSpeedBoosted) {
+                dogeDisplayEl.style.color = '#00ff88';
+                dogeDisplayEl.style.textShadow = '0 0 10px #00ff88, 0 0 20px #00ff88';
+                dogeDisplayEl.style.fontWeight = 'bold';
+            } else {
+                dogeDisplayEl.style.color = '';
+                dogeDisplayEl.style.textShadow = '';
+                dogeDisplayEl.style.fontWeight = '';
+            }
+        }
 
         // Update prices
         document.getElementById('btc-price').innerText = "$" + formatCryptoPrice(btcPrice);
@@ -3535,9 +4184,12 @@ dogeUpgrades.forEach(u => {
         // Get skill tree mining bonus
         const miningBonus = (typeof getSkillBonus === 'function') ? (1 + getSkillBonus('mining_speed')) : 1;
 
+        // Get hacking speed boost
+        const hackingBoost = getHackingSpeedBoost();
+
         // BTC mining gains
         if (btcPerSec > 0) {
-            let gain = btcPerSec * deltaTime * miningBonus;
+            let gain = btcPerSec * deltaTime * miningBonus * hackingBoost;
             let effectivePrice = getEffectiveCryptoPrice(btcPrice);
             let usdValue = gain * effectivePrice;
 
@@ -3556,7 +4208,7 @@ dogeUpgrades.forEach(u => {
 
         // ETH mining gains
         if (ethPerSec > 0) {
-            let gain = ethPerSec * deltaTime * miningBonus;
+            let gain = ethPerSec * deltaTime * miningBonus * hackingBoost;
             let effectivePrice = getEffectiveCryptoPrice(ethPrice);
             let usdValue = gain * effectivePrice;
 
@@ -3575,7 +4227,7 @@ dogeUpgrades.forEach(u => {
 
         // DOGE mining gains
         if (dogePerSec > 0) {
-            let gain = dogePerSec * deltaTime * miningBonus;
+            let gain = dogePerSec * deltaTime * miningBonus * hackingBoost;
             let effectivePrice = getEffectiveCryptoPrice(dogePrice);
             let usdValue = gain * effectivePrice;
 
@@ -3645,6 +4297,15 @@ dogeUpgrades.forEach(u => {
             initTutorial();
             console.log('🎓 Tutorial system initialized');
         }
+
+        // Schedule first hacking notification if not already scheduled
+        if (hackingNextNotificationTime === 0) {
+            scheduleHackingNotification();
+            console.log('⚡ Hacking minigame notification scheduled');
+        }
+
+        // Update hacking stats on page load
+        updateHackingStats();
 
         // Show instructions modal if not dismissed and player hasn't ascended yet
         // BUT: don't show if tutorial is active for new players or if tutorial was completed
@@ -3907,6 +4568,18 @@ dogeUpgrades.forEach(u => {
             if (typeof checkTutorialProgress === 'function') {
                 checkTutorialProgress();
             }
+
+            // Check hacking notification timing
+            if (hackingNextNotificationTime > 0 && Date.now() >= hackingNextNotificationTime) {
+                hackingNextNotificationTime = 0; // Reset
+                displayHackingNotification();
+            }
+
+            // Update hacking stats if tab is visible
+            if (document.getElementById('hacking-tab') && document.getElementById('hacking-tab').classList.contains('active')) {
+                updateHackingStats();
+                updateHackingCooldownDisplays();
+            }
         }, 500);
 
         // Start price swings: separate timing for each crypto
@@ -4049,6 +4722,11 @@ dogeUpgrades.forEach(u => {
     window.exportSaveToFile = exportSaveToFile;
     window.importSaveFromText = importSaveFromText;
     window.importSaveFromFile = importSaveFromFile;
+
+    // Hacking minigame functions
+    window.initHackingMinigame = initHackingMinigame;
+    window.closeHackingModal = closeHackingModal;
+    window.dismissHackingNotification = dismissHackingNotification;
 
     // Test helper - set lifetime earnings for testing rugpull feature
     window.setTestEarnings = function(amount) {
