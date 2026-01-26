@@ -98,6 +98,7 @@
             .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-bottom: 35px !important; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
+            .desktop-button-layout { overflow: hidden !important; }
             .upgrade-list { overflow-y: auto !important; }
             .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; color: #555; }
             .nw-amount { font-size: 1.6rem; margin: 2px 0; }
@@ -330,6 +331,33 @@
 
         .tab-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
         .tab-btn { flex: 1; padding: 8px; background: #333; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
+
+        /* Only apply hover glow on devices that support true hover (desktop/mouse) */
+        @media (hover: hover) {
+            .tab-btn:hover:not(:disabled) { box-shadow: 0 0 20px rgba(247, 147, 26, 0.5); filter: brightness(1.1); }
+            #btc-tab-btn:hover { box-shadow: 0 0 25px rgba(247, 147, 26, 0.6) !important; }
+            #eth-tab-btn:hover { box-shadow: 0 0 25px rgba(98, 126, 234, 0.6) !important; }
+            #doge-tab-btn:hover { box-shadow: 0 0 25px rgba(194, 166, 51, 0.6) !important; }
+            #crypto-exchange-btn:hover { box-shadow: 0 0 25px rgba(0, 255, 136, 0.6) !important; }
+            #hacking-tab-btn:hover { box-shadow: 0 0 25px rgba(255, 0, 255, 0.6) !important; }
+            #power-upgrade-btn:hover { box-shadow: 0 0 25px rgba(0, 255, 136, 0.6) !important; }
+            #autoclicker-btn:hover { box-shadow: 0 0 25px rgba(255, 255, 255, 0.6) !important; }
+        }
+
+        /* Remove any persistent hover on touch devices */
+        @media (hover: none) {
+            .tab-btn:focus, .tab-btn { box-shadow: none !important; outline: none !important; }
+            #btc-tab-btn:focus, #eth-tab-btn:focus, #doge-tab-btn:focus,
+            #crypto-exchange-btn:focus, #hacking-tab-btn:focus,
+            #power-upgrade-btn:focus, #autoclicker-btn:focus,
+            #btc-tab-btn, #eth-tab-btn, #doge-tab-btn,
+            #crypto-exchange-btn, #hacking-tab-btn,
+            #power-upgrade-btn, #autoclicker-btn {
+                box-shadow: none !important; outline: none !important;
+            }
+            .u-item { box-shadow: none !important; }
+        }
+
         .tab-btn.active { background: transparent; border-width: 2px; }
 
         .qty-toggle { flex: 1; padding: 5px; background: #1a1a1a; color: #666; border: 2px solid #333; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 0.7rem; transition: 0.2s; }
@@ -356,10 +384,17 @@
             transition: all 0.2s ease;
         }
 
-        .u-item:hover:not(:disabled) {
-            border-color: var(--btc) !important;
-            box-shadow: 0 0 15px rgba(247, 147, 26, 0.4) !important;
-            transition: box-shadow 0.2s ease;
+        @media (hover: hover) {
+            .u-item:hover:not(:disabled) {
+                border-color: var(--btc) !important;
+                transition: box-shadow 0.2s ease;
+            }
+        }
+
+        @media (hover: none) {
+            .u-item {
+                border-color: #252525 !important;
+            }
         }
 
         .mine-btn:hover {

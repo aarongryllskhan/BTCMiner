@@ -1923,16 +1923,23 @@ function loadGame() {
 
         const tabElement = document.getElementById(tab + '-tab');
         tabElement.classList.add('active');
-        event.target.classList.add('active');
+
+        // Add active class to the button that was clicked
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
 
         // Reset purchase quantity to 1x when switching tabs
         setBuyQuantity(1);
 
-        // Scroll to the tab content on mobile
+        // Scroll buttons to the top of the page
         if (window.innerWidth <= 768) {
             setTimeout(() => {
-                tabElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+                const buttonsContainer = document.querySelector('.tab-buttons');
+                if (buttonsContainer) {
+                    buttonsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 50);
         }
     }
 
@@ -3623,7 +3630,7 @@ function buyDogeBoost(i) {
                 mediumBtn.style.cursor = 'pointer';
                 mediumBtn.innerHTML = `<div style="margin-bottom: 5px;">MEDIUM</div>
                     <div style="font-size: 0.7rem; font-weight: 400;">4 bugs | 20s | 8 lives</div>
-                    <div style="font-size: 0.65rem; margin-top: 5px;">+25% speed | 2m</div>`;
+                    <div style="font-size: 0.65rem; margin-top: 5px;">+25% speed for 2min</div>`;
             }
         }
 
@@ -3639,7 +3646,7 @@ function buyDogeBoost(i) {
                 hardBtn.style.cursor = 'pointer';
                 hardBtn.innerHTML = `<div style="margin-bottom: 5px;">HARD</div>
                     <div style="font-size: 0.7rem; font-weight: 400;">5 bugs | 12s | 10 lives</div>
-                    <div style="font-size: 0.65rem; margin-top: 5px;">+50% speed | 2m</div>`;
+                    <div style="font-size: 0.65rem; margin-top: 5px;">+50% speed for 2min</div>`;
             }
         }
 
@@ -4677,7 +4684,10 @@ dogeUpgrades.forEach(u => {
             // Check hacking notification timing
             if (hackingNextNotificationTime > 0 && Date.now() >= hackingNextNotificationTime) {
                 hackingNextNotificationTime = 0; // Reset
-                displayHackingNotification();
+                // Only display notification if lifetime earnings >= $10,000
+                if (lifetimeEarnings >= 10000) {
+                    displayHackingNotification();
+                }
             }
 
             // Update hacking stats if tab is visible
@@ -4761,6 +4771,7 @@ dogeUpgrades.forEach(u => {
             console.error('Save failed on freeze:', err);
         }
     });
+
 
     // Combined age and terms modal handling
     function acceptAgeAndTerms() {
