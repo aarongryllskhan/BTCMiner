@@ -208,12 +208,12 @@ function updateStakingUI() {
     const btcStakedEl = document.getElementById('btc-staked-amount');
     const btcAprEl = document.getElementById('btc-apr-display');
     if (btcStakedEl) {
-        btcStakedEl.textContent = stakedBTC.toFixed(8);
+        btcStakedEl.textContent = (typeof formatCryptoYield === 'function') ? formatCryptoYield(stakedBTC) : stakedBTC.toFixed(8);
     }
     if (btcAprEl && stakedBTC > 0) {
         const btcEarningsPerInterval = stakedBTC * APR_RATE * btcPrice;
         const btcEarningsPerHour = btcEarningsPerInterval * (3600 / 2); // 1800 intervals per hour
-        btcAprEl.textContent = `$${btcEarningsPerHour.toFixed(2)}/hr`;
+        btcAprEl.textContent = `$${(typeof formatNumberForDisplay === 'function') ? formatNumberForDisplay(btcEarningsPerHour) : btcEarningsPerHour.toFixed(2)}/hr`;
     } else if (btcAprEl) {
         btcAprEl.textContent = '$0.00/hr';
     }
@@ -222,12 +222,12 @@ function updateStakingUI() {
     const ethStakedEl = document.getElementById('eth-staked-amount');
     const ethAprEl = document.getElementById('eth-apr-display');
     if (ethStakedEl) {
-        ethStakedEl.textContent = stakedETH.toFixed(8);
+        ethStakedEl.textContent = (typeof formatCryptoYield === 'function') ? formatCryptoYield(stakedETH) : stakedETH.toFixed(8);
     }
     if (ethAprEl && stakedETH > 0) {
         const ethEarningsPerInterval = stakedETH * APR_RATE * ethPrice;
         const ethEarningsPerHour = ethEarningsPerInterval * (3600 / 2);
-        ethAprEl.textContent = `$${ethEarningsPerHour.toFixed(2)}/hr`;
+        ethAprEl.textContent = `$${(typeof formatNumberForDisplay === 'function') ? formatNumberForDisplay(ethEarningsPerHour) : ethEarningsPerHour.toFixed(2)}/hr`;
     } else if (ethAprEl) {
         ethAprEl.textContent = '$0.00/hr';
     }
@@ -236,12 +236,12 @@ function updateStakingUI() {
     const dogeStakedEl = document.getElementById('doge-staked-amount');
     const dogeAprEl = document.getElementById('doge-apr-display');
     if (dogeStakedEl) {
-        dogeStakedEl.textContent = stakedDOGE.toFixed(2);
+        dogeStakedEl.textContent = (typeof formatCryptoYield === 'function') ? formatCryptoYield(stakedDOGE) : stakedDOGE.toFixed(2);
     }
     if (dogeAprEl && stakedDOGE > 0) {
         const dogeEarningsPerInterval = stakedDOGE * APR_RATE * dogePrice;
         const dogeEarningsPerHour = dogeEarningsPerInterval * (3600 / 2);
-        dogeAprEl.textContent = `$${dogeEarningsPerHour.toFixed(2)}/hr`;
+        dogeAprEl.textContent = `$${(typeof formatNumberForDisplay === 'function') ? formatNumberForDisplay(dogeEarningsPerHour) : dogeEarningsPerHour.toFixed(2)}/hr`;
     } else if (dogeAprEl) {
         dogeAprEl.textContent = '$0.00/hr';
     }
