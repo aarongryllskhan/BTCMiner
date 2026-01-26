@@ -254,13 +254,13 @@
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
-            <button class="mine-btn" onclick="manualHash()" style="position: relative; z-index: 100;">MANUAL BTC HASH<br>
+            <button id="manual-hash-btc-btn" class="mine-btn" onclick="trackManualHashClick(); manualHash()" style="position: relative; z-index: 100;">MANUAL BTC HASH<br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
-            <button class="mine-btn" style="background: #627eea; padding: 8px;" onclick="manualEthHash()">MANUAL ETH HASH<br>
+            <button id="manual-hash-eth-btn" class="mine-btn" style="background: #627eea; padding: 8px;" onclick="trackManualHashClick(); manualEthHash()">MANUAL ETH HASH<br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00007143 Ξ</span>
             </button>
-            <button class="mine-btn" style="background: #c2a633; padding: 8px;" onclick="manualDogeHash()">MANUAL DOGE HASH<br>
+            <button id="manual-hash-doge-btn" class="mine-btn" style="background: #c2a633; padding: 8px;" onclick="trackManualHashClick(); manualDogeHash()">MANUAL DOGE HASH<br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+1.00000000 Ð</span>
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 8px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-size: 0.75rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
@@ -275,7 +275,7 @@
                             <div id="power-bar-fill" style="height: 100%; background: #00ff88; border-radius: 3px; width: 0%;"></div>
                         </div>
                     </div>
-                    <button class="tab-btn" onclick="switchTab('power')" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">UPGRADE POWER SUPPLY</button>
+                    <button id="power-upgrade-btn" class="tab-btn" onclick="trackPowerUpgradeClick(); switchTab('power')" style="border-color: #00ff88; color: #00ff88; padding: 6px 12px; white-space: nowrap;">UPGRADE POWER SUPPLY</button>
                 </div>
             </div>
 
@@ -294,12 +294,12 @@
 
             <!-- Tab Buttons -->
             <div class="tab-buttons" style="margin-bottom: 6px;">
-                <button class="tab-btn active" onclick="switchTab('btc-mining')" style="border-color: #f7931a; color: #f7931a;">BTC</button>
+                <button id="btc-tab-btn" class="tab-btn active" onclick="trackBTCTabClick(); switchTab('btc-mining')" style="border-color: #f7931a; color: #f7931a;">BTC</button>
                 <button class="tab-btn" onclick="switchTab('eth-mining')" style="border-color: #627eea; color: #627eea;">ETH</button>
                 <button class="tab-btn" onclick="switchTab('doge-mining')" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
             </div>
             <div class="tab-buttons">
-                <button class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
+                <button id="crypto-exchange-btn" class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
             </div>
 
             <!-- BTC Mining Tab -->
@@ -1120,6 +1120,9 @@
 </script>
 
 <!-- Load main game -->
+<!-- Load tutorial system before game.js so tutorial is available when game initializes -->
+<script src="tutorial.js?v=1.1.0"></script>
+
 <script src="game.js?v=1.1.0"></script>
 
 <!-- Load staking system after main game variables are defined -->

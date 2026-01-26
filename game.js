@@ -1884,6 +1884,10 @@ function loadGame() {
         }
         btcBalance -= amount;
         dollarBalance += amount * btcPrice;
+        // Track for tutorial
+        if (typeof tutorialData !== 'undefined') {
+            tutorialData.cryptoSoldOnce = true;
+        }
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -1895,6 +1899,10 @@ function loadGame() {
         const saleValue = btcBalance * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
         btcBalance = 0;
+        // Track for tutorial
+        if (typeof tutorialData !== 'undefined') {
+            tutorialData.cryptoSoldOnce = true;
+        }
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -1909,6 +1917,10 @@ function loadGame() {
         const effectivePrice = getEffectiveCryptoPrice(ethPrice);
         const saleValue = amount * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
+        // Track for tutorial
+        if (typeof tutorialData !== 'undefined') {
+            tutorialData.cryptoSoldOnce = true;
+        }
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -1920,6 +1932,10 @@ function loadGame() {
         const saleValue = ethBalance * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
         ethBalance = 0;
+        // Track for tutorial
+        if (typeof tutorialData !== 'undefined') {
+            tutorialData.cryptoSoldOnce = true;
+        }
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -1935,6 +1951,10 @@ function loadGame() {
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
         const saleValue = amount * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
+        // Track for tutorial
+        if (typeof tutorialData !== 'undefined') {
+            tutorialData.cryptoSoldOnce = true;
+        }
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -1945,6 +1965,10 @@ function loadGame() {
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
         dollarBalance += dogeBalance * effectivePrice;
         dogeBalance = 0;
+        // Track for tutorial
+        if (typeof tutorialData !== 'undefined') {
+            tutorialData.cryptoSoldOnce = true;
+        }
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -2002,6 +2026,11 @@ function loadGame() {
 
             // Update price with 1.2x multiplier
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.2, u.level));
+
+            // Track Basic Power Strip purchase for tutorial
+            if (i === 0 && typeof trackPowerStripPurchase === 'function') {
+                trackPowerStripPurchase();
+            }
 
             updateUI();
             saveGame();
@@ -2330,6 +2359,12 @@ function buyLevelMultiple(i, quantity) {
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         }
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
+
+        // Track USB Miner purchase for tutorial
+        if (u.id === 1 && typeof trackUSBMinerPurchase === 'function') {
+            trackUSBMinerPurchase();
+        }
+
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -3539,8 +3574,19 @@ dogeUpgrades.forEach(u => {
         initStaking();
         updateStakingUI();
 
+        // Initialize tutorial for new players
+        if (typeof initTutorial === 'function') {
+            initTutorial();
+            console.log('🎓 Tutorial system initialized');
+        }
+
         // Show instructions modal if not dismissed and player hasn't ascended yet
-        if (localStorage.getItem('instructionsDismissed') !== 'true') {
+        // BUT: don't show if tutorial is active for new players or if tutorial was completed
+        const tutorialCompleted = localStorage.getItem('tutorialCompleted') === 'true';
+        const isNewPlayer = !localStorage.getItem('gameStarted');
+        const isTutorialActive = typeof tutorialData !== 'undefined' && !tutorialData.completed;
+
+        if (!isNewPlayer && !isTutorialActive && !tutorialCompleted && localStorage.getItem('instructionsDismissed') !== 'true') {
             const hasAscended = typeof ascensionLevel !== 'undefined' && ascensionLevel > 0;
             if (!hasAscended) {
                 const instructionsEl = document.getElementById('game-instructions');
@@ -3573,14 +3619,14 @@ dogeUpgrades.forEach(u => {
                 // Show backup reminder after offline earnings modal
                 setTimeout(() => {
                     showBackupReminder();
-                }, 36000);
+                }, 120000);
             }, 500);
         } else {
             console.log('✗ No offline earnings data - modal will not show');
             // Show backup reminder anyway on every load
             setTimeout(() => {
                 showBackupReminder();
-            }, 30000);
+            }, 120000);
         }
 
         const canvasElement = document.getElementById('nwChart');
@@ -3789,6 +3835,13 @@ dogeUpgrades.forEach(u => {
 
         // Auto-save every 1.5 seconds
         setInterval(saveGame, 1500);
+
+        // Check tutorial progress every 500ms
+        setInterval(() => {
+            if (typeof checkTutorialProgress === 'function') {
+                checkTutorialProgress();
+            }
+        }, 500);
 
         // Start price swings: separate timing for each crypto
         // Only start if not already running (prevents multiple loops on refresh)
