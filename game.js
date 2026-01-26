@@ -86,8 +86,10 @@
     let whackGameGamesPlayed = 0;
     let whackGameGamesWon = 0;
     let whackGameTotalRewardsEarned = 0;
+    let whackLastRewards = { btc: 0, eth: 0, doge: 0, usd: 0, totalUsd: 0 }; // Last game rewards
     let whackCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 }; // Track cooldown end times
     let whackActiveBlock = null; // Currently active block ID
+    let whackActiveBlocks = new Set(); // Track all currently active block IDs
     let whackSpawnInterval = null; // Timer for spawning blocks
     let whackGameInterval = null; // Main game loop timer
 
@@ -2198,28 +2200,28 @@ function loadGame() {
             vulnerabilities: 3,
             timeLimit: 30000,
             codeLines: 12,
-            lives: 6,
-            baseUsdValue: 1000,  // $1K base - scales with progression
+            lives: 8,
+            baseUsdValue: 100,  // $100 base - scales with progression
             speedBoost: 1.10,
             boostDuration: 120000, // 2 minutes
             cooldown: 300000 // 5 minute cooldown
         },
         'MEDIUM': {
-            vulnerabilities: 4,
-            timeLimit: 20000,
+            vulnerabilities: 5,
+            timeLimit: 19000,
             codeLines: 16,
-            lives: 8,
-            baseUsdValue: 5000,  // $5K base - scales with progression
+            lives: 11,
+            baseUsdValue: 1000,  // $1K base - scales with progression
             speedBoost: 1.25,
             boostDuration: 120000, // 2 minutes
             cooldown: 900000 // 15 minute cooldown
         },
         'HARD': {
             vulnerabilities: 5,
-            timeLimit: 12000,
+            timeLimit: 13000,
             codeLines: 18,
-            lives: 10,
-            baseUsdValue: 20000,  // $20K base - scales with progression
+            lives: 13,
+            baseUsdValue: 5000,  // $5K base - scales with progression
             speedBoost: 1.50,
             boostDuration: 120000, // 2 minutes
             cooldown: 1800000 // 30 minute cooldown
@@ -2244,27 +2246,30 @@ function loadGame() {
     // Whack-A-Block Minigame Configuration
     const whackDifficultyConfig = {
         'EASY': {
-            timeLimit: 30000,
-            lives: 5,
-            spawnRate: 1200, // milliseconds between block spawns
-            blockVisibility: 1200, // milliseconds block stays visible
-            baseUsdValue: 500,  // $500 base - scales with progression
+            timeLimit: 15000,
+            lives: 14,
+            spawnRate: 460, // milliseconds between block spawns (very slightly faster)
+            blockVisibility: 770, // milliseconds block stays visible (very slightly shorter)
+            simultaneousBlocks: 2, // number of blocks visible at once
+            baseUsdValue: 50,  // $50 base - scales with progression
             cooldown: 180000 // 3 minute cooldown
         },
         'MEDIUM': {
-            timeLimit: 30000,
-            lives: 4,
-            spawnRate: 700, // milliseconds between block spawns
-            blockVisibility: 800, // milliseconds block stays visible
-            baseUsdValue: 2000,  // $2K base - scales with progression
+            timeLimit: 15000,
+            lives: 18,
+            spawnRate: 350, // milliseconds between block spawns (slightly slower)
+            blockVisibility: 650, // milliseconds block stays visible (longer)
+            simultaneousBlocks: 3, // number of blocks visible at once (reduced from 4)
+            baseUsdValue: 500,  // $500 base - scales with progression
             cooldown: 600000 // 10 minute cooldown
         },
         'HARD': {
-            timeLimit: 30000,
-            lives: 3,
-            spawnRate: 400, // milliseconds between block spawns
-            blockVisibility: 500, // milliseconds block stays visible
-            baseUsdValue: 5000,  // $5K base - scales with progression
+            timeLimit: 15000,
+            lives: 22,
+            spawnRate: 350, // milliseconds between block spawns (slightly slower than before)
+            blockVisibility: 650, // milliseconds block stays visible (longer than before)
+            simultaneousBlocks: 3, // number of blocks visible at once (reduced from 4)
+            baseUsdValue: 2000,  // $2K base - scales with progression
             cooldown: 1200000 // 20 minute cooldown
         }
     };
@@ -2550,19 +2555,19 @@ function loadGame() {
         const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
 
         // Define crypto price multiplier ranges per difficulty
-        // EASY: 0.1x - 0.5x of total crypto prices
-        // MEDIUM: 0.5x - 1x of total crypto prices
-        // HARD: 1x - 2x of total crypto prices
+        // EASY: 0.05x - 0.15x of total crypto prices
+        // MEDIUM: 0.2x - 0.5x of total crypto prices
+        // HARD: 1x - 3x of total crypto prices
         let minMultiplier, maxMultiplier;
         if (difficulty === 'HARD') {
             minMultiplier = 1.0;
-            maxMultiplier = 2.0;
+            maxMultiplier = 3.0;
         } else if (difficulty === 'MEDIUM') {
-            minMultiplier = 0.5;
-            maxMultiplier = 1.0;
-        } else { // EASY
-            minMultiplier = 0.1;
+            minMultiplier = 0.2;
             maxMultiplier = 0.5;
+        } else { // EASY
+            minMultiplier = 0.05;
+            maxMultiplier = 0.15;
         }
 
         // Random multiplier within the range
@@ -2930,7 +2935,7 @@ function loadGame() {
         let difficultyName = '';
 
         if (difficulty === 'EASY') {
-            requiredEarnings = 5000;
+            requiredEarnings = 20000;
             difficultyName = 'EASY';
         } else if (difficulty === 'MEDIUM') {
             requiredEarnings = 25000;
@@ -2965,12 +2970,21 @@ function loadGame() {
         whackGameMaxLives = config.lives;
         whackGameLivesRemaining = whackGameMaxLives;
         whackActiveBlock = null;
+        whackActiveBlocks.clear(); // Clear all active blocks
 
         // Show modal
         const modal = document.getElementById('whack-modal');
         if (!modal) return;
 
         modal.style.display = 'flex';
+
+        // Reset display - hide results, show game
+        const gameInfo = document.getElementById('whack-game-info');
+        const resultsMessage = document.getElementById('whack-results-message');
+        const closeBtn = document.getElementById('whack-close-btn');
+        if (gameInfo) gameInfo.style.display = 'block';
+        if (resultsMessage) resultsMessage.style.display = 'none';
+        if (closeBtn) closeBtn.style.display = 'none';
 
         // Update modal content
         document.getElementById('whack-difficulty-display').textContent = difficulty;
@@ -3015,24 +3029,39 @@ function loadGame() {
     function whackSpawnBlock(spawnRate) {
         const config = whackDifficultyConfig[whackGameDifficulty];
         const blockVisibility = config.blockVisibility || 800;
+        const simultaneousBlocks = config.simultaneousBlocks || 1;
 
         whackSpawnInterval = setInterval(() => {
             if (!whackGameActive) return;
 
-            // Only spawn if no block is currently active
-            if (whackActiveBlock === null) {
-                const blockId = Math.floor(Math.random() * 16);
-                const block = document.querySelector(`[data-block-id="${blockId}"]`);
-                if (block) {
-                    whackActiveBlock = blockId;
-                    block.classList.add('active');
+            // Spawn new blocks if we haven't reached the limit
+            if (whackActiveBlocks.size < simultaneousBlocks) {
+                // Find a block that's not already active
+                let blockId = Math.floor(Math.random() * 16);
+                let attempts = 0;
+                while (whackActiveBlocks.has(blockId) && attempts < 10) {
+                    blockId = Math.floor(Math.random() * 16);
+                    attempts++;
+                }
 
-                    // Auto-miss after blockVisibility time if not clicked
-                    setTimeout(() => {
-                        if (whackActiveBlock === blockId) {
-                            missBlock();
-                        }
-                    }, blockVisibility);
+                // Only spawn if we found an available block
+                if (!whackActiveBlocks.has(blockId)) {
+                    const block = document.querySelector(`[data-block-id="${blockId}"]`);
+                    if (block) {
+                        whackActiveBlocks.add(blockId);
+                        block.classList.add('active');
+
+                        // Auto-miss after blockVisibility time if not clicked
+                        setTimeout(() => {
+                            if (whackActiveBlocks.has(blockId)) {
+                                whackActiveBlocks.delete(blockId);
+                                block.classList.remove('active');
+                                if (whackGameActive) {
+                                    missBlock();
+                                }
+                            }
+                        }, blockVisibility);
+                    }
                 }
             }
         }, spawnRate);
@@ -3041,19 +3070,19 @@ function loadGame() {
     function hitBlock(blockId) {
         if (!whackGameActive) return;
 
-        // Only award points if this is the active block
-        if (whackActiveBlock === blockId) {
+        const block = document.querySelector(`[data-block-id="${blockId}"]`);
+
+        // Check if this block is in the active set
+        if (whackActiveBlocks.has(blockId)) {
             whackGameScore += 10;
             whackGameBlocksHit++;
+            whackActiveBlocks.delete(blockId);
 
-            const block = document.querySelector(`[data-block-id="${blockId}"]`);
             if (block) {
                 block.classList.remove('active');
                 block.classList.add('hit');
                 setTimeout(() => block.classList.remove('hit'), 200);
             }
-
-            whackActiveBlock = null;
 
             // Update display
             const scoreDisplay = document.getElementById('whack-score-display');
@@ -3074,6 +3103,13 @@ function loadGame() {
 
     function missBlock() {
         if (!whackGameActive) return;
+
+        // Flash grid red when missing a block
+        const grid = document.getElementById('whack-grid');
+        if (grid) {
+            grid.classList.add('whack-error-flash');
+            setTimeout(() => grid.classList.remove('whack-error-flash'), 300);
+        }
 
         // Clear active block visually
         if (whackActiveBlock !== null) {
@@ -3109,56 +3145,131 @@ function loadGame() {
         if (whackGameLivesRemaining > 0) {
             whackGameGamesWon++;
 
-            const baseReward = config.baseUsdValue;
+            // Get current rugpull/ascension level (defined in rugpull.js)
+            const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
 
-            // Calculate score bonus multiplier (1.0 - 2.0x based on score)
-            const scoreMultiplier = Math.min(2.0, 1.0 + (whackGameScore / 100) * 0.5);
+            // Define crypto price multiplier ranges per difficulty
+            // EASY: 0.02x - 0.08x of total crypto prices
+            // MEDIUM: 0.1x - 0.25x of total crypto prices
+            // HARD: 0.4x - 1.0x of total crypto prices
+            let minMultiplier, maxMultiplier;
+            if (whackGameDifficulty === 'HARD') {
+                minMultiplier = 0.4;
+                maxMultiplier = 1.0;
+            } else if (whackGameDifficulty === 'MEDIUM') {
+                minMultiplier = 0.1;
+                maxMultiplier = 0.25;
+            } else { // EASY
+                minMultiplier = 0.02;
+                maxMultiplier = 0.08;
+            }
 
-            // Time bonus multiplier (0.8 - 1.5x based on speed)
-            const elapsed = Date.now() - whackGameStartTime;
-            const timeRatio = elapsed / whackGameTimeLimit;
-            const timeMultiplier = timeRatio < 0.5 ? 1.5 : Math.max(0.8, 2.0 - (timeRatio * 2));
+            // Random multiplier within the range
+            const cryptoPriceMultiplier = minMultiplier + (Math.random() * (maxMultiplier - minMultiplier));
 
-            // Calculate total reward
-            totalReward = baseReward * scoreMultiplier * timeMultiplier;
-            dollarBalance += totalReward;
-            whackGameTotalRewardsEarned += totalReward;
+            // Calculate total crypto prices (BTC + ETH + DOGE)
+            const totalCryptoPrices = btcPrice + ethPrice + dogePrice;
+
+            // Calculate base USD value from crypto prices
+            let baseUsdValue = totalCryptoPrices * cryptoPriceMultiplier;
+
+            // Calculate score bonus multiplier based on score
+            // 0 points = 0x, scales up to 2.0x at 300 points (capped)
+            const scoreMultiplier = Math.min(2.0, (whackGameScore / 150));
+
+            // POWERFUL Rugpull multiplier: 10x per rugpull level
+            // Rugpull 1 = 10x, Rugpull 2 = 20x, Rugpull 5 = 50x
+            const ascensionMultiplier = rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+
+            // Calculate total USD value after all multipliers
+            const totalUsdValue = baseUsdValue * scoreMultiplier * ascensionMultiplier;
+
+            // Award BTC (40% of total USD value, converted to BTC at current price)
+            const btcUsdValue = totalUsdValue * 0.40;
+            const btcReward = btcUsdValue / btcPrice;
+            btcBalance += btcReward;
+            btcLifetime += btcReward;
+
+            // Award ETH (35% of total USD value, converted to ETH at current price)
+            const ethUsdValue = totalUsdValue * 0.35;
+            const ethReward = ethUsdValue / ethPrice;
+            ethBalance += ethReward;
+            ethLifetime += ethReward;
+
+            // Award DOGE (20% of total USD value, converted to DOGE at current price)
+            const dogeUsdValue = totalUsdValue * 0.20;
+            const dogeReward = dogeUsdValue / dogePrice;
+            dogeBalance += dogeReward;
+            dogeLifetime += dogeReward;
+
+            // Award USD (5% as direct cash)
+            const usdReward = totalUsdValue * 0.05;
+            dollarBalance += usdReward;
+
+            // Track total rewards
+            totalReward = totalUsdValue;
+            whackGameTotalRewardsEarned += totalUsdValue;
+            lifetimeEarnings += totalUsdValue;
+            sessionEarnings += totalUsdValue;
+
+            // Store rewards for display in results modal
+            whackLastRewards = {
+                btc: btcReward,
+                eth: ethReward,
+                doge: dogeReward,
+                usd: usdReward,
+                totalUsd: totalUsdValue
+            };
         }
 
         // Set cooldown
         whackCooldowns[whackGameDifficulty] = Date.now() + config.cooldown;
 
-        // Show results modal
-        setTimeout(() => {
-            // Hide game modal
-            const gameModal = document.getElementById('whack-modal');
-            if (gameModal) gameModal.style.display = 'none';
+        // Show results - hide game, show result
+        const resultsMessage = document.getElementById('whack-results-message');
+        if (resultsMessage) {
+            if (whackGameLivesRemaining > 0) {
+                // Format crypto amounts (4 decimals if >= 1, else 8 decimals)
+                const formatAmount = (amount) => {
+                    if (amount >= 1) return amount.toFixed(4);
+                    return amount.toFixed(8);
+                };
 
-            // Update results modal
-            const resultsModal = document.getElementById('whack-results-modal');
-            if (resultsModal) {
-                // Update content
-                const titleEl = document.getElementById('whack-results-title');
-                if (titleEl) {
-                    titleEl.textContent = whackGameLivesRemaining > 0 ? '✅ SUCCESS!' : '❌ GAME OVER';
-                    titleEl.style.color = whackGameLivesRemaining > 0 ? '#00ff88' : '#ff3344';
-                }
-
-                document.getElementById('whack-results-score').textContent = whackGameScore;
-                document.getElementById('whack-results-blocks').textContent = whackGameBlocksHit;
-                document.getElementById('whack-results-lives').textContent = `${Math.max(0, whackGameLivesRemaining)}/${whackGameMaxLives}`;
-                document.getElementById('whack-results-reward').textContent = totalReward.toFixed(2);
-
-                // Show modal
-                resultsModal.style.display = 'flex';
+                resultsMessage.innerHTML = `<span style="color: #00ff88; font-size: 1.5rem;">✓ BLOCKS SUPPRESSED!</span><br>
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
+                        <div style="color: #fff; font-size: 0.9rem;">
+                            ₿ ${formatAmount(whackLastRewards.btc)} BTC<br>
+                            Ξ ${formatAmount(whackLastRewards.eth)} ETH<br>
+                            Ð ${formatAmount(whackLastRewards.doge)} DOGE<br>
+                            💵 $${whackLastRewards.usd.toFixed(2)}
+                        </div>
+                    </div>`;
+            } else {
+                resultsMessage.innerHTML = `<span style="color: #ff3344; font-size: 1.5rem;">✗ OUT OF LIVES</span><br>
+                    <span style="color: #888;">Better luck next time!</span>`;
             }
+        }
 
-            updateUI();
-        }, 300);
+        // Hide game info (grid and instructions), show results and close button
+        const gameInfo = document.getElementById('whack-game-info');
+        const closeBtn = document.getElementById('whack-close-btn');
+
+        if (gameInfo) gameInfo.style.display = 'none';
+        if (resultsMessage) resultsMessage.style.display = 'block';
+        if (closeBtn) closeBtn.style.display = 'block';
+
+        updateUI();
+        saveGame();
     }
 
     function closeWhackResultsModal() {
         const modal = document.getElementById('whack-results-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function closeWhackModal() {
+        const modal = document.getElementById('whack-modal');
         if (modal) modal.style.display = 'none';
     }
 
@@ -5238,8 +5349,10 @@ dogeUpgrades.forEach(u => {
             // Update hacking stats if tab is visible
             if (document.getElementById('hacking-tab') && document.getElementById('hacking-tab').classList.contains('active')) {
                 updateHackingStats();
-                updateHackingCooldownDisplays();
             }
+
+            // Always update cooldown displays (even when tab is not visible)
+            updateHackingCooldownDisplays();
 
             // Update minigame card lock states
             updateMinigameCardLocks();
