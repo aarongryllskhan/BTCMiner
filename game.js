@@ -2637,22 +2637,33 @@ function loadGame() {
 
             if (!cooldownElement || !buttonElement) return;
 
-            if (now < cooldownEnd) {
-                // Cooldown active - show overlay
+            const isOnCooldown = now < cooldownEnd;
+            const wasOnCooldown = buttonElement.dataset.onCooldown === 'true';
+
+            // Only update if state changed
+            if (isOnCooldown !== wasOnCooldown) {
+                if (isOnCooldown) {
+                    // Cooldown active - show overlay
+                    cooldownElement.style.display = 'flex';
+                    buttonElement.style.cursor = 'not-allowed';
+                    buttonElement.style.opacity = '0.6';
+                    buttonElement.dataset.onCooldown = 'true';
+                } else {
+                    // Cooldown finished - hide overlay
+                    cooldownElement.style.display = 'none';
+                    buttonElement.style.cursor = 'pointer';
+                    buttonElement.style.opacity = '1';
+                    buttonElement.dataset.onCooldown = 'false';
+                }
+            }
+
+            // Only update timer text if cooldown is active
+            if (isOnCooldown) {
                 const remainingMs = cooldownEnd - now;
                 const remainingSeconds = Math.ceil(remainingMs / 1000);
                 const minutes = Math.floor(remainingSeconds / 60);
                 const seconds = remainingSeconds % 60;
-
                 cooldownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                cooldownElement.style.display = 'flex';
-                buttonElement.style.cursor = 'not-allowed';
-                buttonElement.style.opacity = '0.6';
-            } else {
-                // Cooldown finished - hide overlay
-                cooldownElement.style.display = 'none';
-                buttonElement.style.cursor = 'pointer';
-                buttonElement.style.opacity = '1';
             }
         });
     }
