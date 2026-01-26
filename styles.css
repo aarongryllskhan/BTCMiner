@@ -1,9 +1,44 @@
         :root { --btc: #f7931a; --bg: #050505; --panel: #111; --green: #00ff88; --red: #ff3344; --border: #222; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; overflow-x: hidden; }
         #dollar-balance { font-size: 1.5rem; }
         
         #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; }
+
+        /* Constrain utility buttons on all screen sizes */
+        .panel:first-child > div:first-of-type {
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box;
+        }
+
+        /* Make buttons responsive - allow them to shrink and wrap */
+        .panel:first-child > div:first-of-type > div:last-child {
+            flex-shrink: 1 !important;
+            flex-wrap: wrap !important;
+        }
+
+        .panel:first-child > div:first-of-type > div:last-child > button {
+            flex-shrink: 1 !important;
+            white-space: normal !important;
+            min-width: 50px;
+            font-size: 0.5rem !important;
+            padding: 4px 6px !important;
+        }
+
+        /* Desktop refinement */
+        @media (min-width: 1025px) {
+            .panel:first-child {
+                max-width: 100%;
+            }
+
+            .panel:first-child > div:first-of-type > div:last-child > button {
+                white-space: nowrap !important;
+                min-width: auto;
+                font-size: 0.55rem !important;
+                padding: 6px 10px !important;
+            }
+        }
 
         @media (max-width: 1024px) {
             body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
@@ -638,19 +673,40 @@ button:disabled:hover {
             background: #111;
             border: 2px solid #333;
             border-radius: 12px;
-            max-width: 90%;
+            max-width: 90vw;
             max-height: 90vh;
+            width: 100%;
             overflow-y: auto;
+            overflow-x: hidden;
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
             animation: slideUp 0.4s ease;
         }
 
         .skill-tree-modal {
-            width: 800px;
+            max-width: 90vw;
+            width: 100%;
         }
 
         .conversion-modal {
-            width: 600px;
+            max-width: 90vw;
+            width: 100%;
+        }
+
+        @media (min-width: 1200px) {
+            .skill-tree-modal {
+                max-width: 80vw;
+                width: 100%;
+            }
+
+            .conversion-modal {
+                max-width: 75vw;
+                width: 100%;
+            }
+
+            .export-import-modal {
+                max-width: 75vw;
+                width: 100%;
+            }
         }
 
         .modal-header {
@@ -872,7 +928,8 @@ button:disabled:hover {
 
         /* Export/Import Modal Styles */
         .export-import-modal {
-            width: 550px;
+            max-width: 90vw;
+            width: 100%;
         }
 
         #import-save-textarea {
@@ -983,15 +1040,18 @@ button:disabled:hover {
 
         /* Achievements modal */
         #achievements-modal .modal-content {
-            max-width: 900px;
+            max-width: 90vw;
+            max-height: 90vh;
+            width: 100%;
+            overflow-y: auto;
         }
 
-        /* Desktop modal - make it bigger */
+        /* Desktop modal - constrained width */
         @media (min-width: 1200px) {
             #achievements-modal .modal-content {
-                max-width: 95vw;
-                max-height: 95vh;
-                width: 1800px;
+                max-width: 85vw;
+                max-height: 90vh;
+                width: 100%;
                 overflow-y: auto;
             }
         }
@@ -1003,18 +1063,18 @@ button:disabled:hover {
             gap: 15px;
         }
 
-        /* Desktop: 10 columns */
-        @media (min-width: 1200px) {
+        /* Tablet: 4 columns */
+        @media (min-width: 768px) and (max-width: 1199px) {
             #achievements-container {
-                grid-template-columns: repeat(10, 1fr);
-                gap: 12px;
+                grid-template-columns: repeat(4, 1fr);
             }
         }
 
-        /* Tablet: 3 columns */
-        @media (min-width: 768px) and (max-width: 1199px) {
+        /* Desktop: 6 columns (reasonable, fits within viewport) */
+        @media (min-width: 1200px) {
             #achievements-container {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(6, 1fr);
+                gap: 12px;
             }
         }
 
