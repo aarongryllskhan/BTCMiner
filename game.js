@@ -3619,14 +3619,14 @@ dogeUpgrades.forEach(u => {
                 // Show backup reminder after offline earnings modal
                 setTimeout(() => {
                     showBackupReminder();
-                }, 120000);
+                }, 180000);
             }, 500);
         } else {
             console.log('✗ No offline earnings data - modal will not show');
             // Show backup reminder anyway on every load
             setTimeout(() => {
                 showBackupReminder();
-            }, 120000);
+            }, 180000);
         }
 
         const canvasElement = document.getElementById('nwChart');
