@@ -21,9 +21,18 @@
         .panel:first-child > div:first-of-type > div:last-child > button {
             flex-shrink: 1 !important;
             white-space: normal !important;
-            min-width: 50px;
-            font-size: 0.5rem !important;
-            padding: 4px 6px !important;
+            min-width: 40px;
+            font-size: 0.45rem !important;
+            padding: 3px 5px !important;
+        }
+
+        /* Very small mobile - ultra compact buttons */
+        @media (max-width: 480px) {
+            .panel:first-child > div:first-of-type > div:last-child > button {
+                font-size: 0.4rem !important;
+                padding: 2px 4px !important;
+                min-width: 35px;
+            }
         }
 
         /* Desktop refinement */
@@ -680,6 +689,17 @@ button:disabled:hover {
             overflow-x: hidden;
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
             animation: slideUp 0.4s ease;
+            box-sizing: border-box;
+        }
+
+        /* Mobile: reduce modal size and padding */
+        @media (max-width: 768px) {
+            .modal-content {
+                max-width: 95vw;
+                max-height: 85vh;
+                border-radius: 8px;
+                border-width: 1px;
+            }
         }
 
         .skill-tree-modal {
@@ -980,6 +1000,29 @@ button:disabled:hover {
             transition: top 0.3s ease;
         }
 
+        /* Mobile: shrink achievement notification */
+        @media (max-width: 768px) {
+            .achievement-notification {
+                max-width: 85vw;
+                right: 7.5vw;
+                padding: 12px;
+                border-width: 1px;
+            }
+
+            .achievement-notification-emoji {
+                font-size: 1.8rem;
+                min-width: 40px;
+            }
+
+            .achievement-notification-name {
+                font-size: 0.75rem;
+            }
+
+            .achievement-notification-desc {
+                font-size: 0.65rem;
+            }
+        }
+
         @keyframes slideIn {
             from {
                 transform: translateX(400px);
@@ -1044,6 +1087,29 @@ button:disabled:hover {
             max-height: 90vh;
             width: 100%;
             overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Mobile: tighter constraints */
+        @media (max-width: 768px) {
+            #achievements-modal .modal-content {
+                max-width: 95vw;
+                max-height: 85vh;
+                width: calc(100vw - 20px);
+                padding: 0 !important;
+            }
+
+            .modal-header {
+                padding: 12px 15px !important;
+            }
+
+            .modal-body {
+                padding: 12px 15px !important;
+            }
+
+            .modal-header h2 {
+                font-size: 1.3rem !important;
+            }
         }
 
         /* Desktop modal - constrained width */
@@ -1061,6 +1127,30 @@ button:disabled:hover {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
+        }
+
+        /* Mobile: smaller gap and more compact */
+        @media (max-width: 768px) {
+            #achievements-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .achievement-item {
+                padding: 6px !important;
+            }
+
+            .achievement-emoji {
+                font-size: 1.2rem !important;
+            }
+
+            .achievement-name {
+                font-size: 0.7rem !important;
+            }
+
+            .achievement-desc {
+                font-size: 0.6rem !important;
+            }
         }
 
         /* Tablet: 4 columns */
