@@ -422,6 +422,11 @@ function showTutorialStep() {
                 window.scrollTo({ top: scrollPos, behavior: 'smooth' });
             }, 600);
         }
+    } else if (step.id === 'tutorial_complete' && window.innerWidth <= 768) {
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            console.log('🎓 Step 7 scroll to top triggered');
+        }, 600);
     }
 }
 
