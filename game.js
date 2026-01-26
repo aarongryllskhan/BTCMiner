@@ -41,6 +41,11 @@
     let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
     let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
 
+    // Initialize gameState early so rugpull.js can access it
+    if (!window.gameState) {
+        window.gameState = { lifetimeEarnings: 0, dollarBalance: 0 };
+    }
+
     // Buy quantity setting
     let buyQuantity = 1;
 
@@ -68,6 +73,23 @@
     let hackingNextNotificationTime = 0;
     let hackingTotalRewardsEarned = 0;
     let hackingCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 }; // Track cooldown end times
+
+    // Whack-A-Block Minigame State
+    let whackGameActive = false;
+    let whackGameDifficulty = 'EASY';
+    let whackGameStartTime = 0;
+    let whackGameTimeLimit = 30000; // milliseconds
+    let whackGameScore = 0;
+    let whackGameBlocksHit = 0;
+    let whackGameLivesRemaining = 0;
+    let whackGameMaxLives = 0;
+    let whackGameGamesPlayed = 0;
+    let whackGameGamesWon = 0;
+    let whackGameTotalRewardsEarned = 0;
+    let whackCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 }; // Track cooldown end times
+    let whackActiveBlock = null; // Currently active block ID
+    let whackSpawnInterval = null; // Timer for spawning blocks
+    let whackGameInterval = null; // Main game loop timer
 
     // Power system - Rebalanced for strategic gameplay
     let totalPowerAvailable = 0; // Total watts available
@@ -534,6 +556,7 @@
             lifetimeEarnings,
             sessionEarnings,
             sessionStartTime,
+            lifetimeEarningsDisplay: typeof window.rugpullState !== 'undefined' ? window.rugpullState.lifetimeEarningsDisplay : 0,
             chartHistory: chartHistory,
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
@@ -584,6 +607,13 @@
                 speedBoostMultiplier: speedBoostActive ? speedBoostMultiplier : 1.0,
                 nextNotificationTime: hackingNextNotificationTime,
                 cooldowns: hackingCooldowns
+            },
+            // Whack-A-Block minigame data
+            whackData: {
+                gamesPlayed: whackGameGamesPlayed,
+                gamesWon: whackGameGamesWon,
+                totalRewardsEarned: whackGameTotalRewardsEarned,
+                cooldowns: whackCooldowns
             }
         };
 
@@ -657,6 +687,15 @@ function loadGame() {
         dollarBalance = state.dollarBalance || 0;
         hardwareEquity = state.hardwareEquity || 0;
         lifetimeEarnings = state.lifetimeEarnings || 0;
+
+        // Load lifetime earnings display (persists forever across page refreshes)
+        if (state.lifetimeEarningsDisplay && typeof window.rugpullState !== 'undefined') {
+            window.rugpullState.lifetimeEarningsDisplay = state.lifetimeEarningsDisplay;
+        }
+        // Also sync to gameState for display
+        if (window.rugpullState && window.gameState) {
+            window.gameState.lifetimeEarnings = window.rugpullState.lifetimeEarningsDisplay || 0;
+        }
 
         // Reset session on every page load/refresh
         sessionEarnings = 0;
@@ -746,6 +785,10 @@ function loadGame() {
         // Load ascension data
         if (state.ascensionData && typeof loadAscensionData === 'function') {
             loadAscensionData(state.ascensionData);
+            // Update UI to show/hide rugpull store button based on loaded currency
+            if (typeof updateAscensionUI === 'function') {
+                updateAscensionUI();
+            }
         }
 
         // Load hacking minigame data
@@ -770,6 +813,18 @@ function loadGame() {
             } else {
                 speedBoostActive = false;
                 speedBoostMultiplier = 1.0;
+            }
+        }
+
+        // Load whack-a-block minigame data
+        if (state.whackData) {
+            whackGameGamesPlayed = state.whackData.gamesPlayed || 0;
+            whackGameGamesWon = state.whackData.gamesWon || 0;
+            whackGameTotalRewardsEarned = state.whackData.totalRewardsEarned || 0;
+
+            // Load cooldowns
+            if (state.whackData.cooldowns) {
+                whackCooldowns = state.whackData.cooldowns;
             }
         }
 
@@ -943,6 +998,7 @@ function loadGame() {
             lifetimeEarnings,
             sessionEarnings,
             sessionStartTime,
+            lifetimeEarningsDisplay: typeof window.rugpullState !== 'undefined' ? window.rugpullState.lifetimeEarningsDisplay : 0,
             chartHistory: chartHistory,
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
@@ -1564,6 +1620,12 @@ function loadGame() {
             hackingTotalRewardsEarned = 0;
             hackingCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 };
 
+            // Reset whack-a-block minigame
+            whackGameGamesPlayed = 0;
+            whackGameGamesWon = 0;
+            whackGameTotalRewardsEarned = 0;
+            whackCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 };
+
             // Reset achievements on full save reset
             if (typeof achievementsData !== 'undefined') {
                 // Clear achievements object completely
@@ -2179,6 +2241,34 @@ function loadGame() {
         ]
     };
 
+    // Whack-A-Block Minigame Configuration
+    const whackDifficultyConfig = {
+        'EASY': {
+            timeLimit: 30000,
+            lives: 5,
+            spawnRate: 1200, // milliseconds between block spawns
+            blockVisibility: 1200, // milliseconds block stays visible
+            baseUsdValue: 500,  // $500 base - scales with progression
+            cooldown: 180000 // 3 minute cooldown
+        },
+        'MEDIUM': {
+            timeLimit: 30000,
+            lives: 4,
+            spawnRate: 700, // milliseconds between block spawns
+            blockVisibility: 800, // milliseconds block stays visible
+            baseUsdValue: 2000,  // $2K base - scales with progression
+            cooldown: 600000 // 10 minute cooldown
+        },
+        'HARD': {
+            timeLimit: 30000,
+            lives: 3,
+            spawnRate: 400, // milliseconds between block spawns
+            blockVisibility: 500, // milliseconds block stays visible
+            baseUsdValue: 5000,  // $5K base - scales with progression
+            cooldown: 1200000 // 20 minute cooldown
+        }
+    };
+
     function generateVulnerableCode(difficulty) {
         const templates = codeTemplates[difficulty];
         const selectedTemplate = templates[Math.floor(Math.random() * templates.length)];
@@ -2626,49 +2716,453 @@ function loadGame() {
         `;
     }
 
+    function updateWhackStats() {
+        // Update whack-a-block stats in the UI
+        const gamesPlayedEl = document.getElementById('whack-games-played');
+        if (gamesPlayedEl) gamesPlayedEl.textContent = whackGameGamesPlayed;
+
+        const gamesWonEl = document.getElementById('whack-games-won');
+        if (gamesWonEl) gamesWonEl.textContent = whackGameGamesWon;
+
+        // Abbreviate total rewards
+        let rewardsDisplay = '';
+        if (whackGameTotalRewardsEarned >= 1e12) {
+            rewardsDisplay = '$' + (whackGameTotalRewardsEarned / 1e12).toFixed(2) + 'T';
+        } else if (whackGameTotalRewardsEarned >= 1e9) {
+            rewardsDisplay = '$' + (whackGameTotalRewardsEarned / 1e9).toFixed(2) + 'B';
+        } else if (whackGameTotalRewardsEarned >= 1e6) {
+            rewardsDisplay = '$' + (whackGameTotalRewardsEarned / 1e6).toFixed(2) + 'M';
+        } else if (whackGameTotalRewardsEarned >= 1e3) {
+            rewardsDisplay = '$' + (whackGameTotalRewardsEarned / 1e3).toFixed(2) + 'K';
+        } else {
+            rewardsDisplay = '$' + whackGameTotalRewardsEarned.toFixed(2);
+        }
+
+        const totalRewardsEl = document.getElementById('whack-total-rewards');
+        if (totalRewardsEl) totalRewardsEl.textContent = rewardsDisplay.slice(1); // Remove $ from display
+    }
+
+    function updateMinigamesTab() {
+        // Update minigames hub stats display
+
+        // Hacking stats
+        const hackingWonEl = document.getElementById('hacking-games-won-display');
+        if (hackingWonEl) hackingWonEl.textContent = hackingGamesWon;
+
+        const hackingPlayedEl = document.getElementById('hacking-games-played-display');
+        if (hackingPlayedEl) hackingPlayedEl.textContent = hackingGamesPlayed;
+
+        const hackingRewardsEl = document.getElementById('hacking-rewards-display');
+        if (hackingRewardsEl) {
+            let hackingRewardsDisplay = '';
+            if (hackingTotalRewardsEarned >= 1e6) {
+                hackingRewardsDisplay = '$' + (hackingTotalRewardsEarned / 1e6).toFixed(2) + 'M';
+            } else if (hackingTotalRewardsEarned >= 1e3) {
+                hackingRewardsDisplay = '$' + (hackingTotalRewardsEarned / 1e3).toFixed(2) + 'K';
+            } else {
+                hackingRewardsDisplay = '$' + hackingTotalRewardsEarned.toFixed(0);
+            }
+            hackingRewardsEl.textContent = hackingRewardsDisplay;
+        }
+
+        // Whack stats
+        const whackWonEl = document.getElementById('whack-games-won-display');
+        if (whackWonEl) whackWonEl.textContent = whackGameGamesWon;
+
+        const whackPlayedEl = document.getElementById('whack-games-played-display');
+        if (whackPlayedEl) whackPlayedEl.textContent = whackGameGamesPlayed;
+
+        const whackRewardsEl = document.getElementById('whack-rewards-display');
+        if (whackRewardsEl) {
+            let whackRewardsDisplay = '';
+            if (whackGameTotalRewardsEarned >= 1e6) {
+                whackRewardsDisplay = '$' + (whackGameTotalRewardsEarned / 1e6).toFixed(2) + 'M';
+            } else if (whackGameTotalRewardsEarned >= 1e3) {
+                whackRewardsDisplay = '$' + (whackGameTotalRewardsEarned / 1e3).toFixed(2) + 'K';
+            } else {
+                whackRewardsDisplay = '$' + whackGameTotalRewardsEarned.toFixed(0);
+            }
+            whackRewardsEl.textContent = whackRewardsDisplay;
+        }
+    }
+
     function updateHackingCooldownDisplays() {
         const now = Date.now();
+
+        // Unlock requirements for each difficulty
+        const unlockRequirements = {
+            'EASY': 10000,
+            'MEDIUM': 50000,
+            'HARD': 100000
+        };
 
         // Update each difficulty button's cooldown overlay
         ['EASY', 'MEDIUM', 'HARD'].forEach(difficulty => {
             const cooldownEnd = hackingCooldowns[difficulty] || 0;
             const cooldownElement = document.getElementById(`hacking-${difficulty.toLowerCase()}-cooldown`);
+            const lockedElement = document.getElementById(`hacking-${difficulty.toLowerCase()}-locked`);
             const buttonElement = document.getElementById(`hacking-${difficulty.toLowerCase()}-btn`);
 
-            if (!cooldownElement || !buttonElement) return;
+            if (!cooldownElement || !buttonElement || !lockedElement) return;
 
-            const isOnCooldown = now < cooldownEnd;
-            const wasOnCooldown = buttonElement.dataset.onCooldown === 'true';
+            // Check if difficulty is locked
+            const isLocked = lifetimeEarnings < (unlockRequirements[difficulty] || 0);
+            const isOnCooldown = now < cooldownEnd && !isLocked;
 
-            // Only update if state changed
-            if (isOnCooldown !== wasOnCooldown) {
-                if (isOnCooldown) {
-                    // Cooldown active - show overlay
-                    cooldownElement.style.display = 'flex';
-                    buttonElement.style.cursor = 'not-allowed';
-                    buttonElement.style.opacity = '0.6';
-                    buttonElement.dataset.onCooldown = 'true';
-                } else {
-                    // Cooldown finished - hide overlay
-                    cooldownElement.style.display = 'none';
-                    buttonElement.style.cursor = 'pointer';
-                    buttonElement.style.opacity = '1';
-                    buttonElement.dataset.onCooldown = 'false';
-                }
-            }
-
-            // Only update timer text if cooldown is active
-            if (isOnCooldown) {
+            // Update locked state
+            if (isLocked) {
+                lockedElement.style.display = 'flex';
+                lockedElement.innerHTML = `🔒<br>$${(unlockRequirements[difficulty] || 0).toLocaleString()}`;
+                cooldownElement.style.display = 'none';
+                buttonElement.style.cursor = 'not-allowed';
+                buttonElement.style.pointerEvents = 'none';
+                buttonElement.dataset.locked = 'true';
+            } else if (isOnCooldown) {
+                lockedElement.style.display = 'none';
+                cooldownElement.style.removeProperty('display');
+                cooldownElement.style.setProperty('display', 'flex', 'important');
+                buttonElement.style.cursor = 'not-allowed';
+                buttonElement.style.pointerEvents = 'none';
+                buttonElement.style.opacity = '0.6';
+                buttonElement.dataset.locked = 'false';
+                // Update timer
                 const remainingMs = cooldownEnd - now;
                 const remainingSeconds = Math.ceil(remainingMs / 1000);
                 const minutes = Math.floor(remainingSeconds / 60);
                 const seconds = remainingSeconds % 60;
                 cooldownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                // Button is active and clickable
+                lockedElement.style.display = 'none';
+                cooldownElement.style.display = 'none';
+                buttonElement.style.cursor = 'pointer';
+                buttonElement.style.pointerEvents = 'auto';
+                buttonElement.style.opacity = '1';
+                buttonElement.dataset.locked = 'false';
+            }
+        });
+
+        // Update whack-a-block cooldowns
+        const now2 = Date.now();
+
+        // Unlock requirements for whack-a-block
+        const whackUnlockRequirements = {
+            'EASY': 5000,
+            'MEDIUM': 25000,
+            'HARD': 75000
+        };
+
+        ['EASY', 'MEDIUM', 'HARD'].forEach(difficulty => {
+            const cooldownEnd = whackCooldowns[difficulty] || 0;
+            const cooldownElement = document.getElementById(`whack-${difficulty.toLowerCase()}-cooldown`);
+            const lockedElement = document.getElementById(`whack-${difficulty.toLowerCase()}-locked`);
+            const buttonElement = document.getElementById(`whack-${difficulty.toLowerCase()}-btn`);
+
+            if (!cooldownElement || !buttonElement || !lockedElement) return;
+
+            // Check if difficulty is locked
+            const isLocked = lifetimeEarnings < (whackUnlockRequirements[difficulty] || 0);
+            const isOnCooldown = now2 < cooldownEnd && !isLocked;
+
+            // Update locked state
+            if (isLocked) {
+                lockedElement.style.display = 'flex';
+                lockedElement.innerHTML = `🔒<br>$${(whackUnlockRequirements[difficulty] || 0).toLocaleString()}`;
+                cooldownElement.style.display = 'none';
+                buttonElement.style.cursor = 'not-allowed';
+                buttonElement.style.pointerEvents = 'none';
+                buttonElement.dataset.locked = 'true';
+            } else if (isOnCooldown) {
+                lockedElement.style.display = 'none';
+                cooldownElement.style.removeProperty('display');
+                cooldownElement.style.setProperty('display', 'flex', 'important');
+                buttonElement.style.cursor = 'not-allowed';
+                buttonElement.style.pointerEvents = 'none';
+                buttonElement.style.opacity = '0.6';
+                buttonElement.dataset.locked = 'false';
+                // Update timer
+                const remainingMs = cooldownEnd - now2;
+                const remainingSeconds = Math.ceil(remainingMs / 1000);
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                cooldownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                // Button is active and clickable
+                lockedElement.style.display = 'none';
+                cooldownElement.style.display = 'none';
+                buttonElement.style.cursor = 'pointer';
+                buttonElement.style.pointerEvents = 'auto';
+                buttonElement.style.opacity = '1';
+                buttonElement.dataset.locked = 'false';
             }
         });
     }
 
+    function updateMinigameCardLocks() {
+        // Check if hacking minigame is locked (Easy requires $10k)
+        const hackingLockedCard = document.getElementById('hacking-card-locked');
+        if (hackingLockedCard) {
+            if (lifetimeEarnings < 10000) {
+                hackingLockedCard.style.display = 'flex';
+            } else {
+                hackingLockedCard.style.display = 'none';
+            }
+        }
+
+        // Check if whack-a-block minigame is locked (Easy requires $5k)
+        const whackLockedCard = document.getElementById('whack-card-locked');
+        if (whackLockedCard) {
+            if (lifetimeEarnings < 5000) {
+                whackLockedCard.style.display = 'flex';
+            } else {
+                whackLockedCard.style.display = 'none';
+            }
+        }
+    }
+
     // ============== END HACKING MINIGAME FUNCTIONS ==============
+
+    // ============== WHACK-A-BLOCK MINIGAME FUNCTIONS ==============
+
+    function initWhackMinigame(difficulty) {
+        // Check difficulty-specific unlock requirements
+        let requiredEarnings = 0;
+        let difficultyName = '';
+
+        if (difficulty === 'EASY') {
+            requiredEarnings = 5000;
+            difficultyName = 'EASY';
+        } else if (difficulty === 'MEDIUM') {
+            requiredEarnings = 25000;
+            difficultyName = 'MEDIUM';
+        } else if (difficulty === 'HARD') {
+            requiredEarnings = 75000;
+            difficultyName = 'HARD';
+        }
+
+        if (lifetimeEarnings < requiredEarnings) {
+            alert(`🔒 ${difficultyName} Difficulty Locked!\n\nRequires $${requiredEarnings.toLocaleString()} lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
+            return;
+        }
+
+        // Check cooldown
+        const now = Date.now();
+        const cooldownEnd = whackCooldowns[difficulty] || 0;
+
+        if (now < cooldownEnd) {
+            const remainingSeconds = Math.ceil((cooldownEnd - now) / 1000);
+            alert(`⏱️ ${difficulty} difficulty is on cooldown!\n\nTry again in ${remainingSeconds} seconds.`);
+            return;
+        }
+
+        whackGameDifficulty = difficulty;
+        whackGameActive = true;
+        const config = whackDifficultyConfig[difficulty];
+        whackGameTimeLimit = config.timeLimit;
+        whackGameStartTime = Date.now();
+        whackGameScore = 0;
+        whackGameBlocksHit = 0;
+        whackGameMaxLives = config.lives;
+        whackGameLivesRemaining = whackGameMaxLives;
+        whackActiveBlock = null;
+
+        // Show modal
+        const modal = document.getElementById('whack-modal');
+        if (!modal) return;
+
+        modal.style.display = 'flex';
+
+        // Update modal content
+        document.getElementById('whack-difficulty-display').textContent = difficulty;
+        document.getElementById('whack-lives-display').textContent = `❤️ ${whackGameLivesRemaining}/${whackGameMaxLives}`;
+        document.getElementById('whack-score-display').textContent = '0';
+        document.getElementById('whack-time-display').textContent = '30s';
+
+        // Create grid
+        const gridContainer = document.getElementById('whack-grid');
+        gridContainer.innerHTML = '';
+        for (let i = 0; i < 16; i++) {
+            const block = document.createElement('div');
+            block.className = 'whack-block';
+            block.setAttribute('data-block-id', i);
+            block.onclick = () => hitBlock(i);
+            gridContainer.appendChild(block);
+        }
+
+        // Start game
+        whackStartGame(config);
+    }
+
+    function whackStartGame(config) {
+        // Start spawning blocks
+        whackSpawnBlock(config.spawnRate);
+
+        // Update timer every 100ms
+        whackGameInterval = setInterval(() => {
+            const elapsed = Date.now() - whackGameStartTime;
+            const remaining = Math.max(0, whackGameTimeLimit - elapsed);
+            const seconds = Math.ceil(remaining / 1000);
+
+            const timeDisplay = document.getElementById('whack-time-display');
+            if (timeDisplay) timeDisplay.textContent = seconds + 's';
+
+            if (remaining <= 0) {
+                endWhackGame(false);
+            }
+        }, 100);
+    }
+
+    function whackSpawnBlock(spawnRate) {
+        const config = whackDifficultyConfig[whackGameDifficulty];
+        const blockVisibility = config.blockVisibility || 800;
+
+        whackSpawnInterval = setInterval(() => {
+            if (!whackGameActive) return;
+
+            // Only spawn if no block is currently active
+            if (whackActiveBlock === null) {
+                const blockId = Math.floor(Math.random() * 16);
+                const block = document.querySelector(`[data-block-id="${blockId}"]`);
+                if (block) {
+                    whackActiveBlock = blockId;
+                    block.classList.add('active');
+
+                    // Auto-miss after blockVisibility time if not clicked
+                    setTimeout(() => {
+                        if (whackActiveBlock === blockId) {
+                            missBlock();
+                        }
+                    }, blockVisibility);
+                }
+            }
+        }, spawnRate);
+    }
+
+    function hitBlock(blockId) {
+        if (!whackGameActive) return;
+
+        // Only award points if this is the active block
+        if (whackActiveBlock === blockId) {
+            whackGameScore += 10;
+            whackGameBlocksHit++;
+
+            const block = document.querySelector(`[data-block-id="${blockId}"]`);
+            if (block) {
+                block.classList.remove('active');
+                block.classList.add('hit');
+                setTimeout(() => block.classList.remove('hit'), 200);
+            }
+
+            whackActiveBlock = null;
+
+            // Update display
+            const scoreDisplay = document.getElementById('whack-score-display');
+            if (scoreDisplay) scoreDisplay.textContent = whackGameScore;
+
+            // Play hit sound
+            playClickSound();
+        } else {
+            // Clicked wrong block - trigger red flash and miss
+            const grid = document.getElementById('whack-grid');
+            if (grid) {
+                grid.classList.add('whack-error-flash');
+                setTimeout(() => grid.classList.remove('whack-error-flash'), 300);
+            }
+            missBlock();
+        }
+    }
+
+    function missBlock() {
+        if (!whackGameActive) return;
+
+        // Clear active block visually
+        if (whackActiveBlock !== null) {
+            const block = document.querySelector(`[data-block-id="${whackActiveBlock}"]`);
+            if (block) {
+                block.classList.remove('active');
+            }
+            whackActiveBlock = null;
+        }
+
+        // Lose a life
+        whackGameLivesRemaining--;
+        const livesDisplay = document.getElementById('whack-lives-display');
+        if (livesDisplay) livesDisplay.textContent = `❤️ ${whackGameLivesRemaining}/${whackGameMaxLives}`;
+
+        if (whackGameLivesRemaining <= 0) {
+            endWhackGame(false);
+        }
+    }
+
+    function endWhackGame(won) {
+        whackGameActive = false;
+
+        if (whackSpawnInterval) clearInterval(whackSpawnInterval);
+        if (whackGameInterval) clearInterval(whackGameInterval);
+
+        whackGameGamesPlayed++;
+
+        const config = whackDifficultyConfig[whackGameDifficulty];
+        let totalReward = 0;
+
+        // Only award rewards if player didn't lose all lives
+        if (whackGameLivesRemaining > 0) {
+            whackGameGamesWon++;
+
+            const baseReward = config.baseUsdValue;
+
+            // Calculate score bonus multiplier (1.0 - 2.0x based on score)
+            const scoreMultiplier = Math.min(2.0, 1.0 + (whackGameScore / 100) * 0.5);
+
+            // Time bonus multiplier (0.8 - 1.5x based on speed)
+            const elapsed = Date.now() - whackGameStartTime;
+            const timeRatio = elapsed / whackGameTimeLimit;
+            const timeMultiplier = timeRatio < 0.5 ? 1.5 : Math.max(0.8, 2.0 - (timeRatio * 2));
+
+            // Calculate total reward
+            totalReward = baseReward * scoreMultiplier * timeMultiplier;
+            dollarBalance += totalReward;
+            whackGameTotalRewardsEarned += totalReward;
+        }
+
+        // Set cooldown
+        whackCooldowns[whackGameDifficulty] = Date.now() + config.cooldown;
+
+        // Show results modal
+        setTimeout(() => {
+            // Hide game modal
+            const gameModal = document.getElementById('whack-modal');
+            if (gameModal) gameModal.style.display = 'none';
+
+            // Update results modal
+            const resultsModal = document.getElementById('whack-results-modal');
+            if (resultsModal) {
+                // Update content
+                const titleEl = document.getElementById('whack-results-title');
+                if (titleEl) {
+                    titleEl.textContent = whackGameLivesRemaining > 0 ? '✅ SUCCESS!' : '❌ GAME OVER';
+                    titleEl.style.color = whackGameLivesRemaining > 0 ? '#00ff88' : '#ff3344';
+                }
+
+                document.getElementById('whack-results-score').textContent = whackGameScore;
+                document.getElementById('whack-results-blocks').textContent = whackGameBlocksHit;
+                document.getElementById('whack-results-lives').textContent = `${Math.max(0, whackGameLivesRemaining)}/${whackGameMaxLives}`;
+                document.getElementById('whack-results-reward').textContent = totalReward.toFixed(2);
+
+                // Show modal
+                resultsModal.style.display = 'flex';
+            }
+
+            updateUI();
+        }, 300);
+    }
+
+    function closeWhackResultsModal() {
+        const modal = document.getElementById('whack-results-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    // ============== END WHACK-A-BLOCK MINIGAME FUNCTIONS ==============
 
     function updatePowerDisplay() {
         const powerUsedEl = document.getElementById('power-used');
@@ -3239,30 +3733,32 @@ function buyDogeBoost(i) {
         }
 
         // Update lifetime earnings display (with abbreviations for large numbers)
+        // Display = persisted total (lifetimeEarningsDisplay) + current run (lifetimeEarnings)
         const lifetimeEarningEl = document.getElementById('lifetime-earning');
         if (lifetimeEarningEl) {
-            if (lifetimeEarnings >= 1000000000000000000000000000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e30).toFixed(1) + 'N';
-            } else if (lifetimeEarnings >= 1000000000000000000000000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e27).toFixed(1) + 'O';
-            } else if (lifetimeEarnings >= 1000000000000000000000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e24).toFixed(1) + 'Sep';
-            } else if (lifetimeEarnings >= 1000000000000000000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e21).toFixed(1) + 'S';
-            } else if (lifetimeEarnings >= 1000000000000000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e18).toFixed(1) + 'Qa';
-            } else if (lifetimeEarnings >= 1000000000000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e15).toFixed(1) + 'Q';
-            } else if (lifetimeEarnings >= 1000000000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e12).toFixed(1) + 'T';
-            } else if (lifetimeEarnings >= 1000000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e9).toFixed(1) + 'B';
-            } else if (lifetimeEarnings >= 1000000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e6).toFixed(1) + 'M';
-            } else if (lifetimeEarnings >= 1000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e3).toFixed(1) + 'K';
+            const totalLifetimeEarnings = (window.rugpullState?.lifetimeEarningsDisplay || 0) + lifetimeEarnings;
+            if (totalLifetimeEarnings >= 1000000000000000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e30).toFixed(1) + 'N';
+            } else if (totalLifetimeEarnings >= 1000000000000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e27).toFixed(1) + 'O';
+            } else if (totalLifetimeEarnings >= 1000000000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e24).toFixed(1) + 'Sep';
+            } else if (totalLifetimeEarnings >= 1000000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e21).toFixed(1) + 'S';
+            } else if (totalLifetimeEarnings >= 1000000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e18).toFixed(1) + 'Qa';
+            } else if (totalLifetimeEarnings >= 1000000000000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e15).toFixed(1) + 'Q';
+            } else if (totalLifetimeEarnings >= 1000000000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e12).toFixed(1) + 'T';
+            } else if (totalLifetimeEarnings >= 1000000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e9).toFixed(1) + 'B';
+            } else if (totalLifetimeEarnings >= 1000000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e6).toFixed(1) + 'M';
+            } else if (totalLifetimeEarnings >= 1000) {
+                lifetimeEarningEl.innerText = '$' + (totalLifetimeEarnings / 1e3).toFixed(1) + 'K';
             } else {
-                lifetimeEarningEl.innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                lifetimeEarningEl.innerText = '$' + totalLifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             }
         }
     }
@@ -4296,6 +4792,11 @@ dogeUpgrades.forEach(u => {
     if (typeof updateAscensionUI === 'function') {
         updateAscensionUI();
     }
+
+    // Update store button visibility (for tokens display)
+    if (typeof updateStoreButtonVisibility === 'function') {
+        updateStoreButtonVisibility();
+    }
     }
 
     // Mining loop - runs every 100ms
@@ -4367,8 +4868,20 @@ dogeUpgrades.forEach(u => {
             sessionEarnings += usdValue;
         }
 
+        // Update gameState with current values for rugpull.js
+        // lifetimeEarnings = current run earnings (resets on rugpull)
+        window.gameState.lifetimeEarnings = lifetimeEarnings;
+        window.gameState.dollarBalance = dollarBalance;
+
+        // Update currentRunEarnings for rugpull tracking (this is lifetimeEarnings since last rugpull)
+        if (typeof updateCurrentRunEarnings === 'function') {
+            updateCurrentRunEarnings(lifetimeEarnings);
+        }
+
         updateUI();
         updateAutoClickerButtonState();
+        updateWhackStats();
+        updateMinigamesTab();
 
         // Check for rugpull milestone
         if (typeof checkRugpullMilestone === 'function') {
@@ -4427,8 +4940,29 @@ dogeUpgrades.forEach(u => {
             console.log('⚡ Hacking minigame notification scheduled');
         }
 
+        // Initialize button states for both minigames
+        ['EASY', 'MEDIUM', 'HARD'].forEach(difficulty => {
+            // Hacking buttons
+            const hackingBtn = document.getElementById(`hacking-${difficulty.toLowerCase()}-btn`);
+            if (hackingBtn) {
+                const hackingCooldownEnd = hackingCooldowns[difficulty] || 0;
+                hackingBtn.dataset.onCooldown = Date.now() < hackingCooldownEnd ? 'true' : 'false';
+                hackingBtn.style.filter = Date.now() < hackingCooldownEnd ? 'brightness(0.5)' : '';
+            }
+
+            // Whack buttons
+            const whackBtn = document.getElementById(`whack-${difficulty.toLowerCase()}-btn`);
+            if (whackBtn) {
+                const whackCooldownEnd = whackCooldowns[difficulty] || 0;
+                whackBtn.dataset.onCooldown = Date.now() < whackCooldownEnd ? 'true' : 'false';
+                whackBtn.style.filter = Date.now() < whackCooldownEnd ? 'brightness(0.5)' : '';
+            }
+        });
+
         // Update hacking stats on page load
         updateHackingStats();
+        updateWhackStats();
+        updateMinigamesTab();
 
         // Show instructions modal if not dismissed and player hasn't ascended yet
         // BUT: don't show if tutorial is active for new players or if tutorial was completed
@@ -4706,6 +5240,9 @@ dogeUpgrades.forEach(u => {
                 updateHackingStats();
                 updateHackingCooldownDisplays();
             }
+
+            // Update minigame card lock states
+            updateMinigameCardLocks();
         }, 500);
 
         // Start price swings: separate timing for each crypto
@@ -4856,6 +5393,7 @@ dogeUpgrades.forEach(u => {
     window.dismissHackingNotification = dismissHackingNotification;
 
     // Test helper - set lifetime earnings for testing rugpull feature
+
     window.setTestEarnings = function(amount) {
         lifetimeEarnings = amount;
         sessionEarnings = amount;

@@ -6,9 +6,11 @@
 // STATE VARIABLES
 // ==============================================
 
-let ascensionLevel = 0;              // Total number of times the player has ascended
-let rugpullCurrency = 0;             // "Corrupt Tokens" - earned through ascension
-let lastShownMilestoneEarnings = 0;  // Track which $1M milestone popup was shown
+let ascensionLevel = 0;                      // Total number of times the player has ascended
+let rugpullCurrency = 0;                     // "Corrupt Tokens" - earned through ascension
+let lastShownMilestoneEarnings = 0;          // Track which $1M milestone popup was shown
+let lifetimeEarningsThisRugpull = 0;         // Earnings since last rugpull (for rugpull eligibility tracking) - RESETS each rugpull
+let lifetimeEarningsDisplay = 0;             // Total lifetime earnings to DISPLAY to player (persists across rugpulls)
 let rugpullButtonListenersAttached = false;  // Flag to prevent duplicate event listeners
 let upgradeToggleState = {
     auto_sell: true                  // Auto-sell crypto toggle state
@@ -58,22 +60,23 @@ let unlockedSystems = {
 
 /**
  * Calculate the reward (Corrupt Tokens) for ascending
- * Based on: lifetime earnings, current cash, ascension bonus
+ * Scaling: 200 tokens per tier + bonus for exceeding requirement
+ * Base: 200 × 10^(ascensionLevel)
+ * Bonus: 1 token per $5M earned above the requirement
  */
 function calculateRugpullReward() {
-    // Token reward based on the rugpull requirement threshold
-    // This ensures consistent scaling: each threshold gives 200 tokens at level 0
-    // Level 0: $1B = 200 tokens
-    // Level 1: $10B = 2000 tokens (×1.5 bonus)
-    // Level 2: $100B = 20000 tokens (×2.25 bonus)
+    const requirement = getRugpullRequirement();
+    const earnings = lifetimeEarningsThisRugpull;
 
-    const requirement = getRugpullRequirement();  // $1B, $10B, $100B, etc.
-    const baseReward = Math.floor(requirement / 5000000);  // 1 token per $5M
+    // Base reward: 200 tokens × 10 per tier
+    const baseReward = 200 * Math.pow(10, ascensionLevel);
 
-    // Exponential bonus for higher ascension level (1.5x per ascension, starting at level 1)
-    const ascensionBonus = ascensionLevel > 0 ? Math.pow(1.5, ascensionLevel - 1) : 1;  // 1x, 1.5x, 2.25x, 3.375x
+    // Bonus tokens for exceeding requirement
+    // 1 token per $5M earned above the minimum requirement
+    const excessEarnings = Math.max(0, earnings - requirement);
+    const bonusTokens = Math.floor(excessEarnings / 5000000);
 
-    const totalReward = baseReward * ascensionBonus;
+    const totalReward = baseReward + bonusTokens;
 
     // Minimum 1 token even if poor
     return Math.max(1, Math.floor(totalReward));
@@ -84,21 +87,15 @@ function calculateRugpullReward() {
  */
 function showRugpullOffer() {
     // Get values from game.js with fallbacks
-    const earnings = typeof lifetimeEarnings !== 'undefined' ? lifetimeEarnings : 0;
-    const cash = typeof dollarBalance !== 'undefined' ? dollarBalance : 0;
+    const earnings = lifetimeEarningsThisRugpull;
+    const cash = window.gameState && window.gameState.dollarBalance ? window.gameState.dollarBalance : 0;
 
-    // Calculate token breakdown based on requirement threshold
-    const requirement = getRugpullRequirement();  // $1B, $10B, $100B, etc.
-    const baseReward = Math.floor(requirement / 5000000);  // 1 token per $5M
-
-    // Ascension bonus (starts at level 1, not level 0)
-    const ascensionBonus = ascensionLevel > 0 ? Math.pow(1.5, ascensionLevel - 1) : 1;
-    const totalWithBonus = baseReward * ascensionBonus;
-    const reward = Math.max(1, Math.floor(totalWithBonus));
-
-    // For display breakdown
-    const baseFromEarnings = 0;
-    const baseFromCash = baseReward;
+    // Calculate token reward
+    const requirement = getRugpullRequirement();
+    const baseReward = 200 * Math.pow(10, ascensionLevel);
+    const excessEarnings = Math.max(0, earnings - requirement);
+    const bonusTokens = Math.floor(excessEarnings / 5000000);
+    const reward = Math.max(1, Math.floor(baseReward + bonusTokens));
 
     const starterCash = 1500 + (ascensionLevel * 500);
 
@@ -120,13 +117,9 @@ function showRugpullOffer() {
                 <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
                     <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 10px;">TOKEN CALCULATION:</div>
                     <div style="margin-bottom: 15px; color: #ddd; font-size: 0.85rem;">
-                        • $${cash.toLocaleString()} ÷ $5,000,000 = <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
-                        • Requirement: $${requirement.toLocaleString()} ÷ $5,000,000 = <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
-                        • Base Reward: <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
-                        • Ascension Bonus (${ascensionLevel > 0 ? 'Level ' + ascensionLevel + ' = ×' + ascensionBonus.toFixed(2) : 'None (Level 0)'}): <span style="color: #4CAF50;">×${ascensionBonus.toFixed(2)}</span><br>
-                        <span style="border-top: 1px solid #555; padding-top: 10px; margin-top: 10px; display: block;">
-                            <span style="color: #ffeb3b; font-weight: bold;">TOTAL: ${reward} Corrupt Tokens</span>
-                        </span>
+                        • Base Tokens: 200 × 10<sup>${ascensionLevel}</sup> = <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
+                        ${bonusTokens > 0 ? `• Bonus Tokens: $${excessEarnings.toLocaleString()} ÷ $5M = <span style="color: #4CAF50;">+${bonusTokens}</span> tokens<br>` : ''}
+                        • <span style="color: #ffeb3b; font-weight: bold;">TOTAL: ${reward} Corrupt Tokens</span><br>
                     </div>
                 </div>
                 <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
@@ -136,7 +129,6 @@ function showRugpullOffer() {
                         • Start with <span style="color: #ffeb3b; font-weight: bold;">$${starterCash}</span> cash<br>
                         • +2x mining speed bonus <span style="color: #ffeb3b;">(${(ascensionLevel + 1) * 2}x total)</span><br>
                         • +2x manual hash bonus <span style="color: #ffeb3b;">(${(ascensionLevel + 1) * 2}x total)</span><br>
-                        <div style="font-size: 0.8rem; color: #999; margin-top: 8px;">💡 Bonuses stack additively: each ascension adds +2x</div>
                     </div>
                     <div style="border-top: 1px solid #555; padding-top: 10px; margin-top: 10px; color: #ccc; font-size: 0.85rem;">
                         This will:<br>
@@ -184,8 +176,18 @@ function executeRugpull(reward) {
         ascensionStats.bestRunEarnings = dollarBalance;
     }
 
-    // Save lifetime earnings before reset (needed for next milestone tracking)
-    const savedLifetimeEarnings = lifetimeEarnings;
+    // Add this run's earnings to the display total (for player to see)
+    lifetimeEarningsDisplay += lifetimeEarnings;
+    // Update window references so display updates
+    if (window.rugpullState) {
+        window.rugpullState.lifetimeEarningsDisplay = lifetimeEarningsDisplay;
+    }
+    if (window.gameState) {
+        window.gameState.lifetimeEarnings = lifetimeEarningsDisplay;
+    }
+    // Save session data (should persist across rugpull - same session)
+    const savedSessionEarnings = sessionEarnings;
+    const savedSessionStartTime = sessionStartTime;
 
     // Achievement: First rugpull and ascension count
     const newAscensionLevel = ascensionLevel + 1;
@@ -204,7 +206,8 @@ function executeRugpull(reward) {
         metaUpgrades: JSON.parse(JSON.stringify(metaUpgrades)),
         ascensionStats: JSON.parse(JSON.stringify(ascensionStats)),
         unlockedSystems: JSON.parse(JSON.stringify(unlockedSystems)),
-        achievements: savedAchievements
+        achievements: savedAchievements,
+        lifetimeEarningsDisplay: lifetimeEarningsDisplay  // Persist display earnings across rugpull
     };
 
     // Clear localStorage but prepare to restore ascension data
@@ -217,15 +220,32 @@ function executeRugpull(reward) {
     // Store the total lifetime earnings in ascension stats for future token calculations
     // lifetimeEarnings stays at 0 for the new run
 
+    // Reset milestone tracking for the new run (so popup only shows when NEW requirement is reached)
+    lastShownMilestoneEarnings = 0;
+    lifetimeEarningsThisRugpull = 0;  // Reset earnings counter for new run's rugpull tracking
+
     // Restore ascension data
     ascensionLevel = newAscensionLevel;
     rugpullCurrency = savedAscensionData.rugpullCurrency;
     metaUpgrades = savedAscensionData.metaUpgrades;
     ascensionStats = savedAscensionData.ascensionStats;
     unlockedSystems = savedAscensionData.unlockedSystems;
+    lifetimeEarningsDisplay = savedAscensionData.lifetimeEarningsDisplay;  // Restore display earnings
     // Sync window references after restoring ascension data
     window.metaUpgrades = metaUpgrades;
     window.upgradeToggleState = upgradeToggleState;
+    if (window.rugpullState) {
+        window.rugpullState.lifetimeEarningsDisplay = lifetimeEarningsDisplay;
+    }
+
+    // Restore session data (persist across rugpull - same gameplay session)
+    sessionEarnings = savedSessionEarnings;
+    sessionStartTime = savedSessionStartTime;
+
+    // Update window.gameState with display earnings (what player sees)
+    if (window.gameState) {
+        window.gameState.lifetimeEarnings = lifetimeEarningsDisplay;
+    }
 
     // RESTORE ACHIEVEMENTS DATA (persist across rugpulls)
     if (typeof achievementsData !== 'undefined' && savedAscensionData.achievements) {
@@ -247,15 +267,24 @@ function executeRugpull(reward) {
     saveGame();
     updateUI();
     updateStakingUI();
+    updateAscensionUI(); // Explicitly update to show store button
 
     // Show success message as modal
     showRugpullCompleteModal(reward);
 
     // Open meta-upgrades modal so player can spend tokens immediately
+    // Use shorter timeout and force open
     setTimeout(() => {
         closeRugpullCompleteModal();
+        // Force display of store button
+        const storeBtn = document.getElementById('rugpull-store-btn');
+        if (storeBtn) {
+            storeBtn.style.display = 'inline-block';
+        }
+        // Open the meta-upgrades modal
         openMetaUpgradesModal();
-    }, 3000);
+        console.log('[RUGPULL] Auto-opening meta-upgrades modal after rugpull');
+    }, 2000);
 
     // Don't reload - keep modals visible for player to interact with store
     // setTimeout(() => {
@@ -289,7 +318,6 @@ function resetGameState() {
 
     dollarBalance = 0;
     hardwareEquity = 0;
-    sessionEarnings = 0;
     lifetimeEarnings = 0;
 
     // Reset power system
@@ -1085,16 +1113,36 @@ function tryAutoBuyBasicUpgrades() {
 function getRugpullRequirement() {
     // Exponentially scaling rugpull requirements based on ascensions (infinite scaling)
     // 1st (level 0): $1B, 2nd (level 1): $10B, 3rd (level 2): $100B, 4th: $1T, 5th: $10T, 6th: $100T, 7th: $1Q, etc.
-    const baseRequirement = 1000000000;  // $1B base for first rugpull
-    const ascensionMultiplier = Math.pow(10, ascensionLevel);  // 10x harder each ascension
-    return Math.floor(baseRequirement * ascensionMultiplier);
+    return 1000000000 * Math.pow(10, ascensionLevel);  // $1B × 10^level
 }
 
 function isRugpullEligible() {
-    // Check if lifetimeEarnings is available from game.js
-    const earnings = typeof lifetimeEarnings !== 'undefined' ? lifetimeEarnings : 0;
+    // Check current run earnings (resets after each rugpull)
+    const earnings = lifetimeEarningsThisRugpull;
     // Eligible if earned at least the current requirement
     return earnings >= getRugpullRequirement();
+}
+
+/**
+ * Update current run earnings from game.js (called every 100ms)
+ */
+function updateCurrentRunEarnings(lifetimeEarningsFromGame) {
+    lifetimeEarningsThisRugpull = lifetimeEarningsFromGame;
+}
+
+/**
+ * Update store button visibility (called regularly from game loop)
+ * This ensures the button stays visible when player has tokens
+ */
+function updateStoreButtonVisibility() {
+    const storeBtn = document.getElementById('rugpull-store-btn');
+    if (!storeBtn) return;
+
+    if (rugpullCurrency > 0) {
+        storeBtn.style.display = 'inline-block';
+    } else {
+        storeBtn.style.display = 'none';
+    }
 }
 
 /**
@@ -1123,10 +1171,10 @@ function closeMetaUpgradesModal() {
     if (modal) {
         modal.style.display = 'none';
     }
-    // Hide the store button when modal is closed
-    const storeBtn = document.getElementById('rugpull-store-btn');
-    if (storeBtn) {
-        storeBtn.style.display = 'none';
+    // Update store button visibility based on current token balance
+    // (don't automatically hide - let updateStoreButtonVisibility handle it)
+    if (typeof updateStoreButtonVisibility === 'function') {
+        updateStoreButtonVisibility();
     }
 }
 
@@ -1199,6 +1247,7 @@ function updateAscensionUI() {
         let requirementLabel = '';
         let earningsLabel = '';
 
+
         // Helper to format large numbers with appropriate suffix
         function formatLargeNumber(num) {
             if (num >= 1e30) {  // Nonillion (N)
@@ -1224,8 +1273,18 @@ function updateAscensionUI() {
             }
         }
 
-        requirementLabel = formatLargeNumber(requirement);
-        earningsLabel = formatLargeNumber(lifetimeEarnings);
+        // Always show requirement in consistent format (no decimals for whole numbers)
+        if (requirement >= 1e12) {
+            requirementLabel = `$${(requirement / 1e12).toFixed(0)}T`;
+        } else if (requirement >= 1e9) {
+            requirementLabel = `$${(requirement / 1e9).toFixed(0)}B`;
+        } else if (requirement >= 1e6) {
+            requirementLabel = `$${(requirement / 1e6).toFixed(0)}M`;
+        } else {
+            requirementLabel = `$${Math.floor(requirement).toLocaleString()}`;
+        }
+
+        earningsLabel = formatLargeNumber(lifetimeEarningsThisRugpull);
 
         progressText.textContent = `${earningsLabel} / ${requirementLabel}`;
     }
@@ -1233,11 +1292,16 @@ function updateAscensionUI() {
     // Show/hide Rugpull Store button based on tokens
     const storeBtn = document.getElementById('rugpull-store-btn');
     if (storeBtn) {
+        console.log('[RUGPULL STORE BTN] rugpullCurrency:', rugpullCurrency, 'storeBtn found:', !!storeBtn);
         if (rugpullCurrency > 0) {
-            storeBtn.style.display = 'block';
+            storeBtn.style.display = 'inline-block';
+            console.log('[RUGPULL STORE BTN] Showing store button');
         } else {
             storeBtn.style.display = 'none';
+            console.log('[RUGPULL STORE BTN] Hiding store button');
         }
+    } else {
+        console.log('[RUGPULL STORE BTN] Store button element not found');
     }
 }
 
@@ -1261,23 +1325,19 @@ function handleRugpullButtonClick() {
  * Check for $1M milestones and show popup (call from game loop)
  */
 function checkRugpullMilestone() {
-    if (typeof lifetimeEarnings === 'undefined') {
-        console.log('checkRugpullMilestone: lifetimeEarnings undefined');
+    const earnings = lifetimeEarningsThisRugpull;
+    if (!earnings) {
         return;
     }
 
     const requirement = getRugpullRequirement();
 
     // Show popup if player just hit the current rugpull requirement
-    if (lifetimeEarnings >= requirement && lastShownMilestoneEarnings < requirement) {
-        console.log('RUGPULL MILESTONE DETECTED!', lifetimeEarnings, 'vs', requirement);
-        lastShownMilestoneEarnings = lifetimeEarnings;
+    if (earnings >= requirement && lastShownMilestoneEarnings < requirement) {
+        lastShownMilestoneEarnings = earnings;
 
-        // Small delay to ensure UI is ready
-        setTimeout(() => {
-            console.log('Calling showRugpullMilestonePopup');
-            showRugpullMilestonePopup(ascensionLevel + 1);
-        }, 100);
+        // Show popup immediately
+        showRugpullMilestonePopup(ascensionLevel + 1);
     }
 }
 
@@ -1285,7 +1345,6 @@ function checkRugpullMilestone() {
  * Show popup when player reaches a rugpull requirement (as in-game modal)
  */
 function showRugpullMilestonePopup(nextMilestoneNumber) {
-    const reward = calculateRugpullReward();
     const modalText = document.getElementById('milestone-modal-text');
     const modal = document.getElementById('rugpull-milestone-modal');
     const confirmBtn = document.getElementById('milestone-confirm-btn');
@@ -1293,22 +1352,23 @@ function showRugpullMilestonePopup(nextMilestoneNumber) {
     // Get the requirement that was just met (dynamically calculated)
     const requirement = getRugpullRequirement();
     let requirementLabel = '';
-    if (requirement >= 1000000000) {
-        requirementLabel = `$${(requirement / 1000000000).toFixed(2)}B`;
-    } else if (requirement >= 1000000) {
-        requirementLabel = `$${(requirement / 1000000).toFixed(2)}M`;
+    if (requirement >= 1e12) {
+        requirementLabel = `$${(requirement / 1e12).toFixed(0)}T`;
+    } else if (requirement >= 1e9) {
+        requirementLabel = `$${(requirement / 1e9).toFixed(0)}B`;
+    } else if (requirement >= 1e6) {
+        requirementLabel = `$${(requirement / 1e6).toFixed(0)}M`;
     } else {
         requirementLabel = `$${requirement.toLocaleString()}`;
     }
     const currentMilestone = { value: requirement, label: requirementLabel };
 
-    // Calculate token breakdown for display
-    const baseFromEarnings = Math.floor(lifetimeEarnings / 1000000);
-    const baseFromCash = Math.floor(dollarBalance / 100000);
-    const baseReward = baseFromEarnings + baseFromCash;
-    const ascensionBonus = 1 + (ascensionLevel * 0.05);
+    // Calculate token reward and starter cash
+    const baseReward = 200 * Math.pow(10, ascensionLevel);
+    const excessEarnings = Math.max(0, lifetimeEarningsThisRugpull - requirement);
+    const bonusTokens = Math.floor(excessEarnings / 5000000);
+    const reward = Math.max(1, Math.floor(baseReward + bonusTokens));
     const starterCash = 1500 + (ascensionLevel * 500);
-    const totalBonus = ascensionLevel * 2;
 
     if (modalText && modal) {
         modalText.innerHTML = `
@@ -1316,13 +1376,9 @@ function showRugpullMilestonePopup(nextMilestoneNumber) {
             <div style="color: #fff; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.8;">
                 <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 8px;">TOKEN CALCULATION:</div>
                 <div style="margin-bottom: 15px; color: #ddd; font-size: 0.85rem;">
-                    • Lifetime Earnings: $${lifetimeEarnings.toLocaleString()} ÷ $1M = <span style="color: #4CAF50;">${baseFromEarnings}</span> tokens<br>
-                    • Current Cash Bonus: $${dollarBalance.toLocaleString()} ÷ $100k = <span style="color: #4CAF50;">${baseFromCash}</span> tokens<br>
-                    • Base Total: <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
-                    • Ascension Bonus: <span style="color: #4CAF50;">×${ascensionBonus.toFixed(2)}</span><br>
-                    <span style="border-top: 1px solid #555; padding-top: 8px; margin-top: 8px; display: block;">
-                        <span style="color: #ffeb3b; font-weight: bold;">FINAL REWARD: ${reward} Corrupt Tokens</span>
-                    </span>
+                    • Base Tokens: 200 × 10<sup>${ascensionLevel}</sup> = <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
+                    ${bonusTokens > 0 ? `• Bonus Tokens: $${excessEarnings.toLocaleString()} ÷ $5M = <span style="color: #4CAF50;">+${bonusTokens}</span> tokens<br>` : ''}
+                    • <span style="color: #ffeb3b; font-weight: bold;">TOTAL: ${reward} Corrupt Tokens</span>
                 </div>
                 <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
                     <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 8px;">RUGPULL REWARDS:</div>
@@ -1357,10 +1413,10 @@ function closeRugpullMilestoneModal() {
     if (modal) {
         modal.style.display = 'none';
     }
-    // Hide the store button when modal is closed
-    const storeBtn = document.getElementById('rugpull-store-btn');
-    if (storeBtn) {
-        storeBtn.style.display = 'none';
+    // Update store button visibility based on current token balance
+    // (don't automatically hide - let updateStoreButtonVisibility handle it)
+    if (typeof updateStoreButtonVisibility === 'function') {
+        updateStoreButtonVisibility();
     }
 }
 
@@ -1545,6 +1601,14 @@ window.testRugpull = testRugpull;
 // Export metaUpgrades and upgradeToggleState to window so game.js can access them
 window.metaUpgrades = metaUpgrades;
 window.upgradeToggleState = upgradeToggleState;
+
+// Export rugpullState object to window so game.js can save/load lifetimeEarningsDisplay
+window.rugpullState = {
+    lifetimeEarningsDisplay: lifetimeEarningsDisplay
+};
+
+// Export store button visibility function to window
+window.updateStoreButtonVisibility = updateStoreButtonVisibility;
 
 // Debug: Confirm exports are available
 console.log('[RUGPULL] Exports set to window:', {

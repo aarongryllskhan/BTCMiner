@@ -48,6 +48,16 @@
                 font-size: 0.55rem !important;
                 padding: 6px 10px !important;
             }
+
+            /* Desktop: Show store button next to RUGPULL */
+            #rugpull-store-btn {
+                display: inline-block !important;
+                font-size: 0.75rem !important;
+                padding: 4px 12px !important;
+                height: 32px !important;
+                display: flex !important;
+                align-items: center !important;
+            }
         }
 
         @media (max-width: 1024px) {
@@ -73,8 +83,12 @@
             /* Position RUGPULL button below the utility buttons */
             .desktop-button-layout > div:first-child { position: static !important; left: auto !important; top: auto !important; transform: none !important; width: 100% !important; margin: 0 !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
 
-            /* RUGPULL STORE button - hidden on mobile since RUGPULL is now in main layout */
-            #rugpull-store-btn { display: none !important; }
+            /* RUGPULL STORE button styling for mobile - show next to RUGPULL */
+            #rugpull-store-btn {
+                display: inline-block !important;
+                font-size: 0.5rem !important;
+                padding: 4px 8px !important;
+            }
 
             #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; gap: 4px !important; }
             #hashrate-display .stat-box { padding: 4px 6px !important; }
