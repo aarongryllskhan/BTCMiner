@@ -1481,14 +1481,12 @@ function loadGame() {
 
             // Reset achievements on full save reset
             if (typeof achievementsData !== 'undefined') {
-                Object.keys(achievementsData.achievements).forEach(id => {
-                    achievementsData.achievements[id] = {
-                        unlocked: false,
-                        unlockedAt: null,
-                        progress: 0,
-                        notificationShown: false
-                    };
-                });
+                // Clear achievements object completely
+                achievementsData.achievements = {};
+                // Reinitialize achievements from definitions
+                if (typeof initAchievements === 'function') {
+                    initAchievements();
+                }
                 notificationsShownThisSession.clear();
                 console.log('✓ Achievements reset on save reset');
             }
