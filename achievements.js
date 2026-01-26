@@ -378,6 +378,8 @@ function populateAchievementsModal() {
     container.innerHTML = '';
 
     const categories = {};
+    console.log('🏆 Starting category population. Total achievementDefinitions:', Object.keys(achievementDefinitions).length);
+
     Object.keys(achievementDefinitions).forEach(id => {
         const achievement = achievementDefinitions[id];
         const category = achievement.category;
@@ -386,6 +388,13 @@ function populateAchievementsModal() {
         }
         categories[category].push({ id, ...achievement });
     });
+
+    // Debug log
+    console.log('🏆 Categories found:', Object.keys(categories));
+    console.log('🏆 Power achievements:', categories['power'] ? categories['power'].map(a => a.id) : 'NONE');
+    console.log('🏆 Ascension achievements:', categories['ascension'] ? categories['ascension'].map(a => a.id) : 'NONE');
+    console.log('🏆 achievementDefinitions has power_1mw:', 'power_1mw' in achievementDefinitions);
+    console.log('🏆 achievementDefinitions has first_rugpull:', 'first_rugpull' in achievementDefinitions);
 
     const categoryLabels = {
         earnings: '💵 Earnings Milestones',
@@ -403,37 +412,55 @@ function populateAchievementsModal() {
         categoryHeader.innerHTML = `<h3>${categoryLabels[category] || category}</h3>`;
         container.appendChild(categoryHeader);
 
+        console.log(`🏆 Rendering ${category} category with ${categories[category].length} items`);
+
         categories[category].forEach(achievement => {
-            const state = achievementsData.achievements[achievement.id];
-            const isUnlocked = state && state.unlocked;
+            try {
+                // Ensure the achievement has been initialized in achievementsData
+                if (!achievementsData.achievements[achievement.id]) {
+                    achievementsData.achievements[achievement.id] = {
+                        unlocked: false,
+                        unlockedAt: null,
+                        progress: 0,
+                        notificationShown: false
+                    };
+                }
 
-            const achievementDiv = document.createElement('div');
-            achievementDiv.className = `achievement-item ${isUnlocked ? '' : 'achievement-locked'}`;
+                const state = achievementsData.achievements[achievement.id];
+                const isUnlocked = state && state.unlocked;
 
-            if (isUnlocked) {
-                const unlockedDate = new Date(state.unlockedAt);
-                const dateStr = unlockedDate.toLocaleDateString();
-                achievementDiv.innerHTML = `
-                    <div class="achievement-emoji">${achievement.emoji}</div>
-                    <div class="achievement-info">
-                        <div class="achievement-name">${achievement.name}</div>
-                        <div class="achievement-desc">${achievement.description}</div>
-                        <div class="achievement-date">Unlocked: ${dateStr}</div>
-                    </div>
-                `;
-            } else {
-                achievementDiv.innerHTML = `
-                    <div class="achievement-emoji">❓</div>
-                    <div class="achievement-info">
-                        <div class="achievement-name">???</div>
-                        <div class="achievement-desc">???</div>
-                    </div>
-                `;
+                const achievementDiv = document.createElement('div');
+                achievementDiv.className = `achievement-item ${isUnlocked ? '' : 'achievement-locked'}`;
+
+                if (isUnlocked) {
+                    const unlockedDate = new Date(state.unlockedAt);
+                    const dateStr = unlockedDate.toLocaleDateString();
+                    achievementDiv.innerHTML = `
+                        <div class="achievement-emoji">${achievement.emoji}</div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">${achievement.name}</div>
+                            <div class="achievement-desc">${achievement.description}</div>
+                            <div class="achievement-date">Unlocked: ${dateStr}</div>
+                        </div>
+                    `;
+                } else {
+                    achievementDiv.innerHTML = `
+                        <div class="achievement-emoji">❓</div>
+                        <div class="achievement-info">
+                            <div class="achievement-name">???</div>
+                            <div class="achievement-desc">???</div>
+                        </div>
+                    `;
+                }
+
+                container.appendChild(achievementDiv);
+            } catch (e) {
+                console.error('🏆 Error rendering achievement:', achievement.id, e);
             }
-
-            container.appendChild(achievementDiv);
         });
     });
+
+    console.log('🏆 populateAchievementsModal complete. Container children:', container.children.length);
 }
 
 // Mark first stake
@@ -453,3 +480,7 @@ function markFirstRugpull() {
         showAchievementNotification('first_rugpull');
     }
 }
+
+// Verification: Check if Power and Ascension achievements exist in achievementDefinitions
+console.log('🏆 Achievements.js loaded. Power achievements:', Object.keys(achievementDefinitions).filter(k => k.includes('power')));
+console.log('🏆 Ascension achievements:', Object.keys(achievementDefinitions).filter(k => k.includes('rugpull')));

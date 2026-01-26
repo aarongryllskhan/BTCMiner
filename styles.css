@@ -986,18 +986,28 @@ button:disabled:hover {
             max-width: 900px;
         }
 
+        /* Desktop modal - make it bigger */
+        @media (min-width: 1200px) {
+            #achievements-modal .modal-content {
+                max-width: 95vw;
+                max-height: 95vh;
+                width: 1800px;
+                overflow-y: auto;
+            }
+        }
+
         /* Achievement items grid - responsive */
         #achievements-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            grid-auto-flow: dense;
+            gap: 15px;
         }
 
-        /* Desktop: 6 columns */
+        /* Desktop: 10 columns */
         @media (min-width: 1200px) {
             #achievements-container {
-                grid-template-columns: repeat(6, 1fr);
+                grid-template-columns: repeat(10, 1fr);
+                gap: 12px;
             }
         }
 
@@ -1029,11 +1039,11 @@ button:disabled:hover {
         .achievement-item {
             background: rgba(255, 215, 0, 0.05);
             border: 1px solid #FFD700;
-            border-radius: 8px;
-            padding: 12px;
+            border-radius: 6px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 6px;
             transition: all 0.3s ease;
         }
 
@@ -1055,8 +1065,8 @@ button:disabled:hover {
         }
 
         .achievement-emoji {
-            font-size: 1.8rem;
-            min-width: 50px;
+            font-size: 1.5rem;
+            min-width: 40px;
             text-align: center;
             flex-shrink: 0;
         }
@@ -1064,14 +1074,14 @@ button:disabled:hover {
         .achievement-info {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
             flex: 1;
         }
 
         .achievement-name {
             color: #FFD700;
             font-weight: 800;
-            font-size: 0.95rem;
+            font-size: 0.8rem;
         }
 
         .achievement-locked .achievement-name {
@@ -1080,8 +1090,8 @@ button:disabled:hover {
 
         .achievement-desc {
             color: #aaa;
-            font-size: 0.8rem;
-            line-height: 1.3;
+            font-size: 0.7rem;
+            line-height: 1.2;
         }
 
         .achievement-locked .achievement-desc {
@@ -1090,8 +1100,8 @@ button:disabled:hover {
 
         .achievement-date {
             color: #00ff88;
-            font-size: 0.75rem;
-            margin-top: 4px;
+            font-size: 0.65rem;
+            margin-top: 2px;
             font-weight: 600;
         }
 
