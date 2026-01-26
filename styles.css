@@ -1,8 +1,8 @@
         :root { --btc: #f7931a; --bg: #050505; --panel: #111; --green: #00ff88; --red: #ff3344; --border: #222; }
         html { touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box; overflow-x: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px 20px 35px 20px; overflow: hidden; height: 100vh; box-sizing: border-box; overflow-x: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
         #dollar-balance { font-size: 1.5rem; }
-        
+
         #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; }
 
@@ -51,7 +51,7 @@
         }
 
         @media (max-width: 1024px) {
-            body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
+            body { padding: 6px 6px 6px 6px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
             .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-top: 85px !important; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
@@ -93,7 +93,7 @@
         }
 
         @media (max-width: 768px) {
-            body { padding: 6px; margin: 0; height: auto; overflow-y: scroll; }
+            body { padding: 6px 6px 14px 6px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
             .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
@@ -184,7 +184,7 @@
         }
 
         @media (max-width: 480px) {
-            body { padding: 5px; margin: 0; height: auto; overflow-y: scroll; }
+            body { padding: 5px 5px 13px 5px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; }
             .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
@@ -1372,7 +1372,66 @@ button:disabled:hover {
                 right: 10px;
                 bottom: 10px;
                 max-width: none;
-                padding: 15px;
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+
+            #hacking-notification > div:first-child {
+                font-size: 0.9rem;
+                margin-bottom: 6px;
+            }
+
+            #hacking-notification > div:nth-child(2) {
+                font-size: 0.75rem;
+                margin-bottom: 10px;
+            }
+
+            #hacking-notification button {
+                padding: 8px 12px !important;
+                font-size: 0.75rem !important;
+            }
+        }
+
+        /* Footer Styles */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: #666;
+            padding: 8px 20px;
+            text-align: center;
+            border-top: 1px solid #333;
+            font-size: 0.65rem;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        footer a {
+            color: #f7931a;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        footer a:hover {
+            color: #fff;
+        }
+
+        /* Mobile footer adjustments */
+        @media (max-width: 768px) {
+            footer {
+                font-size: 9.6px !important;
+                padding: 1.6px 4.8px !important;
+                line-height: 1.15 !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            footer {
+                font-size: 8px !important;
+                padding: 1.6px 3.2px !important;
+                line-height: 1.15 !important;
             }
         }
 

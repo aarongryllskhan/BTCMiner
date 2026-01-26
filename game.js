@@ -2191,6 +2191,26 @@ function loadGame() {
     }
 
     function initHackingMinigame(difficulty) {
+        // Check difficulty-specific unlock requirements
+        let requiredEarnings = 0;
+        let difficultyName = '';
+
+        if (difficulty === 'EASY') {
+            requiredEarnings = 10000;
+            difficultyName = 'EASY';
+        } else if (difficulty === 'MEDIUM') {
+            requiredEarnings = 50000;
+            difficultyName = 'MEDIUM';
+        } else if (difficulty === 'HARD') {
+            requiredEarnings = 100000;
+            difficultyName = 'HARD';
+        }
+
+        if (lifetimeEarnings < requiredEarnings) {
+            alert(`🔒 ${difficultyName} Difficulty Locked!\n\nRequires $${requiredEarnings.toLocaleString()} lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
+            return;
+        }
+
         // Check cooldown
         const now = Date.now();
         const cooldownEnd = hackingCooldowns[difficulty] || 0;
@@ -2429,8 +2449,8 @@ function loadGame() {
     function awardHackingRewards(difficulty, multiplier) {
         const config = hackingDifficultyConfig[difficulty];
 
-        // Get current ascension level
-        const ascensionLevel = (typeof getAscensionLevel === 'function') ? getAscensionLevel() : 0;
+        // Get current rugpull/ascension level (defined in rugpull.js)
+        const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
 
         // Define crypto price multiplier ranges per difficulty
         // EASY: 0.1x - 0.5x of total crypto prices
@@ -2460,9 +2480,9 @@ function loadGame() {
         // Time bonus and consecutive wins bonus (already in multiplier parameter)
         const totalMultiplier = multiplier;
 
-        // POWERFUL Ascension multiplier: 10x per ascension level
-        // Ascension 1 = 10x, Ascension 2 = 20x, Ascension 5 = 50x
-        const ascensionMultiplier = ascensionLevel > 0 ? (ascensionLevel * 10) : 1;
+        // POWERFUL Rugpull multiplier: 10x per rugpull level
+        // Rugpull 1 = 10x, Rugpull 2 = 20x, Rugpull 5 = 50x
+        const ascensionMultiplier = rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
 
         // Calculate total USD value after all multipliers
         const totalUsdValue = baseUsdValue * totalMultiplier * ascensionMultiplier;
@@ -3556,6 +3576,72 @@ function buyDogeBoost(i) {
         // Update power display
         calculateTotalPowerUsed();
         updatePowerDisplay();
+
+        // Update hacking tab visibility based on lifetime earnings
+        const hackingTabBtn = document.getElementById('hacking-tab-btn');
+        if (hackingTabBtn) {
+            if (lifetimeEarnings < 10000) {
+                hackingTabBtn.style.opacity = '0.5';
+                hackingTabBtn.style.cursor = 'not-allowed';
+                hackingTabBtn.innerHTML = `🔒 HACKING<br><span style="font-size: 0.6rem;">($${(lifetimeEarnings).toFixed(0)}/$10,000)</span>`;
+                hackingTabBtn.onclick = function(e) {
+                    e.preventDefault();
+                    alert(`🔒 Hacking Feature Locked!\n\nRequires $10,000 lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
+                };
+            } else {
+                hackingTabBtn.style.opacity = '1';
+                hackingTabBtn.style.cursor = 'pointer';
+                hackingTabBtn.textContent = 'HACKING';
+                hackingTabBtn.onclick = function() { switchTab('hacking'); };
+            }
+        }
+
+        // Update difficulty button states based on lifetime earnings
+        const easyBtn = document.getElementById('hacking-easy-btn');
+        const mediumBtn = document.getElementById('hacking-medium-btn');
+        const hardBtn = document.getElementById('hacking-hard-btn');
+
+        if (easyBtn) {
+            if (lifetimeEarnings < 10000) {
+                easyBtn.style.opacity = '0.5';
+                easyBtn.style.cursor = 'not-allowed';
+            } else {
+                easyBtn.style.opacity = '1';
+                easyBtn.style.cursor = 'pointer';
+            }
+        }
+
+        if (mediumBtn) {
+            if (lifetimeEarnings < 50000) {
+                mediumBtn.style.opacity = '0.5';
+                mediumBtn.style.cursor = 'not-allowed';
+                const currentAbbrev = lifetimeEarnings >= 1000 ? '$' + (lifetimeEarnings / 1000).toFixed(1) + 'K' : '$' + lifetimeEarnings.toFixed(0);
+                mediumBtn.innerHTML = `<div style="margin-bottom: 5px;">🔒 MEDIUM</div>
+                    <div style="font-size: 0.65rem; font-weight: 400;">${currentAbbrev}/$50K</div>`;
+            } else {
+                mediumBtn.style.opacity = '1';
+                mediumBtn.style.cursor = 'pointer';
+                mediumBtn.innerHTML = `<div style="margin-bottom: 5px;">MEDIUM</div>
+                    <div style="font-size: 0.7rem; font-weight: 400;">4 bugs | 20s | 8 lives</div>
+                    <div style="font-size: 0.65rem; margin-top: 5px;">+25% speed | 2m</div>`;
+            }
+        }
+
+        if (hardBtn) {
+            if (lifetimeEarnings < 100000) {
+                hardBtn.style.opacity = '0.5';
+                hardBtn.style.cursor = 'not-allowed';
+                const currentAbbrev = lifetimeEarnings >= 1000 ? '$' + (lifetimeEarnings / 1000).toFixed(1) + 'K' : '$' + lifetimeEarnings.toFixed(0);
+                hardBtn.innerHTML = `<div style="margin-bottom: 5px;">🔒 HARD</div>
+                    <div style="font-size: 0.65rem; font-weight: 400;">${currentAbbrev}/$100K</div>`;
+            } else {
+                hardBtn.style.opacity = '1';
+                hardBtn.style.cursor = 'pointer';
+                hardBtn.innerHTML = `<div style="margin-bottom: 5px;">HARD</div>
+                    <div style="font-size: 0.7rem; font-weight: 400;">5 bugs | 12s | 10 lives</div>
+                    <div style="font-size: 0.65rem; margin-top: 5px;">+50% speed | 2m</div>`;
+            }
+        }
 
         btcUpgrades.forEach(u => {
     const costUsd = u.currentUsd;
