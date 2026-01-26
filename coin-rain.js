@@ -140,22 +140,14 @@
                 coinType = this.coinTypes[Math.floor(Math.random() * this.coinTypes.length)];
             }
 
-            // Dollar bills are larger, crypto coins are smaller
+            // Consistent sizes for all coins
             let size;
-            if (consistentSize) {
-                // Consistent size for manual click coins
-                if (coinType.name === 'usd') {
-                    size = 42; // Fixed size for dollar bills
-                } else {
-                    size = 16; // Fixed size for crypto coins
-                }
+            if (coinType.name === 'usd') {
+                size = 42; // Fixed size for all dollar bills
+            } else if (coinType.name === 'eth') {
+                size = 32.4; // ETH 35% bigger (24 * 1.35 = 32.4)
             } else {
-                // Random size for passive coins
-                if (coinType.name === 'usd') {
-                    size = 35 + Math.random() * 15; // 35-50px for dollar bills
-                } else {
-                    size = 12 + Math.random() * 8; // 12-20px for crypto coins
-                }
+                size = 24; // Fixed size for BTC and DOGE
             }
 
             // Increase randomization for click coins
