@@ -93,23 +93,42 @@
     let whackSpawnInterval = null; // Timer for spawning blocks
     let whackGameInterval = null; // Main game loop timer
 
+    // Network Stress Test Minigame State
+    let networkGameActive = false;
+    let networkGameDifficulty = 'EASY';
+    let networkGameStartTime = 0;
+    let networkGameTimeLimit = 10000; // 10 seconds
+    let networkGameMaxHP = 50000;
+    let networkGameCurrentHP = 50000;
+    let networkGameTotalDamage = 0; // Total damage from all sources
+    let networkGameClickDamageTotal = 0; // Damage from clicks only
+    let networkGameClickDamage = 100; // Base damage per click
+    let networkGameGamesPlayed = 0;
+    let networkGameGamesWon = 0;
+    let networkGameTotalRewardsEarned = 0;
+    let networkLastRewards = { btc: 0, eth: 0, doge: 0, usd: 0, totalUsd: 0 };
+    let networkGameInterval = null; // Main game loop timer
+
+    // Network Stress Test gets harder with each play
+    // Difficulty scales based on games played
+
     // Power system - Rebalanced for strategic gameplay
     let totalPowerAvailable = 0; // Total watts available
     let totalPowerUsed = 0; // Total watts being used
     const powerUpgrades = [
-        { id: 0, name: "Basic Power Strip", baseUsd: 25, basePower: 10 },
-        { id: 1, name: "Regulated PSU", baseUsd: 350, basePower: 100 },
-        { id: 2, name: "High-Efficiency PSU", baseUsd: 2100, basePower: 500 },
-        { id: 3, name: "Server-Grade PSU", baseUsd: 12000, basePower: 2500 },
-        { id: 4, name: "Mining Power Distribution Unit", baseUsd: 60000, basePower: 12000 },
-        { id: 5, name: "Modular Data Center Power System", baseUsd: 320000, basePower: 60000 },
-        { id: 6, name: "Dedicated Substation Power Unit", baseUsd: 1600000, basePower: 280000 },
-        { id: 7, name: "Industrial Grid Connection", baseUsd: 8000000, basePower: 1400000 },
-        { id: 8, name: "Hydroelectric Power Station", baseUsd: 40000000, basePower: 7000000 },
-        { id: 9, name: "Nuclear Reactor Array", baseUsd: 200000000, basePower: 35000000 },
-        { id: 10, name: "Fusion Energy Complex", baseUsd: 1000000000, basePower: 175000000 },
-        { id: 11, name: "Dyson Sphere Power Collector", baseUsd: 7000000000, basePower: 1200000000 },
-        { id: 12, name: "Stellar Energy Tapestry", baseUsd: 50000000000, basePower: 8500000000 }
+        { id: 0, name: "Basic Power Strip", baseUsd: 5, basePower: 10 },
+        { id: 1, name: "Regulated PSU", baseUsd: 50, basePower: 100 },
+        { id: 2, name: "High-Efficiency PSU", baseUsd: 550, basePower: 1100 },
+        { id: 3, name: "Server-Grade PSU", baseUsd: 6000, basePower: 12000 },
+        { id: 4, name: "Mining Power Distribution Unit", baseUsd: 66000, basePower: 132000 },
+        { id: 5, name: "Modular Data Center Power System", baseUsd: 726000, basePower: 1450000 },
+        { id: 6, name: "Dedicated Substation Power Unit", baseUsd: 8000000, basePower: 16000000 },
+        { id: 7, name: "Industrial Grid Connection", baseUsd: 88000000, basePower: 176000000 },
+        { id: 8, name: "Hydroelectric Power Station", baseUsd: 970000000, basePower: 1940000000 },
+        { id: 9, name: "Nuclear Reactor Array", baseUsd: 10700000000, basePower: 21400000000 },
+        { id: 10, name: "Fusion Energy Complex", baseUsd: 117000000000, basePower: 235000000000 },
+        { id: 11, name: "Dyson Sphere Power Collector", baseUsd: 1290000000000, basePower: 2580000000000 },
+        { id: 12, name: "Stellar Energy Tapestry", baseUsd: 14200000000000, basePower: 28400000000000 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentPower: 0 }));
 
     // Power requirements for mining equipment (in watts)
@@ -460,62 +479,62 @@
     // Bitcoin mining upgrades
     const btcUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.000000250 },
-        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.00000010 },
-        { id: 2, name: "GTX 1660 Super", baseUsd: 100, baseYield: 0.00000070 },
-        { id: 3, name: "RTX 5090 Rig", baseUsd: 3000, baseYield: 0.000015 },
-        { id: 4, name: "ASIC Mining Unit", baseUsd: 7500, baseYield: 0.000085 },
-        { id: 5, name: "Liquid ASIC Rig", baseUsd: 28000, baseYield: 0.00045 },
-        { id: 6, name: "Mobile Mining Container", baseUsd: 110000, baseYield: 0.0032 },
-        { id: 7, name: "Geothermal Mining Farm", baseUsd: 680000, baseYield: 0.045 },
-        { id: 8, name: "Data Center Facility", baseUsd: 5200000, baseYield: 0.62 },
-        { id: 9, name: "Orbital Data Relay", baseUsd: 35000000, baseYield: 5.8 },
-        { id: 10, name: "Quantum Computer", baseUsd: 500000000, baseYield: 125.0 },
-        { id: 11, name: "Advanced Quantum Rig", baseUsd: 3500000000, baseYield: 900.0 },
-        { id: 12, name: "Superintelligent AI Network", baseUsd: 25000000000, baseYield: 6500.0 },
-        { id: 13, name: "Dimensional Mining Array", baseUsd: 180000000000, baseYield: 47000.0 },
-        { id: 14, name: "Multiversal Hash Grid", baseUsd: 1300000000000, baseYield: 340000.0 },
-        { id: 15, name: "Infinite Energy Extractor", baseUsd: 9500000000000, baseYield: 2500000.0 }
+        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.00035 },
+        { id: 2, name: "GTX 1660 Super", baseUsd: 50, baseYield: 0.00245 },
+        { id: 3, name: "RTX 5090 Rig", baseUsd: 550, baseYield: 0.018 },
+        { id: 4, name: "ASIC Mining Unit", baseUsd: 6000, baseYield: 0.16 },
+        { id: 5, name: "Liquid ASIC Rig", baseUsd: 66000, baseYield: 1.4 },
+        { id: 6, name: "Mobile Mining Container", baseUsd: 726000, baseYield: 12.2 },
+        { id: 7, name: "Geothermal Mining Farm", baseUsd: 8000000, baseYield: 107 },
+        { id: 8, name: "Data Center Facility", baseUsd: 88000000, baseYield: 936 },
+        { id: 9, name: "Orbital Data Relay", baseUsd: 970000000, baseYield: 8184 },
+        { id: 10, name: "Quantum Computer", baseUsd: 10700000000, baseYield: 71500 },
+        { id: 11, name: "Advanced Quantum Rig", baseUsd: 117000000000, baseYield: 624000 },
+        { id: 12, name: "Superintelligent AI Network", baseUsd: 1290000000000, baseYield: 5450000 },
+        { id: 13, name: "Dimensional Mining Array", baseUsd: 14200000000000, baseYield: 47600000 },
+        { id: 14, name: "Multiversal Hash Grid", baseUsd: 156000000000000, baseYield: 416000000 },
+        { id: 15, name: "Infinite Energy Extractor", baseUsd: 1720000000000000, baseYield: 3640000000 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Ethereum mining upgrades - Balanced to match BTC/DOGE USD/sec earnings
     const ethUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00007143 },
-        { id: 1, name: "Single GPU Rig", baseUsd: 5, baseYield: 0.0000029 },
-        { id: 2, name: "RTX 4090 Miner", baseUsd: 100, baseYield: 0.000020 },
-        { id: 3, name: "8-GPU Mining Rig", baseUsd: 3000, baseYield: 0.000428 },
-        { id: 4, name: "Professional ETH Farm", baseUsd: 7500, baseYield: 0.00243 },
-        { id: 5, name: "Staking Validator Node", baseUsd: 28000, baseYield: 0.0129 },
-        { id: 6, name: "Multi-Validator Farm", baseUsd: 110000, baseYield: 0.0914 },
-        { id: 7, name: "ETH Mining Complex", baseUsd: 680000, baseYield: 1.286 },
-        { id: 8, name: "Enterprise Staking Pool", baseUsd: 5200000, baseYield: 17.7 },
-        { id: 9, name: "Layer 2 Validation Network", baseUsd: 35000000, baseYield: 165.7 },
-        { id: 10, name: "Ethereum Foundation Node", baseUsd: 500000000, baseYield: 3571.0 },
-        { id: 11, name: "Global Validator Consortium", baseUsd: 3500000000, baseYield: 25000.0 },
-        { id: 12, name: "Sharding Supernetwork", baseUsd: 25000000000, baseYield: 185700.0 },
-        { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 180000000000, baseYield: 1343000.0 },
-        { id: 14, name: "Interchain Bridge Network", baseUsd: 1300000000000, baseYield: 9600000.0 },
-        { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 9500000000000, baseYield: 70350000.0 }
+        { id: 1, name: "Single GPU Rig", baseUsd: 5, baseYield: 0.000025 },
+        { id: 2, name: "RTX 4090 Miner", baseUsd: 50, baseYield: 0.00018 },
+        { id: 3, name: "8-GPU Mining Rig", baseUsd: 550, baseYield: 0.00163 },
+        { id: 4, name: "Professional ETH Farm", baseUsd: 6000, baseYield: 0.0143 },
+        { id: 5, name: "Staking Validator Node", baseUsd: 66000, baseYield: 0.125 },
+        { id: 6, name: "Multi-Validator Farm", baseUsd: 726000, baseYield: 1.095 },
+        { id: 7, name: "ETH Mining Complex", baseUsd: 8000000, baseYield: 9.57 },
+        { id: 8, name: "Enterprise Staking Pool", baseUsd: 88000000, baseYield: 83.6 },
+        { id: 9, name: "Layer 2 Validation Network", baseUsd: 970000000, baseYield: 730 },
+        { id: 10, name: "Ethereum Foundation Node", baseUsd: 10700000000, baseYield: 6380 },
+        { id: 11, name: "Global Validator Consortium", baseUsd: 117000000000, baseYield: 55800 },
+        { id: 12, name: "Sharding Supernetwork", baseUsd: 1290000000000, baseYield: 487000 },
+        { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 14200000000000, baseYield: 4250000 },
+        { id: 14, name: "Interchain Bridge Network", baseUsd: 156000000000000, baseYield: 37200000 },
+        { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 1720000000000000, baseYield: 325000000 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Dogecoin mining upgrades - Balanced to match BTC/ETH USD/sec earnings
     // All three currencies earn the same USD/sec at each tier (DOGE yields are 400x higher to compensate for $0.25 price)
     const dogeUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.01 },
-        { id: 1, name: "Basic Scrypt Miner", baseUsd: 5, baseYield: 0.04 },
-        { id: 2, name: "L3+ ASIC Miner", baseUsd: 100, baseYield: 0.28 },
-        { id: 3, name: "Mini DOGE Farm", baseUsd: 3000, baseYield: 6.0 },
-        { id: 4, name: "Scrypt Mining Pool", baseUsd: 7500, baseYield: 34.0 },
-        { id: 5, name: "Industrial DOGE Facility", baseUsd: 28000, baseYield: 180.0 },
-        { id: 6, name: "DOGE Megafarm", baseUsd: 110000, baseYield: 1280.0 },
-        { id: 7, name: "WOW Mining Complex", baseUsd: 680000, baseYield: 18000.0 },
-        { id: 8, name: "Moon Mining Station", baseUsd: 5200000, baseYield: 248000.0 },
-        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 35000000, baseYield: 2320000.0 },
-        { id: 10, name: "To The Moon Supercomputer", baseUsd: 500000000, baseYield: 50000000.0 },
-        { id: 11, name: "Mars Colony Mining Base", baseUsd: 3500000000, baseYield: 360000000.0 },
-        { id: 12, name: "Asteroid Belt DOGE Harvester", baseUsd: 25000000000, baseYield: 2600000000.0 },
-        { id: 13, name: "Jovian Satellite Network", baseUsd: 180000000000, baseYield: 19000000000.0 },
-        { id: 14, name: "Solar System DOGE Grid", baseUsd: 1300000000000, baseYield: 140000000000.0 },
-        { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 9500000000000, baseYield: 1000000000000.0 }
+        { id: 1, name: "Basic Scrypt Miner", baseUsd: 5, baseYield: 0.14 },
+        { id: 2, name: "L3+ ASIC Miner", baseUsd: 50, baseYield: 0.98 },
+        { id: 3, name: "Mini DOGE Farm", baseUsd: 550, baseYield: 8.8 },
+        { id: 4, name: "Scrypt Mining Pool", baseUsd: 6000, baseYield: 77.0 },
+        { id: 5, name: "Industrial DOGE Facility", baseUsd: 66000, baseYield: 673 },
+        { id: 6, name: "DOGE Megafarm", baseUsd: 726000, baseYield: 5880 },
+        { id: 7, name: "WOW Mining Complex", baseUsd: 8000000, baseYield: 51400 },
+        { id: 8, name: "Moon Mining Station", baseUsd: 88000000, baseYield: 449000 },
+        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 970000000, baseYield: 3920000 },
+        { id: 10, name: "To The Moon Supercomputer", baseUsd: 10700000000, baseYield: 34300000 },
+        { id: 11, name: "Mars Colony Mining Base", baseUsd: 117000000000, baseYield: 299000000 },
+        { id: 12, name: "Asteroid Belt DOGE Harvester", baseUsd: 1290000000000, baseYield: 2610000000 },
+        { id: 13, name: "Jovian Satellite Network", baseUsd: 14200000000000, baseYield: 22800000000 },
+        { id: 14, name: "Solar System DOGE Grid", baseUsd: 156000000000000, baseYield: 199000000000 },
+        { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 1720000000000000, baseYield: 1740000000000 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Keep reference to btcUpgrades as upgrades for backward compatibility
@@ -616,6 +635,12 @@
                 gamesWon: whackGameGamesWon,
                 totalRewardsEarned: whackGameTotalRewardsEarned,
                 cooldowns: whackCooldowns
+            },
+            // Network Stress Test minigame data
+            networkData: {
+                gamesPlayed: networkGameGamesPlayed,
+                gamesWon: networkGameGamesWon,
+                totalRewardsEarned: networkGameTotalRewardsEarned
             }
         };
 
@@ -828,6 +853,13 @@ function loadGame() {
             if (state.whackData.cooldowns) {
                 whackCooldowns = state.whackData.cooldowns;
             }
+        }
+
+        // Load network stress test minigame data
+        if (state.networkData) {
+            networkGameGamesPlayed = state.networkData.gamesPlayed || 0;
+            networkGameGamesWon = state.networkData.gamesWon || 0;
+            networkGameTotalRewardsEarned = state.networkData.totalRewardsEarned || 0;
         }
 
         // Calculate total power used
@@ -1627,6 +1659,11 @@ function loadGame() {
             whackGameGamesWon = 0;
             whackGameTotalRewardsEarned = 0;
             whackCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 };
+
+            // Reset network stress test minigame
+            networkGameGamesPlayed = 0;
+            networkGameGamesWon = 0;
+            networkGameTotalRewardsEarned = 0;
 
             // Reset achievements on full save reset
             if (typeof achievementsData !== 'undefined') {
@@ -2747,6 +2784,32 @@ function loadGame() {
         if (totalRewardsEl) totalRewardsEl.textContent = rewardsDisplay.slice(1); // Remove $ from display
     }
 
+    function updateNetworkStats() {
+        // Update network stress test stats in the UI
+        const gamesPlayedEl = document.getElementById('network-games-played');
+        if (gamesPlayedEl) gamesPlayedEl.textContent = networkGameGamesPlayed;
+
+        const gamesWonEl = document.getElementById('network-games-won');
+        if (gamesWonEl) gamesWonEl.textContent = networkGameGamesWon;
+
+        // Abbreviate total rewards
+        let rewardsDisplay = '';
+        if (networkGameTotalRewardsEarned >= 1e12) {
+            rewardsDisplay = '$' + (networkGameTotalRewardsEarned / 1e12).toFixed(2) + 'T';
+        } else if (networkGameTotalRewardsEarned >= 1e9) {
+            rewardsDisplay = '$' + (networkGameTotalRewardsEarned / 1e9).toFixed(2) + 'B';
+        } else if (networkGameTotalRewardsEarned >= 1e6) {
+            rewardsDisplay = '$' + (networkGameTotalRewardsEarned / 1e6).toFixed(2) + 'M';
+        } else if (networkGameTotalRewardsEarned >= 1e3) {
+            rewardsDisplay = '$' + (networkGameTotalRewardsEarned / 1e3).toFixed(2) + 'K';
+        } else {
+            rewardsDisplay = '$' + networkGameTotalRewardsEarned.toFixed(2);
+        }
+
+        const totalRewardsEl = document.getElementById('network-total-rewards');
+        if (totalRewardsEl) totalRewardsEl.textContent = rewardsDisplay.slice(1); // Remove $ from display
+    }
+
     function updateMinigamesTab() {
         // Update minigames hub stats display
 
@@ -2788,6 +2851,26 @@ function loadGame() {
                 whackRewardsDisplay = '$' + whackGameTotalRewardsEarned.toFixed(0);
             }
             whackRewardsEl.textContent = whackRewardsDisplay;
+        }
+
+        // Network stats
+        const networkWonEl = document.getElementById('network-games-won-display');
+        if (networkWonEl) networkWonEl.textContent = networkGameGamesWon;
+
+        const networkPlayedEl = document.getElementById('network-games-played-display');
+        if (networkPlayedEl) networkPlayedEl.textContent = networkGameGamesPlayed;
+
+        const networkRewardsEl = document.getElementById('network-rewards-display');
+        if (networkRewardsEl) {
+            let networkRewardsDisplay = '';
+            if (networkGameTotalRewardsEarned >= 1e6) {
+                networkRewardsDisplay = '$' + (networkGameTotalRewardsEarned / 1e6).toFixed(2) + 'M';
+            } else if (networkGameTotalRewardsEarned >= 1e3) {
+                networkRewardsDisplay = '$' + (networkGameTotalRewardsEarned / 1e3).toFixed(2) + 'K';
+            } else {
+                networkRewardsDisplay = '$' + networkGameTotalRewardsEarned.toFixed(0);
+            }
+            networkRewardsEl.textContent = networkRewardsDisplay;
         }
     }
 
@@ -2921,6 +3004,16 @@ function loadGame() {
                 whackLockedCard.style.display = 'flex';
             } else {
                 whackLockedCard.style.display = 'none';
+            }
+        }
+
+        // Check if network stress test minigame is locked (requires $30k)
+        const networkLockedCard = document.getElementById('network-card-locked');
+        if (networkLockedCard) {
+            if (lifetimeEarnings < 30000) {
+                networkLockedCard.style.display = 'flex';
+            } else {
+                networkLockedCard.style.display = 'none';
             }
         }
     }
@@ -3274,6 +3367,356 @@ function loadGame() {
     }
 
     // ============== END WHACK-A-BLOCK MINIGAME FUNCTIONS ==============
+
+    // ============== NETWORK STRESS TEST MINIGAME FUNCTIONS ==============
+
+    function initNetworkMinigame() {
+        // Check unlock requirement (starts unlocked, but scales with gameplay)
+        if (lifetimeEarnings < 30000) {
+            alert(`🔒 Network Stress Test Locked!\n\nRequires $30,000 lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
+            return;
+        }
+
+        networkGameActive = true;
+        networkGameStartTime = Date.now();
+        networkGameTotalDamage = 0;
+        networkGameClickDamageTotal = 0;
+
+        // Calculate difficulty based on games won (successful wins only)
+        // Each successful run scales HP by √10 ≈ 3.16x: 1k → 3.16k → 10k → 31.6k → 100k → 316k → 1M
+        const difficultyMultiplier = Math.pow(Math.sqrt(10), networkGameGamesWon);
+        networkGameMaxHP = Math.floor(1000 * difficultyMultiplier); // 1k base
+        networkGameCurrentHP = networkGameMaxHP;
+
+        // Click damage based on manual hash rate (click value converted to USD)
+        // btcClickValue × btcPrice + ethClickValue × ethPrice + dogeClickValue × dogePrice = USD value per click
+        const manualClickDamage = (btcClickValue * btcPrice) + (ethClickValue * ethPrice) + (dogeClickValue * dogePrice);
+        // Default base click damage of 10 so players can click even with 0 manual upgrades
+        const clickDamageBase = Math.max(10, manualClickDamage);
+        // Scale by game count for higher difficulty runs
+        const clickDamageMultiplier = Math.pow(1.15, networkGameGamesWon);
+        networkGameClickDamage = Math.floor(clickDamageBase * clickDamageMultiplier);
+
+        // Speed boost increases with difficulty
+        const speedBoostMultiplier = 0.05 + (0.015 * networkGameGamesPlayed);
+
+        // Show modal
+        const modal = document.getElementById('network-modal');
+        if (!modal) return;
+
+        modal.style.display = 'flex';
+
+        // Reset display - hide results, show game
+        const gameInfo = document.getElementById('network-game-info');
+        const resultsMessage = document.getElementById('network-results-message');
+        const closeBtn = document.getElementById('network-close-btn');
+        if (gameInfo) gameInfo.style.display = 'block';
+        if (resultsMessage) resultsMessage.style.display = 'none';
+        if (closeBtn) closeBtn.style.display = 'none';
+
+        // Update modal content
+        document.getElementById('network-difficulty-display').textContent = `RUN #${networkGameGamesPlayed + 1}`;
+        document.getElementById('network-hp-display').textContent = networkGameMaxHP;
+        document.getElementById('network-hp-max-display').textContent = networkGameMaxHP;
+        document.getElementById('network-time-display').textContent = '10s';
+        document.getElementById('network-total-damage-display').textContent = '0';
+        document.getElementById('network-click-damage-display').textContent = `+${networkGameClickDamage} damage/click`;
+
+        // Start game
+        networkStartGame(speedBoostMultiplier);
+    }
+
+    function networkStartGame(speedBoostMultiplier) {
+        // Update timer every 100ms
+        networkGameInterval = setInterval(() => {
+            const elapsed = Date.now() - networkGameStartTime;
+            const remaining = Math.max(0, networkGameTimeLimit - elapsed);
+            const seconds = Math.ceil(remaining / 1000);
+
+            const timeDisplay = document.getElementById('network-time-display');
+            if (timeDisplay) timeDisplay.textContent = seconds + 's';
+
+            // Calculate passive damage from hash rate
+            // Hash rate (crypto per second) × price of crypto = USD value per second = damage per second
+            const btcDamagePerSec = btcPerSec * btcPrice;
+            const ethDamagePerSec = ethPerSec * ethPrice;
+            const dogeDamagePerSec = dogePerSec * dogePrice;
+            const totalDamagePerSec = btcDamagePerSec + ethDamagePerSec + dogeDamagePerSec;
+
+            // Frame is 100ms, so divide by 10
+            const passiveDamageThisFrame = totalDamagePerSec / 10;
+
+            if (networkGameActive) {
+                networkGameCurrentHP -= passiveDamageThisFrame;
+                networkGameTotalDamage += passiveDamageThisFrame;
+
+                // Update displays
+                const hpDisplay = document.getElementById('network-hp-display');
+                if (hpDisplay) hpDisplay.textContent = Math.max(0, Math.floor(networkGameCurrentHP));
+
+                const totalDamageDisplay = document.getElementById('network-total-damage-display');
+                if (totalDamageDisplay) totalDamageDisplay.textContent = Math.floor(networkGameTotalDamage);
+
+                const passiveDpsDisplay = document.getElementById('network-passive-dps-display');
+                if (passiveDpsDisplay) {
+                    if (totalDamagePerSec < 0.01) {
+                        passiveDpsDisplay.textContent = totalDamagePerSec.toFixed(4);
+                    } else if (totalDamagePerSec < 1) {
+                        passiveDpsDisplay.textContent = totalDamagePerSec.toFixed(2);
+                    } else {
+                        passiveDpsDisplay.textContent = Math.floor(totalDamagePerSec);
+                    }
+                }
+
+                // Update HP bar
+                const hpBar = document.getElementById('network-hp-bar');
+                if (hpBar) {
+                    const hpPercent = Math.max(0, Math.min(100, (networkGameCurrentHP / networkGameMaxHP) * 100));
+                    hpBar.style.width = hpPercent + '%';
+                }
+
+                // Update rewards preview
+                updateNetworkRewardsPreview();
+
+                // Check if network destroyed
+                if (networkGameCurrentHP <= 0) {
+                    endNetworkGame(true);
+                }
+            }
+
+            // End game when timer reaches 0 (10 seconds elapsed) or if network is destroyed
+            if (remaining <= 0) {
+                endNetworkGame(networkGameCurrentHP <= 0);
+            }
+        }, 100);
+    }
+
+    function networkClickAttack() {
+        if (!networkGameActive) return;
+
+        networkGameCurrentHP -= networkGameClickDamage;
+        networkGameTotalDamage += networkGameClickDamage;
+        networkGameClickDamageTotal += networkGameClickDamage;
+
+        // Update displays
+        const hpDisplay = document.getElementById('network-hp-display');
+        if (hpDisplay) hpDisplay.textContent = Math.max(0, Math.floor(networkGameCurrentHP));
+
+        const totalDamageDisplay = document.getElementById('network-total-damage-display');
+        if (totalDamageDisplay) totalDamageDisplay.textContent = Math.floor(networkGameClickDamageTotal);
+
+        // Update HP bar
+        const hpBar = document.getElementById('network-hp-bar');
+        if (hpBar) {
+            const hpPercent = Math.max(0, Math.min(100, (networkGameCurrentHP / networkGameMaxHP) * 100));
+            hpBar.style.width = hpPercent + '%';
+        }
+
+        // Visual feedback
+        const clickBtn = document.getElementById('network-click-btn');
+        if (clickBtn) {
+            clickBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => { clickBtn.style.transform = 'scale(1)'; }, 100);
+        }
+
+        // Play click sound
+        playClickSound();
+
+        // Check if network destroyed
+        if (networkGameCurrentHP <= 0) {
+            endNetworkGame(true);
+        }
+    }
+
+    function updateNetworkRewardsPreview() {
+        // Calculate estimated reward if player wins now
+        const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
+
+        // Base reward for current level
+        const baseReward = 10000 * Math.pow(Math.sqrt(10), networkGameGamesWon);
+
+        // Success multiplier based on current damage
+        const damageRatio = Math.min(1.0, networkGameTotalDamage / (networkGameMaxHP * 1.5));
+        const successMultiplier = 0.5 + (damageRatio * 1.5);
+
+        // Ascension multiplier
+        const ascensionMultiplier = rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+
+        // Total estimated USD value
+        const estimatedUsdValue = baseReward * successMultiplier * ascensionMultiplier;
+
+        // Format helper
+        const formatAmount = (amount) => {
+            if (amount >= 1e12) return (amount / 1e12).toFixed(2) + 'T';
+            if (amount >= 1e9) return (amount / 1e9).toFixed(2) + 'B';
+            if (amount >= 1e6) return (amount / 1e6).toFixed(2) + 'M';
+            if (amount >= 1e3) return (amount / 1e3).toFixed(2) + 'K';
+            return amount.toFixed(0);
+        };
+
+        // Split rewards
+        const btcUsdValue = estimatedUsdValue * 0.40;
+        const btcReward = btcUsdValue / btcPrice;
+        const ethUsdValue = estimatedUsdValue * 0.35;
+        const ethReward = ethUsdValue / ethPrice;
+        const dogeUsdValue = estimatedUsdValue * 0.20;
+        const dogeReward = dogeUsdValue / dogePrice;
+        const usdReward = estimatedUsdValue * 0.05;
+
+        // Update displays
+        const btcDisplay = document.getElementById('network-reward-btc-preview');
+        if (btcDisplay) {
+            if (btcReward >= 1) {
+                btcDisplay.textContent = btcReward.toFixed(4);
+            } else {
+                btcDisplay.textContent = btcReward.toFixed(8);
+            }
+        }
+
+        const ethDisplay = document.getElementById('network-reward-eth-preview');
+        if (ethDisplay) {
+            if (ethReward >= 1) {
+                ethDisplay.textContent = ethReward.toFixed(4);
+            } else {
+                ethDisplay.textContent = ethReward.toFixed(8);
+            }
+        }
+
+        const dogeDisplay = document.getElementById('network-reward-doge-preview');
+        if (dogeDisplay) {
+            if (dogeReward >= 1) {
+                dogeDisplay.textContent = dogeReward.toFixed(4);
+            } else {
+                dogeDisplay.textContent = dogeReward.toFixed(8);
+            }
+        }
+
+        const usdDisplay = document.getElementById('network-reward-usd-preview');
+        if (usdDisplay) {
+            usdDisplay.textContent = '$' + formatAmount(usdReward);
+        }
+    }
+
+    function endNetworkGame(won) {
+        networkGameActive = false;
+
+        if (networkGameInterval) clearInterval(networkGameInterval);
+
+        let totalReward = 0;
+
+        if (won) {
+            // Only increment games played on successful win
+            networkGameGamesPlayed++;
+            networkGameGamesWon++;
+
+            // Get current rugpull/ascension level
+            const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
+
+            // Rewards scale with successful wins by √10: 10k → 31.6k → 100k → 316k → 1M → 3.16M → 10M
+            // Base reward = 10k × (√10)^(wins)
+            const baseReward = 10000 * Math.pow(Math.sqrt(10), networkGameGamesWon);
+
+            // Success rate multiplier based on how much HP was destroyed (0.5x to 2.0x)
+            // If destroyed perfectly (all HP), get full bonus
+            const damageRatio = Math.min(1.0, networkGameTotalDamage / (networkGameMaxHP * 1.5)); // 1.5x multiplier for extra damage bonus
+            const successMultiplier = 0.5 + (damageRatio * 1.5);
+
+            // POWERFUL Rugpull multiplier: 10x per rugpull level
+            const ascensionMultiplier = rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+
+            // Calculate total USD value after all multipliers
+            const totalUsdValue = baseReward * successMultiplier * ascensionMultiplier;
+
+            // Award BTC (40%)
+            const btcUsdValue = totalUsdValue * 0.40;
+            const btcReward = btcUsdValue / btcPrice;
+            btcBalance += btcReward;
+            btcLifetime += btcReward;
+
+            // Award ETH (35%)
+            const ethUsdValue = totalUsdValue * 0.35;
+            const ethReward = ethUsdValue / ethPrice;
+            ethBalance += ethReward;
+            ethLifetime += ethReward;
+
+            // Award DOGE (20%)
+            const dogeUsdValue = totalUsdValue * 0.20;
+            const dogeReward = dogeUsdValue / dogePrice;
+            dogeBalance += dogeReward;
+            dogeLifetime += dogeReward;
+
+            // Award USD (5%)
+            const usdReward = totalUsdValue * 0.05;
+            dollarBalance += usdReward;
+
+            // Track total rewards
+            totalReward = totalUsdValue;
+            networkGameTotalRewardsEarned += totalUsdValue;
+            lifetimeEarnings += totalUsdValue;
+            sessionEarnings += totalUsdValue;
+
+            // Store rewards for display
+            networkLastRewards = {
+                btc: btcReward,
+                eth: ethReward,
+                doge: dogeReward,
+                usd: usdReward,
+                totalUsd: totalUsdValue
+            };
+        }
+
+        // Apply speed boost if won
+        if (won) {
+            const boostDuration = 120000; // 2 minutes
+            speedBoostEndTime = Date.now() + boostDuration;
+            speedBoostActive = true;
+            speedBoostMultiplier = 1.1 + (0.05 * networkGameGamesWon); // Increases with each win
+        }
+
+        // Show results
+        const resultsMessage = document.getElementById('network-results-message');
+        if (resultsMessage) {
+            if (won) {
+                // Format crypto amounts
+                const formatAmount = (amount) => {
+                    if (amount >= 1) return amount.toFixed(4);
+                    return amount.toFixed(8);
+                };
+
+                resultsMessage.innerHTML = `<span style="color: #00b4ff; font-size: 1.5rem;">✓ NETWORK DESTROYED!</span><br>
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
+                        <div style="color: #fff; font-size: 0.9rem;">
+                            ₿ ${formatAmount(networkLastRewards.btc)} BTC<br>
+                            Ξ ${formatAmount(networkLastRewards.eth)} ETH<br>
+                            Ð ${formatAmount(networkLastRewards.doge)} DOGE<br>
+                            💵 $${networkLastRewards.usd.toFixed(2)}
+                        </div>
+                    </div>`;
+            } else {
+                resultsMessage.innerHTML = `<span style="color: #ff3344; font-size: 1.5rem;">✗ TIME'S UP!</span><br>
+                    <span style="color: #888;">Network HP remaining: ${Math.max(0, Math.floor(networkGameCurrentHP))}<br>You dealt ${Math.floor(networkGameTotalDamage)} damage!</span>`;
+            }
+        }
+
+        // Hide game info, show results and close button
+        const gameInfo = document.getElementById('network-game-info');
+        const closeBtn = document.getElementById('network-close-btn');
+
+        if (gameInfo) gameInfo.style.display = 'none';
+        if (resultsMessage) resultsMessage.style.display = 'block';
+        if (closeBtn) closeBtn.style.display = 'block';
+
+        updateUI();
+        saveGame();
+    }
+
+    function closeNetworkModal() {
+        const modal = document.getElementById('network-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    // ============== END NETWORK STRESS TEST MINIGAME FUNCTIONS ==============
 
     function updatePowerDisplay() {
         const powerUsedEl = document.getElementById('power-used');
@@ -4992,6 +5435,7 @@ dogeUpgrades.forEach(u => {
         updateUI();
         updateAutoClickerButtonState();
         updateWhackStats();
+        updateNetworkStats();
         updateMinigamesTab();
 
         // Check for rugpull milestone
@@ -5073,6 +5517,7 @@ dogeUpgrades.forEach(u => {
         // Update hacking stats on page load
         updateHackingStats();
         updateWhackStats();
+        updateNetworkStats();
         updateMinigamesTab();
 
         // Show instructions modal if not dismissed and player hasn't ascended yet
@@ -5504,6 +5949,16 @@ dogeUpgrades.forEach(u => {
     window.initHackingMinigame = initHackingMinigame;
     window.closeHackingModal = closeHackingModal;
     window.dismissHackingNotification = dismissHackingNotification;
+
+    // Whack-a-block minigame functions
+    window.initWhackMinigame = initWhackMinigame;
+    window.closeWhackModal = closeWhackModal;
+    window.closeWhackResultsModal = closeWhackResultsModal;
+
+    // Network Stress Test minigame functions
+    window.initNetworkMinigame = initNetworkMinigame;
+    window.closeNetworkModal = closeNetworkModal;
+    window.networkClickAttack = networkClickAttack;
 
     // Test helper - set lifetime earnings for testing rugpull feature
 

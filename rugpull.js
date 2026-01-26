@@ -24,26 +24,27 @@ let ascensionStats = {
 
 // Meta-upgrades purchased by the player (persists across resets)
 let metaUpgrades = {
-    // TIER 1 (Basic) - 100 tokens each (first rugpull: 2 of 4 with 220 tokens)
+    // TIER 1 (Basic) - 100 tokens each (first rugpull available)
     mining_speed_miner_5: { purchased: false, cost: 100 },      // +5% mining speed for miners
     click_speed_5: { purchased: false, cost: 100 },             // +5% manual hash speed
     starter_miners: { purchased: false, cost: 100 },            // Start with 1 of each basic miner
     power_efficiency: { purchased: false, cost: 100 },          // +20% power efficiency
-    // TIER 2 (Advanced) - 2000 tokens each (need multiple rugpulls)
-    mining_speed_miner_10: { purchased: false, cost: 2000 },    // +10% mining speed for miners
-    click_speed_10: { purchased: false, cost: 2000 },           // +10% manual hash speed
-    cash_multiplier_5: { purchased: false, cost: 2000 },        // +5% cash from all sources
-    // TIER 3 (Expert) - 20000 tokens each (significant investment)
-    mining_speed_miner_25: { purchased: false, cost: 20000 },    // +25% mining speed for miners
-    click_speed_25: { purchased: false, cost: 20000 },           // +25% manual hash speed
-    mining_speed_miner_50: { purchased: false, cost: 20000 },    // +50% mining speed for miners
-    auto_sell_crypto: { purchased: false, cost: 20000 },         // Auto-sell mined crypto for cash
-    crypto_price_5: { purchased: false, cost: 20000 },           // +5% crypto prices
-    // TIER 4 (Prestige) - millions of tokens each (long term goals)
-    mining_speed_miner_100: { purchased: false, cost: 1000000 }, // +100% mining speed for miners
-    click_speed_100: { purchased: false, cost: 1000000 },        // +100% manual hash speed
-    crypto_doubler: { purchased: false, cost: 5000000 },         // Double all crypto mined
-    prestige_tokens: { purchased: false, cost: 5000000 }         // +1% mining bonus per token spent
+    // TIER 2 (Advanced) - 1,000 tokens each (10x) - need multiple rugpulls
+    mining_speed_miner_10: { purchased: false, cost: 1000 },    // +10% mining speed for miners
+    click_speed_10: { purchased: false, cost: 1000 },           // +10% manual hash speed
+    cash_multiplier_5: { purchased: false, cost: 1000 },        // +5% cash from all sources
+    crypto_price_5: { purchased: false, cost: 1000 },           // +5% crypto prices
+    // TIER 3 (Expert) - 10,000 tokens each (10x) - significant investment
+    mining_speed_miner_25: { purchased: false, cost: 10000 },    // +25% mining speed for miners
+    click_speed_25: { purchased: false, cost: 10000 },           // +25% manual hash speed
+    mining_speed_miner_50: { purchased: false, cost: 10000 },    // +50% mining speed for miners
+    auto_sell_crypto: { purchased: false, cost: 10000 },         // Auto-sell mined crypto for cash
+    better_rewards_minigame: { purchased: false, cost: 10000 },  // +25% minigame rewards
+    // TIER 4 (Prestige) - 100,000 tokens each (10x) - long term goals
+    mining_speed_miner_100: { purchased: false, cost: 100000 }, // +100% mining speed for miners
+    click_speed_100: { purchased: false, cost: 100000 },        // +100% manual hash speed
+    crypto_doubler: { purchased: false, cost: 100000 },         // Double all crypto mined
+    ascension_speed_boost: { purchased: false, cost: 100000 }    // +20% earnings for next run
 };
 
 // Unlocked systems (unlock new content after ascensions)
@@ -60,21 +61,22 @@ let unlockedSystems = {
 
 /**
  * Calculate the reward (Corrupt Tokens) for ascending
- * Scaling: 200 tokens per tier + bonus for exceeding requirement
- * Base: 200 × 10^(ascensionLevel)
- * Bonus: 1 token per $5M earned above the requirement
+ * Scaling: Cookie Clicker-style progression
+ * Base: 100 × level^2 tokens
+ * Bonus: 1 token per $1B earned above the requirement
  */
 function calculateRugpullReward() {
     const requirement = getRugpullRequirement();
     const earnings = lifetimeEarningsThisRugpull;
+    const level = ascensionLevel + 1;  // Convert to 1-indexed
 
-    // Base reward: 200 tokens × 10 per tier
-    const baseReward = 200 * Math.pow(10, ascensionLevel);
+    // Base reward: 100 × level^2 (grows quadratically)
+    const baseReward = 100 * Math.pow(level, 2);
 
     // Bonus tokens for exceeding requirement
-    // 1 token per $5M earned above the minimum requirement
+    // 1 token per $1B earned above the minimum requirement
     const excessEarnings = Math.max(0, earnings - requirement);
-    const bonusTokens = Math.floor(excessEarnings / 5000000);
+    const bonusTokens = Math.floor(excessEarnings / 1000000000);
 
     const totalReward = baseReward + bonusTokens;
 
@@ -90,14 +92,15 @@ function showRugpullOffer() {
     const earnings = lifetimeEarningsThisRugpull;
     const cash = window.gameState && window.gameState.dollarBalance ? window.gameState.dollarBalance : 0;
 
-    // Calculate token reward
+    // Calculate token reward using Cookie Clicker-style progression
     const requirement = getRugpullRequirement();
-    const baseReward = 200 * Math.pow(10, ascensionLevel);
+    const level = ascensionLevel + 1;  // Convert to 1-indexed
+    const baseReward = 100 * Math.pow(level, 2);
     const excessEarnings = Math.max(0, earnings - requirement);
-    const bonusTokens = Math.floor(excessEarnings / 5000000);
+    const bonusTokens = Math.floor(excessEarnings / 1000000000);
     const reward = Math.max(1, Math.floor(baseReward + bonusTokens));
 
-    const starterCash = 1500 + (ascensionLevel * 500);
+    const starterCash = 1000 + (ascensionLevel * 500);
 
     // Create modal instead of using confirm()
     const modal = document.getElementById('rugpull-milestone-modal');
@@ -117,8 +120,8 @@ function showRugpullOffer() {
                 <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
                     <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 10px;">TOKEN CALCULATION:</div>
                     <div style="margin-bottom: 15px; color: #ddd; font-size: 0.85rem;">
-                        • Base Tokens: 200 × 10<sup>${ascensionLevel}</sup> = <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
-                        ${bonusTokens > 0 ? `• Bonus Tokens: $${excessEarnings.toLocaleString()} ÷ $5M = <span style="color: #4CAF50;">+${bonusTokens}</span> tokens<br>` : ''}
+                        • Base Tokens: 100 × ${level}<sup>2</sup> = <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
+                        ${bonusTokens > 0 ? `• Bonus Tokens: $${excessEarnings.toLocaleString()} ÷ $1B = <span style="color: #4CAF50;">+${bonusTokens}</span> tokens<br>` : ''}
                         • <span style="color: #ffeb3b; font-weight: bold;">TOTAL: ${reward} Corrupt Tokens</span><br>
                     </div>
                 </div>
@@ -1111,9 +1114,13 @@ function tryAutoBuyBasicUpgrades() {
  * $1M, $10M, $100M, $500M, $1B, etc
  */
 function getRugpullRequirement() {
-    // Exponentially scaling rugpull requirements based on ascensions (infinite scaling)
-    // 1st (level 0): $1B, 2nd (level 1): $10B, 3rd (level 2): $100B, 4th: $1T, 5th: $10T, 6th: $100T, 7th: $1Q, etc.
-    return 1000000000 * Math.pow(10, ascensionLevel);  // $1B × 10^level
+    // Cookie Clicker-style cubic progression for rugpull requirements
+    // Level 0: $1B (1^3 - 1 + 1) × $1B
+    // Level 1: $8B (2^3 - 1 + 1) × $1B
+    // Level 2: $27B (3^3 - 1 + 1) × $1B
+    // Level 3: $64B (4^3 - 1 + 1) × $1B
+    const level = ascensionLevel + 1;  // Convert 0-indexed to 1-indexed
+    return (Math.pow(level, 3)) * 1000000000;  // (level^3) × $1B
 }
 
 function isRugpullEligible() {
