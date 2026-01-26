@@ -1658,7 +1658,7 @@ function loadGame() {
 
         const powerReq = equipmentPowerReqs[u.id] || 0;
         const effectivePower = getEffectivePowerRequirement(powerReq);
-        const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:var(--btc);font-weight:700;display:block;margin-top:3px" id="power-${u.id}">${effectivePower.toLocaleString()}W Consumed per level</span>` : '';
+        const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:var(--btc);font-weight:700;display:block;margin-top:3px" id="power-${u.id}">${formatPower(effectivePower)} Consumed per level</span>` : '';
 
         btn.innerHTML = `
             <div style="text-align:left;flex:1">
@@ -1668,7 +1668,7 @@ function loadGame() {
                 ${powerDisplay}
             </div>
             <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
-                <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                 <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="afford-${u.id}">x0</span>
             </div>`;
         container.appendChild(btn);
@@ -1715,7 +1715,7 @@ function loadGame() {
                     <div style="font-size:1.1rem;color:#00ff88;font-family:monospace;font-weight:700;display:block" id="pow-power-${u.id}">+0W Produced per level</div>
                 </div>
                 <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
-                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="pow-usd-${u.id}">$${formatNumberForDisplay(u.currentUsd)}</span>
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="pow-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
@@ -1738,7 +1738,7 @@ function loadGame() {
 
             const powerReq = equipmentPowerReqs[u.id] || 0;
             const effectivePower = getEffectivePowerRequirement(powerReq);
-            const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-power-${u.id}">${effectivePower.toLocaleString()}W Consumed per level</span>` : '';
+            const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-power-${u.id}">${formatPower(effectivePower)} Consumed per level</span>` : '';
 
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
@@ -1748,7 +1748,7 @@ function loadGame() {
                     ${powerDisplay}
                 </div>
                 <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
-                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="eth-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="eth-usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="eth-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
@@ -1793,7 +1793,7 @@ function loadGame() {
 
             const powerReq = equipmentPowerReqs[u.id] || 0;
             const effectivePower = getEffectivePowerRequirement(powerReq);
-            const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-power-${u.id}">${effectivePower.toLocaleString()}W Consumed per level</span>` : '';
+            const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-power-${u.id}">${formatPower(effectivePower)} Consumed per level</span>` : '';
 
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
@@ -1803,7 +1803,7 @@ function loadGame() {
                     ${powerDisplay}
                 </div>
                 <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
-                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="doge-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="doge-usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="doge-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
@@ -2080,13 +2080,13 @@ function loadGame() {
             if (lvlEl) lvlEl.innerText = `[Lvl ${u.level}]`;
 
             const currentPowerEl = document.getElementById(`pow-current-${u.id}`);
-            if (currentPowerEl) currentPowerEl.innerText = `+${u.currentPower.toLocaleString()}W - Current Power`;
+            if (currentPowerEl) currentPowerEl.innerText = `+${formatPower(u.currentPower)} - Current Power`;
 
             const powerEl = document.getElementById(`pow-power-${u.id}`);
-            if (powerEl) powerEl.innerText = `+${u.basePower.toLocaleString()}W Produced per level`;
+            if (powerEl) powerEl.innerText = `+${formatPower(u.basePower)} Produced per level`;
 
             const usdEl = document.getElementById(`pow-usd-${u.id}`);
-            if (usdEl) usdEl.innerText = `$${u.currentUsd.toLocaleString()}`;
+            if (usdEl) usdEl.innerText = `$${formatNumberForDisplay(u.currentUsd)}`;
 
             // Calculate how many power upgrades can be afforded (accounting for price increases)
             const affordEl = document.getElementById(`pow-afford-${u.id}`);
@@ -2686,6 +2686,74 @@ function buyDogeBoost(i) {
         return Math.floor(num).toLocaleString();
     }
 
+    // Format crypto yields - keeps 8 decimal places below 1k, then abbreviates
+    function formatCryptoYield(num) {
+        const abs = Math.abs(num);
+
+        // Below 1k: keep 8 decimal places
+        if (abs < 1e3) {
+            return num.toFixed(8);
+        }
+
+        // 1k and above: abbreviate
+        if (abs >= 1e30) {
+            return (num / 1e30).toFixed(1) + 'N';
+        } else if (abs >= 1e27) {
+            return (num / 1e27).toFixed(1) + 'O';
+        } else if (abs >= 1e24) {
+            return (num / 1e24).toFixed(1) + 'Sep';
+        } else if (abs >= 1e21) {
+            return (num / 1e21).toFixed(1) + 'S';
+        } else if (abs >= 1e18) {
+            return (num / 1e18).toFixed(1) + 'Qa';
+        } else if (abs >= 1e15) {
+            return (num / 1e15).toFixed(1) + 'Q';
+        } else if (abs >= 1e12) {
+            return (num / 1e12).toFixed(1) + 'T';
+        } else if (abs >= 1e9) {
+            return (num / 1e9).toFixed(1) + 'B';
+        } else if (abs >= 1e6) {
+            return (num / 1e6).toFixed(1) + 'M';
+        } else if (abs >= 1e3) {
+            return (num / 1e3).toFixed(1) + 'K';
+        }
+        return num.toFixed(8);
+    }
+
+    // Format crypto prices - keeps 8 decimal places until 1, then abbreviates
+    function formatCryptoPrice(num) {
+        const abs = Math.abs(num);
+
+        // Below 1: keep 8 decimal places
+        if (abs < 1) {
+            return num.toFixed(8);
+        }
+
+        // 1 and above: abbreviate
+        if (abs >= 1e30) {
+            return (num / 1e30).toFixed(1) + 'N';
+        } else if (abs >= 1e27) {
+            return (num / 1e27).toFixed(1) + 'O';
+        } else if (abs >= 1e24) {
+            return (num / 1e24).toFixed(1) + 'Sep';
+        } else if (abs >= 1e21) {
+            return (num / 1e21).toFixed(1) + 'S';
+        } else if (abs >= 1e18) {
+            return (num / 1e18).toFixed(1) + 'Qa';
+        } else if (abs >= 1e15) {
+            return (num / 1e15).toFixed(1) + 'Q';
+        } else if (abs >= 1e12) {
+            return (num / 1e12).toFixed(1) + 'T';
+        } else if (abs >= 1e9) {
+            return (num / 1e9).toFixed(1) + 'B';
+        } else if (abs >= 1e6) {
+            return (num / 1e6).toFixed(1) + 'M';
+        } else if (abs >= 1e3) {
+            return (num / 1e3).toFixed(1) + 'K';
+        }
+        return num.toFixed(1);
+    }
+
     // Format watts to power units: W, KW, MW, GW, TW, PW
     function formatPower(watts) {
         if (watts >= 1e15) return (watts / 1e15).toFixed(2) + ' PW';  // Petawatt
@@ -2798,9 +2866,9 @@ function buyDogeBoost(i) {
         if (dogeDisplayEl) dogeDisplayEl.innerText = formatHashrate(dogePerSec);
 
         // Update prices
-        document.getElementById('btc-price').innerText = "$" + Math.floor(btcPrice).toLocaleString();
-        document.getElementById('eth-price').innerText = "$" + Math.floor(ethPrice).toLocaleString();
-        document.getElementById('doge-price').innerText = "$" + dogePrice.toFixed(4);
+        document.getElementById('btc-price').innerText = "$" + formatCryptoPrice(btcPrice);
+        document.getElementById('eth-price').innerText = "$" + formatCryptoPrice(ethPrice);
+        document.getElementById('doge-price').innerText = "$" + formatCryptoPrice(dogePrice);
 
         // Update dollar balance
         const dollarBalanceEl = document.getElementById('dollar-balance');
@@ -2810,9 +2878,9 @@ function buyDogeBoost(i) {
         const marketBtcPrice = document.getElementById('market-btc-price');
         const marketEthPrice = document.getElementById('market-eth-price');
         const marketDogePrice = document.getElementById('market-doge-price');
-        if (marketBtcPrice) marketBtcPrice.innerText = Math.floor(btcPrice).toLocaleString();
-        if (marketEthPrice) marketEthPrice.innerText = Math.floor(ethPrice).toLocaleString();
-        if (marketDogePrice) marketDogePrice.innerText = dogePrice.toFixed(4);
+        if (marketBtcPrice) marketBtcPrice.innerText = formatCryptoPrice(btcPrice);
+        if (marketEthPrice) marketEthPrice.innerText = formatCryptoPrice(ethPrice);
+        if (marketDogePrice) marketDogePrice.innerText = formatCryptoPrice(dogePrice);
 
         // Update session stats
         updateSessionStats();
@@ -2835,7 +2903,7 @@ function buyDogeBoost(i) {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus + ascensionBonus);
-            yEl.innerText = `+${currentSpeed.toFixed(8)} ₿/s - Current Speed`;
+            yEl.innerText = `+${formatCryptoYield(currentSpeed)} ₿/s - Current Speed`;
         }
     }
 
@@ -2850,7 +2918,7 @@ function buyDogeBoost(i) {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus + ascensionBonus);
-            increaseEl.innerText = `+${perLevelIncrease.toFixed(8)} ₿/s per level`;
+            increaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} ₿/s per level`;
             increaseEl.style.display = 'block';
         }
     }
@@ -2868,7 +2936,7 @@ function buyDogeBoost(i) {
             }
             tempLevel++;
         }
-        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
+        uEl.innerText = `$${formatNumberForDisplay(Math.floor(displayCost))}`;
     }
 
     // Update power display with effective consumption after skills
@@ -2877,7 +2945,7 @@ function buyDogeBoost(i) {
         const powerReq = equipmentPowerReqs[u.id] || 0;
         if (powerReq > 0) {
             const effectivePower = getEffectivePowerRequirement(powerReq);
-            powerEl.innerText = `${effectivePower.toLocaleString()}W Consumed per level`;
+            powerEl.innerText = `${formatPower(effectivePower)} Consumed per level`;
         }
     }
 
@@ -3061,7 +3129,7 @@ ethUpgrades.forEach(u => {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus + ascensionBonus);
-            yEl.innerText = `+${currentSpeed.toFixed(8)} Ξ/s - Current Speed`;
+            yEl.innerText = `+${formatCryptoYield(currentSpeed)} Ξ/s - Current Speed`;
         }
     }
 
@@ -3076,7 +3144,7 @@ ethUpgrades.forEach(u => {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus + ascensionBonus);
-            ethIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ξ/s per level`;
+            ethIncreaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} Ξ/s per level`;
             ethIncreaseEl.style.display = 'block';
         }
     }
@@ -3094,7 +3162,7 @@ ethUpgrades.forEach(u => {
             }
             tempLevel++;
         }
-        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
+        uEl.innerText = `$${formatNumberForDisplay(Math.floor(displayCost))}`;
     }
 
     // Update power display with effective consumption after skills
@@ -3103,7 +3171,7 @@ ethUpgrades.forEach(u => {
         const powerReq = equipmentPowerReqs[u.id] || 0;
         if (powerReq > 0) {
             const effectivePower = getEffectivePowerRequirement(powerReq);
-            ethPowerEl.innerText = `${effectivePower.toLocaleString()}W Consumed per level`;
+            ethPowerEl.innerText = `${formatPower(effectivePower)} Consumed per level`;
         }
     }
 
@@ -3261,7 +3329,7 @@ dogeUpgrades.forEach(u => {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus + ascensionBonus);
-            yEl.innerText = `+${currentSpeed.toFixed(8)} Ð/s - Current Speed`;
+            yEl.innerText = `+${formatCryptoYield(currentSpeed)} Ð/s - Current Speed`;
         }
     }
 
@@ -3276,7 +3344,7 @@ dogeUpgrades.forEach(u => {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus + ascensionBonus);
-            dogeIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ð/s per level`;
+            dogeIncreaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} Ð/s per level`;
             dogeIncreaseEl.style.display = 'block';
         }
     }
@@ -3294,7 +3362,7 @@ dogeUpgrades.forEach(u => {
             }
             tempLevel++;
         }
-        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
+        uEl.innerText = `$${formatNumberForDisplay(Math.floor(displayCost))}`;
     }
 
     // Update power display with effective consumption after skills
@@ -3303,7 +3371,7 @@ dogeUpgrades.forEach(u => {
         const powerReq = equipmentPowerReqs[u.id] || 0;
         if (powerReq > 0) {
             const effectivePower = getEffectivePowerRequirement(powerReq);
-            dogePowerEl.innerText = `${effectivePower.toLocaleString()}W Consumed per level`;
+            dogePowerEl.innerText = `${formatPower(effectivePower)} Consumed per level`;
         }
     }
 
