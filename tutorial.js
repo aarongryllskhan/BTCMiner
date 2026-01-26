@@ -63,7 +63,7 @@ let tutorialData = {
         {
             id: 'manual_hash',
             title: 'Start Mining!',
-            description: 'Click the manual hash buttons OR use the AUTO CLICKER to earn cryptocurrency. Earn at least $30 to continue! 💰',
+            description: 'Click the manual hash buttons AND/OR use the AUTO CLICKER to earn cryptocurrency. Earn at least $30 to continue! 💰',
             targets: ['manual-hash-btc-btn', 'manual-hash-eth-btn', 'manual-hash-doge-btn', 'autoclicker-btn'],
             trigger: 'clicks_made',
             nextCondition: () => {
@@ -260,6 +260,19 @@ function showTutorialStep() {
 
     console.log(`🎓 Tutorial Step ${tutorialData.currentStep + 1}: ${step.id}`);
 
+    // Handle mobile scrolling for step 1 immediately
+    if (step.id === 'manual_hash' && window.innerWidth <= 768) {
+        setTimeout(() => {
+            const autoclickerBtn = document.getElementById('autoclicker-btn');
+            if (autoclickerBtn) {
+                const btnRect = autoclickerBtn.getBoundingClientRect();
+                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 96);
+                window.scrollTo({ top: scrollPos, behavior: 'smooth' });
+                console.log('🎓 Step 1 immediate scroll - scrollPos:', scrollPos);
+            }
+        }, 100);
+    }
+
     // Remove previous tutorial overlay
     removeOldTutorialOverlay();
 
@@ -365,6 +378,47 @@ function showTutorialStep() {
     // Apply custom highlighting if provided
     if (step.customHighlight && typeof step.customHighlight === 'function') {
         step.customHighlight();
+    }
+
+    // Scroll to target element on mobile for better visibility
+    if (isStep1) {
+        const autoclickerBtn = document.getElementById('autoclicker-btn');
+        if (autoclickerBtn && window.innerWidth <= 768) {
+            setTimeout(() => {
+                const btnRect = autoclickerBtn.getBoundingClientRect();
+                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 96);
+                window.scrollTo({ top: scrollPos, behavior: 'smooth' });
+                console.log('🎓 Step 1 scroll triggered - scrollPos:', scrollPos);
+            }, 800);
+        }
+    } else if (isStep2) {
+        const exchangeBtn = document.getElementById('crypto-exchange-btn');
+        if (exchangeBtn && window.innerWidth <= 768) {
+            setTimeout(() => {
+                const btnRect = exchangeBtn.getBoundingClientRect();
+                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 80);
+                window.scrollTo({ top: scrollPos, behavior: 'smooth' });
+            }, 600);
+        }
+    } else if (isStep3) {
+        const powerBtn = document.getElementById('power-upgrade-btn');
+        if (powerBtn && window.innerWidth <= 768) {
+            setTimeout(() => {
+                const btnRect = powerBtn.getBoundingClientRect();
+                const scrollPos = window.scrollY + btnRect.top - 120;
+                window.scrollTo({ top: scrollPos, behavior: 'smooth' });
+                console.log('🎓 Step 3 scroll triggered - scrollPos:', scrollPos);
+            }, 600);
+        }
+    } else if (isStep5) {
+        const btcBtn = document.getElementById('btc-tab-btn');
+        if (btcBtn && window.innerWidth <= 768) {
+            setTimeout(() => {
+                const btnRect = btcBtn.getBoundingClientRect();
+                const scrollPos = window.scrollY + btnRect.top - 120;
+                window.scrollTo({ top: scrollPos, behavior: 'smooth' });
+            }, 600);
+        }
     }
 }
 

@@ -95,7 +95,7 @@
         @media (max-width: 768px) {
             body { padding: 6px 6px 14px 6px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-bottom: 35px !important; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .upgrade-list { overflow-y: auto !important; }
@@ -180,13 +180,13 @@
             #upgrade-power-btn { padding: 8px 12px !important; font-size: 0.65rem !important; width: 100% !important; }
             #power-upgrade-btn { padding: 6px 10px !important; font-size: 0.65rem !important; flex: 1 !important; }
             .tab-buttons { gap: 6px !important; }
-            .tab-btn { padding: 6px 8px !important; font-size: 0.6rem !important; }
+            .tab-btn { padding: 10px 8px !important; font-size: 0.75rem !important; }
         }
 
         @media (max-width: 480px) {
             body { padding: 5px 5px 13px 5px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; }
+            .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; padding-bottom: 35px !important; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .upgrade-list { overflow-y: auto !important; }
@@ -265,7 +265,7 @@
             #upgrade-power-btn { padding: 6px 10px !important; font-size: 0.6rem !important; width: 100% !important; }
             #power-upgrade-btn { padding: 5px 8px !important; font-size: 0.6rem !important; flex: 1 !important; }
             .tab-buttons { gap: 4px !important; }
-            .tab-btn { padding: 5px 6px !important; font-size: 0.55rem !important; }
+            .tab-btn { padding: 8px 6px !important; font-size: 0.7rem !important; }
         }
 
             .u-item { padding: 10px; margin-bottom: 8px; }
@@ -1432,6 +1432,58 @@ button:disabled:hover {
                 font-size: 8px !important;
                 padding: 1.6px 3.2px !important;
                 line-height: 1.15 !important;
+            }
+
+            /* Cookie banner mobile optimization */
+            #cookie-consent-banner {
+                padding: 6px !important;
+                gap: 4px !important;
+            }
+
+            #cookie-consent-banner > div {
+                flex-direction: column !important;
+                gap: 4px !important;
+            }
+
+            #cookie-consent-banner > div > div:first-child {
+                min-width: 100% !important;
+            }
+
+            #cookie-consent-banner > div > div:first-child h3 {
+                font-size: 0.75rem !important;
+                margin: 0 0 2px 0 !important;
+            }
+
+            #cookie-consent-banner > div > div:first-child p {
+                font-size: 0.6rem !important;
+                margin: 2px 0 !important;
+                line-height: 1.15 !important;
+            }
+
+            #cookie-consent-banner button {
+                padding: 5px 10px !important;
+                font-size: 0.65rem !important;
+            }
+
+            #cookie-consent-banner > div > div:last-child {
+                width: 100% !important;
+                flex-direction: column !important;
+                gap: 3px !important;
+            }
+
+            #cookie-consent-banner > div > div:last-child button {
+                width: 100% !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Cookie banner tablet optimization */
+            #cookie-consent-banner > div > div:last-child {
+                flex-direction: column !important;
+            }
+
+            #cookie-consent-banner > div > div:last-child button {
+                width: 100% !important;
             }
         }
 
