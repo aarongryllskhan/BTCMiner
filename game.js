@@ -1783,6 +1783,16 @@ function loadGame() {
         }
     }
 
+    // VFX (coin animations) toggle
+    let vfxEnabled = true;
+    function toggleVFX() {
+        vfxEnabled = !vfxEnabled;
+        const btn = document.getElementById('vfx-btn');
+        if (btn) {
+            btn.innerText = vfxEnabled ? 'VFX ON' : 'VFX OFF';
+        }
+    }
+
     // Auto-clicker state
     let autoClickerActive = false;
     let autoClickerCooldownEnd = 0;
@@ -2090,6 +2100,8 @@ function loadGame() {
         const saleValue = btcBalance * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
         btcBalance = 0;
+        // Spawn dollar coins on sell (1 coin per $10 USD)
+        spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
         if (typeof tutorialData !== 'undefined') {
             tutorialData.cryptoSoldOnce = true;
@@ -2123,6 +2135,8 @@ function loadGame() {
         const saleValue = ethBalance * effectivePrice * 0.95; // 5% fee
         dollarBalance += saleValue;
         ethBalance = 0;
+        // Spawn dollar coins on sell (1 coin per $10 USD)
+        spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
         if (typeof tutorialData !== 'undefined') {
             tutorialData.cryptoSoldOnce = true;
@@ -2154,8 +2168,11 @@ function loadGame() {
     function sellAllDOGE() {
         if (dogeBalance <= 0) return;
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
-        dollarBalance += dogeBalance * effectivePrice;
+        const saleValue = dogeBalance * effectivePrice;
+        dollarBalance += saleValue;
         dogeBalance = 0;
+        // Spawn dollar coins on sell (1 coin per $10 USD)
+        spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
         if (typeof tutorialData !== 'undefined') {
             tutorialData.cryptoSoldOnce = true;
@@ -2693,6 +2710,17 @@ function loadGame() {
         const modal = document.getElementById('hacking-modal');
         if (modal) {
             modal.style.display = 'none';
+        }
+
+        // Spawn explosion coins when closing results
+        if (vfxEnabled && hackingGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
+            // Use last rewards if we just won
+            const totalUsdValue = (hackingLastRewards?.btc * btcPrice || 0) + (hackingLastRewards?.eth * ethPrice || 0) + (hackingLastRewards?.doge * dogePrice || 0);
+            const coinCount = Math.max(80, Math.min(300, Math.floor(totalUsdValue / 10)));
+            spawnExplosionCoins('btc', coinCount / 4);
+            spawnExplosionCoins('eth', coinCount / 4);
+            spawnExplosionCoins('doge', coinCount / 4);
+            spawnExplosionCoins('usd', coinCount / 4);
         }
 
         // Reset modal state
@@ -3364,6 +3392,17 @@ function loadGame() {
     function closeWhackModal() {
         const modal = document.getElementById('whack-modal');
         if (modal) modal.style.display = 'none';
+
+        // Spawn explosion coins when closing results
+        if (vfxEnabled && whackGameGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
+            // Use last rewards if we just won
+            const totalUsdValue = whackLastRewards?.totalUsd || 0;
+            const coinCount = Math.max(15, Math.min(50, Math.floor(totalUsdValue / 50)));
+            spawnExplosionCoins('btc', coinCount / 4);
+            spawnExplosionCoins('eth', coinCount / 4);
+            spawnExplosionCoins('doge', coinCount / 4);
+            spawnExplosionCoins('usd', coinCount / 4);
+        }
     }
 
     // ============== END WHACK-A-BLOCK MINIGAME FUNCTIONS ==============
@@ -3714,6 +3753,17 @@ function loadGame() {
     function closeNetworkModal() {
         const modal = document.getElementById('network-modal');
         if (modal) modal.style.display = 'none';
+
+        // Spawn explosion coins when closing results
+        if (vfxEnabled && networkGameGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
+            // Use last rewards if we just won
+            const totalUsdValue = networkLastRewards?.totalUsd || 0;
+            const coinCount = Math.max(20, Math.min(50, Math.floor(totalUsdValue / 50)));
+            spawnExplosionCoins('btc', coinCount / 4);
+            spawnExplosionCoins('eth', coinCount / 4);
+            spawnExplosionCoins('doge', coinCount / 4);
+            spawnExplosionCoins('usd', coinCount / 4);
+        }
     }
 
     // ============== END NETWORK STRESS TEST MINIGAME FUNCTIONS ==============
@@ -3874,6 +3924,9 @@ function manualHash() {
     clickTimestamps.push(now);
     if (clickTimestamps.length > 60) clickTimestamps.shift();
 
+    // Spawn coins on click
+    spawnCoinsForClick('btc', usdValue);
+
     // Play click sound
     playClickSound();
 
@@ -3908,6 +3961,9 @@ function manualEthHash() {
     manualHashCooldownEnd = now + 1000;
     clickTimestamps.push(now);
     if (clickTimestamps.length > 60) clickTimestamps.shift();
+
+    // Spawn coins on click
+    spawnCoinsForClick('eth', usdValue);
 
     // Play click sound
     playClickSound();
@@ -3944,11 +4000,68 @@ function manualDogeHash() {
     clickTimestamps.push(now);
     if (clickTimestamps.length > 60) clickTimestamps.shift();
 
+    // Spawn coins on click
+    spawnCoinsForClick('doge', usdValue);
+
     // Play click sound
     playClickSound();
 
     // Refresh the screen
     updateUI();
+}
+
+function spawnCoinsForClick(coinType, usdValue) {
+    if (!vfxEnabled || typeof window.coinRainSystem === 'undefined' || !window.coinRainSystem) return;
+
+    let coinCount;
+    if (coinType === 'usd') {
+        // For dollar sells: precise logarithmic scale
+        // 1 at $1, 2 at $2, 5 at $5, 10 at $10, 15 at $1k, 20 at $10k, 25 at $100k, 30 at $1m, 35 at $10m, 40 at $100m, 45 at $1b, 50 at $10b+
+        if (usdValue < 1) {
+            coinCount = 1;
+        } else if (usdValue < 10) {
+            // Linear scale from 1-10
+            coinCount = Math.floor(Math.min(10, usdValue));
+        } else if (usdValue < 1000) {
+            // Jump to 10 at $10, then scale to 15 at $1k
+            coinCount = 10 + Math.floor((usdValue - 10) / 66); // ~5 coins over $990
+        } else if (usdValue < 10000) {
+            // 15 at $1k, scale to 20 at $10k
+            coinCount = 15 + Math.floor((usdValue - 1000) / 1800); // ~5 coins over $9k
+        } else if (usdValue < 100000) {
+            // 20 at $10k, scale to 25 at $100k
+            coinCount = 20 + Math.floor((usdValue - 10000) / 18000); // ~5 coins over $90k
+        } else if (usdValue < 1000000) {
+            // 25 at $100k, scale to 30 at $1m
+            coinCount = 25 + Math.floor((usdValue - 100000) / 180000); // ~5 coins over $900k
+        } else if (usdValue < 10000000) {
+            // 30 at $1m, scale to 35 at $10m
+            coinCount = 30 + Math.floor((usdValue - 1000000) / 1800000); // ~5 coins over $9m
+        } else if (usdValue < 100000000) {
+            // 35 at $10m, scale to 40 at $100m
+            coinCount = 35 + Math.floor((usdValue - 10000000) / 18000000); // ~5 coins over $90m
+        } else if (usdValue < 1000000000) {
+            // 40 at $100m, scale to 45 at $1b
+            coinCount = 40 + Math.floor((usdValue - 100000000) / 180000000); // ~5 coins over $900m
+        } else if (usdValue < 10000000000) {
+            // 45 at $1b, scale to 50 at $10b
+            coinCount = 45 + Math.floor((usdValue - 1000000000) / 1800000000); // ~5 coins over $9b
+        } else {
+            // 50 cap at $10b+
+            coinCount = 50;
+        }
+        coinCount = Math.max(1, Math.min(50, coinCount));
+    } else {
+        // For manual crypto clicks: 1 coin per $10 (more generous feedback)
+        coinCount = Math.max(1, Math.floor(usdValue / 10));
+    }
+
+    for (let i = 0; i < coinCount; i++) {
+        // Stagger coin spawning with tiny delays (5-30ms between each)
+        setTimeout(() => {
+            window.coinRainSystem.spawnCoin(coinType, true); // true = consistent size
+        }, i * (5 + Math.random() * 25)); // Random delay between 5-30ms per coin
+    }
 }
 
 function buyLevel(i) {
@@ -4323,7 +4436,7 @@ function buyDogeBoost(i) {
         const isMobile = window.innerWidth <= 768;
         const abs = Math.abs(num);
 
-        // Desktop: abbreviate only at 1B+, otherwise use locale string
+        // Desktop: abbreviate at 10M+, mobile: use full numbers
         if (!isMobile) {
             if (abs >= 1e30) {
                 return (num / 1e30).toFixed(1) + 'N';
@@ -4341,6 +4454,8 @@ function buyDogeBoost(i) {
                 return (num / 1e12).toFixed(1) + 'T';
             } else if (abs >= 1e9) {
                 return (num / 1e9).toFixed(1) + 'B';
+            } else if (abs >= 1e7) {
+                return (num / 1e6).toFixed(1) + 'M';
             }
             return Math.floor(num).toLocaleString();
         }
@@ -4536,6 +4651,17 @@ function buyDogeBoost(i) {
         const hackingBoost = getHackingSpeedBoost();
         const totalMiningMultiplier = miningBonus * hackingBoost;
         const isSpeedBoosted = hackingBoost > 1.0;
+
+        // Update coin rain animation with current hash rates (convert to USD values)
+        if (vfxEnabled && typeof updateCoinRain === 'function') {
+            const btcUsdPerSec = (btcPerSec * totalMiningMultiplier) * btcPrice;
+            const ethUsdPerSec = (ethPerSec * totalMiningMultiplier) * ethPrice;
+            const dogeUsdPerSec = (dogePerSec * totalMiningMultiplier) * dogePrice;
+            updateCoinRain(btcUsdPerSec, ethUsdPerSec, dogeUsdPerSec);
+        } else if (!vfxEnabled && typeof updateCoinRain === 'function') {
+            // Disable passive spawning when VFX is off
+            updateCoinRain(0, 0, 0);
+        }
 
         // Update individual hashrate displays (old location - keep for backwards compatibility)
         const btcEl = document.getElementById('yield-btc');

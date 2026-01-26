@@ -36,6 +36,7 @@
     <link rel="canonical" href="https://idlebtcminer.com">
     <link rel="sitemap" type="application/xml" href="/sitemap.xml">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="coin-rain.js?v=1.1.0"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -160,6 +161,7 @@
                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto; pointer-events: auto;">
                     <button style="background: #ff6b35; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
+                    <button id="vfx-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleVFX()">VFX ON</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #2196F3; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
@@ -592,6 +594,39 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Network Stress Test Card -->
+                    <div style="background: linear-gradient(135deg, rgba(0, 180, 255, 0.1) 0%, rgba(0, 180, 255, 0.05) 100%); border: 2px solid #00b4ff; border-radius: 12px; padding: 20px; position: relative; margin-top: 20px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="color: #00b4ff; margin: 0 0 5px 0; font-size: 1.2rem;">🌐 Network Stress Test</h3>
+                                <p style="color: #888; font-size: 0.8rem; margin: 0;">Destroy the network with your hash rate + clicks</p>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES WON</div>
+                                <div style="color: #00b4ff; font-weight: 800; font-size: 1rem;" id="network-games-won-display">0</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES PLAYED</div>
+                                <div style="color: #00b4ff; font-weight: 800; font-size: 1rem;" id="network-games-played-display">0</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">TOTAL REWARDS</div>
+                                <div style="color: #00b4ff; font-weight: 800; font-size: 0.9rem;" id="network-rewards-display">$0</div>
+                            </div>
+                        </div>
+                        <button onclick="initNetworkMinigame()" style="background: #00b4ff; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
+                            PLAY NOW →
+                        </button>
+                        <div id="network-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <div style="font-size: 1.5rem;">🔒</div>
+                                <div>Unlock at $30,000 Lifetime Earnings</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -758,6 +793,59 @@
                             💡 10 points per block hit!<br>
                             ⚡ Score bonus: 0.1x - 2.0x multiplier (1.0x at 100 points)<br>
                             🚀 Rugpull level: 10x per level (scales infinitely!)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NETWORK STRESS TEST Tab -->
+            <div id="network-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
+                <div class="upgrade-list" style="flex: 1; min-height: 0; overflow-y: auto; padding: 10px;">
+                    <div style="margin-bottom: 20px;">
+                        <button onclick="switchTab('minigames')" style="background: rgba(0, 180, 255, 0.2); color: #00b4ff; border: 1px solid #00b4ff; padding: 8px 15px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.8rem; margin-bottom: 15px;">
+                            ← BACK TO MINIGAMES
+                        </button>
+                        <h3 style="color: #00b4ff; margin: 0 0 10px 0; font-size: 1.3rem;">🌐 NETWORK STRESS TEST Minigame</h3>
+                        <p style="color: #888; font-size: 0.8rem; margin: 0;">Destroy the network using your miners' hash rate and clicking power! You have 10 seconds!</p>
+                    </div>
+
+                    <!-- Stats Display -->
+                    <div id="network-stats-content" style="background: rgba(0, 180, 255, 0.1); border: 1px solid #00b4ff; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem;">
+                            <div><span style="color: #888;">Games Played:</span> <span style="color: #00b4ff; font-weight: 800;" id="network-games-played">0</span></div>
+                            <div><span style="color: #888;">Games Won:</span> <span style="color: #00b4ff; font-weight: 800;" id="network-games-won">0</span></div>
+                            <div><span style="color: #888;">Total Rewards:</span> <span style="color: #00b4ff; font-weight: 800;">$<span id="network-total-rewards">0.00</span></span></div>
+                        </div>
+                    </div>
+
+                    <!-- Play Button -->
+                    <div style="margin-bottom: 20px;">
+                        <button onclick="initNetworkMinigame()" style="background: linear-gradient(135deg, #00b4ff 0%, #0080ff 100%); color: #fff; border: none; padding: 20px 40px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 1.1rem; width: 100%;">
+                            🌐 LAUNCH NETWORK STRESS TEST
+                        </button>
+                    </div>
+
+                    <!-- Rewards Info -->
+                    <div style="background: rgba(0, 180, 255, 0.1); border: 1px solid #00b4ff; border-radius: 8px; padding: 15px;">
+                        <h4 style="color: #00b4ff; margin: 0 0 10px 0; font-size: 1rem;">💰 Progressive Difficulty & Rewards!</h4>
+                        <div style="color: #888; font-size: 0.85rem; margin-bottom: 12px;">
+                            Each run gets 50% harder! But higher difficulty = bigger rewards. Your hash rate powers your attack!
+                        </div>
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                            <div style="color: #fff; font-weight: 700; margin-bottom: 8px;">How It Works:</div>
+                            <div style="color: #00b4ff; font-size: 0.9rem; margin: 5px 0; font-weight: 600;">📈 50% Harder Each Run</div>
+                            <div style="color: #888; font-size: 0.8rem; margin-bottom: 8px;">Network HP: 50k → 75k → 112.5k → 168.75k...</div>
+
+                            <div style="color: #00b4ff; font-size: 0.9rem; margin: 5px 0; font-weight: 600;">⚔️ Two Ways to Attack</div>
+                            <div style="color: #888; font-size: 0.8rem; margin-bottom: 8px;">Passive: Hash Rate deals damage per second (USD value of crypto)<br>Active: Click the ATTACK button for bonus damage</div>
+
+                            <div style="color: #00b4ff; font-size: 0.9rem; margin: 5px 0; font-weight: 600;">💎 Better Rewards at Higher Difficulty</div>
+                            <div style="color: #888; font-size: 0.8rem; margin-bottom: 3px;">Run 1: 0.5x base reward × hash rate<br>Run 5: 0.9x base reward × hash rate (80% more!)</div>
+                        </div>
+                        <div style="font-size: 0.7rem; color: #888; line-height: 1.5;">
+                            ⚡ Win Speed Boost: 2 minutes of +10-15% mining speed per win!<br>
+                            🚀 POWERFUL Rugpull: 10x reward multiplier per level!<br>
+                            💡 Tip: Upgrade your miners to increase passive damage!
                         </div>
                     </div>
                 </div>
@@ -1499,6 +1587,89 @@
                 CLOSE
             </button>
         </div>
+    </div>
+</div>
+
+<!-- Network Stress Test Modal -->
+<div id="network-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10002; justify-content: center; align-items: center; overflow: auto;">
+    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #00b4ff; box-shadow: 0 0 30px rgba(0,180,255,0.5); display: flex; flex-direction: column; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
+            <h2 style="color: #00b4ff; margin: 0; font-size: 1.5rem;">🌐 NETWORK STRESS TEST</h2>
+            <div style="text-align: right;">
+                <div style="color: #00b4ff; font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">
+                    <span id="network-difficulty-display">EASY</span>
+                </div>
+                <div style="color: #fff; font-size: 1rem;">
+                    <span id="network-time-display">10s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- HP Bar -->
+        <div style="background: rgba(0,180,255,0.2); border: 2px solid #00b4ff; border-radius: 8px; padding: 15px; margin-bottom: 20px; width: 100%; text-align: center;">
+            <div style="color: #888; font-size: 0.85rem; margin-bottom: 8px;">NETWORK HP</div>
+            <div style="background: rgba(0,0,0,0.5); border-radius: 4px; height: 30px; overflow: hidden; margin-bottom: 8px; position: relative;">
+                <div id="network-hp-bar" style="background: linear-gradient(90deg, #ff3344, #ff6644); height: 100%; width: 100%; transition: width 0.1s ease;"></div>
+            </div>
+            <div style="color: #00b4ff; font-size: 1.3rem; font-weight: 800;">
+                <span id="network-hp-display">50000</span> / <span id="network-hp-max-display">50000</span> HP
+            </div>
+        </div>
+
+        <!-- Game Info Section -->
+        <div id="network-game-info">
+            <div style="color: #888; font-size: 0.9rem; text-align: center; margin-bottom: 20px;">
+                Use your hash rate (passive) and clicking (active) to destroy the network!
+            </div>
+
+            <!-- Click Button -->
+            <button id="network-click-btn" onclick="networkClickAttack()" style="width: 100%; background: linear-gradient(135deg, #00b4ff 0%, #0080ff 100%); color: #fff; border: 2px solid #00b4ff; padding: 30px; border-radius: 8px; cursor: pointer; font-size: 1.5rem; font-weight: 800; margin-bottom: 15px; transition: all 0.1s ease;">
+                ATTACK!<br><span style="font-size: 0.8rem; font-weight: 400;" id="network-click-damage-display">+100 damage/click</span>
+            </button>
+
+            <!-- Stats -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div style="background: rgba(0,180,255,0.1); border: 1px solid #00b4ff; border-radius: 6px; padding: 10px; text-align: center;">
+                    <div style="color: #888; font-size: 0.75rem; margin-bottom: 3px;">HASH RATE DAMAGE/SEC</div>
+                    <div style="color: #00b4ff; font-weight: 800; font-size: 1.1rem;" id="network-passive-dps-display">0</div>
+                </div>
+                <div style="background: rgba(0,180,255,0.1); border: 1px solid #00b4ff; border-radius: 6px; padding: 10px; text-align: center;">
+                    <div style="color: #888; font-size: 0.75rem; margin-bottom: 3px;">TOTAL DAMAGE</div>
+                    <div style="color: #00b4ff; font-weight: 800; font-size: 1.1rem;" id="network-total-damage-display">0</div>
+                </div>
+            </div>
+
+            <!-- Rewards Preview -->
+            <div style="background: rgba(0,180,255,0.1); border: 1px solid #00b4ff; border-radius: 8px; padding: 15px; margin-top: 20px;">
+                <div style="color: #888; font-size: 0.75rem; margin-bottom: 8px;">ESTIMATED REWARDS (if destroyed)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; font-size: 0.8rem;">
+                    <div style="text-align: center;">
+                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 3px;">₿ BTC</div>
+                        <div style="color: #00b4ff; font-weight: 800;" id="network-reward-btc-preview">0</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #627eea; font-weight: 700; margin-bottom: 3px;">Ξ ETH</div>
+                        <div style="color: #00b4ff; font-weight: 800;" id="network-reward-eth-preview">0</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #c1a81d; font-weight: 700; margin-bottom: 3px;">Ð DOGE</div>
+                        <div style="color: #00b4ff; font-weight: 800;" id="network-reward-doge-preview">0</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #fff; font-weight: 700; margin-bottom: 3px;">💵 USD</div>
+                        <div style="color: #00b4ff; font-weight: 800;" id="network-reward-usd-preview">$0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Message -->
+        <div id="network-results-message" style="display: none; text-align: center; padding: 30px; margin-bottom: 20px;"></div>
+
+        <!-- Close Button -->
+        <button id="network-close-btn" onclick="closeNetworkModal()" style="display: none; background: #00b4ff; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+            CLOSE
+        </button>
     </div>
 </div>
 
