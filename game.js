@@ -2695,27 +2695,27 @@ function buyDogeBoost(i) {
             return num.toFixed(8);
         }
 
-        // 1k and above: abbreviate
+        // 1k and above: abbreviate with 2 decimal places for accuracy
         if (abs >= 1e30) {
-            return (num / 1e30).toFixed(1) + 'N';
+            return (num / 1e30).toFixed(2) + 'N';
         } else if (abs >= 1e27) {
-            return (num / 1e27).toFixed(1) + 'O';
+            return (num / 1e27).toFixed(2) + 'O';
         } else if (abs >= 1e24) {
-            return (num / 1e24).toFixed(1) + 'Sep';
+            return (num / 1e24).toFixed(2) + 'Sep';
         } else if (abs >= 1e21) {
-            return (num / 1e21).toFixed(1) + 'S';
+            return (num / 1e21).toFixed(2) + 'S';
         } else if (abs >= 1e18) {
-            return (num / 1e18).toFixed(1) + 'Qa';
+            return (num / 1e18).toFixed(2) + 'Qa';
         } else if (abs >= 1e15) {
-            return (num / 1e15).toFixed(1) + 'Q';
+            return (num / 1e15).toFixed(2) + 'Q';
         } else if (abs >= 1e12) {
-            return (num / 1e12).toFixed(1) + 'T';
+            return (num / 1e12).toFixed(2) + 'T';
         } else if (abs >= 1e9) {
-            return (num / 1e9).toFixed(1) + 'B';
+            return (num / 1e9).toFixed(2) + 'B';
         } else if (abs >= 1e6) {
-            return (num / 1e6).toFixed(1) + 'M';
+            return (num / 1e6).toFixed(2) + 'M';
         } else if (abs >= 1e3) {
-            return (num / 1e3).toFixed(1) + 'K';
+            return (num / 1e3).toFixed(2) + 'K';
         }
         return num.toFixed(8);
     }
