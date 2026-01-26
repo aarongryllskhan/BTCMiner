@@ -266,7 +266,7 @@ function showTutorialStep() {
             const autoclickerBtn = document.getElementById('autoclicker-btn');
             if (autoclickerBtn) {
                 const btnRect = autoclickerBtn.getBoundingClientRect();
-                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 96);
+                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 300);
                 window.scrollTo({ top: scrollPos, behavior: 'smooth' });
                 console.log('🎓 Step 1 immediate scroll - scrollPos:', scrollPos);
             }
@@ -279,6 +279,7 @@ function showTutorialStep() {
     // Create overlay (allows clicks to pass through)
     const overlay = document.createElement('div');
     overlay.id = 'tutorial-overlay';
+    const isMobile = window.innerWidth <= 768;
     overlay.style.cssText = `
         position: fixed;
         top: 0;
@@ -288,9 +289,10 @@ function showTutorialStep() {
         background: transparent;
         z-index: 9990;
         display: flex;
-        align-items: center;
+        align-items: ${isMobile ? 'flex-end' : 'center'};
         justify-content: center;
         pointer-events: none;
+        ${isMobile ? 'overflow-y: auto;' : ''}
     `;
 
     // Create tutorial card
@@ -309,6 +311,7 @@ function showTutorialStep() {
         pointer-events: auto;
         position: relative;
         z-index: 9991;
+        ${isMobile ? 'margin-bottom: 15px; margin-top: auto; max-height: 45vh; overflow-y: auto;' : ''}
     `;
 
     // Check if "Got It!" button should be disabled
@@ -386,7 +389,7 @@ function showTutorialStep() {
         if (autoclickerBtn && window.innerWidth <= 768) {
             setTimeout(() => {
                 const btnRect = autoclickerBtn.getBoundingClientRect();
-                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 96);
+                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 300);
                 window.scrollTo({ top: scrollPos, behavior: 'smooth' });
                 console.log('🎓 Step 1 scroll triggered - scrollPos:', scrollPos);
             }, 800);
@@ -396,7 +399,7 @@ function showTutorialStep() {
         if (exchangeBtn && window.innerWidth <= 768) {
             setTimeout(() => {
                 const btnRect = exchangeBtn.getBoundingClientRect();
-                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 80);
+                const scrollPos = window.scrollY + btnRect.top - (window.innerHeight - btnRect.height - 350);
                 window.scrollTo({ top: scrollPos, behavior: 'smooth' });
             }, 600);
         }
