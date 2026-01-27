@@ -224,11 +224,10 @@ function spawnCryptoSymbol() {
         }
     } else {
         // Fallback if rates/prices aren't available yet
-        const basePrices = { BTC: 100000, ETH: 3500, DOGE: 0.25 };
-        const baseRates = { BTC: 0.00001, ETH: 0.0005, DOGE: 10 };
-        if (cryptoType.name === 'BTC') usdValue = baseRates.BTC * basePrices.BTC;
-        else if (cryptoType.name === 'ETH') usdValue = baseRates.ETH * basePrices.ETH;
-        else if (cryptoType.name === 'DOGE') usdValue = baseRates.DOGE * basePrices.DOGE;
+        const baseRewards = { BTC: 30, ETH: 20, DOGE: 10 };
+        if (cryptoType.name === 'BTC') usdValue = baseRewards.BTC;
+        else if (cryptoType.name === 'ETH') usdValue = baseRewards.ETH;
+        else if (cryptoType.name === 'DOGE') usdValue = baseRewards.DOGE;
     }
 
     // Spawn from left side

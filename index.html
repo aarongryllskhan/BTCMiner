@@ -562,74 +562,8 @@
                         </div>
                     </div>
 
-                    <!-- Hacking Minigame Card -->
-                    <div style="background: linear-gradient(135deg, rgba(255, 0, 255, 0.1) 0%, rgba(255, 0, 255, 0.05) 100%); border: 2px solid #ff00ff; border-radius: 12px; padding: 20px; margin-bottom: 20px; position: relative;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                            <div>
-                                <h3 style="color: #ff00ff; margin: 0 0 5px 0; font-size: 1.2rem;">🔐 Protocol Auditing</h3>
-                                <p style="color: #888; font-size: 0.8rem; margin: 0;">Find vulnerabilities & earn speed boosts</p>
-                            </div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES WON</div>
-                                <div style="color: #ff00ff; font-weight: 800; font-size: 1rem;" id="hacking-games-won-display">0</div>
-                            </div>
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES PLAYED</div>
-                                <div style="color: #ff00ff; font-weight: 800; font-size: 1rem;" id="hacking-games-played-display">0</div>
-                            </div>
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">TOTAL REWARDS</div>
-                                <div style="color: #ff00ff; font-weight: 800; font-size: 0.9rem;" id="hacking-rewards-display">$0</div>
-                            </div>
-                        </div>
-                        <button onclick="switchTab('hacking')" style="background: #ff00ff; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
-                            PLAY NOW →
-                        </button>
-                        <div id="hacking-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                                <div style="font-size: 1.5rem;">🔒</div>
-                                <div>Unlock at $10,000 Lifetime Earnings</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Whack-A-Block Card -->
-                    <div style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%); border: 2px solid #00ff88; border-radius: 12px; padding: 20px; position: relative;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                            <div>
-                                <h3 style="color: #00ff88; margin: 0 0 5px 0; font-size: 1.2rem;">⚡ Block Suppression</h3>
-                                <p style="color: #888; font-size: 0.8rem; margin: 0;">Fast-paced reaction game with cash rewards</p>
-                            </div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES WON</div>
-                                <div style="color: #00ff88; font-weight: 800; font-size: 1rem;" id="whack-games-won-display">0</div>
-                            </div>
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES PLAYED</div>
-                                <div style="color: #00ff88; font-weight: 800; font-size: 1rem;" id="whack-games-played-display">0</div>
-                            </div>
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">TOTAL REWARDS</div>
-                                <div style="color: #00ff88; font-weight: 800; font-size: 0.9rem;" id="whack-rewards-display">$0</div>
-                            </div>
-                        </div>
-                        <button onclick="switchTab('whack')" style="background: #00ff88; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
-                            PLAY NOW →
-                        </button>
-                        <div id="whack-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                                <div style="font-size: 1.5rem;">🔒</div>
-                                <div>Unlock at $20,000 Lifetime Earnings</div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Network Stress Test Card -->
-                    <div style="background: linear-gradient(135deg, rgba(0, 180, 255, 0.1) 0%, rgba(0, 180, 255, 0.05) 100%); border: 2px solid #00b4ff; border-radius: 12px; padding: 20px; position: relative; margin-top: 20px;">
+                    <div style="background: linear-gradient(135deg, rgba(0, 180, 255, 0.1) 0%, rgba(0, 180, 255, 0.05) 100%); border: 2px solid #00b4ff; border-radius: 12px; padding: 20px; position: relative; margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
                             <div>
                                 <h3 style="color: #00b4ff; margin: 0 0 5px 0; font-size: 1.2rem;">🌐 Network Stress Test</h3>
@@ -656,7 +590,73 @@
                         <div id="network-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
                                 <div style="font-size: 1.5rem;">🔒</div>
-                                <div>Unlock at $30,000 Lifetime Earnings</div>
+                                <div>Unlock at $20,000 Lifetime Earnings</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Block Suppression Card -->
+                    <div style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%); border: 2px solid #00ff88; border-radius: 12px; padding: 20px; position: relative; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="color: #00ff88; margin: 0 0 5px 0; font-size: 1.2rem;">⚡ Block Suppression</h3>
+                                <p style="color: #888; font-size: 0.8rem; margin: 0;">Fast-paced reaction game with cash rewards</p>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES WON</div>
+                                <div style="color: #00ff88; font-weight: 800; font-size: 1rem;" id="whack-games-won-display">0</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES PLAYED</div>
+                                <div style="color: #00ff88; font-weight: 800; font-size: 1rem;" id="whack-games-played-display">0</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">TOTAL REWARDS</div>
+                                <div style="color: #00ff88; font-weight: 800; font-size: 0.9rem;" id="whack-rewards-display">$0</div>
+                            </div>
+                        </div>
+                        <button onclick="switchTab('whack')" style="background: #00ff88; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
+                            PLAY NOW →
+                        </button>
+                        <div id="whack-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <div style="font-size: 1.5rem;">🔒</div>
+                                <div>Unlock at $50,000 Lifetime Earnings</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Protocol Auditing Card -->
+                    <div style="background: linear-gradient(135deg, rgba(255, 0, 255, 0.1) 0%, rgba(255, 0, 255, 0.05) 100%); border: 2px solid #ff00ff; border-radius: 12px; padding: 20px; position: relative;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="color: #ff00ff; margin: 0 0 5px 0; font-size: 1.2rem;">🔐 Protocol Auditing</h3>
+                                <p style="color: #888; font-size: 0.8rem; margin: 0;">Find vulnerabilities & earn speed boosts</p>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES WON</div>
+                                <div style="color: #ff00ff; font-weight: 800; font-size: 1rem;" id="hacking-games-won-display">0</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES PLAYED</div>
+                                <div style="color: #ff00ff; font-weight: 800; font-size: 1rem;" id="hacking-games-played-display">0</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">TOTAL REWARDS</div>
+                                <div style="color: #ff00ff; font-weight: 800; font-size: 0.9rem;" id="hacking-rewards-display">$0</div>
+                            </div>
+                        </div>
+                        <button onclick="switchTab('hacking')" style="background: #ff00ff; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
+                            PLAY NOW →
+                        </button>
+                        <div id="hacking-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <div style="font-size: 1.5rem;">🔒</div>
+                                <div>Unlock at $500,000 Lifetime Earnings</div>
                             </div>
                         </div>
                     </div>
@@ -761,56 +761,56 @@
                                 <div style="font-size: 0.7rem; font-weight: 400;">3 bugs | 30s | 6 lives</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">+10% speed for 2min</div>
                                 <div id="hacking-easy-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4;"></div>
-                                <div id="hacking-easy-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column;"></div>
+                                <div id="hacking-easy-cooldown" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 11; align-items: center; justify-content: center; flex-direction: column; visibility: hidden;"></div>
                             </button>
                             <button id="hacking-medium-btn" onclick="initHackingMinigame('MEDIUM')" style="background: #f39c12; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
                                 <div style="margin-bottom: 5px;">MEDIUM</div>
                                 <div style="font-size: 0.7rem; font-weight: 400;">4 bugs | 20s | 8 lives</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">+25% speed for 2min</div>
                                 <div id="hacking-medium-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4;"></div>
-                                <div id="hacking-medium-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column;"></div>
+                                <div id="hacking-medium-cooldown" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 11; align-items: center; justify-content: center; flex-direction: column; visibility: hidden;"></div>
                             </button>
                             <button id="hacking-hard-btn" onclick="initHackingMinigame('HARD')" style="background: #e74c3c; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
                                 <div style="margin-bottom: 5px;">HARD</div>
                                 <div style="font-size: 0.7rem; font-weight: 400;">5 bugs | 12s | 10 lives</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">+50% speed for 2min</div>
                                 <div id="hacking-hard-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4;"></div>
-                                <div id="hacking-hard-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column;"></div>
+                                <div id="hacking-hard-cooldown" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column; visibility: hidden;"></div>
                             </button>
                         </div>
                     </div>
 
                     <!-- Rewards Info -->
                     <div style="background: rgba(247, 147, 26, 0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 15px;">
-                        <h4 style="color: #f7931a; margin: 0 0 10px 0; font-size: 1rem;">💰 Crypto Price-Based Rewards!</h4>
+                        <h4 style="color: #f7931a; margin: 0 0 10px 0; font-size: 1rem;">💰 Hash Rate-Based Rewards!</h4>
                         <div style="color: #888; font-size: 0.85rem; margin-bottom: 12px;">
-                            Rewards scale with crypto market prices! Higher prices = bigger rewards!
+                            Each line validated = your current mining power in USD!
                         </div>
                         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 12px; margin-bottom: 10px;">
-                            <div style="color: #fff; font-weight: 700; margin-bottom: 8px;">Base Formula: (BTC + ETH + DOGE prices) × Multiplier</div>
+                            <div style="color: #fff; font-weight: 700; margin-bottom: 8px;">Base Formula: ($10 + BTC/sec × BTC Price + ETH/sec × ETH Price + DOGE/sec × DOGE Price) × Lines Validated × Time Bonus × Rugpull Level</div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.75rem;">
                                 <div style="text-align: center;">
                                     <div style="color: #00ff88; font-weight: 700;">EASY</div>
-                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">0.1x - 0.5x</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">crypto prices</div>
+                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">Standard Difficulty</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">5 vulnerabilities</div>
                                     <div style="color: #666; font-size: 0.65rem;">6 lives | 5m cooldown</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="color: #ffaa33; font-weight: 700;">MEDIUM</div>
-                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">0.5x - 1x</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">crypto prices</div>
+                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">Higher Difficulty</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">8 vulnerabilities</div>
                                     <div style="color: #666; font-size: 0.65rem;">8 lives | 15m cooldown</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="color: #ff3344; font-weight: 700;">HARD</div>
-                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">1x - 2x</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">crypto prices</div>
+                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">Maximum Difficulty</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">10 vulnerabilities</div>
                                     <div style="color: #666; font-size: 0.65rem;">10 lives | 30m cooldown</div>
                                 </div>
                             </div>
                         </div>
                         <div style="font-size: 0.7rem; color: #888; line-height: 1.5;">
-                            💎 Rewards paid as BTC (40%), ETH (35%), DOGE (20%), Cash (5%)<br>
+                            • 1 Line = ($10 + BTC/sec × BTC Price + ETH/sec × ETH Price + DOGE/sec × DOGE Price) × Time Bonus × Consecutive Win Multiplier<br>
                             ⚡ Speed boosts: +10%, +25%, +50% (can stack!)<br>
                             🚀 POWERFUL Rugpull: 10x reward per rugpull level!
                         </div>
@@ -868,36 +868,36 @@
 
                     <!-- Rewards Info -->
                     <div style="background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 8px; padding: 15px;">
-                        <h4 style="color: #00ff88; margin: 0 0 10px 0; font-size: 1rem;">💰 Score-Based Rewards!</h4>
+                        <h4 style="color: #00ff88; margin: 0 0 10px 0; font-size: 1rem;">💰 Hash Rate-Based Rewards!</h4>
                         <div style="color: #888; font-size: 0.85rem; margin-bottom: 12px;">
-                            Earn cash rewards based on how many blocks you hit!
+                            Each block hit = $10 base + your current mining power in USD!
                         </div>
                         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 12px; margin-bottom: 10px;">
-                            <div style="color: #fff; font-weight: 700; margin-bottom: 8px;">Base Formula: Crypto Prices × Difficulty Range × Score Multiplier × Rugpull Level</div>
+                            <div style="color: #fff; font-weight: 700; margin-bottom: 8px;">Base Formula: ($10 + BTC/sec × BTC Price + ETH/sec × ETH Price + DOGE/sec × DOGE Price) × Blocks Hit × Score Multiplier × Rugpull Level</div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.75rem;">
                                 <div style="text-align: center;">
                                     <div style="color: #00ff88; font-weight: 700;">EASY</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin: 5px 0;">0.05x - 0.25x</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">Difficulty Range Multiplier</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin: 5px 0;">Standard Speed</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">15 Seconds</div>
                                     <div style="color: #666; font-size: 0.65rem;">3m cooldown</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="color: #ffaa33; font-weight: 700;">MEDIUM</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin: 5px 0;">0.125x - 0.25x</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">Difficulty Range Multiplier</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin: 5px 0;">Faster Speed</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">15 Seconds</div>
                                     <div style="color: #666; font-size: 0.65rem;">10m cooldown</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="color: #ff3344; font-weight: 700;">HARD</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin: 5px 0;">0.25x - 0.5x</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">Difficulty Range Multiplier</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin: 5px 0;">Fastest Speed</div>
+                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">15 Seconds</div>
                                     <div style="color: #666; font-size: 0.65rem;">20m cooldown</div>
                                 </div>
                             </div>
                         </div>
                         <div style="font-size: 0.7rem; color: #888; line-height: 1.5;">
-                            💡 10 points per block hit!<br>
-                            ⚡ Score bonus: 0.1x - 2.0x multiplier (1.0x at 100 points)<br>
+                            • 1 Block = ($10 + BTC/sec × BTC Price + ETH/sec × ETH Price + DOGE/sec × DOGE Price) × Score Multiplier × Rugpull Level<br>
+                            ⚡ Score bonus: up to 1.5x multiplier (higher score = higher multiplier)<br>
                             🚀 Rugpull level: 10x per level (scales infinitely!)
                         </div>
                     </div>
@@ -1615,7 +1615,7 @@
 <div id="whack-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10002; justify-content: center; align-items: center; overflow: auto;">
     <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #00ff88; box-shadow: 0 0 30px rgba(0,255,136,0.5); display: flex; flex-direction: column; align-items: center;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
-            <h2 style="color: #00ff88; margin: 0; font-size: 1.5rem;">⚡ WHACK-A-BLOCK</h2>
+            <h2 style="color: #00ff88; margin: 0; font-size: 1.5rem;">⚡ BLOCK SUPPRESSION</h2>
             <div style="text-align: right;">
                 <div style="color: #00ff88; font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">
                     <span id="whack-difficulty-display">EASY</span>

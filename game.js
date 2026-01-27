@@ -1,3 +1,11 @@
+    // Abbreviate large numbers with K/M/B suffix
+    function abbreviateNumber(num) {
+        if (num >= 1e9) return (num / 1e9).toFixed(3) + 'B';
+        if (num >= 1e6) return (num / 1e6).toFixed(3) + 'M';
+        if (num >= 1e3) return (num / 1e3).toFixed(3) + 'K';
+        return num.toFixed(0);
+    }
+
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
@@ -2412,13 +2420,13 @@ function loadGame() {
         let difficultyName = '';
 
         if (difficulty === 'EASY') {
-            requiredEarnings = 10000;
+            requiredEarnings = 500000;
             difficultyName = 'EASY';
         } else if (difficulty === 'MEDIUM') {
-            requiredEarnings = 50000;
+            requiredEarnings = 1000000;
             difficultyName = 'MEDIUM';
         } else if (difficulty === 'HARD') {
-            requiredEarnings = 100000;
+            requiredEarnings = 5000000;
             difficultyName = 'HARD';
         }
 
@@ -2460,6 +2468,12 @@ function loadGame() {
         if (!modal) return;
 
         modal.style.display = 'flex';
+
+        // Hide previous results and show game content
+        const resultMessage = document.getElementById('hacking-result-message');
+        const gameInfo = document.getElementById('hacking-game-info');
+        if (resultMessage) resultMessage.style.display = 'none';
+        if (gameInfo) gameInfo.style.display = 'block';
 
         // Update modal content
         document.getElementById('hacking-difficulty-display').textContent = difficulty;
@@ -2623,10 +2637,10 @@ function loadGame() {
                     <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
                         <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
                         <div style="color: #fff; font-size: 0.9rem;">
-                            ₿ ${formatCrypto(rewards.btc)} BTC<br>
-                            Ξ ${formatCrypto(rewards.eth)} ETH<br>
-                            Ð ${formatCrypto(rewards.doge)} DOGE<br>
-                            💵 $${rewards.usd.toFixed(2)}
+                            ₿ ${abbreviateNumber(rewards.btc)} BTC<br>
+                            Ξ ${abbreviateNumber(rewards.eth)} ETH<br>
+                            Ð ${abbreviateNumber(rewards.doge)} DOGE<br>
+                            💵 $${abbreviateNumber(rewards.totalUsd)}
                         </div>
                     </div>
                     <div style="margin-top: 10px; color: #00ff88; font-weight: 700;">
@@ -2668,30 +2682,23 @@ function loadGame() {
         // Get current rugpull/ascension level (defined in rugpull.js)
         const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
 
-        // Define crypto price multiplier ranges per difficulty
-        // EASY: 0.05x - 0.15x of total crypto prices
-        // MEDIUM: 0.2x - 0.5x of total crypto prices
-        // HARD: 1x - 3x of total crypto prices
-        let minMultiplier, maxMultiplier;
-        if (difficulty === 'HARD') {
-            minMultiplier = 1.0;
-            maxMultiplier = 3.0;
-        } else if (difficulty === 'MEDIUM') {
-            minMultiplier = 0.2;
-            maxMultiplier = 0.5;
-        } else { // EASY
-            minMultiplier = 0.05;
-            maxMultiplier = 0.15;
-        }
+        // Hash rate-based reward system: each line validated = $10 base + (BTC/sec × BTC price + ETH/sec × ETH price + DOGE/sec × DOGE price)
+        const currentBtcPerSec = window.btcPerSec ?? btcPerSec ?? 0;
+        const currentEthPerSec = window.ethPerSec ?? ethPerSec ?? 0;
+        const currentDogePerSec = window.dogePerSec ?? dogePerSec ?? 0;
+        const currentBtcPrice = window.btcPrice ?? btcPrice ?? 100000;
+        const currentEthPrice = window.ethPrice ?? ethPrice ?? 3500;
+        const currentDogePrice = window.dogePrice ?? dogePrice ?? 0.25;
 
-        // Random multiplier within the range
-        const cryptoPriceMultiplier = minMultiplier + (Math.random() * (maxMultiplier - minMultiplier));
+        // Number of lines validated (vulnerabilities found)
+        const linesValidated = hackingVulnerabilitiesFound.length;
 
-        // Calculate total crypto prices (BTC + ETH + DOGE)
-        const totalCryptoPrices = btcPrice + ethPrice + dogePrice;
+        // Reward per line formula: $10 base + (current hash rate value in USD)
+        const hashRateUsdValue = (currentBtcPerSec * currentBtcPrice) + (currentEthPerSec * currentEthPrice) + (currentDogePerSec * currentDogePrice);
+        const rewardPerLine = 10 + hashRateUsdValue;
 
-        // Calculate base USD value from crypto prices
-        let baseUsdValue = totalCryptoPrices * cryptoPriceMultiplier;
+        // Total base USD value = lines validated × reward per line
+        let baseUsdValue = linesValidated * rewardPerLine;
 
         // Time bonus and consecutive wins bonus (already in multiplier parameter)
         const totalMultiplier = multiplier;
@@ -2987,9 +2994,9 @@ function loadGame() {
 
         // Unlock requirements for each difficulty
         const unlockRequirements = {
-            'EASY': 10000,
-            'MEDIUM': 50000,
-            'HARD': 100000
+            'EASY': 500000,
+            'MEDIUM': 1000000,
+            'HARD': 5000000
         };
 
         // Update each difficulty button's cooldown overlay
@@ -3009,14 +3016,13 @@ function loadGame() {
             if (isLocked) {
                 lockedElement.style.display = 'flex';
                 lockedElement.innerHTML = `🔒<br>$${(unlockRequirements[difficulty] || 0).toLocaleString()}`;
-                cooldownElement.style.display = 'none';
+                cooldownElement.style.visibility = 'hidden';
                 buttonElement.style.cursor = 'not-allowed';
                 buttonElement.style.pointerEvents = 'none';
                 buttonElement.dataset.locked = 'true';
             } else if (isOnCooldown) {
                 lockedElement.style.display = 'none';
-                cooldownElement.style.removeProperty('display');
-                cooldownElement.style.setProperty('display', 'flex', 'important');
+                cooldownElement.style.visibility = 'visible';
                 buttonElement.style.cursor = 'not-allowed';
                 buttonElement.style.pointerEvents = 'none';
                 buttonElement.style.opacity = '0.6';
@@ -3030,7 +3036,7 @@ function loadGame() {
             } else {
                 // Button is active and clickable
                 lockedElement.style.display = 'none';
-                cooldownElement.style.display = 'none';
+                cooldownElement.style.visibility = 'hidden';
                 buttonElement.style.cursor = 'pointer';
                 buttonElement.style.pointerEvents = 'auto';
                 buttonElement.style.opacity = '1';
@@ -3129,33 +3135,33 @@ function loadGame() {
             }
         }
 
-        // Check if hacking minigame is locked (Easy requires $10k)
-        const hackingLockedCard = document.getElementById('hacking-card-locked');
-        if (hackingLockedCard) {
-            if (lifetimeEarnings < 10000) {
-                hackingLockedCard.style.display = 'flex';
+        // Check if network stress test minigame is locked (requires $20k)
+        const networkLockedCard = document.getElementById('network-card-locked');
+        if (networkLockedCard) {
+            if (lifetimeEarnings < 20000) {
+                networkLockedCard.style.display = 'flex';
             } else {
-                hackingLockedCard.style.display = 'none';
+                networkLockedCard.style.display = 'none';
             }
         }
 
-        // Check if whack-a-block minigame is locked (Easy requires $5k)
+        // Check if whack-a-block minigame is locked (Easy requires $50k)
         const whackLockedCard = document.getElementById('whack-card-locked');
         if (whackLockedCard) {
-            if (lifetimeEarnings < 5000) {
+            if (lifetimeEarnings < 50000) {
                 whackLockedCard.style.display = 'flex';
             } else {
                 whackLockedCard.style.display = 'none';
             }
         }
 
-        // Check if network stress test minigame is locked (requires $30k)
-        const networkLockedCard = document.getElementById('network-card-locked');
-        if (networkLockedCard) {
-            if (lifetimeEarnings < 30000) {
-                networkLockedCard.style.display = 'flex';
+        // Check if hacking minigame is locked (requires $500k)
+        const hackingLockedCard = document.getElementById('hacking-card-locked');
+        if (hackingLockedCard) {
+            if (lifetimeEarnings < 500000) {
+                hackingLockedCard.style.display = 'flex';
             } else {
-                networkLockedCard.style.display = 'none';
+                hackingLockedCard.style.display = 'none';
             }
         }
     }
@@ -3280,7 +3286,7 @@ function loadGame() {
         let difficultyName = '';
 
         if (difficulty === 'EASY') {
-            requiredEarnings = 20000;
+            requiredEarnings = 50000;
             difficultyName = 'EASY';
         } else if (difficulty === 'MEDIUM') {
             requiredEarnings = 25000;
@@ -3429,9 +3435,9 @@ function loadGame() {
                 setTimeout(() => block.classList.remove('hit'), 200);
             }
 
-            // Update display
+            // Update display - show blocks suppressed (not score points)
             const scoreDisplay = document.getElementById('whack-score-display');
-            if (scoreDisplay) scoreDisplay.textContent = whackGameScore;
+            if (scoreDisplay) scoreDisplay.textContent = whackGameBlocksHit;
 
             // Play hit sound
             playClickSound();
@@ -3493,34 +3499,28 @@ function loadGame() {
             // Get current rugpull/ascension level (defined in rugpull.js)
             const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
 
-            // Define crypto price multiplier ranges per difficulty
-            // EASY: 0.02x - 0.08x of total crypto prices
-            // MEDIUM: 0.1x - 0.25x of total crypto prices
-            // HARD: 0.4x - 1.0x of total crypto prices
-            let minMultiplier, maxMultiplier;
-            if (whackGameDifficulty === 'HARD') {
-                minMultiplier = 0.4;
-                maxMultiplier = 1.0;
-            } else if (whackGameDifficulty === 'MEDIUM') {
-                minMultiplier = 0.1;
-                maxMultiplier = 0.25;
-            } else { // EASY
-                minMultiplier = 0.02;
-                maxMultiplier = 0.08;
-            }
+            // Hash rate-based reward system: each block hit = $10 base + (BTC/sec × BTC price + ETH/sec × ETH price + DOGE/sec × DOGE price)
+            const currentBtcPerSec = window.btcPerSec ?? btcPerSec ?? 0;
+            const currentEthPerSec = window.ethPerSec ?? ethPerSec ?? 0;
+            const currentDogePerSec = window.dogePerSec ?? dogePerSec ?? 0;
+            const currentBtcPrice = window.btcPrice ?? btcPrice ?? 100000;
+            const currentEthPrice = window.ethPrice ?? ethPrice ?? 3500;
+            const currentDogePrice = window.dogePrice ?? dogePrice ?? 0.25;
 
-            // Random multiplier within the range
-            const cryptoPriceMultiplier = minMultiplier + (Math.random() * (maxMultiplier - minMultiplier));
+            // Use actual blocks hit (clicked/suppressed)
+            const blocksHit = whackGameBlocksHit;
 
-            // Calculate total crypto prices (BTC + ETH + DOGE)
-            const totalCryptoPrices = btcPrice + ethPrice + dogePrice;
+            // Reward per block formula: $10 base + (current hash rate value in USD)
+            const hashRateUsdValue = (currentBtcPerSec * currentBtcPrice) + (currentEthPerSec * currentEthPrice) + (currentDogePerSec * currentDogePrice);
+            const rewardPerBlock = 10 + hashRateUsdValue;
 
-            // Calculate base USD value from crypto prices
-            let baseUsdValue = totalCryptoPrices * cryptoPriceMultiplier;
+            // Total base USD value = blocks hit × reward per block
+            let baseUsdValue = blocksHit * rewardPerBlock;
 
-            // Calculate score bonus multiplier based on score
-            // 0 points = 0x, scales up to 2.0x at 300 points (capped)
-            const scoreMultiplier = Math.min(2.0, (whackGameScore / 150));
+            // Calculate score bonus multiplier based on blocks hit accuracy
+            // Better accuracy = higher multiplier (up to 1.5x for perfect - all blocks hit)
+            const maxBlocks = 15; // Maximum blocks that can be spawned in 15 seconds
+            const scoreMultiplier = Math.min(1.5, (blocksHit / maxBlocks));
 
             // POWERFUL Rugpull multiplier: 10x per rugpull level
             // Rugpull 1 = 10x, Rugpull 2 = 20x, Rugpull 5 = 50x
@@ -3584,10 +3584,10 @@ function loadGame() {
                     <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
                         <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
                         <div style="color: #fff; font-size: 0.9rem;">
-                            ₿ ${formatAmount(whackLastRewards.btc)} BTC<br>
-                            Ξ ${formatAmount(whackLastRewards.eth)} ETH<br>
-                            Ð ${formatAmount(whackLastRewards.doge)} DOGE<br>
-                            💵 $${whackLastRewards.usd.toFixed(2)}
+                            ₿ ${abbreviateNumber(whackLastRewards.btc)} BTC<br>
+                            Ξ ${abbreviateNumber(whackLastRewards.eth)} ETH<br>
+                            Ð ${abbreviateNumber(whackLastRewards.doge)} DOGE<br>
+                            💵 $${abbreviateNumber(whackLastRewards.totalUsd)}
                         </div>
                     </div>`;
             } else {
@@ -3635,8 +3635,8 @@ function loadGame() {
 
     function initNetworkMinigame() {
         // Check unlock requirement (starts unlocked, but scales with gameplay)
-        if (lifetimeEarnings < 30000) {
-            alert(`🔒 Network Stress Test Locked!\n\nRequires $30,000 lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
+        if (lifetimeEarnings < 20000) {
+            alert(`🔒 Network Stress Test Locked!\n\nRequires $20,000 lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
             return;
         }
 
