@@ -36,7 +36,7 @@
     <link rel="canonical" href="https://idlebtcminer.com">
     <link rel="sitemap" type="application/xml" href="/sitemap.xml">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="coin-rain.js?v=1.1.0"></script>
+    <script src="coin-rain.js?v=1.2.0"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -261,13 +261,13 @@
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
-            <button id="manual-hash-btc-btn" class="mine-btn" onclick="trackManualHashClick(); manualHash()" style="position: relative; z-index: 100;">MANUAL BTC HASH <img src="bitcointoken.png" style="width: 28px; height: 28px; vertical-align: middle; margin-left: 6px;" alt="BTC"><br>
+            <button id="manual-hash-btc-btn" class="mine-btn" onclick="trackManualHashClick(); manualHash()" style="position: relative; z-index: 100; line-height: 1.2;">MANUAL BTC HASH <img src="bitcointoken.png" style="width: 28px; height: 28px; vertical-align: text-top; margin-left: 2px;" alt="BTC"><br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
-            <button id="manual-hash-eth-btn" class="mine-btn" style="background: #627eea; padding: 8px;" onclick="trackManualHashClick(); manualEthHash()">MANUAL ETH HASH <img src="ethcoin.png" style="width: 36px; height: 36px; vertical-align: middle; margin-left: 6px;" alt="ETH"><br>
+            <button id="manual-hash-eth-btn" class="mine-btn" style="background: #627eea; padding: 8px; line-height: 1.2;" onclick="trackManualHashClick(); manualEthHash()">MANUAL ETH HASH <img src="ethcoin.png" style="width: 36px; height: 36px; vertical-align: text-top; margin-left: 2px;" alt="ETH"><br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00007143 Ξ</span>
             </button>
-            <button id="manual-hash-doge-btn" class="mine-btn" style="background: #c2a633; padding: 8px;" onclick="trackManualHashClick(); manualDogeHash()">MANUAL DOGE HASH <img src="dogecoin.png" style="width: 28px; height: 28px; vertical-align: middle; margin-left: 6px;" alt="DOGE"><br>
+            <button id="manual-hash-doge-btn" class="mine-btn" style="background: #c2a633; padding: 8px; line-height: 1.2;" onclick="trackManualHashClick(); manualDogeHash()">MANUAL DOGE HASH <img src="dogecoin.png" style="width: 28px; height: 28px; vertical-align: text-top; margin-left: 2px;" alt="DOGE"><br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+1.00000000 Ð</span>
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 8px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-size: 0.75rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
@@ -1728,7 +1728,7 @@
 }
 </style>
 
-<script src="game.js?v=1.1.0"></script>
+<script src="game.js?v=1.2.0"></script>
 
 <!-- Load staking system after main game variables are defined -->
 <script src="staking.js?v=1.1.0"></script>
@@ -1746,7 +1746,7 @@
     <a href="#" onclick="openPrivacyModal(); switchPolicyTab('cookies'); return false;" style="color: #f7931a; text-decoration: none;">Cookie Policy</a> |
     <a href="#" onclick="openPrivacyModal(); switchPolicyTab('terms'); return false;" style="color: #f7931a; text-decoration: none;">Terms & Conditions</a> |
     <a href="#" onclick="openPrivacyModal(); switchPolicyTab('contact'); return false;" style="color: #f7931a; text-decoration: none;">Contact</a> |
-    © 2026 Idle BTC Miner- Aaron Khan
+    Idle BTC Miner 2026 - Aaron Khan
 </footer>
 
 <script>

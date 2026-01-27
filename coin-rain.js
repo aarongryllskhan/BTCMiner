@@ -15,12 +15,13 @@
             this.spawnRates = { btc: 0, eth: 0, doge: 0, usd: 0 };
             this.maxCoins = 50; // Much lower for very subtle passive effect
             this.lastAnimationTime = 0;
+            this.usdWarningLogged = false;
 
             this.coinTypes = [
                 { name: 'btc', src: 'bitcointoken.png', color: '#f7931a' },
                 { name: 'eth', src: 'ethcoin.png', color: '#627eea' },
                 { name: 'doge', src: 'dogecoin.png', color: '#c2a633' },
-                { name: 'usd', src: 'dollar.png', color: '#00ff88' }
+                { name: 'usd', src: 'dollar2.png', color: '#ffdd00' }
             ];
 
             this.images = {};
@@ -38,15 +39,16 @@
 
                 const handleLoad = () => {
                     loadedCount++;
-                    console.log(`[CoinRain] ✓ Loaded: ${coin.src}`);
+                    console.log(`[CoinRain] ✓ Loaded: ${coin.src} (${img.naturalWidth}x${img.naturalHeight})`);
                     if (loadedCount === totalImages) {
                         this.imagesLoaded = true;
                         console.log('[CoinRain] All images loaded!');
                     }
                 };
 
-                const handleError = () => {
-                    console.warn(`[CoinRain] ✗ Failed to load: ${coin.src} - using colored circles`);
+                const handleError = (e) => {
+                    console.warn(`[CoinRain] ✗ Failed to load: ${coin.src}`, e);
+                    console.error(`[CoinRain] Error loading ${coin.src} - Status: ${img.status}`);
                     loadedCount++;
                     if (loadedCount === totalImages) {
                         this.imagesLoaded = true;
@@ -56,18 +58,32 @@
 
                 img.onload = handleLoad;
                 img.onerror = handleError;
-                // Try different paths
+                img.onabort = () => {
+                    console.error(`[CoinRain] Abort loading: ${coin.src}`);
+                    handleError(new Error('Abort'));
+                };
+
+                console.log(`[CoinRain] Attempting to load: ${coin.src}`);
+                // Try to load the image - start with relative path
                 img.src = coin.src;
+
                 this.images[coin.name] = img;
             });
 
-            // Fallback: mark as loaded after 3 seconds anyway
+            // Fallback: mark as loaded after 5 seconds anyway (longer timeout for slow networks)
             setTimeout(() => {
                 if (loadedCount < totalImages) {
-                    console.warn('[CoinRain] Timeout - using fallback circles');
+                    console.warn('[CoinRain] Timeout after 5s - using fallback circles');
+                    // Log which images failed to load
+                    this.coinTypes.forEach(coin => {
+                        const img = this.images[coin.name];
+                        if (!img || !img.complete || img.naturalHeight === 0) {
+                            console.error(`[CoinRain] Failed to load: ${coin.src}`);
+                        }
+                    });
                     this.imagesLoaded = true;
                 }
-            }, 3000);
+            }, 5000);
         }
 
         initialize() {
@@ -111,17 +127,12 @@
             const totalUsdPerSec = btcUsdPerSec + ethUsdPerSec + dogeUsdPerSec;
             this.lastHashRate = totalUsdPerSec;
 
-            // Spawn rate: much slower - 1 coin per $500 USD per second (max 5/sec total)
-            // This gives subtle passive drops - couple coins every few seconds
-            const baseCoinRate = totalUsdPerSec / 500;
-            this.spawnRate = Math.min(baseCoinRate, 5);
-
-            // Track individual spawn rates based on USD value distribution
-            // This is used by the animate loop to spawn appropriate coin types
-            this.spawnRates.btc = btcUsdPerSec / 500;
-            this.spawnRates.eth = ethUsdPerSec / 500;
-            this.spawnRates.doge = dogeUsdPerSec / 500;
-            this.spawnRates.usd = totalUsdPerSec / 500;
+            // Passive coin spawn disabled - only manual hash coins (from spawnExplosionCoins) are shown
+            this.spawnRate = 0;
+            this.spawnRates.btc = 0;
+            this.spawnRates.eth = 0;
+            this.spawnRates.doge = 0;
+            this.spawnRates.usd = 0;
         }
 
         spawnCoin(forcedType = null, consistentSize = false) {
@@ -143,9 +154,9 @@
             // Consistent sizes for all coins
             let size;
             if (coinType.name === 'usd') {
-                size = 42; // Fixed size for all dollar bills
+                size = 96; // Much bigger dollar bills (60 * 1.6 = 96)
             } else if (coinType.name === 'eth') {
-                size = 32.4; // ETH 35% bigger (24 * 1.35 = 32.4)
+                size = 26.4; // ETH 10% bigger (24 * 1.1 = 26.4)
             } else {
                 size = 24; // Fixed size for BTC and DOGE
             }
@@ -237,9 +248,14 @@
                     try {
                         this.ctx.drawImage(img, -coin.size / 2, -coin.size / 2, coin.size, coin.size);
                     } catch (e) {
+                        console.warn(`[CoinRain] Failed to draw image for ${coin.type}:`, e);
                         this.drawFallback(coin.size, coinColor);
                     }
                 } else {
+                    if (coin.type === 'usd' && !this.usdWarningLogged) {
+                        console.log(`[CoinRain] USD coin using fallback - img exists: ${!!img}, complete: ${img?.complete}, naturalHeight: ${img?.naturalHeight}`);
+                        this.usdWarningLogged = true;
+                    }
                     this.drawFallback(coin.size, coinColor);
                 }
 
@@ -250,28 +266,77 @@
         drawFallback(size, color) {
             const radius = size / 2;
 
-            // Draw outer glow (bright)
-            this.ctx.fillStyle = color.replace(')', ', 0.5)').replace('rgb', 'rgba');
-            this.ctx.beginPath();
-            this.ctx.arc(0, 0, radius * 1.4, 0, Math.PI * 2);
-            this.ctx.fill();
+            // Convert hex to rgba for glow effect
+            let glowColor;
+            if (color.startsWith('#')) {
+                // Convert hex to rgba with 0.5 alpha
+                const hex = color.slice(1);
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                glowColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
+            } else {
+                // Already in rgb format
+                glowColor = color.replace(')', ', 0.5)').replace('rgb', 'rgba');
+            }
 
-            // Draw solid circle (bright)
-            this.ctx.fillStyle = color;
-            this.ctx.beginPath();
-            this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            this.ctx.fill();
+            // Special handling for USD coins - draw as rectangular bill
+            if (color === '#ffdd00') {
+                const billWidth = size * 1.5;
+                const billHeight = size * 0.6;
 
-            // Draw bright border
-            this.ctx.strokeStyle = 'rgba(255,255,255,1)';
-            this.ctx.lineWidth = 2.5;
-            this.ctx.stroke();
+                // Draw outer glow (brighter)
+                this.ctx.fillStyle = 'rgba(26, 200, 50, 0.6)';
+                this.ctx.fillRect(-billWidth/2 - 3, -billHeight/2 - 3, billWidth + 6, billHeight + 6);
 
-            // Draw inner highlight (bright)
-            this.ctx.fillStyle = 'rgba(255,255,255,0.6)';
-            this.ctx.beginPath();
-            this.ctx.arc(-radius * 0.3, -radius * 0.3, radius * 0.35, 0, Math.PI * 2);
-            this.ctx.fill();
+                // Draw bill background (bright vibrant green)
+                this.ctx.fillStyle = '#22dd44';
+                this.ctx.fillRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
+
+                // Draw bright gold/yellow border
+                this.ctx.strokeStyle = '#ffff00';
+                this.ctx.lineWidth = 3;
+                this.ctx.strokeRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
+
+                // Draw dollar sign in the center (bright yellow)
+                this.ctx.fillStyle = '#ffff00';
+                this.ctx.font = `bold ${Math.floor(size * 0.75)}px Arial`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText('$', 0, 0);
+
+                // Add bright highlight details
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                this.ctx.fillRect(-billWidth/2 + 2, -billHeight/2 + 2, billWidth/3, billHeight - 4);
+
+                // Add extra shine
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                this.ctx.fillRect(-billWidth/2 + billWidth/2.5, -billHeight/2 + 1, billWidth/5, billHeight - 2);
+            } else {
+                // Draw as circles for other coins (BTC, ETH, DOGE)
+                // Draw outer glow (bright)
+                this.ctx.fillStyle = glowColor;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, radius * 1.4, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Draw solid circle (bright)
+                this.ctx.fillStyle = color;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Draw bright border
+                this.ctx.strokeStyle = 'rgba(255,255,255,1)';
+                this.ctx.lineWidth = 2.5;
+                this.ctx.stroke();
+
+                // Draw inner highlight (bright)
+                this.ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                this.ctx.beginPath();
+                this.ctx.arc(-radius * 0.3, -radius * 0.3, radius * 0.35, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
         }
 
         animate() {

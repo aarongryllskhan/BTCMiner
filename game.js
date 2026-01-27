@@ -479,62 +479,62 @@
     // Bitcoin mining upgrades
     const btcUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.000000250 },
-        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.00035 },
-        { id: 2, name: "GTX 1660 Super", baseUsd: 50, baseYield: 0.00245 },
-        { id: 3, name: "RTX 5090 Rig", baseUsd: 550, baseYield: 0.018 },
-        { id: 4, name: "ASIC Mining Unit", baseUsd: 6000, baseYield: 0.16 },
-        { id: 5, name: "Liquid ASIC Rig", baseUsd: 66000, baseYield: 1.4 },
-        { id: 6, name: "Mobile Mining Container", baseUsd: 726000, baseYield: 12.2 },
-        { id: 7, name: "Geothermal Mining Farm", baseUsd: 8000000, baseYield: 107 },
-        { id: 8, name: "Data Center Facility", baseUsd: 88000000, baseYield: 936 },
-        { id: 9, name: "Orbital Data Relay", baseUsd: 970000000, baseYield: 8184 },
-        { id: 10, name: "Quantum Computer", baseUsd: 10700000000, baseYield: 71500 },
-        { id: 11, name: "Advanced Quantum Rig", baseUsd: 117000000000, baseYield: 624000 },
-        { id: 12, name: "Superintelligent AI Network", baseUsd: 1290000000000, baseYield: 5450000 },
-        { id: 13, name: "Dimensional Mining Array", baseUsd: 14200000000000, baseYield: 47600000 },
-        { id: 14, name: "Multiversal Hash Grid", baseUsd: 156000000000000, baseYield: 416000000 },
-        { id: 15, name: "Infinite Energy Extractor", baseUsd: 1720000000000000, baseYield: 3640000000 }
+        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.00011 },
+        { id: 2, name: "GTX 1660 Super", baseUsd: 50, baseYield: 0.000385 },
+        { id: 3, name: "RTX 5090 Rig", baseUsd: 550, baseYield: 0.001348 },
+        { id: 4, name: "ASIC Mining Unit", baseUsd: 6000, baseYield: 0.00471 },
+        { id: 5, name: "Liquid ASIC Rig", baseUsd: 66000, baseYield: 0.01648 },
+        { id: 6, name: "Mobile Mining Container", baseUsd: 726000, baseYield: 0.05768 },
+        { id: 7, name: "Geothermal Mining Farm", baseUsd: 8000000, baseYield: 0.2018 },
+        { id: 8, name: "Data Center Facility", baseUsd: 88000000, baseYield: 0.7063 },
+        { id: 9, name: "Orbital Data Relay", baseUsd: 970000000, baseYield: 2.472 },
+        { id: 10, name: "Quantum Computer", baseUsd: 10700000000, baseYield: 8.652 },
+        { id: 11, name: "Advanced Quantum Rig", baseUsd: 117000000000, baseYield: 30.28 },
+        { id: 12, name: "Superintelligent AI Network", baseUsd: 1290000000000, baseYield: 105.98 },
+        { id: 13, name: "Dimensional Mining Array", baseUsd: 14200000000000, baseYield: 370.93 },
+        { id: 14, name: "Multiversal Hash Grid", baseUsd: 156000000000000, baseYield: 1298.26 },
+        { id: 15, name: "Infinite Energy Extractor", baseUsd: 1720000000000000, baseYield: 4543.91 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Ethereum mining upgrades - Balanced to match BTC/DOGE USD/sec earnings
     const ethUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00007143 },
-        { id: 1, name: "Single GPU Rig", baseUsd: 5, baseYield: 0.000025 },
-        { id: 2, name: "RTX 4090 Miner", baseUsd: 50, baseYield: 0.00018 },
-        { id: 3, name: "8-GPU Mining Rig", baseUsd: 550, baseYield: 0.00163 },
-        { id: 4, name: "Professional ETH Farm", baseUsd: 6000, baseYield: 0.0143 },
-        { id: 5, name: "Staking Validator Node", baseUsd: 66000, baseYield: 0.125 },
-        { id: 6, name: "Multi-Validator Farm", baseUsd: 726000, baseYield: 1.095 },
-        { id: 7, name: "ETH Mining Complex", baseUsd: 8000000, baseYield: 9.57 },
-        { id: 8, name: "Enterprise Staking Pool", baseUsd: 88000000, baseYield: 83.6 },
-        { id: 9, name: "Layer 2 Validation Network", baseUsd: 970000000, baseYield: 730 },
-        { id: 10, name: "Ethereum Foundation Node", baseUsd: 10700000000, baseYield: 6380 },
-        { id: 11, name: "Global Validator Consortium", baseUsd: 117000000000, baseYield: 55800 },
-        { id: 12, name: "Sharding Supernetwork", baseUsd: 1290000000000, baseYield: 487000 },
-        { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 14200000000000, baseYield: 4250000 },
-        { id: 14, name: "Interchain Bridge Network", baseUsd: 156000000000000, baseYield: 37200000 },
-        { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 1720000000000000, baseYield: 325000000 }
+        { id: 1, name: "Single GPU Rig", baseUsd: 5, baseYield: 0.002857 },
+        { id: 2, name: "RTX 4090 Miner", baseUsd: 50, baseYield: 0.009991 },
+        { id: 3, name: "8-GPU Mining Rig", baseUsd: 550, baseYield: 0.03497 },
+        { id: 4, name: "Professional ETH Farm", baseUsd: 6000, baseYield: 0.1224 },
+        { id: 5, name: "Staking Validator Node", baseUsd: 66000, baseYield: 0.4283 },
+        { id: 6, name: "Multi-Validator Farm", baseUsd: 726000, baseYield: 1.499 },
+        { id: 7, name: "ETH Mining Complex", baseUsd: 8000000, baseYield: 5.246 },
+        { id: 8, name: "Enterprise Staking Pool", baseUsd: 88000000, baseYield: 18.36 },
+        { id: 9, name: "Layer 2 Validation Network", baseUsd: 970000000, baseYield: 64.26 },
+        { id: 10, name: "Ethereum Foundation Node", baseUsd: 10700000000, baseYield: 224.91 },
+        { id: 11, name: "Global Validator Consortium", baseUsd: 117000000000, baseYield: 787.2 },
+        { id: 12, name: "Sharding Supernetwork", baseUsd: 1290000000000, baseYield: 2755.2 },
+        { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 14200000000000, baseYield: 9643.2 },
+        { id: 14, name: "Interchain Bridge Network", baseUsd: 156000000000000, baseYield: 33751.2 },
+        { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 1720000000000000, baseYield: 118130.4 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Dogecoin mining upgrades - Balanced to match BTC/ETH USD/sec earnings
     // All three currencies earn the same USD/sec at each tier (DOGE yields are 400x higher to compensate for $0.25 price)
     const dogeUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.01 },
-        { id: 1, name: "Basic Scrypt Miner", baseUsd: 5, baseYield: 0.14 },
-        { id: 2, name: "L3+ ASIC Miner", baseUsd: 50, baseYield: 0.98 },
-        { id: 3, name: "Mini DOGE Farm", baseUsd: 550, baseYield: 8.8 },
-        { id: 4, name: "Scrypt Mining Pool", baseUsd: 6000, baseYield: 77.0 },
-        { id: 5, name: "Industrial DOGE Facility", baseUsd: 66000, baseYield: 673 },
-        { id: 6, name: "DOGE Megafarm", baseUsd: 726000, baseYield: 5880 },
-        { id: 7, name: "WOW Mining Complex", baseUsd: 8000000, baseYield: 51400 },
-        { id: 8, name: "Moon Mining Station", baseUsd: 88000000, baseYield: 449000 },
-        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 970000000, baseYield: 3920000 },
-        { id: 10, name: "To The Moon Supercomputer", baseUsd: 10700000000, baseYield: 34300000 },
-        { id: 11, name: "Mars Colony Mining Base", baseUsd: 117000000000, baseYield: 299000000 },
-        { id: 12, name: "Asteroid Belt DOGE Harvester", baseUsd: 1290000000000, baseYield: 2610000000 },
-        { id: 13, name: "Jovian Satellite Network", baseUsd: 14200000000000, baseYield: 22800000000 },
-        { id: 14, name: "Solar System DOGE Grid", baseUsd: 156000000000000, baseYield: 199000000000 },
-        { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 1720000000000000, baseYield: 1740000000000 }
+        { id: 1, name: "Basic Scrypt Miner", baseUsd: 5, baseYield: 40 },
+        { id: 2, name: "L3+ ASIC Miner", baseUsd: 50, baseYield: 140 },
+        { id: 3, name: "Mini DOGE Farm", baseUsd: 550, baseYield: 490 },
+        { id: 4, name: "Scrypt Mining Pool", baseUsd: 6000, baseYield: 1715 },
+        { id: 5, name: "Industrial DOGE Facility", baseUsd: 66000, baseYield: 6000 },
+        { id: 6, name: "DOGE Megafarm", baseUsd: 726000, baseYield: 21000 },
+        { id: 7, name: "WOW Mining Complex", baseUsd: 8000000, baseYield: 73500 },
+        { id: 8, name: "Moon Mining Station", baseUsd: 88000000, baseYield: 257250 },
+        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 970000000, baseYield: 900375 },
+        { id: 10, name: "To The Moon Supercomputer", baseUsd: 10700000000, baseYield: 3151313 },
+        { id: 11, name: "Mars Colony Mining Base", baseUsd: 117000000000, baseYield: 11029625 },
+        { id: 12, name: "Asteroid Belt DOGE Harvester", baseUsd: 1290000000000, baseYield: 38603375 },
+        { id: 13, name: "Jovian Satellite Network", baseUsd: 14200000000000, baseYield: 135113625 },
+        { id: 14, name: "Solar System DOGE Grid", baseUsd: 156000000000000, baseYield: 472896875 },
+        { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 1720000000000000, baseYield: 1655137500 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
 
     // Keep reference to btcUpgrades as upgrades for backward compatibility
@@ -2083,8 +2083,11 @@ function loadGame() {
             alert('Not enough Bitcoin!');
             return;
         }
+        const saleValue = amount * btcPrice;
         btcBalance -= amount;
-        dollarBalance += amount * btcPrice;
+        dollarBalance += saleValue;
+        // Spawn dollar coins on sell
+        spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
         if (typeof tutorialData !== 'undefined') {
             tutorialData.cryptoSoldOnce = true;
@@ -2116,10 +2119,12 @@ function loadGame() {
             alert('Not enough Ethereum!');
             return;
         }
-        ethBalance -= amount;
         const effectivePrice = getEffectiveCryptoPrice(ethPrice);
         const saleValue = amount * effectivePrice * 0.95; // 5% fee
+        ethBalance -= amount;
         dollarBalance += saleValue;
+        // Spawn dollar coins on sell
+        spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
         if (typeof tutorialData !== 'undefined') {
             tutorialData.cryptoSoldOnce = true;
@@ -2152,10 +2157,12 @@ function loadGame() {
             alert('Not enough Dogecoin!');
             return;
         }
-        dogeBalance -= amount;
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
         const saleValue = amount * effectivePrice * 0.95; // 5% fee
+        dogeBalance -= amount;
         dollarBalance += saleValue;
+        // Spawn dollar coins on sell
+        spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
         if (typeof tutorialData !== 'undefined') {
             tutorialData.cryptoSoldOnce = true;
@@ -2192,6 +2199,8 @@ function loadGame() {
         const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
         btcBalance -= amountToSell;
         dollarBalance += saleValue;
+        // Spawn dollar coins on sell
+        spawnCoinsForClick('usd', saleValue);
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -2204,6 +2213,8 @@ function loadGame() {
         const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
         ethBalance -= amountToSell;
         dollarBalance += saleValue;
+        // Spawn dollar coins on sell
+        spawnCoinsForClick('usd', saleValue);
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -2216,6 +2227,8 @@ function loadGame() {
         const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
         dogeBalance -= amountToSell;
         dollarBalance += saleValue;
+        // Spawn dollar coins on sell
+        spawnCoinsForClick('usd', saleValue);
         updateUI();
         saveGame();
         playUpgradeSound();
@@ -3704,14 +3717,6 @@ function loadGame() {
             };
         }
 
-        // Apply speed boost if won
-        if (won) {
-            const boostDuration = 120000; // 2 minutes
-            speedBoostEndTime = Date.now() + boostDuration;
-            speedBoostActive = true;
-            speedBoostMultiplier = 1.1 + (0.05 * networkGameGamesWon); // Increases with each win
-        }
-
         // Show results
         const resultsMessage = document.getElementById('network-results-message');
         if (resultsMessage) {
@@ -4011,7 +4016,16 @@ function manualDogeHash() {
 }
 
 function spawnCoinsForClick(coinType, usdValue) {
-    if (!vfxEnabled || typeof window.coinRainSystem === 'undefined' || !window.coinRainSystem) return;
+    if (!vfxEnabled) return;
+
+    // Initialize coin rain system if not already done
+    if (typeof window.coinRainSystem === 'undefined' || !window.coinRainSystem) {
+        if (typeof initializeCoinRain === 'function') {
+            initializeCoinRain();
+        } else {
+            return; // Can't initialize, bail out
+        }
+    }
 
     let coinCount;
     if (coinType === 'usd') {
