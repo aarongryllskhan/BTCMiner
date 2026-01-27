@@ -154,18 +154,19 @@
                         </div>
                         <div id="rugpull-progress-text" style="color: #ffeb3b; font-size: 0.65rem; font-weight: bold; margin-top: 2px; text-align: center;">$0 / $1B</div>
                     </div>
-                    <button id="rugpull-store-btn" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.65rem; transition: all 0.3s ease; display: none; white-space: nowrap; height: fit-content;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+                    
                 </div>
 
                 <!-- OTHER BUTTONS - RIGHT SIDE, VERTICAL COLUMN -->
                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto; pointer-events: auto;">
-                    <button style="background: #ff6b35; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
                     <button id="vfx-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleVFX()">VFX ON</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #2196F3; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
+                    <button style="background: #ff6b35; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
+                    <button id="rugpull-store-btn" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.65rem; transition: all 0.3s ease; display: none; white-space: nowrap; height: fit-content;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
                 </div>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
