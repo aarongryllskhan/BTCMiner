@@ -430,6 +430,14 @@
             transition: transform 0.05s, box-shadow 0.2s, filter 0.2s;
         }
 
+        /* Mobile touch feedback */
+        @media (hover: none) {
+            .mine-btn:active {
+                transform: scale(0.94) translateY(3px);
+                box-shadow: 0 0 15px rgba(247, 147, 26, 0.5);
+            }
+        }
+
         .u-item:disabled {
             opacity: 0.2;
             cursor: not-allowed;

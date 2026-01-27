@@ -13,7 +13,7 @@
             this.lastHashRate = 0;
             this.spawnRate = 0;
             this.spawnRates = { btc: 0, eth: 0, doge: 0, usd: 0 };
-            this.maxCoins = 50; // Much lower for very subtle passive effect
+            this.maxCoins = 30; // Lower limit to prevent lag from too many coins
             this.lastAnimationTime = 0;
             this.usdWarningLogged = false;
 
@@ -21,7 +21,9 @@
                 { name: 'btc', src: 'bitcointoken.png', color: '#f7931a' },
                 { name: 'eth', src: 'ethcoin.png', color: '#627eea' },
                 { name: 'doge', src: 'dogecoin.png', color: '#c2a633' },
-                { name: 'usd', src: 'dollar2.png', color: '#ffdd00' }
+                { name: 'usd', src: 'dollar2.png', color: '#ffdd00' },
+                { name: 'usd_stack', src: 'dollarstack.png', color: '#ffdd00' },
+                { name: 'usd_stack_2', src: 'dollarstack-2.png', color: '#ffdd00' }
             ];
 
             this.images = {};
@@ -155,6 +157,10 @@
             let size;
             if (coinType.name === 'usd') {
                 size = 96; // Much bigger dollar bills (60 * 1.6 = 96)
+            } else if (coinType.name === 'usd_stack') {
+                size = 110; // Even bigger for dollar stacks
+            } else if (coinType.name === 'usd_stack_2') {
+                size = 77; // Smaller for mega dollar stacks - 30% less than usd_stack (110 * 0.7 = 77)
             } else if (coinType.name === 'eth') {
                 size = 26.4; // ETH 10% bigger (24 * 1.1 = 26.4)
             } else {
@@ -166,6 +172,10 @@
             const vyVariation = consistentSize ? 2.5 : 1.5;
             const rotationSpeedVariation = consistentSize ? 0.2 : 0.1;
 
+            // USD coins should start brighter
+            const isUSD = coinType.name === 'usd' || coinType.name === 'usd_stack' || coinType.name === 'usd_stack_2';
+            const startOpacity = isUSD ? 1.0 : 0.7; // Full opacity for USD coins
+
             const coin = {
                 x: Math.random() * this.canvas.width,
                 y: Math.random() * -100 - 50, // Stagger spawn heights from -50 to -150
@@ -174,7 +184,7 @@
                 rotation: Math.random() * Math.PI * 2,
                 rotationSpeed: (Math.random() - 0.5) * rotationSpeedVariation, // More varied rotation for click coins
                 size: size,
-                opacity: 0.7, // Start more transparent
+                opacity: startOpacity, // Full opacity for USD, 0.7 for others
                 type: coinType.name,
                 lifetime: 0,
                 maxLifetime: 12000 + Math.random() * 6000, // Much longer lifetime (12-18 seconds)
@@ -280,8 +290,13 @@
                 glowColor = color.replace(')', ', 0.5)').replace('rgb', 'rgba');
             }
 
-            // Special handling for USD coins - draw as rectangular bill
+            // Special handling for USD coins - draw as rectangular bill or stack
             if (color === '#ffdd00') {
+                // Check if this is a coin type (to differentiate between usd, usd_stack, and usd_stack_2)
+                const currentCoin = this.coinTypes.find(c => c.color === color);
+                const isStack = currentCoin && (currentCoin.name === 'usd_stack' || currentCoin.name === 'usd_stack_2');
+                const isMegaStack = currentCoin && currentCoin.name === 'usd_stack_2';
+
                 const billWidth = size * 1.5;
                 const billHeight = size * 0.6;
 
@@ -289,29 +304,59 @@
                 this.ctx.fillStyle = 'rgba(26, 200, 50, 0.6)';
                 this.ctx.fillRect(-billWidth/2 - 3, -billHeight/2 - 3, billWidth + 6, billHeight + 6);
 
-                // Draw bill background (bright vibrant green)
-                this.ctx.fillStyle = '#22dd44';
-                this.ctx.fillRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
+                if (isStack) {
+                    // Draw multiple stacked bills for dollar stacks
+                    const numStacks = isMegaStack ? 4 : 3; // More bills for mega stacks
+                    for (let j = numStacks - 1; j >= 0; j--) {
+                        const offsetY = j * 3;
+                        const offsetX = j * 2;
 
-                // Draw bright gold/yellow border
-                this.ctx.strokeStyle = '#ffff00';
-                this.ctx.lineWidth = 3;
-                this.ctx.strokeRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
+                        // Draw bill background (bright vibrant green - more opaque)
+                        this.ctx.fillStyle = 'rgba(34, 221, 68, 0.95)';
+                        this.ctx.fillRect(-billWidth/2 + offsetX, -billHeight/2 + offsetY, billWidth, billHeight);
 
-                // Draw dollar sign in the center (bright yellow)
-                this.ctx.fillStyle = '#ffff00';
-                this.ctx.font = `bold ${Math.floor(size * 0.75)}px Arial`;
-                this.ctx.textAlign = 'center';
-                this.ctx.textBaseline = 'middle';
-                this.ctx.fillText('$', 0, 0);
+                        // Draw bright gold/yellow border (thicker for mega stacks)
+                        this.ctx.strokeStyle = '#ffff00';
+                        this.ctx.lineWidth = isMegaStack ? 4 : 3;
+                        this.ctx.strokeRect(-billWidth/2 + offsetX, -billHeight/2 + offsetY, billWidth, billHeight);
+                    }
 
-                // Add bright highlight details
-                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                this.ctx.fillRect(-billWidth/2 + 2, -billHeight/2 + 2, billWidth/3, billHeight - 4);
+                    // Draw dollar sign in the center
+                    this.ctx.fillStyle = '#ffff00';
+                    this.ctx.font = `bold ${Math.floor(size * (isMegaStack ? 0.9 : 0.85))}px Arial`;
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText('$', 0, 0);
 
-                // Add extra shine
-                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                this.ctx.fillRect(-billWidth/2 + billWidth/2.5, -billHeight/2 + 1, billWidth/5, billHeight - 2);
+                    // Add bright highlight details for stack
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    this.ctx.fillRect(-billWidth/2 + 2, -billHeight/2 + 2, billWidth/3, billHeight - 4);
+                } else {
+                    // Single bill
+                    // Draw bill background (bright vibrant green)
+                    this.ctx.fillStyle = '#22dd44';
+                    this.ctx.fillRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
+
+                    // Draw bright gold/yellow border
+                    this.ctx.strokeStyle = '#ffff00';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.strokeRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
+
+                    // Draw dollar sign in the center (bright yellow)
+                    this.ctx.fillStyle = '#ffff00';
+                    this.ctx.font = `bold ${Math.floor(size * 0.75)}px Arial`;
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText('$', 0, 0);
+
+                    // Add bright highlight details
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    this.ctx.fillRect(-billWidth/2 + 2, -billHeight/2 + 2, billWidth/3, billHeight - 4);
+
+                    // Add extra shine
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    this.ctx.fillRect(-billWidth/2 + billWidth/2.5, -billHeight/2 + 1, billWidth/5, billHeight - 2);
+                }
             } else {
                 // Draw as circles for other coins (BTC, ETH, DOGE)
                 // Draw outer glow (bright)

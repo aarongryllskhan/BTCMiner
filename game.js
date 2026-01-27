@@ -46,6 +46,16 @@
         window.gameState = { lifetimeEarnings: 0, dollarBalance: 0 };
     }
 
+    // Make mining rates globally accessible for minigames (packet-interceptor.js, etc.)
+    // These are updated whenever rates change
+    window.btcPerSec = btcPerSec;
+    window.ethPerSec = ethPerSec;
+    window.dogePerSec = dogePerSec;
+    window.btcPrice = btcPrice;
+    window.ethPrice = ethPrice;
+    window.dogePrice = dogePrice;
+    window.totalMiningMultiplier = 1; // Will be updated when calculated
+
     // Buy quantity setting
     let buyQuantity = 1;
 
@@ -111,6 +121,13 @@
 
     // Network Stress Test gets harder with each play
     // Difficulty scales based on games played
+
+    // Data Packet Interceptor Minigame State
+    let packetGameGamesPlayed = 0;
+    let packetGameGamesWon = 0; // Games where at least 1 packet was caught
+    let packetGameTotalRewardsEarned = 0;
+    let packetLastRewards = { btc: 0, eth: 0, doge: 0, usd: 0, totalUsd: 0 };
+    let packetCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 }; // Track cooldown end times
 
     // Power system - Rebalanced for strategic gameplay
     let totalPowerAvailable = 0; // Total watts available
@@ -641,6 +658,13 @@
                 gamesPlayed: networkGameGamesPlayed,
                 gamesWon: networkGameGamesWon,
                 totalRewardsEarned: networkGameTotalRewardsEarned
+            },
+            // Packet Interceptor minigame data
+            packetData: {
+                gamesPlayed: packetGameGamesPlayed,
+                gamesWon: packetGameGamesWon,
+                totalRewardsEarned: packetGameTotalRewardsEarned,
+                cooldowns: packetCooldowns
             }
         };
 
@@ -862,6 +886,18 @@ function loadGame() {
             networkGameTotalRewardsEarned = state.networkData.totalRewardsEarned || 0;
         }
 
+        // Load packet interceptor minigame data
+        if (state.packetData) {
+            packetGameGamesPlayed = state.packetData.gamesPlayed || 0;
+            packetGameGamesWon = state.packetData.gamesWon || 0;
+            packetGameTotalRewardsEarned = state.packetData.totalRewardsEarned || 0;
+
+            // Load cooldowns
+            if (state.packetData.cooldowns) {
+                packetCooldowns = state.packetData.cooldowns;
+            }
+        }
+
         // Calculate total power used
         calculateTotalPowerUsed();
 
@@ -870,6 +906,11 @@ function loadGame() {
         btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
         ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
         dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+
+        // Make mining rates globally accessible for minigames
+        window.btcPerSec = btcPerSec;
+        window.ethPerSec = ethPerSec;
+        window.dogePerSec = dogePerSec;
 
         // Restore autoclicker cooldown
         autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
@@ -1664,6 +1705,12 @@ function loadGame() {
             networkGameGamesPlayed = 0;
             networkGameGamesWon = 0;
             networkGameTotalRewardsEarned = 0;
+
+            // Reset packet interceptor minigame
+            packetGameGamesPlayed = 0;
+            packetGameGamesWon = 0;
+            packetGameTotalRewardsEarned = 0;
+            packetCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 };
 
             // Reset achievements on full save reset
             if (typeof achievementsData !== 'undefined') {
@@ -2913,6 +2960,26 @@ function loadGame() {
             }
             networkRewardsEl.textContent = networkRewardsDisplay;
         }
+
+        // Packet Interceptor stats
+        const packetWonEl = document.getElementById('packet-games-won-display');
+        if (packetWonEl) packetWonEl.textContent = packetGameGamesWon;
+
+        const packetPlayedEl = document.getElementById('packet-games-played-display');
+        if (packetPlayedEl) packetPlayedEl.textContent = packetGameGamesPlayed;
+
+        const packetRewardsEl = document.getElementById('packet-rewards-display');
+        if (packetRewardsEl) {
+            let packetRewardsDisplay = '';
+            if (packetGameTotalRewardsEarned >= 1e6) {
+                packetRewardsDisplay = '$' + (packetGameTotalRewardsEarned / 1e6).toFixed(2) + 'M';
+            } else if (packetGameTotalRewardsEarned >= 1e3) {
+                packetRewardsDisplay = '$' + (packetGameTotalRewardsEarned / 1e3).toFixed(2) + 'K';
+            } else {
+                packetRewardsDisplay = '$' + packetGameTotalRewardsEarned.toFixed(0);
+            }
+            packetRewardsEl.textContent = packetRewardsDisplay;
+        }
     }
 
     function updateHackingCooldownDisplays() {
@@ -3028,6 +3095,40 @@ function loadGame() {
     }
 
     function updateMinigameCardLocks() {
+        // Check if packet interceptor minigame is locked (no lock - available from start!)
+        const packetLockedCard = document.getElementById('packet-card-locked');
+        if (packetLockedCard) {
+            packetLockedCard.style.display = 'none'; // Always available
+        }
+
+        // Check if packet interceptor MEDIUM is locked (requires $100k lifetime earnings)
+        const packetMediumLocked = document.getElementById('packet-medium-locked');
+        if (packetMediumLocked) {
+            if (lifetimeEarnings < 100000) {
+                packetMediumLocked.style.display = 'flex';
+                document.getElementById('packet-medium-btn').disabled = true;
+                document.getElementById('packet-medium-btn').style.opacity = '0.6';
+            } else {
+                packetMediumLocked.style.display = 'none';
+                document.getElementById('packet-medium-btn').disabled = false;
+                document.getElementById('packet-medium-btn').style.opacity = '1';
+            }
+        }
+
+        // Check if packet interceptor HARD is locked (requires $1M lifetime earnings)
+        const packetHardLocked = document.getElementById('packet-hard-locked');
+        if (packetHardLocked) {
+            if (lifetimeEarnings < 1000000) {
+                packetHardLocked.style.display = 'flex';
+                document.getElementById('packet-hard-btn').disabled = true;
+                document.getElementById('packet-hard-btn').style.opacity = '0.6';
+            } else {
+                packetHardLocked.style.display = 'none';
+                document.getElementById('packet-hard-btn').disabled = false;
+                document.getElementById('packet-hard-btn').style.opacity = '1';
+            }
+        }
+
         // Check if hacking minigame is locked (Easy requires $10k)
         const hackingLockedCard = document.getElementById('hacking-card-locked');
         if (hackingLockedCard) {
@@ -3057,6 +3158,116 @@ function loadGame() {
                 networkLockedCard.style.display = 'none';
             }
         }
+    }
+
+    // Function to update packet interceptor stats after game completion
+    function updatePacketInterceptorStats(packetsCaught, totalReward) {
+        packetGameGamesPlayed++;
+        if (packetsCaught > 0) {
+            packetGameGamesWon++;
+        }
+
+        // Scale reward based on current earnings and ascension bonus
+        // All difficulties scale with progression so they remain valuable forever
+        // Use same scaling as other minigames: rugpull multiplier (10x per level) + ascension bonus
+        const rugpullMultiplier = typeof rugpullLevel !== 'undefined' && rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+        const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+        const totalUsdValue = totalReward * rugpullMultiplier * (1 + ascensionBonus);
+
+        console.log(`[Packet Interceptor] Base Reward: $${totalReward}, Rugpull: ${rugpullMultiplier.toFixed(1)}x, Ascension: ${(ascensionBonus * 100).toFixed(1)}%, Final: $${totalUsdValue.toFixed(2)}`);
+
+        // Distribute rewards in multi-currency format (same split as hacking game)
+        // Award BTC (40% of total USD value, converted to BTC at current price)
+        const btcUsdValue = totalUsdValue * 0.40;
+        const btcReward = btcUsdValue / btcPrice;
+        btcBalance += btcReward;
+        btcLifetime += btcReward;
+
+        // Award ETH (35% of total USD value, converted to ETH at current price)
+        const ethUsdValue = totalUsdValue * 0.35;
+        const ethReward = ethUsdValue / ethPrice;
+        ethBalance += ethReward;
+        ethLifetime += ethReward;
+
+        // Award DOGE (20% of total USD value, converted to DOGE at current price)
+        const dogeUsdValue = totalUsdValue * 0.20;
+        const dogeReward = dogeUsdValue / dogePrice;
+        dogeBalance += dogeReward;
+        dogeLifetime += dogeReward;
+
+        // Award USD (5% as direct cash)
+        const usdReward = totalUsdValue * 0.05;
+        dollarBalance += usdReward;
+
+        // Track total rewards
+        packetGameTotalRewardsEarned += totalUsdValue;
+        lifetimeEarnings += totalUsdValue;
+        sessionEarnings += totalUsdValue;
+
+        // Store last rewards for display
+        packetLastRewards = {
+            btc: btcReward,
+            eth: ethReward,
+            doge: dogeReward,
+            usd: usdReward,
+            totalUsd: totalUsdValue
+        };
+
+        // Set cooldown based on difficulty (stored in packetGameState from packet-interceptor.js)
+        if (typeof packetGameState !== 'undefined') {
+            const difficulty = packetGameState.difficulty;
+            const cooldownDurations = {
+                'EASY': 30 * 1000,      // 30 seconds
+                'MEDIUM': 60 * 1000,    // 60 seconds
+                'HARD': 120 * 1000      // 120 seconds
+            };
+            packetCooldowns[difficulty] = Date.now() + (cooldownDurations[difficulty] || 30000);
+        }
+
+        // Update displays
+        updateMinigamesTab();
+        updateMinigameCardLocks();
+        updatePacketCooldownDisplays();
+
+        // Save game
+        saveGame();
+    }
+
+    function updatePacketCooldownDisplays() {
+        const now = Date.now();
+
+        // Update each difficulty button's cooldown overlay
+        ['EASY', 'MEDIUM', 'HARD'].forEach(difficulty => {
+            const cooldownEnd = packetCooldowns[difficulty] || 0;
+            const cooldownElement = document.getElementById(`packet-${difficulty.toLowerCase()}-cooldown`);
+            const buttonElement = document.getElementById(`packet-${difficulty.toLowerCase()}-btn`);
+
+            if (!cooldownElement || !buttonElement) return;
+
+            const isOnCooldown = now < cooldownEnd;
+
+            if (isOnCooldown) {
+                cooldownElement.style.removeProperty('display');
+                cooldownElement.style.setProperty('display', 'flex', 'important');
+                buttonElement.style.cursor = 'not-allowed';
+                buttonElement.style.pointerEvents = 'none';
+                buttonElement.style.opacity = '0.6';
+                buttonElement.dataset.locked = 'false';
+                // Update timer
+                const remainingMs = cooldownEnd - now;
+                const remainingSeconds = Math.ceil(remainingMs / 1000);
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                cooldownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                // Button is active and clickable
+                cooldownElement.style.display = 'none';
+                buttonElement.style.cursor = 'pointer';
+                buttonElement.style.pointerEvents = 'auto';
+                buttonElement.style.opacity = '1';
+                buttonElement.dataset.locked = 'false';
+            }
+        });
     }
 
     // ============== END HACKING MINIGAME FUNCTIONS ==============
@@ -3777,7 +3988,7 @@ function loadGame() {
         const powerUsedEl = document.getElementById('power-used');
         if (powerUsedEl) {
             const availableWithBonus = getTotalPowerAvailableWithBonus();
-            powerUsedEl.innerText = totalPowerUsed.toLocaleString() + 'W / ' + availableWithBonus.toLocaleString() + 'W';
+            powerUsedEl.innerText = formatPower(totalPowerUsed) + ' / ' + formatPower(availableWithBonus);
 
             // Dynamic color for power text based on usage
             const percentage = availableWithBonus > 0 ? (totalPowerUsed / availableWithBonus * 100) : 0;
@@ -4066,16 +4277,111 @@ function spawnCoinsForClick(coinType, usdValue) {
         }
         coinCount = Math.max(1, Math.min(50, coinCount));
     } else {
-        // For manual crypto clicks: 1 coin per $10 (more generous feedback)
-        coinCount = Math.max(1, Math.floor(usdValue / 10));
+        // For manual crypto clicks: Always just 1 coin for clean visual feedback
+        coinCount = 1;
+    }
+
+    // Determine which USD images to spawn (mix for large amounts)
+    let usdCoinTypes = ['usd']; // default to regular dollar only
+    if (coinType === 'usd') {
+        if (usdValue >= 100000) {
+            // Use all three: regular dollars, stacks, and mega stacks
+            usdCoinTypes = ['usd', 'usd_stack', 'usd_stack_2'];
+            // Keep 80% of coins (20% reduction instead of 66%)
+            coinCount = Math.ceil(coinCount * 0.8);
+        } else if (usdValue >= 10000) {
+            // Use dollars and stacks
+            usdCoinTypes = ['usd', 'usd_stack'];
+            // Keep 90% of coins (10% reduction instead of 50%)
+            coinCount = Math.ceil(coinCount * 0.9);
+        }
     }
 
     for (let i = 0; i < coinCount; i++) {
         // Stagger coin spawning with tiny delays (5-30ms between each)
         setTimeout(() => {
-            window.coinRainSystem.spawnCoin(coinType, true); // true = consistent size
+            let typeToSpawn = coinType;
+            if (coinType === 'usd') {
+                // Randomly select from the available USD types
+                typeToSpawn = usdCoinTypes[Math.floor(Math.random() * usdCoinTypes.length)];
+            }
+            window.coinRainSystem.spawnCoin(typeToSpawn, true); // true = consistent size
         }, i * (5 + Math.random() * 25)); // Random delay between 5-30ms per coin
     }
+}
+
+function spawnPacketInterceptorRewardCoins() {
+    // Initialize coin rain system if not already done
+    if (typeof window.coinRainSystem === 'undefined' || !window.coinRainSystem) {
+        if (typeof initializeCoinRain === 'function') {
+            initializeCoinRain();
+        } else {
+            return; // Can't initialize, bail out
+        }
+    }
+
+    // Get the last rewards earned from packet interceptor
+    if (typeof packetLastRewards === 'undefined' || !packetLastRewards || packetLastRewards.totalUsd <= 0) {
+        return; // No rewards to display
+    }
+
+    // Skip if VFX is disabled
+    if (typeof vfxEnabled !== 'undefined' && !vfxEnabled) return;
+
+    const rewards = packetLastRewards;
+    const totalUsdValue = rewards.totalUsd;
+
+    // Spawn USD coins (dollar2, dollarstack, dollarstack_2)
+    let usdCoinCount;
+    if (totalUsdValue >= 100000) {
+        // Use all three: regular dollars, stacks, and mega stacks
+        usdCoinCount = Math.min(40, Math.floor(totalUsdValue / 100000));
+    } else if (totalUsdValue >= 10000) {
+        // Use dollars and stacks
+        usdCoinCount = Math.min(30, Math.floor(totalUsdValue / 50000));
+    } else {
+        usdCoinCount = Math.min(20, Math.floor(totalUsdValue / 10000) + 5);
+    }
+    usdCoinCount = Math.max(3, usdCoinCount);
+
+    // Spawn BTC coins (roughly proportional to amount)
+    const btcCoinCount = Math.min(20, Math.max(2, Math.floor(rewards.btc * 1000)));
+
+    // Spawn ETH coins
+    const ethCoinCount = Math.min(20, Math.max(2, Math.floor(rewards.eth * 100)));
+
+    // Spawn DOGE coins
+    const dogeCoinCount = Math.min(20, Math.max(2, Math.floor(Math.min(100, rewards.doge / 100))));
+
+    // Helper function to spawn coins of a type
+    const spawnCoinsOfType = (coinType, count) => {
+        let usdCoinTypes = null;
+        if (coinType === 'usd') {
+            if (totalUsdValue >= 100000) {
+                usdCoinTypes = ['usd', 'usd_stack', 'usd_stack_2'];
+            } else if (totalUsdValue >= 10000) {
+                usdCoinTypes = ['usd', 'usd_stack'];
+            } else {
+                usdCoinTypes = ['usd'];
+            }
+        }
+
+        for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+                let typeToSpawn = coinType;
+                if (coinType === 'usd' && usdCoinTypes) {
+                    typeToSpawn = usdCoinTypes[Math.floor(Math.random() * usdCoinTypes.length)];
+                }
+                window.coinRainSystem.spawnCoin(typeToSpawn, true); // true = consistent size
+            }, i * (10 + Math.random() * 30)); // Random delay between 10-40ms per coin
+        }
+    };
+
+    // Spawn all coin types
+    spawnCoinsOfType('usd', usdCoinCount);
+    spawnCoinsOfType('btc', btcCoinCount);
+    spawnCoinsOfType('eth', ethCoinCount);
+    spawnCoinsOfType('doge', dogeCoinCount);
 }
 
 function buyLevel(i) {
@@ -4231,6 +4537,7 @@ function buyEthBoost(i) {
 
         const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
         ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+        window.ethPerSec = ethPerSec; // Make globally accessible for minigames
         updateUI();
         saveGame();
 
@@ -4262,6 +4569,7 @@ function buyDogeBoost(i) {
 
         const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
         dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+        window.dogePerSec = dogePerSec; // Make globally accessible for minigames
         updateUI();
         saveGame();
 
@@ -4314,6 +4622,7 @@ function buyDogeBoost(i) {
         if (purchased > 0) {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+            window.ethPerSec = ethPerSec; // Make globally accessible for minigames
             updateUI();
             saveGame();
             playUpgradeSound();
@@ -4364,6 +4673,7 @@ function buyDogeBoost(i) {
         if (purchased > 0) {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+            window.dogePerSec = dogePerSec; // Make globally accessible for minigames
             updateUI();
             saveGame();
             playUpgradeSound();
@@ -4587,9 +4897,9 @@ function buyDogeBoost(i) {
         let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
         const isMobileUI = window.innerWidth <= 768;
 
-        // Abbreviate on mobile always, or on desktop when $1B+
-        if ((isMobileUI && cryptoPortfolioValue >= 1000) || (cryptoPortfolioValue >= 1000000000)) {
-            const abbrev = cryptoPortfolioValue / 1e9 >= 1 ? (cryptoPortfolioValue / 1e9).toFixed(1) + 'b' : cryptoPortfolioValue / 1e6 >= 1 ? (cryptoPortfolioValue / 1e6).toFixed(1) + 'm' : (cryptoPortfolioValue / 1e3).toFixed(1) + 'k';
+        // Abbreviate on mobile always, or on desktop when over $100M
+        if ((isMobileUI && cryptoPortfolioValue >= 1000) || (cryptoPortfolioValue > 100000000)) {
+            const abbrev = cryptoPortfolioValue / 1e9 >= 1 ? (cryptoPortfolioValue / 1e9).toFixed(3) + 'B' : cryptoPortfolioValue / 1e6 >= 1 ? (cryptoPortfolioValue / 1e6).toFixed(3) + 'M' : (cryptoPortfolioValue / 1e3).toFixed(3) + 'K';
             document.getElementById('nw-val').innerText = "$" + abbrev;
         } else {
             document.getElementById('nw-val').innerText = "$" + cryptoPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2});
@@ -4664,6 +4974,10 @@ function buyDogeBoost(i) {
         const miningBonus = (typeof getSkillBonus === 'function') ? (1 + getSkillBonus('mining_speed')) : 1;
         const hackingBoost = getHackingSpeedBoost();
         const totalMiningMultiplier = miningBonus * hackingBoost;
+        window.totalMiningMultiplier = totalMiningMultiplier; // Make globally accessible for minigames
+        window.btcPrice = btcPrice; // Make globally accessible for minigames
+        window.ethPrice = ethPrice;
+        window.dogePrice = dogePrice;
         const isSpeedBoosted = hackingBoost > 1.0;
 
         // Update coin rain animation with current hash rates (convert to USD values)
@@ -5938,6 +6252,7 @@ dogeUpgrades.forEach(u => {
 
             // Always update cooldown displays (even when tab is not visible)
             updateHackingCooldownDisplays();
+            updatePacketCooldownDisplays();
 
             // Update minigame card lock states
             updateMinigameCardLocks();
