@@ -5125,55 +5125,29 @@ function buyDogeBoost(i) {
 
     // Helper function to abbreviate large numbers (mobile always, desktop at 1B+)
     function formatNumberForDisplay(num) {
-        // Check if viewport is mobile (max-width: 768px)
-        const isMobile = window.innerWidth <= 768;
+        // Unified abbreviation for both desktop and mobile - extends to Novemcillion
         const abs = Math.abs(num);
 
-        // Desktop: abbreviate at 10M+, mobile: use full numbers
-        if (!isMobile) {
-            if (abs >= 1e60) return (num / 1e60).toFixed(1) + 'Nmdc';
-            else if (abs >= 1e57) return (num / 1e57).toFixed(1) + 'O/Odc';
-            else if (abs >= 1e54) return (num / 1e54).toFixed(1) + 'Spdc';
-            else if (abs >= 1e51) return (num / 1e51).toFixed(1) + 'Sxdc';
-            else if (abs >= 1e48) return (num / 1e48).toFixed(1) + 'Qdc';
-            else if (abs >= 1e45) return (num / 1e45).toFixed(1) + 'Qdc';
-            else if (abs >= 1e42) return (num / 1e42).toFixed(1) + 'Tdc';
-            else if (abs >= 1e39) return (num / 1e39).toFixed(1) + 'U/Udc';
-            else if (abs >= 1e36) return (num / 1e36).toFixed(1) + 'D/Ddc';
-            else if (abs >= 1e33) return (num / 1e33).toFixed(1) + 'Dc';
-            else if (abs >= 1e30) return (num / 1e30).toFixed(1) + 'N';
-            else if (abs >= 1e27) return (num / 1e27).toFixed(1) + 'O';
-            else if (abs >= 1e24) return (num / 1e24).toFixed(1) + 'Sep';
-            else if (abs >= 1e21) return (num / 1e21).toFixed(1) + 'S';
-            else if (abs >= 1e18) return (num / 1e18).toFixed(1) + 'Qa';
-            else if (abs >= 1e15) return (num / 1e15).toFixed(1) + 'Q';
-            else if (abs >= 1e12) return (num / 1e12).toFixed(1) + 'T';
-            else if (abs >= 1e9) return (num / 1e9).toFixed(1) + 'B';
-            else if (abs >= 1e7) return (num / 1e6).toFixed(1) + 'M';
-            return Math.floor(num).toLocaleString();
-        }
-
-        // Mobile abbreviation: extends to Novemcillion
-        if (abs >= 1e60) return (num / 1e60).toFixed(1) + 'Nmdc';
-        else if (abs >= 1e57) return (num / 1e57).toFixed(1) + 'O/Odc';
-        else if (abs >= 1e54) return (num / 1e54).toFixed(1) + 'Spdc';
-        else if (abs >= 1e51) return (num / 1e51).toFixed(1) + 'Sxdc';
-        else if (abs >= 1e48) return (num / 1e48).toFixed(1) + 'Qdc';
-        else if (abs >= 1e45) return (num / 1e45).toFixed(1) + 'Qdc';
-        else if (abs >= 1e42) return (num / 1e42).toFixed(1) + 'Tdc';
-        else if (abs >= 1e39) return (num / 1e39).toFixed(1) + 'U/Udc';
-        else if (abs >= 1e36) return (num / 1e36).toFixed(1) + 'D/Ddc';
-        else if (abs >= 1e33) return (num / 1e33).toFixed(1) + 'Dc';
-        else if (abs >= 1e30) return (num / 1e30).toFixed(1) + 'N';
-        else if (abs >= 1e27) return (num / 1e27).toFixed(1) + 'O';
-        else if (abs >= 1e24) return (num / 1e24).toFixed(1) + 'Sep';
-        else if (abs >= 1e21) return (num / 1e21).toFixed(1) + 'S';
-        else if (abs >= 1e18) return (num / 1e18).toFixed(1) + 'Qa';
-        else if (abs >= 1e15) return (num / 1e15).toFixed(1) + 'Q';
-        else if (abs >= 1e12) return (num / 1e12).toFixed(1) + 'T';
-        else if (abs >= 1e9) return (num / 1e9).toFixed(1) + 'B';
-        else if (abs >= 1e6) return (num / 1e6).toFixed(1) + 'M';
-        else if (abs >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+        if (abs >= 1e60) return (num / 1e60).toFixed(3) + 'Nmdc';
+        else if (abs >= 1e57) return (num / 1e57).toFixed(3) + 'O/Odc';
+        else if (abs >= 1e54) return (num / 1e54).toFixed(3) + 'Spdc';
+        else if (abs >= 1e51) return (num / 1e51).toFixed(3) + 'Sxdc';
+        else if (abs >= 1e48) return (num / 1e48).toFixed(3) + 'Qdc';
+        else if (abs >= 1e45) return (num / 1e45).toFixed(3) + 'Qdc';
+        else if (abs >= 1e42) return (num / 1e42).toFixed(3) + 'Tdc';
+        else if (abs >= 1e39) return (num / 1e39).toFixed(3) + 'U/Udc';
+        else if (abs >= 1e36) return (num / 1e36).toFixed(3) + 'D/Ddc';
+        else if (abs >= 1e33) return (num / 1e33).toFixed(3) + 'Dc';
+        else if (abs >= 1e30) return (num / 1e30).toFixed(3) + 'N';
+        else if (abs >= 1e27) return (num / 1e27).toFixed(3) + 'O';
+        else if (abs >= 1e24) return (num / 1e24).toFixed(3) + 'Sep';
+        else if (abs >= 1e21) return (num / 1e21).toFixed(3) + 'S';
+        else if (abs >= 1e18) return (num / 1e18).toFixed(3) + 'Qa';
+        else if (abs >= 1e15) return (num / 1e15).toFixed(3) + 'Q';
+        else if (abs >= 1e12) return (num / 1e12).toFixed(3) + 'T';
+        else if (abs >= 1e9) return (num / 1e9).toFixed(3) + 'B';
+        else if (abs >= 1e6) return (num / 1e6).toFixed(3) + 'M';
+        else if (abs >= 1e3) return (num / 1e3).toFixed(3) + 'K';
         return Math.floor(num).toLocaleString();
     }
 
