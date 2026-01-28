@@ -89,6 +89,8 @@
     let chartTimestamps = []; // Track when each data point was added
     let lastChartUpdateTime = Date.now();
     let chartStartTime = Date.now();
+    let chartMarkers = []; // Fixed markers every 60 seconds: { index, time, value }
+    let lastMarkerTime = Date.now();
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -4885,6 +4887,86 @@ function buyDogeBoost(i) {
         }
     }
 
+    // Update the date/time tracker on the chart based on cursor position
+    // Track the current hovered marker for tooltip display
+    let hoveredMarkerIndex = -1;
+
+    function updateChartDateTracker(mouseEvent) {
+        const tooltip = document.getElementById('chart-marker-tooltip');
+        const trackerElement = document.getElementById('chart-date-tracker');
+
+        hoveredMarkerIndex = -1;
+
+        // Hide tooltip by default
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
+        if (trackerElement) {
+            trackerElement.textContent = '--';
+        }
+
+        // If mouse event, check if hovering over a marker
+        if (mouseEvent && nwChart && chartMarkers.length > 0) {
+            const canvas = document.getElementById('nwChart');
+            if (!canvas) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = mouseEvent.clientX - rect.left;
+            const mouseY = mouseEvent.clientY - rect.top;
+
+            // Chart.js provides canvasX and canvasY directly
+            const canvasPosition = Chart.helpers.getRelativePosition(mouseEvent, nwChart);
+            if (!canvasPosition) return;
+
+            const xScale = nwChart.scales.x;
+            const yScale = nwChart.scales.y;
+
+            // Check if mouse is near any marker (within 15px radius)
+            for (let i = 0; i < chartMarkers.length; i++) {
+                const marker = chartMarkers[i];
+                // Get pixel position for the marker index
+                const markerX = xScale.getPixelForValue(marker.index);
+                const markerY = yScale.getPixelForValue(marker.value);
+
+                const distance = Math.sqrt((mouseX - markerX) ** 2 + (mouseY - markerY) ** 2);
+
+                if (distance <= 15) {
+                    hoveredMarkerIndex = i;
+                    const date = new Date(marker.time);
+                    const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+                    const dateStr = date.toLocaleDateString('en-US', options);
+
+                    let valueStr = '$0';
+                    if (marker.value >= 1000000000) {
+                        valueStr = '$' + (marker.value / 1000000000).toFixed(1) + 'B';
+                    } else if (marker.value >= 1000000) {
+                        valueStr = '$' + (marker.value / 1000000).toFixed(1) + 'M';
+                    } else if (marker.value >= 1000) {
+                        valueStr = '$' + (marker.value / 1000).toFixed(1) + 'k';
+                    } else if (marker.value > 0) {
+                        valueStr = '$' + marker.value.toFixed(2);
+                    }
+
+                    // Show and position tooltip
+                    if (tooltip) {
+                        tooltip.textContent = valueStr;
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = (markerX - tooltip.offsetWidth / 2) + 'px';
+                        tooltip.style.top = (markerY - 40) + 'px';
+                    }
+
+                    // Also show in the bottom tracker
+                    if (trackerElement) {
+                        trackerElement.textContent = dateStr;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // No need to manually redraw with Chart.js - tooltips are handled automatically
+    }
+
     function updateSessionStats() {
         // Update session time
         const now = Date.now();
@@ -6363,24 +6445,6 @@ dogeUpgrades.forEach(u => {
 
         // Function to initialize the chart
         const initChart = () => {
-            // Ensure canvas has proper dimensions
-            const wrapper = canvasElement.parentElement;
-            if (wrapper) {
-                const rect = wrapper.getBoundingClientRect();
-                canvasElement.width = rect.width - 20; // Account for padding
-                canvasElement.height = rect.height - 20; // Account for padding
-                console.log('Canvas dimensions set to:', canvasElement.width, 'x', canvasElement.height);
-            }
-
-            const ctx = canvasElement.getContext('2d');
-            console.log('Canvas context:', ctx);
-
-            // Verify canvas context is valid
-            if (!ctx) {
-                console.error('ERROR: Could not get canvas 2D context');
-                return null;
-            }
-
             // Initialize chart with full history (at least one data point)
             const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
             console.log('=== CHART DEBUG ===');
@@ -6407,87 +6471,149 @@ dogeUpgrades.forEach(u => {
                 return null;
             }
 
-            console.log('Chart.js version:', Chart.version);
+            console.log('Chart.js loaded');
 
             let nwChart;
             try {
+                const ctx = document.getElementById('nwChart');
+                if (!ctx) {
+                    console.error('Canvas element not found');
+                    return null;
+                }
+
+                // Format chart data - Chart.js expects x as labels and y as data values
+                const getChartLabels = () => {
+                    return chartTimestamps.map((ts) =>
+                        new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                    );
+                };
+
+                const getChartValues = () => {
+                    return chartHistory;
+                };
+
+                // Create gradient for area fill
+                const canvas = document.getElementById('nwChart');
+                const tempCtx = canvas.getContext('2d');
+                const gradient = tempCtx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(0, 255, 136, 0.4)');
+                gradient.addColorStop(1, 'rgba(0, 255, 136, 0.05)');
+
                 nwChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartHistory.map((_, i) => ''),
-                    datasets: [{
-                        data: chartHistory,
-                        borderColor: '#00ff88',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    scales: {
-                        x: {
-                            display: false,
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
+                    type: 'line',
+                    data: {
+                        labels: getChartLabels(),
+                        datasets: [{
+                            label: 'Net Worth',
+                            data: getChartValues(),
+                            borderColor: '#00ff88',
+                            backgroundColor: gradient,
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            pointBackgroundColor: '#00ff88',
+                            pointBorderColor: 'transparent',
+                            pointBorderWidth: 0,
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: '#00ff88',
+                            pointHoverBorderColor: 'transparent',
+                            pointHoverBorderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: {
                                 display: false
+                            },
+                            tooltip: {
+                                enabled: true,
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#00ff88',
+                                bodyColor: '#ffffff',
+                                borderColor: '#00ff88',
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: false,
+                                callbacks: {
+                                    title: function(context) {
+                                        if (context.length > 0) {
+                                            const index = context[0].dataIndex;
+                                            return chartTimestamps[index] ?
+                                                new Date(chartTimestamps[index].time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) :
+                                                '';
+                                        }
+                                        return '';
+                                    },
+                                    label: function(context) {
+                                        const value = context.parsed.y;
+                                        let formatted = '$' + value.toFixed(2);
+                                        if (value >= 1000000000) {
+                                            formatted = '$' + (value / 1000000000).toFixed(2) + 'B';
+                                        } else if (value >= 1000000) {
+                                            formatted = '$' + (value / 1000000).toFixed(2) + 'M';
+                                        } else if (value >= 1000) {
+                                            formatted = '$' + (value / 1000).toFixed(2) + 'k';
+                                        }
+                                        return formatted;
+                                    }
+                                }
                             }
                         },
-                        y: {
-                            display: true,
-                            beginAtZero: true,
-                            min: 0,
-                            grace: '5%',
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
+                        scales: {
+                            x: {
                                 display: true,
-                                color: '#999',
-                                font: {
-                                    size: 10
+                                grid: {
+                                    display: false,
+                                    drawBorder: false
                                 },
-                                maxTicksLimit: 8,
-                                callback: function(value) {
-                                    if (value >= 1000000000) {
-                                        return '$' + (value / 1000000000).toFixed(1) + 'B';
+                                ticks: {
+                                    color: '#999',
+                                    font: {
+                                        size: 11
+                                    },
+                                    maxTicksLimit: 6
+                                }
+                            },
+                            y: {
+                                display: true,
+                                position: 'left',
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: '#999',
+                                    font: {
+                                        size: 11
+                                    },
+                                    callback: function(value) {
+                                        if (value >= 1000000000) {
+                                            return '$' + (value / 1000000000).toFixed(1) + 'B';
+                                        }
+                                        if (value >= 1000000) {
+                                            return '$' + (value / 1000000).toFixed(1) + 'M';
+                                        }
+                                        if (value >= 1000) {
+                                            return '$' + (value / 1000).toFixed(1) + 'k';
+                                        }
+                                        return '$' + value.toFixed(2);
                                     }
-                                    if (value >= 1000000) {
-                                        return '$' + (value / 1000000).toFixed(1) + 'M';
-                                    }
-                                    if (value >= 1000) {
-                                        return '$' + (value / 1000).toFixed(1) + 'k';
-                                    }
-                                    return '$' + value.toFixed(2);
                                 }
                             }
                         }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
                     }
-                }
-            });
-
+                });
 
                 console.log('Chart object created:', nwChart);
                 console.log('Chart initialized with data:', chartHistory);
-
-                // Force an immediate render
-                try {
-                    nwChart.update();
-                    console.log('Chart render forced successfully');
-                } catch (renderError) {
-                    console.error('ERROR forcing chart render:', renderError);
-                }
 
                 return nwChart;
             } catch (error) {
@@ -6506,6 +6632,8 @@ dogeUpgrades.forEach(u => {
             if (nwChart) {
                 chartInitialized = true;
                 console.log('Chart successfully initialized');
+                // Update the date tracker on initialization
+                updateChartDateTracker();
             }
         };
 
@@ -6530,10 +6658,8 @@ dogeUpgrades.forEach(u => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 if (nwChart) {
-                    console.log('Window resized, reinitializing chart...');
-                    nwChart.destroy();
-                    chartInitialized = false;
-                    tryInitChart();
+                    console.log('Window resized, re-rendering chart...');
+                    nwChart.resize();
                 }
             }, 300);
         });
@@ -6549,23 +6675,58 @@ dogeUpgrades.forEach(u => {
             }
 
             const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+            const now = Date.now();
 
             // Always update the chart with the current net worth
             chartHistory.push(netWorth);
-            chartTimestamps.push({ time: Date.now(), value: netWorth });
+            chartTimestamps.push({ time: now, value: netWorth });
 
-            // Keep all data points - chart will stretch to the right showing full history
-            // No limit on data points so we preserve the entire game history
+            // Add a marker every minute (60 seconds)
+            if (now - lastMarkerTime >= 60000) {
+                chartMarkers.push({
+                    index: chartHistory.length - 1,
+                    time: now,
+                    value: netWorth
+                });
+                lastMarkerTime = now;
 
+                // Keep only 50 markers on chart - always preserve the first marker
+                // When we hit 50, remove some from the middle to keep chart clean
+                if (chartMarkers.length > 50) {
+                    // Remove 10 markers from positions 20-29 (middle area)
+                    chartMarkers.splice(20, 10);
+                }
+            }
+
+            // Update chart with new data
+            nwChart.data.labels = chartTimestamps.map((ts) =>
+                new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            );
             nwChart.data.datasets[0].data = chartHistory;
-            nwChart.data.labels = chartHistory.map((_, i) => '');
-            nwChart.update('none');
+            nwChart.update('none'); // Update without animation
+
+            // Update chart date tracker
+            updateChartDateTracker();
 
             updateCount++;
             if (updateCount % 5 === 0) {
                 console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length, 'Latest value:', netWorth, 'BTC:', btcBalance, 'ETH:', ethBalance, 'DOGE:', dogeBalance);
             }
         }, 2000);
+
+        // Add mouse tracking for marker hover detection
+        const nwChartCanvas = document.getElementById('nwChart');
+        if (nwChartCanvas) {
+            nwChartCanvas.addEventListener('mousemove', (e) => {
+                updateChartDateTracker(e);
+            });
+
+            nwChartCanvas.addEventListener('mouseleave', () => {
+                // Clear marker hover when mouse leaves
+                hoveredMarkerIndex = -1;
+                updateChartDateTracker();
+            });
+        }
 
         // Auto-save every 1.5 seconds
         setInterval(saveGame, 1500);

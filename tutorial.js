@@ -120,37 +120,44 @@ let tutorialData = {
             highlightClass: 'tutorial-highlight-urgent',
             autoAdvance: true,
             customHighlight: () => {
-                // Highlight the Basic Power Strip button in the power shop
-                // The Basic Power Strip is the first power upgrade (id: 0), so button id is "pow-0"
-                const basicPowerStripBtn = document.getElementById('pow-0');
+                // Use a longer delay to ensure the power shop is fully rendered
+                setTimeout(() => {
+                    const basicPowerStripBtn = document.getElementById('pow-0');
 
-                if (basicPowerStripBtn) {
-                    // Apply glow effect to the button itself
-                    basicPowerStripBtn.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(255, 215, 0, 0.2)';
-                    basicPowerStripBtn.style.border = '2px dashed #FFD700';
-                    basicPowerStripBtn.style.position = 'relative';
-                    basicPowerStripBtn.style.zIndex = '9991';
-                    basicPowerStripBtn.style.borderRadius = '8px';
-                    console.log('🎓 Basic Power Strip highlighted successfully via ID pow-0');
-                } else {
-                    console.log('🎓 Could not find Basic Power Strip button with ID pow-0 - trying text search fallback');
-                    // Fallback: search by text content
-                    let found = false;
-                    document.querySelectorAll('button.u-item').forEach(el => {
-                        if (el.textContent.includes('Basic Power Strip')) {
-                            el.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(255, 215, 0, 0.2)';
-                            el.style.border = '2px dashed #FFD700';
-                            el.style.position = 'relative';
-                            el.style.zIndex = '9991';
-                            el.style.borderRadius = '8px';
-                            console.log('🎓 Basic Power Strip found and highlighted via text search');
-                            found = true;
+                    if (basicPowerStripBtn) {
+                        // Apply aggressive highlight styling with !important
+                        basicPowerStripBtn.style.cssText = `
+                            border: 3px dashed #FFD700 !important;
+                            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+                            position: relative !important;
+                            z-index: 9991 !important;
+                            outline: 2px solid #FFD700 !important;
+                            outline-offset: 2px !important;
+                        `;
+                        console.log('🎓 Basic Power Strip highlighted successfully via ID pow-0');
+                    } else {
+                        console.log('🎓 Could not find Basic Power Strip button with ID pow-0 - trying text search fallback');
+                        // Fallback: search by text content
+                        let found = false;
+                        document.querySelectorAll('button.u-item').forEach(el => {
+                            if (el.textContent.includes('Basic Power Strip')) {
+                                el.style.cssText = `
+                                    border: 3px dashed #FFD700 !important;
+                                    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+                                    position: relative !important;
+                                    z-index: 9991 !important;
+                                    outline: 2px solid #FFD700 !important;
+                                    outline-offset: 2px !important;
+                                `;
+                                console.log('🎓 Basic Power Strip found and highlighted via text search');
+                                found = true;
+                            }
+                        });
+                        if (!found) {
+                            console.log('🎓 Basic Power Strip button not found - power shop may not be rendered yet');
                         }
-                    });
-                    if (!found) {
-                        console.log('🎓 Basic Power Strip button not found - power shop may not be rendered yet');
                     }
-                }
+                }, 300);
             }
         },
         {
@@ -173,37 +180,44 @@ let tutorialData = {
             highlightClass: 'tutorial-highlight-urgent',
             autoAdvance: true,
             customHighlight: () => {
-                // Highlight the USB Miner button in the BTC shop
-                // USB Miner is btcUpgrades[1] with id: 1, so button id is "up-1"
-                const usbMinerBtn = document.getElementById('up-1');
+                // Use a longer delay to ensure the BTC shop is fully rendered
+                setTimeout(() => {
+                    const usbMinerBtn = document.getElementById('up-1');
 
-                if (usbMinerBtn) {
-                    // Apply glow effect to the button itself
-                    usbMinerBtn.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(255, 215, 0, 0.2)';
-                    usbMinerBtn.style.border = '2px dashed #FFD700';
-                    usbMinerBtn.style.position = 'relative';
-                    usbMinerBtn.style.zIndex = '9991';
-                    usbMinerBtn.style.borderRadius = '8px';
-                    console.log('🎓 USB Miner highlighted successfully via ID up-1');
-                } else {
-                    console.log('🎓 Could not find USB Miner button with ID up-1 - trying text search fallback');
-                    // Fallback: search by text content
-                    let found = false;
-                    document.querySelectorAll('button.u-item').forEach(el => {
-                        if (el.textContent.includes('USB Miner')) {
-                            el.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(255, 215, 0, 0.2)';
-                            el.style.border = '2px dashed #FFD700';
-                            el.style.position = 'relative';
-                            el.style.zIndex = '9991';
-                            el.style.borderRadius = '8px';
-                            console.log('🎓 USB Miner found and highlighted via text search');
-                            found = true;
+                    if (usbMinerBtn) {
+                        // Apply aggressive highlight styling with !important
+                        usbMinerBtn.style.cssText = `
+                            border: 3px dashed #FFD700 !important;
+                            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+                            position: relative !important;
+                            z-index: 9991 !important;
+                            outline: 2px solid #FFD700 !important;
+                            outline-offset: 2px !important;
+                        `;
+                        console.log('🎓 USB Miner highlighted successfully via ID up-1');
+                    } else {
+                        console.log('🎓 Could not find USB Miner button with ID up-1 - trying text search fallback');
+                        // Fallback: search by text content
+                        let found = false;
+                        document.querySelectorAll('button.u-item').forEach(el => {
+                            if (el.textContent.includes('USB Miner')) {
+                                el.style.cssText = `
+                                    border: 3px dashed #FFD700 !important;
+                                    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+                                    position: relative !important;
+                                    z-index: 9991 !important;
+                                    outline: 2px solid #FFD700 !important;
+                                    outline-offset: 2px !important;
+                                `;
+                                console.log('🎓 USB Miner found and highlighted via text search');
+                                found = true;
+                            }
+                        });
+                        if (!found) {
+                            console.log('🎓 USB Miner button not found - BTC shop may not be rendered yet');
                         }
-                    });
-                    if (!found) {
-                        console.log('🎓 USB Miner button not found - BTC shop may not be rendered yet');
                     }
-                }
+                }, 300);
             }
         },
         {
@@ -380,7 +394,10 @@ function showTutorialStep() {
 
     // Apply custom highlighting if provided
     if (step.customHighlight && typeof step.customHighlight === 'function') {
-        step.customHighlight();
+        // Use a small delay to ensure DOM elements are rendered
+        setTimeout(() => {
+            step.customHighlight();
+        }, 50);
     }
 
     // Scroll to target element on mobile for better visibility
@@ -447,6 +464,11 @@ function removeOldTutorialOverlay() {
     const oldOverlay = document.getElementById('tutorial-overlay');
     if (oldOverlay) oldOverlay.remove();
 
+    // Get current step to check if we should preserve highlights
+    const step = tutorialData.steps[tutorialData.currentStep];
+    const isCurrentStepPowerSupply = step && step.id === 'buy_power_supply';
+    const isCurrentStepUSBMiner = step && step.id === 'buy_usb_miner';
+
     // Remove highlights from tutorial-highlight class
     document.querySelectorAll('.tutorial-highlight').forEach(el => {
         el.classList.remove('tutorial-highlight');
@@ -471,22 +493,32 @@ function removeOldTutorialOverlay() {
         }
     });
 
-    // Remove glow from Basic Power Strip button
-    const basicPowerStripBtn = document.getElementById('pow-0');
-    if (basicPowerStripBtn) {
-        basicPowerStripBtn.style.boxShadow = '';
-        basicPowerStripBtn.style.border = '';
-        basicPowerStripBtn.style.zIndex = '';
-        basicPowerStripBtn.style.borderRadius = '';
+    // Only remove glow from Basic Power Strip button if we're NOT on that step
+    if (!isCurrentStepPowerSupply) {
+        const basicPowerStripBtn = document.getElementById('pow-0');
+        if (basicPowerStripBtn) {
+            basicPowerStripBtn.style.boxShadow = '';
+            basicPowerStripBtn.style.border = '';
+            basicPowerStripBtn.style.zIndex = '';
+            basicPowerStripBtn.style.borderRadius = '';
+            basicPowerStripBtn.style.outline = '';
+            basicPowerStripBtn.style.outlineOffset = '';
+            basicPowerStripBtn.style.position = '';
+        }
     }
 
-    // Remove glow from USB Miner button
-    const usbMinerBtn = document.getElementById('up-1');
-    if (usbMinerBtn) {
-        usbMinerBtn.style.boxShadow = '';
-        usbMinerBtn.style.border = '';
-        usbMinerBtn.style.zIndex = '';
-        usbMinerBtn.style.borderRadius = '';
+    // Only remove glow from USB Miner button if we're NOT on that step
+    if (!isCurrentStepUSBMiner) {
+        const usbMinerBtn = document.getElementById('up-1');
+        if (usbMinerBtn) {
+            usbMinerBtn.style.boxShadow = '';
+            usbMinerBtn.style.border = '';
+            usbMinerBtn.style.zIndex = '';
+            usbMinerBtn.style.borderRadius = '';
+            usbMinerBtn.style.outline = '';
+            usbMinerBtn.style.outlineOffset = '';
+            usbMinerBtn.style.position = '';
+        }
     }
 }
 
