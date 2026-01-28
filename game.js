@@ -721,6 +721,14 @@
             return;
         }
 
+        // Trim chart history to prevent localStorage quota issues - keep last 4,800 points per chart (1 hour at 750ms intervals)
+        const maxChartPoints = 4800;
+        const trimmedChartHistory = chartHistory.length > maxChartPoints ? chartHistory.slice(-maxChartPoints) : chartHistory;
+        const trimmedChartTimestamps = chartTimestamps.length > maxChartPoints ? chartTimestamps.slice(-maxChartPoints) : chartTimestamps;
+        const trimmedPowerChartHistory = powerChartHistory.length > maxChartPoints ? powerChartHistory.slice(-maxChartPoints) : powerChartHistory;
+        const trimmedPowerChartColors = powerChartColors.length > maxChartPoints ? powerChartColors.slice(-maxChartPoints) : powerChartColors;
+        const trimmedHashRateChartTimestamps = hashRateChartTimestamps.length > maxChartPoints ? hashRateChartTimestamps.slice(-maxChartPoints) : hashRateChartTimestamps;
+
         const gameState = {
             // Bitcoin data
             btcBalance,
@@ -749,12 +757,12 @@
             sessionEarnings,
             sessionStartTime,
             lifetimeEarningsDisplay: typeof window.rugpullState !== 'undefined' ? window.rugpullState.lifetimeEarningsDisplay : 0,
-            chartHistory: chartHistory,
-            chartTimestamps: chartTimestamps,
+            chartHistory: trimmedChartHistory,
+            chartTimestamps: trimmedChartTimestamps,
             chartStartTime: chartStartTime,
-            powerChartHistory: powerChartHistory,
-            powerChartColors: powerChartColors,
-            hashRateChartTimestamps: hashRateChartTimestamps,
+            powerChartHistory: trimmedPowerChartHistory,
+            powerChartColors: trimmedPowerChartColors,
+            hashRateChartTimestamps: trimmedHashRateChartTimestamps,
             totalPowerAvailable,
             // Staking data
             staking: getStakingData(),
@@ -1266,12 +1274,12 @@ function loadGame() {
             sessionEarnings,
             sessionStartTime,
             lifetimeEarningsDisplay: typeof window.rugpullState !== 'undefined' ? window.rugpullState.lifetimeEarningsDisplay : 0,
-            chartHistory: chartHistory,
-            chartTimestamps: chartTimestamps,
+            chartHistory: trimmedChartHistory,
+            chartTimestamps: trimmedChartTimestamps,
             chartStartTime: chartStartTime,
-            powerChartHistory: powerChartHistory,
-            powerChartColors: powerChartColors,
-            hashRateChartTimestamps: hashRateChartTimestamps,
+            powerChartHistory: trimmedPowerChartHistory,
+            powerChartColors: trimmedPowerChartColors,
+            hashRateChartTimestamps: trimmedHashRateChartTimestamps,
             totalPowerAvailable,
             // Staking data
             staking: getStakingData(),
@@ -4763,42 +4771,28 @@ function spawnCoinsForClick(coinType, usdValue) {
 
     let coinCount;
     if (coinType === 'usd') {
-        // For dollar sells: precise logarithmic scale
-        // 1 at $1, 2 at $2, 5 at $5, 10 at $10, 15 at $1k, 20 at $10k, 25 at $100k, 30 at $1m, 35 at $10m, 40 at $100m, 45 at $1b, 50 at $10b+
+        // For dollar sells: reduced coin count to minimize lag
         if (usdValue < 1) {
             coinCount = 1;
         } else if (usdValue < 10) {
-            // Linear scale from 1-10
-            coinCount = Math.floor(Math.min(10, usdValue));
+            coinCount = Math.floor(Math.min(3, usdValue));
         } else if (usdValue < 1000) {
-            // Jump to 10 at $10, then scale to 15 at $1k
-            coinCount = 10 + Math.floor((usdValue - 10) / 66); // ~5 coins over $990
+            coinCount = 3 + Math.floor((usdValue - 10) / 330); // ~3 coins max
         } else if (usdValue < 10000) {
-            // 15 at $1k, scale to 20 at $10k
-            coinCount = 15 + Math.floor((usdValue - 1000) / 1800); // ~5 coins over $9k
+            coinCount = 4 + Math.floor((usdValue - 1000) / 2250); // ~4 coins max
         } else if (usdValue < 100000) {
-            // 20 at $10k, scale to 25 at $100k
-            coinCount = 20 + Math.floor((usdValue - 10000) / 18000); // ~5 coins over $90k
+            coinCount = 5 + Math.floor((usdValue - 10000) / 22500); // ~5 coins max
         } else if (usdValue < 1000000) {
-            // 25 at $100k, scale to 30 at $1m
-            coinCount = 25 + Math.floor((usdValue - 100000) / 180000); // ~5 coins over $900k
+            coinCount = 6 + Math.floor((usdValue - 100000) / 225000); // ~6 coins max
         } else if (usdValue < 10000000) {
-            // 30 at $1m, scale to 35 at $10m
-            coinCount = 30 + Math.floor((usdValue - 1000000) / 1800000); // ~5 coins over $9m
+            coinCount = 7 + Math.floor((usdValue - 1000000) / 1285714); // ~8 coins max
         } else if (usdValue < 100000000) {
-            // 35 at $10m, scale to 40 at $100m
-            coinCount = 35 + Math.floor((usdValue - 10000000) / 18000000); // ~5 coins over $90m
-        } else if (usdValue < 1000000000) {
-            // 40 at $100m, scale to 45 at $1b
-            coinCount = 40 + Math.floor((usdValue - 100000000) / 180000000); // ~5 coins over $900m
-        } else if (usdValue < 10000000000) {
-            // 45 at $1b, scale to 50 at $10b
-            coinCount = 45 + Math.floor((usdValue - 1000000000) / 1800000000); // ~5 coins over $9b
+            coinCount = 8 + Math.floor((usdValue - 10000000) / 10000000); // ~9 coins max
         } else {
-            // 50 cap at $10b+
-            coinCount = 50;
+            // Cap at 10 coins for mega amounts
+            coinCount = 10;
         }
-        coinCount = Math.max(1, Math.min(50, coinCount));
+        coinCount = Math.max(1, Math.min(10, coinCount));
     } else {
         // For manual crypto clicks: Always just 1 coin for clean visual feedback
         coinCount = 1;
@@ -4854,27 +4848,25 @@ function spawnPacketInterceptorRewardCoins() {
     const rewards = packetLastRewards;
     const totalUsdValue = rewards.totalUsd;
 
-    // Spawn USD coins (dollar2, dollarstack, dollarstack_2)
+    // Spawn USD coins (reduced for performance)
     let usdCoinCount;
     if (totalUsdValue >= 100000) {
-        // Use all three: regular dollars, stacks, and mega stacks
-        usdCoinCount = Math.min(40, Math.floor(totalUsdValue / 100000));
+        usdCoinCount = Math.min(6, Math.floor(totalUsdValue / 500000));
     } else if (totalUsdValue >= 10000) {
-        // Use dollars and stacks
-        usdCoinCount = Math.min(30, Math.floor(totalUsdValue / 50000));
+        usdCoinCount = Math.min(5, Math.floor(totalUsdValue / 50000));
     } else {
-        usdCoinCount = Math.min(20, Math.floor(totalUsdValue / 10000) + 5);
+        usdCoinCount = Math.min(4, Math.floor(totalUsdValue / 10000) + 2);
     }
-    usdCoinCount = Math.max(3, usdCoinCount);
+    usdCoinCount = Math.max(1, usdCoinCount);
 
-    // Spawn BTC coins (roughly proportional to amount)
-    const btcCoinCount = Math.min(20, Math.max(2, Math.floor(rewards.btc * 1000)));
+    // Spawn BTC coins (reduced)
+    const btcCoinCount = Math.min(5, Math.max(1, Math.floor(rewards.btc * 100)));
 
-    // Spawn ETH coins
-    const ethCoinCount = Math.min(20, Math.max(2, Math.floor(rewards.eth * 100)));
+    // Spawn ETH coins (reduced)
+    const ethCoinCount = Math.min(5, Math.max(1, Math.floor(rewards.eth * 10)));
 
-    // Spawn DOGE coins
-    const dogeCoinCount = Math.min(20, Math.max(2, Math.floor(Math.min(100, rewards.doge / 100))));
+    // Spawn DOGE coins (reduced)
+    const dogeCoinCount = Math.min(5, Math.max(1, Math.floor(rewards.doge / 1000)));
 
     // Helper function to spawn coins of a type
     const spawnCoinsOfType = (coinType, count) => {
@@ -5570,6 +5562,7 @@ function buyDogeBoost(i) {
     }
 
     function updateUI() {
+
         // Update rugpull progress display and UI (calls rugpull.js function)
         if (typeof window.updateAscensionUI === 'function') {
             window.updateAscensionUI();
@@ -5581,6 +5574,11 @@ function buyDogeBoost(i) {
         if (typeof checkAchievements === 'function') {
             checkAchievements();
         }
+
+        // Update chart data in real-time with every UI update
+        const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+        chartHistory.push(netWorth);
+        chartTimestamps.push({ time: Date.now(), value: netWorth, cash: dollarBalance });
 
         // Crypto portfolio value = value of all crypto holdings only
         let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
@@ -6879,8 +6877,8 @@ dogeUpgrades.forEach(u => {
             if (chartHistory.length === 0) {
                 chartHistory.push(0);
                 chartHistory.push(0);
-                chartTimestamps.push({ time: Date.now(), value: 0 });
-                chartTimestamps.push({ time: Date.now() + 1000, value: 0 });
+                chartTimestamps.push({ time: Date.now(), value: 0, cash: dollarBalance });
+                chartTimestamps.push({ time: Date.now() + 1000, value: 0, cash: dollarBalance });
             }
 
             console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
@@ -6913,24 +6911,34 @@ dogeUpgrades.forEach(u => {
                     return chartHistory;
                 };
 
-                // Create gradient for area fill
-                const canvas = document.getElementById('nwChart');
-                const tempCtx = canvas.getContext('2d');
-                const gradient = tempCtx.createLinearGradient(0, 0, 0, 400);
-                gradient.addColorStop(0, 'rgba(0, 255, 136, 0.4)');
-                gradient.addColorStop(1, 'rgba(0, 255, 136, 0.05)');
 
                 nwChart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: getChartLabels(),
                         datasets: [{
-                            label: 'Net Worth',
+                            label: 'CRYPTO',
                             data: getChartValues(),
-                            borderColor: '#00ff88',
-                            backgroundColor: gradient,
+                            borderColor: '#FFD700',
+                            backgroundColor: 'transparent',
                             borderWidth: 2.5,
-                            fill: true,
+                            fill: false,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            pointBackgroundColor: '#FFD700',
+                            pointBorderColor: 'transparent',
+                            pointBorderWidth: 0,
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: '#FFD700',
+                            pointHoverBorderColor: 'transparent',
+                            pointHoverBorderWidth: 0
+                        }, {
+                            label: 'CASH',
+                            data: chartTimestamps.map((ts) => ts.cash || 0),
+                            borderColor: '#00ff88',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2.5,
+                            fill: false,
                             tension: 0.1,
                             pointRadius: 0,
                             pointBackgroundColor: '#00ff88',
@@ -6952,7 +6960,12 @@ dogeUpgrades.forEach(u => {
                         },
                         plugins: {
                             legend: {
-                                display: false
+                                display: true,
+                                align: 'center',
+                                labels: {
+                                    color: '#999',
+                                    font: { size: 10 }
+                                }
                             },
                             tooltip: {
                                 enabled: true,
@@ -6962,7 +6975,7 @@ dogeUpgrades.forEach(u => {
                                 borderColor: '#00ff88',
                                 borderWidth: 1,
                                 padding: 10,
-                                displayColors: false,
+                                displayColors: true,
                                 callbacks: {
                                     title: function(context) {
                                         if (context.length > 0) {
@@ -6972,6 +6985,14 @@ dogeUpgrades.forEach(u => {
                                                 '';
                                         }
                                         return '';
+                                    },
+                                    labelColor: function(context) {
+                                        return {
+                                            borderColor: context.dataset.borderColor,
+                                            backgroundColor: context.dataset.borderColor,
+                                            borderWidth: 0,
+                                            borderRadius: 0
+                                        };
                                     },
                                     label: function(context) {
                                         const value = context.parsed.y;
@@ -6983,7 +7004,7 @@ dogeUpgrades.forEach(u => {
                                         } else if (value >= 1000) {
                                             formatted = '$' + (value / 1000).toFixed(2) + 'k';
                                         }
-                                        return formatted;
+                                        return context.dataset.label + ': ' + formatted;
                                     }
                                 }
                             }
@@ -7165,7 +7186,9 @@ dogeUpgrades.forEach(u => {
             }, 300);
         });
 
+        // Master chart update loop - handles all data collection and rendering at 333ms frequency
         let updateCount = 0;
+        let lastTrimTime = Date.now();
         setInterval(() => {
             if (!nwChart) {
                 // Try initializing again if still not ready
@@ -7175,17 +7198,15 @@ dogeUpgrades.forEach(u => {
                 return;
             }
 
-            const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+            const timeRangeSlider = document.getElementById('chart-time-slider');
+            const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
             const now = Date.now();
 
-            // Always update the chart with the current net worth
-            chartHistory.push(netWorth);
-            chartTimestamps.push({ time: now, value: netWorth });
-
-            // Also track hash rates and power for the secondary chart
+            // Collect hash rate and power data for secondary charts
             hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
             ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
             dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
+
             // Track current power usage for display
             const timeDeltaSeconds = (now - lastHashRateChartUpdateTime) / 1000;
             cumulativePowerUsed += totalPowerUsed * timeDeltaSeconds;
@@ -7200,11 +7221,36 @@ dogeUpgrades.forEach(u => {
             const currentPercentage = (totalPowerUsed / availablePower) * 100;
             const color = currentPercentage > 50 ? '#ff3333' : '#00ff88';
 
-            powerChartHistory.push(currentPercentage); // Chart shows power usage as percentage of available capacity
-            currentPowerValues.push(totalPowerUsed); // Used for coloring based on current wattage
-            powerChartColors.push(color); // Store color determined at time of recording
+            powerChartHistory.push(currentPercentage);
+            currentPowerValues.push(totalPowerUsed);
+            powerChartColors.push(color);
             hashRateChartTimestamps.push({ time: now });
             lastHashRateChartUpdateTime = now;
+
+            // Trim arrays to prevent memory growth - keep last 4,800 points (1 hour at 750ms)
+            // Only trim every 30 seconds to avoid constant trimming during chart updates
+            if (now - lastTrimTime >= 30000) {
+                lastTrimTime = now;
+                const maxChartPointsRuntime = 4800;
+                if (chartHistory.length > maxChartPointsRuntime) {
+                    chartHistory.splice(0, chartHistory.length - maxChartPointsRuntime);
+                    chartTimestamps.splice(0, chartTimestamps.length - maxChartPointsRuntime);
+                }
+                // Trim all hash rate arrays together to keep them synchronized
+                if (hashRateChartHistory.length > maxChartPointsRuntime) {
+                    const trimAmount = hashRateChartHistory.length - maxChartPointsRuntime;
+                    hashRateChartHistory.splice(0, trimAmount);
+                    ethHashRateChartHistory.splice(0, trimAmount);
+                    dogeHashRateChartHistory.splice(0, trimAmount);
+                    hashRateChartTimestamps.splice(0, trimAmount);
+                }
+                if (powerChartHistory.length > maxChartPointsRuntime) {
+                    const trimAmount = powerChartHistory.length - maxChartPointsRuntime;
+                    powerChartHistory.splice(0, trimAmount);
+                    powerChartColors.splice(0, trimAmount);
+                    currentPowerValues.splice(0, trimAmount);
+                }
+            }
 
             // Add a marker every minute (60 seconds)
             if (now - lastMarkerTime >= 60000) {
@@ -7215,75 +7261,89 @@ dogeUpgrades.forEach(u => {
                 });
                 lastMarkerTime = now;
 
-                // Keep only 50 markers on chart - always preserve the first marker
-                // When we hit 50, remove some from the middle to keep chart clean
+                // Keep only 50 markers on chart
                 if (chartMarkers.length > 50) {
-                    // Remove 10 markers from positions 20-29 (middle area)
                     chartMarkers.splice(20, 10);
                 }
             }
 
-            // Update chart with new data - respecting time range slider
-            if (nwChart && chartHistory.length > 0) {
-                const timeRangeSlider = document.getElementById('chart-time-slider');
-                const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
-                const startIndex = Math.max(0, chartHistory.length - Math.ceil(chartHistory.length * (timeRangePercent / 100)));
+            // Update net worth chart
+            if (chartHistory && chartHistory.length > 0) {
+                // Ensure both arrays are the same length
+                const dataLength = Math.min(chartHistory.length, chartTimestamps.length);
 
-                nwChart.data.labels = chartTimestamps.slice(startIndex).map((ts) =>
+                // Calculate start index based on the actual synchronized data length
+                let startIndex = 0;
+                if (timeRangePercent < 100) {
+                    startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (timeRangePercent / 100))));
+                }
+
+                const slicedTimestamps = chartTimestamps.slice(startIndex, startIndex + (dataLength - startIndex));
+                const slicedHistory = chartHistory.slice(startIndex, startIndex + (dataLength - startIndex));
+
+                nwChart.data.labels = slicedTimestamps.map((ts) =>
                     new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                 );
-                nwChart.data.datasets[0].data = chartHistory.slice(startIndex);
-                nwChart.update('none'); // Update without animation
+                nwChart.data.datasets[0].data = slicedHistory;
+                nwChart.data.datasets[1].data = slicedTimestamps.map((ts) => ts.cash || 0);
+
+                // Recalculate Y-axis scale to fit the current data range
+                if (slicedHistory.length > 0) {
+                    const maxValue = Math.max(...slicedHistory, ...slicedTimestamps.map(ts => ts.cash || 0));
+                    const minValue = Math.min(...slicedHistory, ...slicedTimestamps.map(ts => ts.cash || 0));
+                    nwChart.options.scales.y.min = Math.max(0, minValue * 0.95);
+                    nwChart.options.scales.y.max = maxValue * 1.05;
+                }
+
+                nwChart.update('none');
             }
 
-            // Update hash rate chart if it's initialized (always visible)
-            if (hashRateChartInstance && hashRateChartHistory.length > 0) {
-                const timeRangeSlider = document.getElementById('chart-time-slider');
-                const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
-                const startIndex = Math.max(0, hashRateChartHistory.length - Math.ceil(hashRateChartHistory.length * (timeRangePercent / 100)));
-
+            // Update hash rate chart
+            if (hashRateChartInstance && hashRateChartHistory.length > 0 && hashRateChartTimestamps.length > 0) {
                 // Ensure all data arrays are the same length
                 const dataLength = Math.min(
                     hashRateChartHistory.length,
                     ethHashRateChartHistory.length,
                     dogeHashRateChartHistory.length,
-                    powerChartHistory.length,
                     hashRateChartTimestamps.length
                 );
 
-                const visibleDataLength = dataLength - startIndex;
-                // Scale hash rates by USD value per second
-                const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * btcPrice);
-                const ethUsdPerSec = ethHashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * ethPrice);
-                const dogeUsdPerSec = dogeHashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * dogePrice);
+                // Calculate start index based on filtered data length, not raw array length
+                const hashRateStartIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (timeRangePercent / 100))));
+                const sliceLength = Math.max(1, dataLength - hashRateStartIndex);
 
-                hashRateChartInstance.data.labels = hashRateChartTimestamps.slice(startIndex, startIndex + visibleDataLength).map((ts) => {
+                // Scale hash rates by USD value per second
+                const btcUsdPerSec = hashRateChartHistory.slice(hashRateStartIndex, hashRateStartIndex + sliceLength).map(v => v * btcPrice);
+                const ethUsdPerSec = ethHashRateChartHistory.slice(hashRateStartIndex, hashRateStartIndex + sliceLength).map(v => v * ethPrice);
+                const dogeUsdPerSec = dogeHashRateChartHistory.slice(hashRateStartIndex, hashRateStartIndex + sliceLength).map(v => v * dogePrice);
+
+                const hashLabels = hashRateChartTimestamps.slice(hashRateStartIndex, hashRateStartIndex + sliceLength).map((ts) => {
                     const time = ts?.time || Date.now();
                     return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 });
+
+                hashRateChartInstance.data.labels = hashLabels;
                 hashRateChartInstance.data.datasets[0].data = btcUsdPerSec;
                 hashRateChartInstance.data.datasets[1].data = ethUsdPerSec;
                 hashRateChartInstance.data.datasets[2].data = dogeUsdPerSec;
                 hashRateChartInstance.update('none');
             }
 
-            // Update power chart if it's initialized
-            if (powerChartInstance && powerChartHistory.length > 0) {
-                const timeRangeSlider = document.getElementById('chart-time-slider');
-                const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
-                const startIndex = Math.max(0, powerChartHistory.length - Math.ceil(powerChartHistory.length * (timeRangePercent / 100)));
+            // Update power chart
+            if (powerChartInstance && powerChartHistory.length > 0 && hashRateChartTimestamps.length > 0) {
+                // Calculate start index based on actual data length to prevent empty arrays
+                const powerDataLength = Math.min(powerChartHistory.length, hashRateChartTimestamps.length);
+                const powerStartIndex = Math.max(0, powerDataLength - Math.max(1, Math.ceil(powerDataLength * (timeRangePercent / 100))));
 
-                const powerDataPercent = powerChartHistory.slice(startIndex);
-                const visibleDataLength = powerDataPercent.length;
-
-                powerChartInstance.data.labels = hashRateChartTimestamps.slice(startIndex, startIndex + visibleDataLength).map((ts) => {
+                const powerDataPercent = powerChartHistory.slice(powerStartIndex);
+                const powerLabels = hashRateChartTimestamps.slice(powerStartIndex).map((ts) => {
                     const time = ts?.time || Date.now();
                     return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 });
+
+                powerChartInstance.data.labels = powerLabels;
                 powerChartInstance.data.datasets[0].data = powerDataPercent;
-                // Store percentage data and pre-recorded colors for segment coloring
-                powerChartInstance._powerDataPercent = powerDataPercent;
-                powerChartInstance._powerChartColors = powerChartColors.slice(startIndex, startIndex + visibleDataLength);
+                powerChartInstance._powerChartColors = powerChartColors.slice(powerStartIndex);
                 powerChartInstance.update('none');
             }
 
@@ -7291,10 +7351,10 @@ dogeUpgrades.forEach(u => {
             updateChartDateTracker();
 
             updateCount++;
-            if (updateCount % 5 === 0) {
-                console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length, 'Latest value:', netWorth, 'BTC:', btcBalance, 'ETH:', ethBalance, 'DOGE:', dogeBalance);
+            if (updateCount % 20 === 0) {
+                console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length);
             }
-        }, 1000);
+        }, 750);
 
         // Add mouse tracking for marker hover detection
         const nwChartCanvas = document.getElementById('nwChart');
@@ -7335,18 +7395,21 @@ dogeUpgrades.forEach(u => {
                     const isDesktop = window.innerWidth > 1200;
 
                     if (nwChart && chartHistory.length > 0) {
-                        const startIndex = Math.max(0, chartHistory.length - Math.ceil(chartHistory.length * (percent / 100)));
-                        nwChart.data.labels = chartTimestamps.slice(startIndex).map((ts) =>
+                        // Ensure both arrays are the same length
+                        const dataLength = Math.min(chartHistory.length, chartTimestamps.length);
+                        const startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (percent / 100))));
+                        const sliceLength = Math.max(1, dataLength - startIndex);
+
+                        nwChart.data.labels = chartTimestamps.slice(startIndex, startIndex + sliceLength).map((ts) =>
                             new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                         );
-                        nwChart.data.datasets[0].data = chartHistory.slice(startIndex);
+                        nwChart.data.datasets[0].data = chartHistory.slice(startIndex, startIndex + sliceLength);
+                        nwChart.data.datasets[1].data = chartTimestamps.slice(startIndex, startIndex + sliceLength).map((ts) => ts.cash || 0);
                         nwChart.update('none');
                     }
 
                     // Update hash rate chart (always visible)
                     if (hashRateChartInstance && hashRateChartHistory.length > 0) {
-                        const startIndex = Math.max(0, hashRateChartHistory.length - Math.ceil(hashRateChartHistory.length * (percent / 100)));
-
                         // Ensure all data arrays are the same length
                         const dataLength = Math.min(
                             hashRateChartHistory.length,
@@ -7355,7 +7418,9 @@ dogeUpgrades.forEach(u => {
                             hashRateChartTimestamps.length
                         );
 
-                        const sliceLength = dataLength - startIndex;
+                        // Calculate start index based on actual data length
+                        const startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (percent / 100))));
+                        const sliceLength = Math.max(1, dataLength - startIndex);
 
                         // Scale hash rates by USD value per second
                         const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + sliceLength).map(v => v * btcPrice);
@@ -7372,6 +7437,24 @@ dogeUpgrades.forEach(u => {
                         hashRateChartInstance.data.datasets[1].data = ethUsdPerSec;
                         hashRateChartInstance.data.datasets[2].data = dogeUsdPerSec;
                         hashRateChartInstance.update('none');
+                    }
+
+                    // Update power chart - use actual data length for consistency
+                    if (powerChartInstance && hashRateChartTimestamps.length > 0) {
+                        // Calculate start index based on actual data length
+                        const powerDataLength = Math.min(powerChartHistory.length, hashRateChartTimestamps.length);
+                        const startIndex = Math.max(0, powerDataLength - Math.max(1, Math.ceil(powerDataLength * (percent / 100))));
+
+                        const powerDataPercent = powerChartHistory.slice(startIndex);
+                        const labels = hashRateChartTimestamps.slice(startIndex).map((ts) => {
+                            const time = ts?.time || Date.now();
+                            return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        });
+
+                        powerChartInstance.data.labels = labels;
+                        powerChartInstance.data.datasets[0].data = powerDataPercent;
+                        powerChartInstance._powerChartColors = powerChartColors.slice(startIndex);
+                        powerChartInstance.update('none');
                     }
                 }, 100); // Update 100ms after user stops dragging
             });
@@ -7459,7 +7542,6 @@ dogeUpgrades.forEach(u => {
 
                 const timeRangeSlider = document.getElementById('chart-time-slider');
             const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
-            const startIndex = Math.max(0, hashRateChartHistory.length - Math.ceil(hashRateChartHistory.length * (timeRangePercent / 100)));
 
             // Ensure all data arrays are the same length
             const dataLength = Math.min(
@@ -7469,12 +7551,16 @@ dogeUpgrades.forEach(u => {
                 hashRateChartTimestamps.length
             );
 
-            // Scale hash rates by their USD value per second
-            const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + dataLength).map(v => v * btcPrice);
-            const ethUsdPerSec = ethHashRateChartHistory.slice(startIndex, startIndex + dataLength).map(v => v * ethPrice);
-            const dogeUsdPerSec = dogeHashRateChartHistory.slice(startIndex, startIndex + dataLength).map(v => v * dogePrice);
+            // Calculate start index based on filtered data length, not raw array length
+            const startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (timeRangePercent / 100))));
+            const sliceLength = Math.max(1, dataLength - startIndex);
 
-            const labels = hashRateChartTimestamps.slice(startIndex, startIndex + dataLength).map((ts) => {
+            // Scale hash rates by their USD value per second
+            const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + sliceLength).map(v => v * btcPrice);
+            const ethUsdPerSec = ethHashRateChartHistory.slice(startIndex, startIndex + sliceLength).map(v => v * ethPrice);
+            const dogeUsdPerSec = dogeHashRateChartHistory.slice(startIndex, startIndex + sliceLength).map(v => v * dogePrice);
+
+            const labels = hashRateChartTimestamps.slice(startIndex, startIndex + sliceLength).map((ts) => {
                 const time = ts?.time || Date.now();
                 return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
             });
@@ -7543,12 +7629,57 @@ dogeUpgrades.forEach(u => {
                                 color: '#999',
                                 font: { size: 10 }
                             }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#00ff88',
+                            bodyColor: '#ffffff',
+                            borderColor: '#00ff88',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: true,
+                            callbacks: {
+                                title: function(context) {
+                                    if (context.length > 0) {
+                                        const index = context[0].dataIndex;
+                                        return hashRateChartTimestamps[index] ?
+                                            new Date(hashRateChartTimestamps[index].time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) :
+                                            '';
+                                    }
+                                    return '';
+                                },
+                                labelColor: function(context) {
+                                    return {
+                                        borderColor: context.dataset.borderColor,
+                                        backgroundColor: context.dataset.borderColor,
+                                        borderWidth: 0,
+                                        borderRadius: 0
+                                    };
+                                },
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    let formatted = '$' + value.toFixed(2);
+                                    if (value >= 1000000000) {
+                                        formatted = '$' + (value / 1000000000).toFixed(2) + 'B';
+                                    } else if (value >= 1000000) {
+                                        formatted = '$' + (value / 1000000).toFixed(2) + 'M';
+                                    } else if (value >= 1000) {
+                                        formatted = '$' + (value / 1000).toFixed(2) + 'k';
+                                    }
+                                    return context.dataset.label + ': ' + formatted;
+                                }
+                            }
                         }
                     },
                     scales: {
                         x: {
-                            ticks: { color: '#999' },
-                            grid: { color: 'rgba(100, 100, 100, 0.1)' }
+                            display: true,
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: { color: '#999', font: { size: 11 }, maxTicksLimit: 6 }
                         },
                         y: {
                             type: 'linear',
@@ -7556,7 +7687,7 @@ dogeUpgrades.forEach(u => {
                             position: 'left',
                             beginAtZero: true,
                             ticks: { color: '#999', font: { size: 10 } },
-                            grid: { color: 'rgba(100, 100, 100, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
                             title: { display: true, text: 'USD Value per Second', color: '#999' }
                         }
                     }
@@ -7593,13 +7724,13 @@ dogeUpgrades.forEach(u => {
                 }
 
                 // Simple power chart with current power values
-                if (powerChartHistory.length === 0) {
+                if (powerChartHistory.length === 0 || hashRateChartTimestamps.length === 0) {
                     return false; // No data yet
                 }
 
                 const timeRangeSlider = document.getElementById('chart-time-slider');
                 const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
-                const startIndex = Math.max(0, powerChartHistory.length - Math.ceil(powerChartHistory.length * (timeRangePercent / 100)));
+                const startIndex = Math.max(0, hashRateChartTimestamps.length - Math.ceil(hashRateChartTimestamps.length * (timeRangePercent / 100)));
 
                 const powerData = powerChartHistory.slice(startIndex);
                 if (powerData.length === 0) {
@@ -7720,13 +7851,15 @@ dogeUpgrades.forEach(u => {
                         },
                         scales: {
                             x: {
+                                display: true,
                                 grid: {
-                                    color: 'rgba(255,255,255,0.05)',
+                                    display: false,
                                     drawBorder: false
                                 },
                                 ticks: {
                                     color: '#999',
-                                    font: { size: 10 }
+                                    font: { size: 11 },
+                                    maxTicksLimit: 6
                                 }
                             },
                             y: {
@@ -7793,7 +7926,7 @@ dogeUpgrades.forEach(u => {
 
             // Update minigame card lock states
             updateMinigameCardLocks();
-        }, 500);
+        }, 750);
 
         // Start price swings: separate timing for each crypto
         // Only start if not already running (prevents multiple loops on refresh)
