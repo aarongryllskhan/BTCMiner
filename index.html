@@ -1525,16 +1525,19 @@
     <div style="background: linear-gradient(135deg, #1a2a1a 0%, #2d3d2d 100%); background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,255,136,0.03) 20px, rgba(0,255,136,0.03) 21px), repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,255,136,0.03) 20px, rgba(0,255,136,0.03) 21px), radial-gradient(circle at 20% 50%, rgba(0,255,136,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(0,255,136,0.05) 0%, transparent 50%); padding: 30px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #00ff88; box-shadow: 0 0 30px rgba(0,255,136,0.5), inset 0 0 30px rgba(0,255,136,0.1); display: flex; flex-direction: column; align-items: center;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
             <h2 style="color: #00ff88; margin: 0; font-size: 1.5rem;">⚡ BLOCK SUPPRESSION</h2>
-            <div style="text-align: right;">
-                <div style="color: #00ff88; font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">
-                    <span id="whack-difficulty-display">EASY</span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="text-align: right;">
+                    <div style="color: #00ff88; font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">
+                        <span id="whack-difficulty-display">EASY</span>
+                    </div>
+                    <div style="color: #fff; font-size: 1rem;">
+                        <span id="whack-time-display">30s</span>
+                    </div>
+                    <div style="color: #ff3344; font-size: 0.9rem; margin-top: 5px; font-weight: 800;">
+                        Lives: <span id="whack-lives-display">❤️ 5/5</span>
+                    </div>
                 </div>
-                <div style="color: #fff; font-size: 1rem;">
-                    <span id="whack-time-display">30s</span>
-                </div>
-                <div style="color: #ff3344; font-size: 0.9rem; margin-top: 5px; font-weight: 800;">
-                    Lives: <span id="whack-lives-display">❤️ 5/5</span>
-                </div>
+                <button onclick="event.stopPropagation(); closeWhackMidGame();" style="background: #00ff88; color: #000; border: none; padding: 8px 12px; font-weight: 800; border-radius: 4px; cursor: pointer; font-size: 1.2rem; line-height: 1; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">×</button>
             </div>
         </div>
 
@@ -1652,8 +1655,8 @@
                     <div style="color: #00b4ff; font-weight: 800; font-size: 1.1rem;" id="network-passive-dps-display">0</div>
                 </div>
                 <div style="background: rgba(0,180,255,0.1); border: 1px solid #00b4ff; border-radius: 6px; padding: 10px; text-align: center;">
-                    <div style="color: #888; font-size: 0.75rem; margin-bottom: 3px;">TOTAL DAMAGE</div>
-                    <div style="color: #00b4ff; font-weight: 800; font-size: 1.1rem;" id="network-total-damage-display">0</div>
+                    <div style="color: #888; font-size: 0.75rem; margin-bottom: 3px;">MANUAL CLICK DMG BONUS</div>
+                    <div style="color: #00b4ff; font-weight: 800; font-size: 1.1rem;" id="network-total-damage-display">0%</div>
                 </div>
             </div>
 
@@ -1821,7 +1824,38 @@
 }
 </style>
 
-<script src="game.js?v=1.2.0"></script>
+<!-- Global function wrappers for rugpull functions that are called from HTML before rugpull.js loads -->
+<script>
+// Create a namespace for the actual implementations
+window._rugpullImpl = {};
+
+// Create wrapper functions that delegate to implementations
+function showRugpullTooltip() {
+    if (window._rugpullImpl.showRugpullTooltip) {
+        window._rugpullImpl.showRugpullTooltip();
+    }
+}
+
+function hideRugpullTooltip() {
+    if (window._rugpullImpl.hideRugpullTooltip) {
+        window._rugpullImpl.hideRugpullTooltip();
+    }
+}
+
+function openMetaUpgradesModal() {
+    if (window._rugpullImpl.openMetaUpgradesModal) {
+        window._rugpullImpl.openMetaUpgradesModal();
+    }
+}
+
+function handleRugpullButtonClick() {
+    if (window._rugpullImpl.handleRugpullButtonClick) {
+        window._rugpullImpl.handleRugpullButtonClick();
+    }
+}
+</script>
+
+<script src="game.js?v=1.2.1"></script>
 <script src="packet-interceptor.js?v=1.0.0"></script>
 
 <!-- Load staking system after main game variables are defined -->
@@ -1831,7 +1865,7 @@
 <script src="achievements.js?v=1.1.0"></script>
 
 <!-- Load rugpull/ascension system after main game variables are defined -->
-<script src="rugpull.js?v=1.1.0"></script>
+<script src="rugpull.js?v=1.1.1"></script>
 
 <!-- Footer - Fixed at bottom -->
 <footer style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.9); color: #666; padding: 8px 20px; text-align: center; border-top: 1px solid #333; font-size: 0.65rem; z-index: 100; backdrop-filter: blur(10px); line-height: 1.3;">

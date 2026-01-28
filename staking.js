@@ -344,3 +344,6 @@ function loadStakingData(data) {
 function getTotalStakedValue() {
     return (stakedBTC * btcPrice) + (stakedETH * ethPrice) + (stakedDOGE * dogePrice);
 }
+
+// Export updateStakingUI to window so game.js can call it
+window.updateStakingUI = updateStakingUI;

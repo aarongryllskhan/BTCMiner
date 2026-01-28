@@ -16,7 +16,8 @@ let packetGameState = {
     gameStartTime: 0,
     spawnRate: 2, // symbols per second
     caughtParticles: [],
-    gameActive: true
+    gameActive: true,
+    manuallyClosed: false // Track if user manually closed the game
 };
 
 const CRYPTO_TYPES = [
@@ -128,6 +129,41 @@ function createPacketInterceptorModal() {
         overflow: hidden;
     `;
 
+    // Create header container with close button
+    const headerContainer = document.createElement('div');
+    headerContainer.style.cssText = `
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10001;
+    `;
+
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '×';
+    closeButton.style.cssText = `
+        background: #ff8c00;
+        color: #000;
+        border: none;
+        padding: 8px 12px;
+        font-weight: 800;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        line-height: 1;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    closeButton.onclick = function(e) {
+        e.stopPropagation();
+        closePacketInterceptorMidGame();
+    };
+    headerContainer.appendChild(closeButton);
+    modal.appendChild(headerContainer);
+
     // Create canvas for game
     const canvas = document.createElement('canvas');
     canvas.width = window.innerWidth * 0.9;
@@ -145,7 +181,7 @@ function createPacketInterceptorModal() {
     packetGameState.ctx = canvas.getContext('2d');
     packetGameState.modalElement = modal;
 
-    // Add canvas to modal (no quit button - game must be completed)
+    // Add canvas to modal
     modal.appendChild(canvas);
 
     document.body.appendChild(modal);
@@ -506,6 +542,12 @@ function drawPacketInterceptorHUD() {
 }
 
 function endPacketInterceptorGame(quit = false) {
+    // If manually closed, treat as quit
+    if (packetGameState.manuallyClosed) {
+        packetGameState.manuallyClosed = false; // Reset flag
+        quit = true;
+    }
+
     console.log('[Coin Snag] endPacketInterceptorGame called, quit:', quit);
 
     // Only remove the game modal, not if we're showing results
@@ -657,5 +699,41 @@ function showPacketInterceptorResults(totalReward) {
         };
     } else {
         console.error('[Coin Snag] Close button not found!');
+    }
+}
+
+function closePacketInterceptorMidGame() {
+    // Apply cooldown if game is still active
+    if (packetGameState.gameActive && packetGameState.isRunning) {
+        packetGameState.gameActive = false;
+        packetGameState.isRunning = false;
+        packetGameState.manuallyClosed = true; // Mark as manually closed
+
+        // Apply cooldown - match the difficulty config from game.js
+        const difficulty = packetGameState.difficulty;
+        const cooldownDuration = 30000; // 30 seconds default
+
+        // Access the packet cooldowns from the main game if available
+        if (typeof packetCooldowns !== 'undefined') {
+            packetCooldowns[difficulty] = Date.now() + cooldownDuration;
+            console.log(`[Packet Interceptor] Applied cooldown to ${difficulty}: ${cooldownDuration}ms`);
+            // Update display if function exists
+            if (typeof updatePacketCooldownDisplays === 'function') {
+                updatePacketCooldownDisplays();
+            }
+        }
+    }
+
+    // Close the modal
+    if (packetGameState.modalElement && document.body.contains(packetGameState.modalElement)) {
+        packetGameState.modalElement.removeEventListener('click', handleCryptoClick);
+        packetGameState.modalElement.removeEventListener('touchstart', handleCryptoTouch);
+        document.body.removeChild(packetGameState.modalElement);
+        packetGameState.modalElement = null;
+    }
+
+    // Return to minigames tab
+    if (typeof switchTab === 'function') {
+        switchTab('minigames');
     }
 }

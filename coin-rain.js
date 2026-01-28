@@ -156,13 +156,13 @@
             // Consistent sizes for all coins
             let size;
             if (coinType.name === 'usd') {
-                size = 150; // Much bigger dollar bills (120 * 1.25 = 150)
+                size = 75; // Smaller dollar bills
             } else if (coinType.name === 'usd_stack') {
-                size = 171.875; // Even bigger for dollar stacks (137.5 * 1.25 = 171.875)
+                size = 85; // Smaller for dollar stacks
             } else if (coinType.name === 'usd_stack_2') {
-                size = 120.3125; // Smaller for mega dollar stacks (96.25 * 1.25 = 120.3125)
+                size = 60; // Smaller for mega dollar stacks
             } else {
-                size = 37.5; // Fixed size for BTC, ETH, and DOGE - all same size now (30 * 1.25 = 37.5)
+                size = 18; // Smaller fixed size for BTC, ETH, and DOGE
             }
 
             // Increase randomization for click coins
@@ -454,7 +454,7 @@
                 vy: Math.sin(angle) * speed,
                 rotation: Math.random() * Math.PI * 2,
                 rotationSpeed: (Math.random() - 0.5) * 0.5,
-                size: coinType === 'usd' ? 35 + Math.random() * 15 : 12 + Math.random() * 8,
+                size: coinType === 'usd' ? 18 + Math.random() * 8 : 6 + Math.random() * 4,
                 opacity: 1,
                 type: coinType,
                 lifetime: 0,

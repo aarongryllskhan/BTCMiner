@@ -65,6 +65,7 @@
     let sessionStartNetWorth = 0;
     let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
     let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
+    // lifetimeEarningsThisRugpull is now managed by rugpull.js - do not declare it here
 
     // Master abbreviation system for all number formatting
     const ABBREVIATIONS = [
@@ -237,6 +238,7 @@
 
     // Whack-A-Block Minigame State
     let whackGameActive = false;
+    let whackGameManuallyClosed = false; // Track if user manually closed the game
     let whackGameDifficulty = 'EASY';
     let whackGameStartTime = 0;
     let whackGameTimeLimit = 30000; // milliseconds
@@ -263,9 +265,10 @@
     let networkGameCurrentHP = 50000;
     let networkGameTotalDamage = 0; // Total damage from all sources
     let networkGameClickDamageTotal = 0; // Damage from clicks only
-    let networkGameClickDamage = 100; // Base damage per click
+    let networkGameClickDamage = 20; // Base damage per click (increases 10% per manual hash upgrade)
     let networkGameGamesPlayed = 0;
     let networkGameGamesWon = 0;
+    let networkGameWonThisRound = false; // Track if won current round (for explosion coins)
     let networkGameTotalRewardsEarned = 0;
     let networkLastRewards = { btc: 0, eth: 0, doge: 0, usd: 0, totalUsd: 0 };
     let networkGameInterval = null; // Main game loop timer
@@ -749,6 +752,9 @@
             chartHistory: chartHistory,
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
+            powerChartHistory: powerChartHistory,
+            powerChartColors: powerChartColors,
+            hashRateChartTimestamps: hashRateChartTimestamps,
             totalPowerAvailable,
             // Staking data
             staking: getStakingData(),
@@ -1130,7 +1136,7 @@ function loadGame() {
 
             // Add staking cash to dollar balance
             if (offlineStakingCash > 0) {
-                dollarBalance += offlineStakingCash;
+                addEarnings(offlineStakingCash);
                 lifetimeEarnings += offlineStakingCash;
                 sessionEarnings += offlineStakingCash;
             }
@@ -1197,6 +1203,20 @@ function loadGame() {
             console.log('No saved chart data, starting fresh');
         }
 
+        // Restore power chart history from save
+        if (state.powerChartHistory && state.powerChartHistory.length > 0) {
+            powerChartHistory = state.powerChartHistory;
+            powerChartColors = state.powerChartColors || [];
+            hashRateChartTimestamps = state.hashRateChartTimestamps || [];
+            console.log('Power chart data restored:', powerChartHistory.length, 'data points');
+        } else {
+            // Start fresh if no saved power chart data
+            powerChartHistory = [];
+            powerChartColors = [];
+            hashRateChartTimestamps = [];
+            console.log('No saved power chart data, starting fresh');
+        }
+
         // Debug log
         console.log('✓ LOAD COMPLETE');
         console.log('Final balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
@@ -1249,6 +1269,9 @@ function loadGame() {
             chartHistory: chartHistory,
             chartTimestamps: chartTimestamps,
             chartStartTime: chartStartTime,
+            powerChartHistory: powerChartHistory,
+            powerChartColors: powerChartColors,
+            hashRateChartTimestamps: hashRateChartTimestamps,
             totalPowerAvailable,
             // Staking data
             staking: getStakingData(),
@@ -1728,6 +1751,19 @@ function loadGame() {
     }
 
     /**
+     * Add earnings to both dollar balance and rugpull tracker
+     * Call this instead of directly modifying dollarBalance
+     */
+    function addEarnings(amount) {
+        dollarBalance += amount;
+
+        // Update rugpull earnings tracker in rugpull.js if available
+        if (typeof window.rugpullAddEarnings === 'function') {
+            window.rugpullAddEarnings(amount);
+        }
+    }
+
+    /**
      * Check if auto-sell crypto is enabled and sell if needed
      */
     function tryAutoSellCrypto(cryptoType, amount) {
@@ -1755,19 +1791,19 @@ function loadGame() {
         if (cryptoType === 'btc') {
             const effectivePrice = getEffectiveCryptoPrice(btcPrice);
             const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
-            dollarBalance += cashValue;
+            addEarnings(cashValue);
             console.log(`[AUTO-SELL] BTC: Sold ${amount} BTC for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
             return true;  // Sold instead of adding to balance
         } else if (cryptoType === 'eth') {
             const effectivePrice = getEffectiveCryptoPrice(ethPrice);
             const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
-            dollarBalance += cashValue;
+            addEarnings(cashValue);
             console.log(`[AUTO-SELL] ETH: Sold ${amount} ETH for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
             return true;  // Sold instead of adding to balance
         } else if (cryptoType === 'doge') {
             const effectivePrice = getEffectiveCryptoPrice(dogePrice);
             const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
-            dollarBalance += cashValue;
+            addEarnings(cashValue);
             console.log(`[AUTO-SELL] DOGE: Sold ${amount} DOGE for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
             return true;  // Sold instead of adding to balance
         }
@@ -2362,7 +2398,7 @@ function loadGame() {
         }
         const saleValue = amount * btcPrice;
         btcBalance -= amount;
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         // Spawn dollar coins on sell
         spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
@@ -2378,7 +2414,7 @@ function loadGame() {
         if (btcBalance <= 0) return;
         const effectivePrice = getEffectiveCryptoPrice(btcPrice);
         const saleValue = btcBalance * effectivePrice * 0.95; // 5% fee
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         btcBalance = 0;
         // Spawn dollar coins on sell (1 coin per $10 USD)
         spawnCoinsForClick('usd', saleValue);
@@ -2404,7 +2440,7 @@ function loadGame() {
         const effectivePrice = getEffectiveCryptoPrice(ethPrice);
         const saleValue = amount * effectivePrice * 0.95; // 5% fee
         ethBalance -= amount;
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         // Spawn dollar coins on sell
         spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
@@ -2420,7 +2456,7 @@ function loadGame() {
         if (ethBalance <= 0) return;
         const effectivePrice = getEffectiveCryptoPrice(ethPrice);
         const saleValue = ethBalance * effectivePrice * 0.95; // 5% fee
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         ethBalance = 0;
         // Spawn dollar coins on sell (1 coin per $10 USD)
         spawnCoinsForClick('usd', saleValue);
@@ -2447,7 +2483,7 @@ function loadGame() {
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
         const saleValue = amount * effectivePrice * 0.95; // 5% fee
         dogeBalance -= amount;
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         // Spawn dollar coins on sell
         spawnCoinsForClick('usd', saleValue);
         // Track for tutorial
@@ -2463,7 +2499,7 @@ function loadGame() {
         if (dogeBalance <= 0) return;
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
         const saleValue = dogeBalance * effectivePrice;
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         dogeBalance = 0;
         // Spawn dollar coins on sell (1 coin per $10 USD)
         spawnCoinsForClick('usd', saleValue);
@@ -2490,7 +2526,7 @@ function loadGame() {
         const effectivePrice = getEffectiveCryptoPrice(btcPrice);
         const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
         btcBalance -= amountToSell;
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         // Spawn dollar coins on sell
         spawnCoinsForClick('usd', saleValue);
         updateUI();
@@ -2509,7 +2545,7 @@ function loadGame() {
         const effectivePrice = getEffectiveCryptoPrice(ethPrice);
         const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
         ethBalance -= amountToSell;
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         // Spawn dollar coins on sell
         spawnCoinsForClick('usd', saleValue);
         updateUI();
@@ -2528,7 +2564,7 @@ function loadGame() {
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
         const saleValue = amountToSell * effectivePrice * 0.95; // 5% fee
         dogeBalance -= amountToSell;
-        dollarBalance += saleValue;
+        addEarnings(saleValue);
         // Spawn dollar coins on sell
         spawnCoinsForClick('usd', saleValue);
         updateUI();
@@ -3004,7 +3040,7 @@ function loadGame() {
 
         // Award USD (5% as direct cash)
         const usdReward = totalUsdValue * 0.05;
-        dollarBalance += usdReward;
+        addEarnings(usdReward);
 
         // Track total rewards
         hackingTotalRewardsEarned += totalUsdValue;
@@ -3506,7 +3542,7 @@ function loadGame() {
 
         // Award USD (5% as direct cash)
         const usdReward = totalUsdValue * 0.05;
-        dollarBalance += usdReward;
+        addEarnings(usdReward);
 
         // Track total rewards
         packetGameTotalRewardsEarned += totalUsdValue;
@@ -3542,6 +3578,40 @@ function loadGame() {
         saveGame();
     }
 
+
+    function updateWhackCooldownDisplays() {
+        const now = Date.now();
+
+        // Update each difficulty button's cooldown overlay
+        ['EASY', 'MEDIUM', 'HARD'].forEach(difficulty => {
+            const cooldownEnd = whackCooldowns[difficulty] || 0;
+            const cooldownElement = document.getElementById(`whack-${difficulty.toLowerCase()}-cooldown`);
+            const buttonElement = document.getElementById(`whack-${difficulty.toLowerCase()}-btn`);
+
+            if (!cooldownElement || !buttonElement) return;
+
+            const isOnCooldown = now < cooldownEnd;
+
+            if (isOnCooldown) {
+                cooldownElement.style.removeProperty('display');
+                cooldownElement.style.setProperty('display', 'flex', 'important');
+                cooldownElement.style.pointerEvents = 'none';
+                buttonElement.style.cursor = 'not-allowed';
+                buttonElement.style.opacity = '0.6';
+                // Update timer
+                const remainingMs = cooldownEnd - now;
+                const remainingSeconds = Math.ceil(remainingMs / 1000);
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                cooldownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                // Button is active and clickable
+                cooldownElement.style.display = 'none';
+                buttonElement.style.cursor = 'pointer';
+                buttonElement.style.opacity = '1';
+            }
+        });
+    }
 
     function updatePacketCooldownDisplays() {
         const now = Date.now();
@@ -3726,8 +3796,9 @@ function loadGame() {
 
         const block = document.querySelector(`[data-block-id="${blockId}"]`);
 
-        // Check if this block is in the active set
-        if (whackActiveBlocks.has(blockId)) {
+        // Check if block is visually active (has the 'active' class)
+        // This prevents false misses when clicking blocks that are already expiring
+        if (block && block.classList.contains('active')) {
             whackGameScore += 10;
             whackGameBlocksHit++;
             whackActiveBlocks.delete(blockId);
@@ -3745,13 +3816,17 @@ function loadGame() {
             // Play hit sound
             playClickSound();
         } else {
-            // Clicked wrong block - trigger red flash and miss
-            const grid = document.getElementById('whack-grid');
-            if (grid) {
-                grid.classList.add('whack-error-flash');
-                setTimeout(() => grid.classList.remove('whack-error-flash'), 300);
+            // Only trigger miss if block is actually supposed to be active
+            // This prevents false misses due to timing/race conditions
+            if (block && !block.classList.contains('active')) {
+                // Clicked wrong block - trigger red flash and miss
+                const grid = document.getElementById('whack-grid');
+                if (grid) {
+                    grid.classList.add('whack-error-flash');
+                    setTimeout(() => grid.classList.remove('whack-error-flash'), 300);
+                }
+                missBlock();
             }
-            missBlock();
         }
     }
 
@@ -3785,6 +3860,14 @@ function loadGame() {
     }
 
     function endWhackGame(won) {
+        // If game was manually closed, don't show results
+        if (whackGameManuallyClosed) {
+            whackGameManuallyClosed = false; // Reset flag
+            if (whackSpawnInterval) clearInterval(whackSpawnInterval);
+            if (whackGameInterval) clearInterval(whackGameInterval);
+            return;
+        }
+
         whackGameActive = false;
 
         if (whackSpawnInterval) clearInterval(whackSpawnInterval);
@@ -3856,7 +3939,7 @@ function loadGame() {
 
             // Award USD (5% as direct cash)
             const usdReward = totalUsdValue * 0.05;
-            dollarBalance += usdReward;
+            addEarnings(usdReward);
 
             // Track total rewards
             totalReward = totalUsdValue;
@@ -3950,12 +4033,33 @@ function loadGame() {
         }
     }
 
+    function closeWhackMidGame() {
+        // Close mid-game and apply cooldown if game is active
+        if (whackGameActive) {
+            whackGameActive = false;
+            whackGameManuallyClosed = true; // Mark as manually closed
+            const config = whackDifficultyConfig[whackGameDifficulty];
+            whackCooldowns[whackGameDifficulty] = Date.now() + config.cooldown;
+            console.log(`[WHACK] Applied cooldown to ${whackGameDifficulty}: ${config.cooldown}ms`);
+            updateWhackCooldownDisplays();
+        }
+
+        // Close the game modal
+        const modal = document.getElementById('whack-modal');
+        if (modal) modal.style.display = 'none';
+
+        // Also close results modal if open (from previous game)
+        const resultsModal = document.getElementById('whack-results-modal');
+        if (resultsModal) resultsModal.style.display = 'none';
+    }
+
     function closeWhackModal() {
         const modal = document.getElementById('whack-modal');
         if (modal) modal.style.display = 'none';
         // document.body.classList.remove('minigame-modal-open');
 
-        // Spawn explosion coins when closing results
+        // Only spawn explosion coins if we actually won (not from manual close)
+        // whackGameGamesWon only increments when endWhackGame(true) is called
         if (vfxEnabled && whackGameGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
             // Use last rewards if we just won
             const totalUsdValue = whackLastRewards?.totalUsd || 0;
@@ -3971,6 +4075,20 @@ function loadGame() {
 
     // ============== NETWORK STRESS TEST MINIGAME FUNCTIONS ==============
 
+    // Helper function to get total manual hash upgrades and bonus percentage
+    function getManualHashBonus() {
+        const btcLevel = btcUpgrades[0]?.level || 0;
+        const ethLevel = ethUpgrades[0]?.level || 0;
+        const dogeLevel = dogeUpgrades[0]?.level || 0;
+        const totalUpgrades = btcLevel + ethLevel + dogeLevel;
+        const bonusPercent = (Math.pow(1.1, totalUpgrades) - 1) * 100;
+        return {
+            totalUpgrades: totalUpgrades,
+            bonusPercent: bonusPercent,
+            displayText: bonusPercent > 0 ? `+${bonusPercent.toFixed(1)}%` : '0%'
+        };
+    }
+
     function initNetworkMinigame() {
         // Check unlock requirement (starts unlocked, but scales with gameplay)
         const hasMinigameUnlock = (typeof metaUpgrades !== 'undefined' && metaUpgrades.minigame_unlock && metaUpgrades.minigame_unlock.purchased);
@@ -3985,19 +4103,14 @@ function loadGame() {
         networkGameClickDamageTotal = 0;
 
         // Calculate difficulty based on games won (successful wins only)
-        // Each successful run scales HP by √10 ≈ 3.16x: 1k → 3.16k → 10k → 31.6k → 100k → 316k → 1M
-        const difficultyMultiplier = Math.pow(Math.sqrt(10), networkGameGamesWon);
-        networkGameMaxHP = Math.floor(1000 * difficultyMultiplier); // 1k base
+        // Each successful run scales HP by 1.3x: 200 → 260 → 338 → 439 → 571 → 742 → 965
+        const difficultyMultiplier = Math.pow(1.3, networkGameGamesWon);
+        networkGameMaxHP = Math.floor(200 * difficultyMultiplier); // 200 base, scales by 1.3
         networkGameCurrentHP = networkGameMaxHP;
 
-        // Click damage based on manual hash rate (click value converted to USD)
-        // btcClickValue × btcPrice + ethClickValue × ethPrice + dogeClickValue × dogePrice = USD value per click
-        const manualClickDamage = (btcClickValue * btcPrice) + (ethClickValue * ethPrice) + (dogeClickValue * dogePrice);
-        // Default base click damage of 10 so players can click even with 0 manual upgrades
-        const clickDamageBase = Math.max(10, manualClickDamage);
-        // Scale by game count for higher difficulty runs
-        const clickDamageMultiplier = Math.pow(1.15, networkGameGamesWon);
-        networkGameClickDamage = Math.floor(clickDamageBase * clickDamageMultiplier);
+        // Click damage based on manual hash rate upgrades purchased
+        const manualHashBonus = getManualHashBonus();
+        networkGameClickDamage = Math.floor(20 * Math.pow(1.1, manualHashBonus.totalUpgrades));
 
         // Speed boost increases with difficulty
         const speedBoostMultiplier = 0.05 + (0.015 * networkGameGamesPlayed);
@@ -4022,7 +4135,9 @@ function loadGame() {
         document.getElementById('network-hp-display').textContent = networkGameMaxHP;
         document.getElementById('network-hp-max-display').textContent = networkGameMaxHP;
         document.getElementById('network-time-display').textContent = '10s';
-        document.getElementById('network-total-damage-display').textContent = '0';
+        // Display manual click damage bonus percentage
+        const bonus = getManualHashBonus();
+        document.getElementById('network-total-damage-display').textContent = bonus.displayText;
         document.getElementById('network-click-damage-display').textContent = `+${networkGameClickDamage} damage/click`;
 
         // Start game
@@ -4058,7 +4173,11 @@ function loadGame() {
                 if (hpDisplay) hpDisplay.textContent = Math.max(0, Math.floor(networkGameCurrentHP));
 
                 const totalDamageDisplay = document.getElementById('network-total-damage-display');
-                if (totalDamageDisplay) totalDamageDisplay.textContent = Math.floor(networkGameTotalDamage);
+                if (totalDamageDisplay) {
+                    // Show manual click damage bonus percentage
+                    const bonus = getManualHashBonus();
+                    totalDamageDisplay.textContent = bonus.displayText;
+                }
 
                 const passiveDpsDisplay = document.getElementById('network-passive-dps-display');
                 if (passiveDpsDisplay) {
@@ -4132,21 +4251,9 @@ function loadGame() {
     }
 
     function updateNetworkRewardsPreview() {
-        // Calculate estimated reward if player wins now
-        const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
-
-        // Base reward for current level
-        const baseReward = 10000 * Math.pow(Math.sqrt(10), networkGameGamesWon);
-
-        // Success multiplier based on current damage
-        const damageRatio = Math.min(1.0, networkGameTotalDamage / (networkGameMaxHP * 1.5));
-        const successMultiplier = 0.5 + (damageRatio * 1.5);
-
-        // Ascension multiplier
-        const ascensionMultiplier = Math.pow(1.15, rugpullLevel);
-
-        // Total estimated USD value
-        const estimatedUsdValue = baseReward * successMultiplier * ascensionMultiplier;
+        // Calculate fixed reward for current level (no variation based on damage)
+        // Reward is fixed based on games won: 5k → 6.95k → 9.65k → 13.4k → 18.6k → 25.8k → 35.8k
+        const fixedReward = 5000 * Math.pow(1.39, networkGameGamesWon);
 
         // Format helper
         const formatAmount = (amount) => {
@@ -4157,14 +4264,14 @@ function loadGame() {
             return amount.toFixed(0);
         };
 
-        // Split rewards
-        const btcUsdValue = estimatedUsdValue * 0.40;
+        // Split rewards proportionally
+        const btcUsdValue = fixedReward * 0.40;
         const btcReward = btcUsdValue / btcPrice;
-        const ethUsdValue = estimatedUsdValue * 0.35;
+        const ethUsdValue = fixedReward * 0.35;
         const ethReward = ethUsdValue / ethPrice;
-        const dogeUsdValue = estimatedUsdValue * 0.20;
+        const dogeUsdValue = fixedReward * 0.20;
         const dogeReward = dogeUsdValue / dogePrice;
-        const usdReward = estimatedUsdValue * 0.05;
+        const usdReward = fixedReward * 0.05;
 
         // Update displays
         const btcDisplay = document.getElementById('network-reward-btc-preview');
@@ -4208,6 +4315,8 @@ function loadGame() {
         let totalReward = 0;
 
         if (won) {
+            // Set flag to allow explosion coins on close
+            networkGameWonThisRound = true;
             // Only increment games played on successful win
             networkGameGamesPlayed++;
             networkGameGamesWon++;
@@ -4215,9 +4324,9 @@ function loadGame() {
             // Get current rugpull/ascension level
             const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
 
-            // Rewards scale with successful wins by √10: 10k → 31.6k → 100k → 316k → 1M → 3.16M → 10M
-            // Base reward = 10k × (√10)^(wins)
-            const baseReward = 10000 * Math.pow(Math.sqrt(10), networkGameGamesWon);
+            // Rewards scale with successful wins by 1.39: 10k → 13.9k → 19.3k → 26.8k → 37.2k → 51.7k → 71.9k
+            // Base reward = 10k × (1.39)^(wins)
+            const baseReward = 5000 * Math.pow(1.39, networkGameGamesWon);
 
             // Success rate multiplier based on how much HP was destroyed (0.5x to 2.0x)
             // If destroyed perfectly (all HP), get full bonus
@@ -4250,7 +4359,7 @@ function loadGame() {
 
             // Award USD (5%)
             const usdReward = totalUsdValue * 0.05;
-            dollarBalance += usdReward;
+            addEarnings(usdReward);
 
             // Track total rewards
             totalReward = totalUsdValue;
@@ -4324,8 +4433,8 @@ function loadGame() {
         if (modal) modal.style.display = 'none';
         // document.body.classList.remove('minigame-modal-open');
 
-        // Spawn explosion coins when closing results
-        if (vfxEnabled && networkGameGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
+        // Spawn explosion coins only if we just won this game (not if we lost and are closing)
+        if (vfxEnabled && networkGameWonThisRound && typeof spawnExplosionCoins === 'function') {
             // Use last rewards if we just won
             const totalUsdValue = networkLastRewards?.totalUsd || 0;
             const coinCount = Math.max(20, Math.min(50, Math.floor(totalUsdValue / 50)));
@@ -4334,6 +4443,7 @@ function loadGame() {
             spawnExplosionCoins('doge', coinCount / 4);
             spawnExplosionCoins('usd', coinCount / 4);
         }
+        networkGameWonThisRound = false; // Reset flag after closing
     }
 
     // ============== END NETWORK STRESS TEST MINIGAME FUNCTIONS ==============
@@ -5343,7 +5453,7 @@ function buyDogeBoost(i) {
                         data: [0, 0, 0],
                         backgroundColor: ['#f7931a', '#627eea', '#c2a633'],
                         borderColor: '#1a1a1a',
-                        borderWidth: 1
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -5372,7 +5482,7 @@ function buyDogeBoost(i) {
                         ],
                         backgroundColor: ['#f7931a', '#627eea', '#c2a633'],
                         borderColor: '#1a1a1a',
-                        borderWidth: 1
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -5424,7 +5534,49 @@ function buyDogeBoost(i) {
         cryptoPieChart.update();
     }
 
+    function updateRugpullProgressDisplay() {
+        // Get current lifetime earnings from rugpull.js
+        let earningsThisSession = (typeof window.lifetimeEarningsThisRugpull !== 'undefined') ? window.lifetimeEarningsThisRugpull : 0;
+
+        // Calculate rugpull requirement (Rugpull 0 = $1M, Rugpull 1 = $8M, etc)
+        let ascensionLvl = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
+        const level = ascensionLvl + 1;
+        const requirement = 1000000 * Math.pow(level, 3);
+
+        // Format numbers for display
+        const formatNum = (num) => {
+            if (num >= 1e9) return '$' + (num / 1e9).toFixed(0) + 'B';
+            if (num >= 1e6) return '$' + (num / 1e6).toFixed(0) + 'M';
+            if (num >= 1e3) return '$' + (num / 1e3).toFixed(0) + 'K';
+            return '$' + Math.floor(num).toLocaleString();
+        };
+
+        const earningsLabel = formatNum(earningsThisSession);
+        const requirementLabel = formatNum(requirement);
+        const displayText = earningsLabel + ' / ' + requirementLabel;
+
+        // Update all three rugpull progress display elements
+        const displayElements = [
+            document.getElementById('rugpull-progress-text'),
+            document.getElementById('rugpull-progress-text-mobile'),
+            document.getElementById('rugpull-progress-text-desktop')
+        ];
+
+        displayElements.forEach(el => {
+            if (el) {
+                el.textContent = displayText;
+            }
+        });
+    }
+
     function updateUI() {
+        // Update rugpull progress display and UI (calls rugpull.js function)
+        if (typeof window.updateAscensionUI === 'function') {
+            window.updateAscensionUI();
+        } else {
+            updateRugpullProgressDisplay();
+        }
+
         // Check achievements every UI update
         if (typeof checkAchievements === 'function') {
             checkAchievements();
@@ -6366,18 +6518,18 @@ dogeUpgrades.forEach(u => {
     });
 
     // Update staking UI
-    if (typeof updateStakingUI === 'function') {
-        updateStakingUI();
+    if (typeof window.updateStakingUI === 'function') {
+        window.updateStakingUI();
     }
 
     // Update ascension UI
-    if (typeof updateAscensionUI === 'function') {
-        updateAscensionUI();
+    if (typeof window.updateAscensionUI === 'function') {
+        window.updateAscensionUI();
     }
 
     // Update store button visibility (for tokens display)
-    if (typeof updateStoreButtonVisibility === 'function') {
-        updateStoreButtonVisibility();
+    if (typeof window.updateStoreButtonVisibility === 'function') {
+        window.updateStoreButtonVisibility();
     }
     }
 
@@ -6456,8 +6608,8 @@ dogeUpgrades.forEach(u => {
         window.gameState.dollarBalance = dollarBalance;
 
         // Update currentRunEarnings for rugpull tracking (this is lifetimeEarnings since last rugpull)
-        if (typeof updateCurrentRunEarnings === 'function') {
-            updateCurrentRunEarnings(lifetimeEarnings);
+        if (typeof window.updateCurrentRunEarnings === 'function') {
+            window.updateCurrentRunEarnings(lifetimeEarnings);
         }
 
         updateUI();
@@ -6467,8 +6619,8 @@ dogeUpgrades.forEach(u => {
         updateMinigamesTab();
 
         // Check for rugpull milestone
-        if (typeof checkRugpullMilestone === 'function') {
-            checkRugpullMilestone();
+        if (typeof window.checkRugpullMilestone === 'function') {
+            window.checkRugpullMilestone();
         }
 
     }, 100);
@@ -7048,7 +7200,7 @@ dogeUpgrades.forEach(u => {
             const currentPercentage = (totalPowerUsed / availablePower) * 100;
             const color = currentPercentage > 50 ? '#ff3333' : '#00ff88';
 
-            powerChartHistory.push(totalPowerUsed); // Chart shows current power usage
+            powerChartHistory.push(currentPercentage); // Chart shows power usage as percentage of available capacity
             currentPowerValues.push(totalPowerUsed); // Used for coloring based on current wattage
             powerChartColors.push(color); // Store color determined at time of recording
             hashRateChartTimestamps.push({ time: now });
@@ -7077,24 +7229,11 @@ dogeUpgrades.forEach(u => {
                 const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
                 const startIndex = Math.max(0, chartHistory.length - Math.ceil(chartHistory.length * (timeRangePercent / 100)));
 
-                // Only update if data has changed
-                const visibleDataLength = chartHistory.length - startIndex;
-                if (!nwChart._lastVisibleLength || nwChart._lastVisibleLength !== visibleDataLength) {
-                    nwChart.data.labels = chartTimestamps.slice(startIndex).map((ts) =>
-                        new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-                    );
-                    nwChart.data.datasets[0].data = chartHistory.slice(startIndex);
-                    nwChart._lastVisibleLength = visibleDataLength;
-                    nwChart.update('none'); // Update without animation
-                } else {
-                    // Just add new data point without full redraw
-                    const lastTimestamp = chartTimestamps[chartTimestamps.length - 1];
-                    if (lastTimestamp) {
-                        nwChart.data.labels[nwChart.data.labels.length] = new Date(lastTimestamp.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                        nwChart.data.datasets[0].data[nwChart.data.datasets[0].data.length] = netWorth;
-                        nwChart.update('none');
-                    }
-                }
+                nwChart.data.labels = chartTimestamps.slice(startIndex).map((ts) =>
+                    new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                );
+                nwChart.data.datasets[0].data = chartHistory.slice(startIndex);
+                nwChart.update('none'); // Update without animation
             }
 
             // Update hash rate chart if it's initialized (always visible)
@@ -7134,13 +7273,9 @@ dogeUpgrades.forEach(u => {
                 const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
                 const startIndex = Math.max(0, powerChartHistory.length - Math.ceil(powerChartHistory.length * (timeRangePercent / 100)));
 
-                const powerData = powerChartHistory.slice(startIndex);
-                // Use the max capacity we've seen (which only increases)
-                const chartMaxPower = Math.max(maxPowerCapacity, 1);
-                // Convert to percentages (0-100%) based on max capacity
-                const powerDataPercent = powerData.map(p => (p / chartMaxPower) * 100);
+                const powerDataPercent = powerChartHistory.slice(startIndex);
+                const visibleDataLength = powerDataPercent.length;
 
-                const visibleDataLength = powerData.length;
                 powerChartInstance.data.labels = hashRateChartTimestamps.slice(startIndex, startIndex + visibleDataLength).map((ts) => {
                     const time = ts?.time || Date.now();
                     return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -7159,7 +7294,7 @@ dogeUpgrades.forEach(u => {
             if (updateCount % 5 === 0) {
                 console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length, 'Latest value:', netWorth, 'BTC:', btcBalance, 'ETH:', ethBalance, 'DOGE:', dogeBalance);
             }
-        }, 500);
+        }, 1000);
 
         // Add mouse tracking for marker hover detection
         const nwChartCanvas = document.getElementById('nwChart');
@@ -7653,6 +7788,7 @@ dogeUpgrades.forEach(u => {
 
             // Always update cooldown displays (even when tab is not visible)
             updateHackingCooldownDisplays();
+            updateWhackCooldownDisplays();
             updatePacketCooldownDisplays();
 
             // Update minigame card lock states
@@ -7817,6 +7953,7 @@ dogeUpgrades.forEach(u => {
 
     // Whack-a-block minigame functions
     window.initWhackMinigame = initWhackMinigame;
+    window.closeWhackMidGame = closeWhackMidGame;
     window.closeWhackModal = closeWhackModal;
     window.closeWhackResultsModal = closeWhackResultsModal;
 
@@ -7825,11 +7962,43 @@ dogeUpgrades.forEach(u => {
     window.closeNetworkModal = closeNetworkModal;
     window.networkClickAttack = networkClickAttack;
 
-    // Test helper - set lifetime earnings for testing rugpull feature
+    // Stub for rugpull store - will be overridden by rugpull.js if it loads
+    window.openMetaUpgradesModal = function() {
+        const modal = document.getElementById('meta-upgrades-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            console.log('✓ Meta-upgrades modal opened');
+        } else {
+            alert('Meta-upgrades modal not found in HTML');
+        }
+    };
 
+    // Close meta-upgrades modal
+    window.closeMetaUpgradesModal = function() {
+        const modal = document.getElementById('meta-upgrades-modal');
+        if (modal) {
+            modal.style.display = 'none';
+            console.log('✓ Meta-upgrades modal closed');
+        }
+    };
+
+    // Handle rugpull button click
+    window.handleRugpullButtonClick = function() {
+        console.log('Rugpull button clicked');
+        // Call the meta-upgrades modal function from rugpull.js or the wrapper
+        if (typeof window._rugpullImpl?.handleRugpullButtonClick === 'function') {
+            window._rugpullImpl.handleRugpullButtonClick();
+        } else {
+            window.openMetaUpgradesModal();
+        }
+    };
+
+    // Test helper - set lifetime earnings for testing rugpull feature
     window.setTestEarnings = function(amount) {
         lifetimeEarnings = amount;
         sessionEarnings = amount;
+        // Also update rugpull tracker
+        addEarnings(amount);
         console.log('TEST: Set lifetimeEarnings to $' + amount.toLocaleString());
     };
 
@@ -7838,6 +8007,10 @@ dogeUpgrades.forEach(u => {
         lifetimeEarnings = 1000000000;  // $1B
         dollarBalance = 1000000000;     // $1B cash too
         sessionEarnings = 1000000000;
+        // Also update rugpull tracker
+        if (typeof window.rugpullAddEarnings === 'function') {
+            window.rugpullAddEarnings(1000000000);
+        }
         console.log('✓ TEST: Set earnings to $1,000,000,000');
         console.log('✓ Rugpull eligible! First rugpull reward: ~20 tokens');
         updateUI();
@@ -7845,6 +8018,13 @@ dogeUpgrades.forEach(u => {
         if (typeof showRugpullOffer === 'function') {
             setTimeout(() => showRugpullOffer(), 500);
         }
+    };
+
+    // Test function specifically for rugpull progress tracking
+    window.testRugpullEarnings = function(amount) {
+        console.log(`TEST: Adding $${amount.toLocaleString()} to rugpull progress`);
+        addEarnings(amount);
+        updateUI();
     };
 
     // Debug function to check localStorage directly
