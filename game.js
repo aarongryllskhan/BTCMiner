@@ -6644,7 +6644,7 @@ dogeUpgrades.forEach(u => {
                                     drawBorder: false
                                 },
                                 ticks: {
-                                    color: '#999',
+                                    color: 'transparent',
                                     font: {
                                         size: 11
                                     },
