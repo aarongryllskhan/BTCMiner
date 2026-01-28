@@ -91,16 +91,23 @@
     let chartStartTime = Date.now();
     let chartMarkers = []; // Fixed markers every 60 seconds: { index, time, value }
     let lastMarkerTime = Date.now();
+    let cryptoPieChart = null; // Global reference to pie chart
 
     // Multi-axis hash rate chart tracking
     let hashRateChartHistory = [];
     let powerChartHistory = [];
+    let currentPowerValues = []; // Track current power for each data point (for coloring)
+    let powerChartColors = []; // Track the color for each point (green/red determined at time of recording)
+    let cumulativePowerUsed = 0; // Track cumulative power consumption over time
+    let maxPowerCapacity = 1; // Track the maximum power capacity (used for scaling chart)
     let ethHashRateChartHistory = [];
     let dogeHashRateChartHistory = [];
     let hashRateChartTimestamps = [];
     let lastHashRateChartUpdateTime = Date.now();
     let currentChartView = 'networth'; // 'networth' or 'hashrate'
     let hashRateChartInstance = null;
+    let powerChartInstance = null;
+    let currentHashrateView = 'hashrate'; // 'hashrate' or 'power'
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -2420,6 +2427,12 @@ function loadGame() {
             u.level++;
             u.currentPower = u.basePower * u.level;
             totalPowerAvailable += u.basePower;
+
+            // Update chart max capacity to reflect new power level
+            const availablePower = getTotalPowerAvailableWithBonus();
+            if (availablePower > maxPowerCapacity) {
+                maxPowerCapacity = availablePower;
+            }
 
             // Update price with 1.2x multiplier
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
@@ -5242,6 +5255,105 @@ function buyDogeBoost(i) {
         return watts.toFixed(2) + ' W';  // Watts
     }
 
+    function initPieChart() {
+        const ctx = document.getElementById('cryptoPieChart');
+        if (!ctx) return null;
+
+        const btcValue = btcBalance * btcPrice;
+        const ethValue = ethBalance * ethPrice;
+        const dogeValue = dogeBalance * dogePrice;
+        const totalValue = btcValue + ethValue + dogeValue;
+
+        if (totalValue === 0) {
+            cryptoPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Bitcoin', 'Ethereum', 'Dogecoin'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#f7931a', '#627eea', '#c2a633'],
+                        borderColor: '#1a1a1a',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+        } else {
+            cryptoPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Bitcoin', 'Ethereum', 'Dogecoin'],
+                    datasets: [{
+                        data: [
+                            (btcValue / totalValue) * 100,
+                            (ethValue / totalValue) * 100,
+                            (dogeValue / totalValue) * 100
+                        ],
+                        backgroundColor: ['#f7931a', '#627eea', '#c2a633'],
+                        borderColor: '#1a1a1a',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            padding: 8,
+                            titleFont: { size: 12 },
+                            bodyFont: { size: 11 },
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        return cryptoPieChart;
+    }
+
+    function updateCryptoPieChart() {
+        if (!cryptoPieChart) {
+            return; // Chart hasn't been initialized yet
+        }
+
+        const btcValue = btcBalance * btcPrice;
+        const ethValue = ethBalance * ethPrice;
+        const dogeValue = dogeBalance * dogePrice;
+        const totalValue = btcValue + ethValue + dogeValue;
+
+        if (totalValue === 0) {
+            cryptoPieChart.data.datasets[0].data = [0, 0, 0];
+        } else {
+            cryptoPieChart.data.datasets[0].data = [
+                (btcValue / totalValue) * 100,
+                (ethValue / totalValue) * 100,
+                (dogeValue / totalValue) * 100
+            ];
+        }
+
+        cryptoPieChart.update();
+    }
+
     function updateUI() {
         // Check achievements every UI update
         if (typeof checkAchievements === 'function') {
@@ -5277,6 +5389,9 @@ function buyDogeBoost(i) {
         document.getElementById('bal-btc').innerText = formatCryptoBalance(btcBalance);
         document.getElementById('bal-eth').innerText = formatCryptoBalance(ethBalance);
         document.getElementById('bal-doge').innerText = formatCryptoBalance(dogeBalance);
+
+        // Update pie chart with current crypto distribution
+        updateCryptoPieChart();
 
         // Update manual hash button text (with ascension multiplier applied)
         const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (1 + ascensionLevel * 0.01) : 1;
@@ -6378,6 +6493,7 @@ dogeUpgrades.forEach(u => {
 
         if (manualBtcBtn) {
             let btcAnimTimeout = null;
+            let btcTouched = false;
             const btcClick = () => {
                 trackManualHashClick();
                 manualHash();
@@ -6393,19 +6509,24 @@ dogeUpgrades.forEach(u => {
                     btcAnimTimeout = null;
                 }, 50);
             };
-            manualBtcBtn.addEventListener('click', () => {
+            manualBtcBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btcTouched = true;
                 triggerBtcAnimation();
                 btcClick();
             });
-            manualBtcBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                triggerBtcAnimation();
-                btcClick();
+            manualBtcBtn.addEventListener('click', (e) => {
+                if (!btcTouched) {
+                    triggerBtcAnimation();
+                    btcClick();
+                }
+                btcTouched = false;
             });
         }
 
         if (manualEthBtn) {
             let ethAnimTimeout = null;
+            let ethTouched = false;
             const ethClick = () => {
                 trackManualHashClick();
                 manualEthHash();
@@ -6418,19 +6539,24 @@ dogeUpgrades.forEach(u => {
                     ethAnimTimeout = null;
                 }, 50);
             };
-            manualEthBtn.addEventListener('click', () => {
+            manualEthBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                ethTouched = true;
                 triggerEthAnimation();
                 ethClick();
             });
-            manualEthBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                triggerEthAnimation();
-                ethClick();
+            manualEthBtn.addEventListener('click', (e) => {
+                if (!ethTouched) {
+                    triggerEthAnimation();
+                    ethClick();
+                }
+                ethTouched = false;
             });
         }
 
         if (manualDogeBtn) {
             let dogeAnimTimeout = null;
+            let dogeTouched = false;
             const dogeClick = () => {
                 trackManualHashClick();
                 manualDogeHash();
@@ -6443,14 +6569,18 @@ dogeUpgrades.forEach(u => {
                     dogeAnimTimeout = null;
                 }, 50);
             };
-            manualDogeBtn.addEventListener('click', () => {
+            manualDogeBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                dogeTouched = true;
                 triggerDogeAnimation();
                 dogeClick();
             });
-            manualDogeBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                triggerDogeAnimation();
-                dogeClick();
+            manualDogeBtn.addEventListener('click', (e) => {
+                if (!dogeTouched) {
+                    triggerDogeAnimation();
+                    dogeClick();
+                }
+                dogeTouched = false;
             });
         }
 
@@ -6725,6 +6855,63 @@ dogeUpgrades.forEach(u => {
                 }, 200);
             }
 
+            // Initialize pie chart
+            console.log('Initializing crypto pie chart...');
+            cryptoPieChart = initPieChart();
+            if (cryptoPieChart) {
+                console.log('Pie chart successfully initialized');
+            }
+
+            // Initialize power chart with retry logic
+            console.log('Initializing power chart...');
+            const powerInitResult = initializePowerChart();
+            if (!powerInitResult) {
+                console.log('Power chart init failed, will retry...');
+                // Retry power chart initialization
+                setTimeout(() => {
+                    console.log('Retrying power chart initialization...');
+                    initializePowerChart();
+                }, 200);
+            }
+
+            // Setup chart swap buttons
+            const hashrateBtn = document.getElementById('hashrate-chart-btn');
+            const powerBtn = document.getElementById('power-chart-btn');
+            const hashRateCanvas = document.getElementById('hashRateChart');
+            const powerCanvas = document.getElementById('powerChart');
+
+            if (hashrateBtn && powerBtn && hashRateCanvas && powerCanvas) {
+                hashrateBtn.addEventListener('click', () => {
+                    currentHashrateView = 'hashrate';
+                    hashRateCanvas.style.display = 'block';
+                    powerCanvas.style.display = 'none';
+                    hashrateBtn.style.background = '#00ff88';
+                    hashrateBtn.style.color = '#000';
+                    hashrateBtn.style.borderColor = '#00ff88';
+                    powerBtn.style.background = 'rgba(0,255,136,0.3)';
+                    powerBtn.style.color = '#00ff88';
+                    powerBtn.style.borderColor = '#00ff88';
+                    if (hashRateChartInstance) {
+                        setTimeout(() => hashRateChartInstance.resize(), 50);
+                    }
+                });
+
+                powerBtn.addEventListener('click', () => {
+                    currentHashrateView = 'power';
+                    hashRateCanvas.style.display = 'none';
+                    powerCanvas.style.display = 'block';
+                    powerBtn.style.background = '#00ff88';
+                    powerBtn.style.color = '#000';
+                    powerBtn.style.borderColor = '#00ff88';
+                    hashrateBtn.style.background = 'rgba(0,255,136,0.3)';
+                    hashrateBtn.style.color = '#00ff88';
+                    hashrateBtn.style.borderColor = '#00ff88';
+                    if (powerChartInstance) {
+                        setTimeout(() => powerChartInstance.resize(), 50);
+                    }
+                });
+            }
+
             // Retry with delays (especially important for mobile)
             if (!chartInitialized) {
                 console.log('Chart init failed, retrying with delays...');
@@ -6777,8 +6964,25 @@ dogeUpgrades.forEach(u => {
             hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
             ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
             dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
-            powerChartHistory.push(totalPowerUsed);
+            // Track current power usage for display
+            const timeDeltaSeconds = (now - lastHashRateChartUpdateTime) / 1000;
+            cumulativePowerUsed += totalPowerUsed * timeDeltaSeconds;
+
+            // Update max capacity to available power supply
+            const availablePower = getTotalPowerAvailableWithBonus();
+            if (availablePower > maxPowerCapacity) {
+                maxPowerCapacity = availablePower;
+            }
+
+            // Determine color based on current percentage at time of recording
+            const currentPercentage = (totalPowerUsed / availablePower) * 100;
+            const color = currentPercentage > 50 ? '#ff3333' : '#00ff88';
+
+            powerChartHistory.push(totalPowerUsed); // Chart shows current power usage
+            currentPowerValues.push(totalPowerUsed); // Used for coloring based on current wattage
+            powerChartColors.push(color); // Store color determined at time of recording
             hashRateChartTimestamps.push({ time: now });
+            lastHashRateChartUpdateTime = now;
 
             // Add a marker every minute (60 seconds)
             if (now - lastMarkerTime >= 60000) {
@@ -6857,6 +7061,31 @@ dogeUpgrades.forEach(u => {
                 }
             }
 
+            // Update power chart if it's initialized
+            if (powerChartInstance && powerChartHistory.length > 0) {
+                const timeRangeSlider = document.getElementById('chart-time-slider');
+                const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
+                const startIndex = Math.max(0, powerChartHistory.length - Math.ceil(powerChartHistory.length * (timeRangePercent / 100)));
+
+                const powerData = powerChartHistory.slice(startIndex);
+                // Use the max capacity we've seen (which only increases)
+                const chartMaxPower = Math.max(maxPowerCapacity, 1);
+                // Convert to percentages (0-100%) based on max capacity
+                const powerDataPercent = powerData.map(p => (p / chartMaxPower) * 100);
+
+                const visibleDataLength = powerData.length;
+                // Always update the data to keep it in sync with other charts
+                powerChartInstance.data.labels = hashRateChartTimestamps.slice(startIndex, startIndex + visibleDataLength).map((ts) => {
+                    const time = ts?.time || Date.now();
+                    return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                });
+                powerChartInstance.data.datasets[0].data = powerDataPercent;
+                // Store percentage data and pre-recorded colors for segment coloring
+                powerChartInstance._powerDataPercent = powerDataPercent;
+                powerChartInstance._powerChartColors = powerChartColors.slice(startIndex, startIndex + visibleDataLength);
+                powerChartInstance.update('none');
+            }
+
             // Update chart date tracker
             updateChartDateTracker();
 
@@ -6864,7 +7093,7 @@ dogeUpgrades.forEach(u => {
             if (updateCount % 5 === 0) {
                 console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length, 'Latest value:', netWorth, 'BTC:', btcBalance, 'ETH:', ethBalance, 'DOGE:', dogeBalance);
             }
-        }, 2000);
+        }, 500);
 
         // Add mouse tracking for marker hover detection
         const nwChartCanvas = document.getElementById('nwChart');
@@ -7141,6 +7370,196 @@ dogeUpgrades.forEach(u => {
             console.error('Error creating hash rate chart:', error);
             return false;
         }
+        };
+
+        // Initialize power usage chart
+        window.initializePowerChart = function() {
+            try {
+                const canvasEl = document.getElementById('powerChart');
+                if (!canvasEl) {
+                    console.warn('Power chart canvas not found in DOM yet');
+                    return false;
+                }
+
+                const ctx = canvasEl.getContext('2d');
+                if (!ctx) {
+                    console.warn('Could not get canvas context for power chart');
+                    return false;
+                }
+
+                if (powerChartInstance) {
+                    powerChartInstance.destroy();
+                }
+
+                // Simple power chart with current power values
+                if (powerChartHistory.length === 0) {
+                    return false; // No data yet
+                }
+
+                const timeRangeSlider = document.getElementById('chart-time-slider');
+                const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
+                const startIndex = Math.max(0, powerChartHistory.length - Math.ceil(powerChartHistory.length * (timeRangePercent / 100)));
+
+                const powerData = powerChartHistory.slice(startIndex);
+                if (powerData.length === 0) {
+                    return false;
+                }
+
+                // Use the max capacity we've seen (which only increases)
+                const chartMaxPower = Math.max(maxPowerCapacity, 1);
+                // Convert to percentages (0-100%) based on max capacity
+                const powerDataPercent = powerData.map(p => (p / chartMaxPower) * 100);
+
+                // Create time labels
+                let labels = [];
+                if (hashRateChartTimestamps.length > startIndex) {
+                    labels = hashRateChartTimestamps.slice(startIndex, startIndex + powerData.length).map((ts) => {
+                        const time = ts?.time || Date.now();
+                        return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    });
+                } else {
+                    labels = powerData.map((_, i) => '');
+                }
+
+                powerChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Power Usage',
+                                data: powerDataPercent,
+                                borderColor: '#00ff88',
+                                backgroundColor: 'rgba(0, 0, 0, 0)',
+                                pointRadius: 0,
+                                pointHoverRadius: 5,
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.4,
+                                spanGaps: true,
+                                segment: {
+                                    borderColor: function(context) {
+                                        const p0DataIndex = context.p0DataIndex;
+                                        const p1DataIndex = context.p1DataIndex;
+
+                                        // Get the data values for this segment
+                                        if (context.dataset && context.dataset.data && p0DataIndex !== undefined && p1DataIndex !== undefined) {
+                                            const value0 = context.dataset.data[p0DataIndex];
+                                            const value1 = context.dataset.data[p1DataIndex];
+
+                                            // If either point is above 50%, the segment is red
+                                            // This keeps the line red from when it crosses 50% until it drops back below 50%
+                                            return (value0 > 50 || value1 > 50) ? '#ff3333' : '#00ff88';
+                                        }
+                                        return '#00ff88';
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                top: 5,
+                                bottom: 5,
+                                left: 0,
+                                right: 0
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                padding: 10,
+                                titleFont: { size: 12, weight: 'bold' },
+                                bodyFont: { size: 11 },
+                                borderColor: '#00ff88',
+                                borderWidth: 1,
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        const percentValue = context.parsed.y;
+                                        return percentValue.toFixed(1) + '%';
+                                    }
+                                }
+                            },
+                            // Plugin to draw 50% threshold line
+                            thresholdLine: {
+                                id: 'thresholdLine',
+                                afterDatasetsDraw(chart) {
+                                    const ctx = chart.ctx;
+                                    const yScale = chart.scales.y;
+                                    const canvasHeight = chart.chartArea.bottom;
+                                    const canvasTop = chart.chartArea.top;
+
+                                    // Calculate the y position for 50%
+                                    const y50Percent = yScale.getPixelForValue(50);
+
+                                    // Draw the line
+                                    ctx.save();
+                                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                                    ctx.lineWidth = 1;
+                                    ctx.setLineDash([5, 5]);
+                                    ctx.beginPath();
+                                    ctx.moveTo(chart.chartArea.left, y50Percent);
+                                    ctx.lineTo(chart.chartArea.right, y50Percent);
+                                    ctx.stroke();
+                                    ctx.restore();
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(255,255,255,0.05)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: '#999',
+                                    font: { size: 10 }
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(255,255,255,0.05)',
+                                    drawBorder: false
+                                },
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    color: '#999',
+                                    font: { size: 10 },
+                                    stepSize: 25,
+                                    callback: function(value) {
+                                        return value.toFixed(0) + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Store power data and pre-recorded colors for segment coloring
+                powerChartInstance._powerDataPercent = powerDataPercent;
+                powerChartInstance._powerData = powerData;
+                // Store the colors that were recorded at the time of each data point
+                powerChartInstance._powerChartColors = powerChartColors.slice(startIndex, startIndex + powerDataPercent.length);
+
+                console.log('✅ Power chart initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('Error creating power chart:', error);
+                return false;
+            }
         };
 
         // Auto-save every 1.5 seconds
