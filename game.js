@@ -7113,22 +7113,19 @@ dogeUpgrades.forEach(u => {
                 );
 
                 const visibleDataLength = dataLength - startIndex;
-                if (!hashRateChartInstance._lastVisibleLength || hashRateChartInstance._lastVisibleLength !== visibleDataLength) {
-                    // Scale hash rates by USD value per second
-                    const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * btcPrice);
-                    const ethUsdPerSec = ethHashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * ethPrice);
-                    const dogeUsdPerSec = dogeHashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * dogePrice);
+                // Scale hash rates by USD value per second
+                const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * btcPrice);
+                const ethUsdPerSec = ethHashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * ethPrice);
+                const dogeUsdPerSec = dogeHashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * dogePrice);
 
-                    hashRateChartInstance.data.labels = hashRateChartTimestamps.slice(startIndex, startIndex + visibleDataLength).map((ts) => {
-                        const time = ts?.time || Date.now();
-                        return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                    });
-                    hashRateChartInstance.data.datasets[0].data = btcUsdPerSec;
-                    hashRateChartInstance.data.datasets[1].data = ethUsdPerSec;
-                    hashRateChartInstance.data.datasets[2].data = dogeUsdPerSec;
-                    hashRateChartInstance._lastVisibleLength = visibleDataLength;
-                    hashRateChartInstance.update('none');
-                }
+                hashRateChartInstance.data.labels = hashRateChartTimestamps.slice(startIndex, startIndex + visibleDataLength).map((ts) => {
+                    const time = ts?.time || Date.now();
+                    return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                });
+                hashRateChartInstance.data.datasets[0].data = btcUsdPerSec;
+                hashRateChartInstance.data.datasets[1].data = ethUsdPerSec;
+                hashRateChartInstance.data.datasets[2].data = dogeUsdPerSec;
+                hashRateChartInstance.update('none');
             }
 
             // Update power chart if it's initialized
@@ -7144,7 +7141,6 @@ dogeUpgrades.forEach(u => {
                 const powerDataPercent = powerData.map(p => (p / chartMaxPower) * 100);
 
                 const visibleDataLength = powerData.length;
-                // Always update the data to keep it in sync with other charts
                 powerChartInstance.data.labels = hashRateChartTimestamps.slice(startIndex, startIndex + visibleDataLength).map((ts) => {
                     const time = ts?.time || Date.now();
                     return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
