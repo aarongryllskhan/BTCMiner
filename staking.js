@@ -23,6 +23,44 @@ function initStaking() {
     }
 
     stakingInterval = setInterval(processStakingEarnings, APR_INTERVAL);
+    updateStakingAPRDisplay();
+}
+
+/**
+ * Calculate total staking APR bonus including rugpull upgrades
+ */
+function getStakingAPRBonus() {
+    let stakingAPRBonus = 0;
+
+    // Get rugpull staking APR bonuses if metaUpgrades exist
+    if (typeof metaUpgrades !== 'undefined') {
+        Object.entries(metaUpgrades).forEach(([key, upgrade]) => {
+            if (upgrade.purchased && key.includes('staking_apy')) {
+                const tierMatch = key.match(/\d+$/);
+                if (tierMatch) {
+                    const tier = parseInt(tierMatch[0]);
+                    // 0.05% base per tier with 1.15x scaling
+                    stakingAPRBonus += 0.05 * Math.pow(1.15, tier - 1);
+                }
+            }
+        });
+    }
+
+    return stakingAPRBonus;
+}
+
+/**
+ * Update the staking APR display with actual bonus value
+ */
+function updateStakingAPRDisplay() {
+    const baseAPR = 0.1; // 0.1% base
+    const bonusAPR = getStakingAPRBonus();
+    const totalAPR = baseAPR + bonusAPR;
+
+    const aprElement = document.getElementById('staking-apr-rate');
+    if (aprElement) {
+        aprElement.textContent = totalAPR.toFixed(2) + '%';
+    }
 }
 
 /**
@@ -37,9 +75,15 @@ function processStakingEarnings() {
     // Get skill tree staking bonus
     const stakingBonus = (typeof getStakingBonus === 'function') ? getStakingBonus() : 1;
 
+    // Get rugpull staking APR bonus (as decimal, e.g., 0.05 = 0.05%)
+    const rugpullAPRBonus = getStakingAPRBonus();
+
+    // Calculate effective APR rate: base 0.1% + rugpull bonus
+    const effectiveAPRRate = APR_RATE + (rugpullAPRBonus / 100);
+
     // Calculate BTC staking earnings
     if (stakedBTC > 0) {
-        const btcEarnings = stakedBTC * APR_RATE * stakingBonus;
+        const btcEarnings = stakedBTC * effectiveAPRRate * stakingBonus;
         btcEarned = btcEarnings;
         const btcCashValue = btcEarnings * btcPrice;
         totalEarnings += btcCashValue;
@@ -47,7 +91,7 @@ function processStakingEarnings() {
 
     // Calculate ETH staking earnings
     if (stakedETH > 0) {
-        const ethEarnings = stakedETH * APR_RATE * stakingBonus;
+        const ethEarnings = stakedETH * effectiveAPRRate * stakingBonus;
         ethEarned = ethEarnings;
         const ethCashValue = ethEarnings * ethPrice;
         totalEarnings += ethCashValue;
@@ -55,7 +99,7 @@ function processStakingEarnings() {
 
     // Calculate DOGE staking earnings
     if (stakedDOGE > 0) {
-        const dogeEarnings = stakedDOGE * APR_RATE * stakingBonus;
+        const dogeEarnings = stakedDOGE * effectiveAPRRate * stakingBonus;
         dogeEarned = dogeEarnings;
         const dogeCashValue = dogeEarnings * dogePrice;
         totalEarnings += dogeCashValue;
@@ -204,6 +248,17 @@ function unstakeCrypto(crypto, percentage) {
  * Update staking UI display
  */
 function updateStakingUI() {
+    // Get staking bonuses from purchased upgrades
+    let aprRate = APR_RATE;
+    let earningsBoostMultiplier = 1;
+
+    if (typeof getSkillBonus === 'function') {
+        const stakingAPRBonus = getSkillBonus('staking_apy') || 0;
+        const earningsBoost = getSkillBonus('earnings_boost') || 0;
+        aprRate = APR_RATE * (1 + stakingAPRBonus / 100);
+        earningsBoostMultiplier = 1 + earningsBoost / 100;
+    }
+
     // Update BTC staking display
     const btcStakedEl = document.getElementById('btc-staked-amount');
     const btcAprEl = document.getElementById('btc-apr-display');
@@ -211,7 +266,7 @@ function updateStakingUI() {
         btcStakedEl.textContent = (typeof formatCryptoYield === 'function') ? formatCryptoYield(stakedBTC) : stakedBTC.toFixed(8);
     }
     if (btcAprEl && stakedBTC > 0) {
-        const btcEarningsPerInterval = stakedBTC * APR_RATE * btcPrice;
+        const btcEarningsPerInterval = stakedBTC * aprRate * btcPrice * earningsBoostMultiplier;
         const btcEarningsPerHour = btcEarningsPerInterval * (3600 / 2); // 1800 intervals per hour
         btcAprEl.textContent = `$${(typeof formatNumberForDisplay === 'function') ? formatNumberForDisplay(btcEarningsPerHour) : btcEarningsPerHour.toFixed(2)}/hr`;
     } else if (btcAprEl) {
@@ -225,7 +280,7 @@ function updateStakingUI() {
         ethStakedEl.textContent = (typeof formatCryptoYield === 'function') ? formatCryptoYield(stakedETH) : stakedETH.toFixed(8);
     }
     if (ethAprEl && stakedETH > 0) {
-        const ethEarningsPerInterval = stakedETH * APR_RATE * ethPrice;
+        const ethEarningsPerInterval = stakedETH * aprRate * ethPrice * earningsBoostMultiplier;
         const ethEarningsPerHour = ethEarningsPerInterval * (3600 / 2);
         ethAprEl.textContent = `$${(typeof formatNumberForDisplay === 'function') ? formatNumberForDisplay(ethEarningsPerHour) : ethEarningsPerHour.toFixed(2)}/hr`;
     } else if (ethAprEl) {
@@ -239,7 +294,7 @@ function updateStakingUI() {
         dogeStakedEl.textContent = (typeof formatCryptoYield === 'function') ? formatCryptoYield(stakedDOGE) : stakedDOGE.toFixed(2);
     }
     if (dogeAprEl && stakedDOGE > 0) {
-        const dogeEarningsPerInterval = stakedDOGE * APR_RATE * dogePrice;
+        const dogeEarningsPerInterval = stakedDOGE * aprRate * dogePrice * earningsBoostMultiplier;
         const dogeEarningsPerHour = dogeEarningsPerInterval * (3600 / 2);
         dogeAprEl.textContent = `$${(typeof formatNumberForDisplay === 'function') ? formatNumberForDisplay(dogeEarningsPerHour) : dogeEarningsPerHour.toFixed(2)}/hr`;
     } else if (dogeAprEl) {

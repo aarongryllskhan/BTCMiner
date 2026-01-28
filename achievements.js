@@ -194,7 +194,8 @@ function checkAchievements() {
 
         // ========== EARNINGS MILESTONES ==========
         if (achievement.category === 'earnings' && achievement.threshold) {
-            if (lifetimeEarnings >= achievement.threshold) {
+            const totalLifetimeEarnings = (typeof window !== 'undefined' && window.rugpullState?.lifetimeEarningsDisplay || 0) + lifetimeEarnings;
+            if (totalLifetimeEarnings >= achievement.threshold) {
                 unlocked = true;
             }
         }

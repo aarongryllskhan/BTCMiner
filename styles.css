@@ -1,6 +1,53 @@
         :root { --btc: #f7931a; --bg: #050505; --panel: #111; --green: #00ff88; --red: #ff3344; --border: #222; }
         html { touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px 20px 35px 20px; overflow: hidden; height: 100vh; box-sizing: border-box; overflow-x: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #000000;
+            background-attachment: fixed;
+            background-color: #000000;
+            color: #fff;
+            margin: 0;
+            padding: 20px 20px 35px 20px;
+            overflow: hidden;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            position: relative;
+            will-change: auto;
+        }
+
+        /* Pure black background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            pointer-events: none;
+            z-index: 0;
+            will-change: auto;
+        }
+
+
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Ensure modals don't expand the page */
+        #hacking-modal,
+        #whack-modal,
+        #network-modal {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
         #dollar-balance { font-size: 1.5rem; }
 
         /* Coin Rain Animation */
@@ -8,7 +55,127 @@
 
 
         #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; }
+
+        /* Left panel - Mining section with subtle pattern */
+        #main-layout > div:first-child {
+            position: relative;
+            background-image:
+                linear-gradient(90deg, transparent 48%, rgba(247, 147, 26, 0.03) 49%, rgba(247, 147, 26, 0.03) 51%, transparent 52%),
+                linear-gradient(0deg, transparent 48%, rgba(51, 168, 255, 0.02) 49%, rgba(51, 168, 255, 0.02) 51%, transparent 52%);
+            background-size:
+                250px 250px,
+                250px 250px;
+            background-position:
+                0 0,
+                0 0;
+            background-attachment: fixed;
+        }
+
+        /* Right panel - Controls section with subtle pattern */
+        #main-layout > div:last-child {
+            position: relative;
+            background-image:
+                linear-gradient(180deg, transparent 48%, rgba(51, 168, 255, 0.02) 49%, rgba(51, 168, 255, 0.02) 51%, transparent 52%),
+                linear-gradient(90deg, transparent 48%, rgba(247, 147, 26, 0.02) 49%, rgba(247, 147, 26, 0.02) 51%, transparent 52%);
+            background-size:
+                250px 250px,
+                250px 250px;
+            background-position:
+                0 0,
+                0 0;
+            background-attachment: fixed;
+        }
+
+        .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; }
+
+        /* Manual Hash Buttons - Lightweight patterns */
+        #manual-hash-btc-btn::before,
+        #manual-hash-eth-btn::before,
+        #manual-hash-doge-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(45deg, transparent 48%, rgba(255, 255, 255, 0.03) 49%, rgba(255, 255, 255, 0.03) 51%, transparent 52%);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #manual-hash-btc-btn,
+        #manual-hash-eth-btn,
+        #manual-hash-doge-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #manual-hash-btc-btn span,
+        #manual-hash-eth-btn span,
+        #manual-hash-doge-btn span,
+        #manual-hash-btc-btn img,
+        #manual-hash-eth-btn img,
+        #manual-hash-doge-btn img,
+        #manual-hash-btc-btn br,
+        #manual-hash-eth-btn br,
+        #manual-hash-doge-btn br {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Power Supply Button Pattern */
+        #upgrade-power-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(90deg, transparent 48%, rgba(0, 255, 136, 0.04) 49%, rgba(0, 255, 136, 0.04) 51%, transparent 52%),
+                linear-gradient(0deg, transparent 48%, rgba(0, 255, 136, 0.03) 49%, rgba(0, 255, 136, 0.03) 51%, transparent 52%);
+            background-size: 60px 60px, 60px 60px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #upgrade-power-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #upgrade-power-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, rgba(0, 255, 136, 0.1) 0%, transparent 50%, rgba(0, 255, 136, 0.1) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Panel - Solid dark grey background */
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #1a1a1a;
+            pointer-events: none;
+            z-index: 1;
+            border-radius: 12px;
+        }
+
+        .panel > * {
+            position: relative;
+            z-index: 2;
+        }
 
         /* Constrain utility buttons on all screen sizes */
         .panel:first-child > div:first-of-type {
@@ -41,9 +208,23 @@
         }
 
         /* Desktop refinement */
-        @media (min-width: 1025px) {
+        @media (min-width: 1300px) {
             .panel:first-child {
                 max-width: 100%;
+            }
+
+            /* Ensure desktop button layout is on top */
+            .desktop-button-layout {
+                z-index: 1000 !important;
+                pointer-events: auto !important;
+            }
+
+            .desktop-button-layout > div {
+                pointer-events: auto !important;
+            }
+
+            .desktop-button-layout button {
+                pointer-events: auto !important;
             }
 
             .panel:first-child > div:first-of-type > div:last-child > button {
@@ -53,43 +234,57 @@
                 padding: 6px 10px !important;
             }
 
-            /* Desktop: Show store button next to RUGPULL */
-            #rugpull-store-btn {
-                display: inline-block !important;
-                font-size: 0.75rem !important;
-                padding: 4px 12px !important;
-                height: 32px !important;
+            /* Show desktop RUGPULL section in normal flow */
+            #desktop-rugpull-section {
                 display: flex !important;
-                align-items: center !important;
+            }
+
+            #rugpull-store-btn-desktop {
+                display: flex !important;
+            }
+
+            /* Hide overlay RUGPULL button on desktop */
+            .desktop-button-layout > div:first-child {
+                display: none !important;
+            }
+
+            /* Hide mobile RUGPULL section on desktop */
+            #mobile-rugpull-section {
+                display: none !important;
             }
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 1299px) {
             body { padding: 6px 6px 6px 6px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-top: 85px !important; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-top: 50px !important; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; padding-top: 0 !important; }
             .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
             .stat-box b { word-break: break-word; }
 
             /* Mobile portfolio section - give it proper spacing */
-            .nw-label { display: block; margin-bottom: 8px; order: -1; position: relative; z-index: 10; }
+            .nw-label { display: block; margin-bottom: 4px !important; margin-top: 0 !important; padding-top: 0; order: -1; position: relative; z-index: 10; font-size: 1.8rem !important; }
             .nw-amount { margin-bottom: 8px; }
 
-            /* On mobile, position buttons container as column */
-            .desktop-button-layout { position: absolute !important; top: 6px !important; left: 6px !important; right: 6px !important; display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: stretch !important; z-index: 100 !important; padding: 0 !important; margin: 0 !important; background: transparent !important; pointer-events: auto !important; }
+            /* On mobile, position buttons container as row above content */
+            .desktop-button-layout { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: center !important; z-index: 100 !important; padding: 6px !important; margin: 0 !important; background: transparent !important; pointer-events: auto !important; }
 
             /* Show utility buttons horizontally at the top */
             .desktop-button-layout > div:last-child { order: -1 !important; margin: 0 !important; display: flex !important; flex-direction: row !important; gap: 2px !important; flex-wrap: wrap !important; width: 100% !important; align-items: stretch !important; justify-content: center !important; }
             .desktop-button-layout > div:last-child > button { padding: 3px 6px !important; font-size: 0.45rem !important; height: 26px !important; flex: 1 1 auto !important; white-space: nowrap !important; min-width: 45px !important; }
 
-            /* Position RUGPULL button below the utility buttons */
-            .desktop-button-layout > div:first-child { position: static !important; left: auto !important; top: auto !important; transform: none !important; width: 100% !important; margin: 0 !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
+            /* Position RUGPULL button centered below the utility buttons */
+            .desktop-button-layout > div:first-child { position: static !important; left: auto !important; top: auto !important; transform: none !important; width: auto !important; margin: 0 !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
 
-            /* RUGPULL STORE button styling for mobile - show next to RUGPULL */
+            /* Hide desktop version of RUGPULL STORE on mobile */
             #rugpull-store-btn {
-                display: inline-block !important;
+                display: none !important;
+            }
+
+            /* Show mobile version of RUGPULL STORE on mobile, positioned below RUGPULL button */
+            #rugpull-store-btn-mobile {
+                display: block !important;
                 font-size: 0.5rem !important;
                 padding: 4px 8px !important;
             }
@@ -108,6 +303,33 @@
             .stat-box { padding: 4px 8px !important; margin-bottom: 2px !important; }
             .stat-box span { margin-bottom: 1px !important; }
             .stat-box b { font-size: 0.9rem !important; }
+
+            /* Pin achievement button to the bottom on mobile */
+            #achievements-btn {
+                margin-top: auto !important;
+                order: 999 !important;
+            }
+        }
+
+        @media (min-width: 770px) and (max-width: 1299px) {
+            /* Show desktop RUGPULL section in normal flow on tablets */
+            #desktop-rugpull-section {
+                display: flex !important;
+            }
+
+            #rugpull-store-btn-desktop {
+                display: flex !important;
+            }
+
+            /* Hide overlay RUGPULL button on tablets */
+            .desktop-button-layout > div:first-child {
+                display: none !important;
+            }
+
+            /* Hide mobile RUGPULL section on tablets */
+            #mobile-rugpull-section {
+                display: none !important;
+            }
         }
 
         @media (max-width: 768px) {
@@ -290,7 +512,7 @@
             .u-item { padding: 10px; margin-bottom: 8px; }
         }
         
-        .nw-label { font-size: 1.5rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
+        .nw-label { font-size: 1.5rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; margin-top: 0 !important; padding-top: 0 !important; margin-bottom: 8px; }
         .nw-amount {
             font-size: 4.5rem;
             font-weight: 950;
@@ -427,7 +649,14 @@
         }
 
         .mine-btn {
-            transition: transform 0.05s, box-shadow 0.2s, filter 0.2s;
+            transition: transform 0.03s ease-out, box-shadow 0.03s ease-out, filter 0.2s;
+        }
+
+        /* Active state class for manual touch feedback */
+        .mine-btn.active {
+            transform: scale(0.94) translateY(3px);
+            box-shadow: 0 0 15px rgba(247, 147, 26, 0.5);
+            transition: transform 0.03s ease-in, box-shadow 0.03s ease-in;
         }
 
         /* Mobile touch feedback */
@@ -703,7 +932,7 @@ button:disabled:hover {
             border-left-width: 1px;
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 1299px) {
             #news-ticker-overlay {
                 max-height: 60px;
             }
@@ -865,6 +1094,9 @@ button:disabled:hover {
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 1000;
+            position: relative;
+            visibility: visible !important;
         }
 
         .modal-close:hover {
@@ -1101,7 +1333,7 @@ button:disabled:hover {
             padding: 20px;
             max-width: 350px;
             box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
-            z-index: 9999;
+            z-index: 10010;
             animation: slideIn 0.5s ease, slideOut 5s ease forwards;
             pointer-events: none;
             transition: top 0.3s ease;
@@ -1546,5 +1778,92 @@ button:disabled:hover {
             #cookie-consent-banner > div > div:last-child button {
                 width: 100% !important;
             }
+
+            /* Disable horizontal scrolling on mobile for minigame modals */
+            #hacking-modal,
+            #whack-modal,
+            #whack-results-modal,
+            #network-modal {
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+            }
+
+            #hacking-modal > div,
+            #whack-modal > div,
+            #network-modal > div {
+                overflow-x: hidden !important;
+                max-width: 100vw !important;
+                width: 100vw !important;
+                box-sizing: border-box;
+            }
+
+            /* Prevent background scrolling when minigame modals are open */
+            body.minigame-modal-open {
+                overflow: hidden !important;
+            }
+
+            /* Ensure minigame modals don't expand the viewport */
+            #hacking-modal,
+            #whack-modal,
+            #network-modal {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+            }
+
+            /* Hide desktop RUGPULL button from header on mobile */
+            .desktop-button-layout > div:first-child {
+                display: none !important;
+            }
+
+            /* Mobile RUGPULL section styling - side by side */
+            #mobile-rugpull-section {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 8px !important;
+                margin-bottom: 12px !important;
+                align-items: stretch !important;
+            }
+
+            #rugpull-btn-mobile {
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+
+            #rugpull-store-btn-mobile-main {
+                display: block !important;
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+        }
+
+        /* Large desktop: bigger title */
+        @media (min-width: 1561px) {
+            .nw-label { font-size: 2rem !important; }
+        }
+
+        /* Very small screens: bigger title and move up */
+        @media (max-width: 414px) {
+            .nw-label {
+                font-size: 1.8rem !important;
+                margin-top: -4px !important;
+                margin-bottom: 4px !important;
+            }
+        }
+
+        /* Screens below 571px: center text and make smaller so it fits in 1 row */
+        @media (max-width: 570px) {
+            .nw-label {
+                font-size: 1.1rem !important;
+                text-align: center !important;
+                margin-bottom: 8px !important;
+                margin-top: 0 !important;
+            }
+            .panel { padding-top: 65px !important; }
         }
 

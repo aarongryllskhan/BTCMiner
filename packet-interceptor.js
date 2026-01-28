@@ -1,4 +1,4 @@
-// ============== DATA PACKET INTERCEPTOR MINIGAME ==============
+// ============== COIN SNAG MINIGAME ==============
 
 let packetGameState = {
     isRunning: false,
@@ -20,16 +20,41 @@ let packetGameState = {
 };
 
 const CRYPTO_TYPES = [
-    { name: 'BTC', symbol: '₿', color: '#f7931a' },
-    { name: 'ETH', symbol: 'Ξ', color: '#627eea' },
-    { name: 'DOGE', symbol: 'Ð', color: '#c2a633' }
+    { name: 'BTC', symbol: '₿', color: '#f7931a', imagePath: 'bitcointoken.png', sizeMultiplier: 1.0 },
+    { name: 'ETH', symbol: 'Ξ', color: '#627eea', imagePath: 'ethcoin.png', sizeMultiplier: 1.12 },
+    { name: 'DOGE', symbol: 'Ð', color: '#c2a633', imagePath: 'dogecoin.png', sizeMultiplier: 1.0 }
 ];
+
+// Preload images
+const cryptoImages = {};
+CRYPTO_TYPES.forEach(crypto => {
+    const img = new Image();
+    img.src = crypto.imagePath;
+    cryptoImages[crypto.name] = img;
+});
 
 // Abbreviate large numbers (e.g., 1500000 -> "1.500M")
 function abbreviateNumber(num) {
-    if (num >= 1e9) return (num / 1e9).toFixed(3) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(3) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(3) + 'K';
+    if (num >= 1e60) return (num / 1e60).toFixed(2) + 'Nmdc';
+    if (num >= 1e57) return (num / 1e57).toFixed(2) + 'O/Odc';
+    if (num >= 1e54) return (num / 1e54).toFixed(2) + 'Spdc';
+    if (num >= 1e51) return (num / 1e51).toFixed(2) + 'Sxdc';
+    if (num >= 1e48) return (num / 1e48).toFixed(2) + 'Qdc';
+    if (num >= 1e45) return (num / 1e45).toFixed(2) + 'Qdc';
+    if (num >= 1e42) return (num / 1e42).toFixed(2) + 'Tdc';
+    if (num >= 1e39) return (num / 1e39).toFixed(2) + 'U/Udc';
+    if (num >= 1e36) return (num / 1e36).toFixed(2) + 'D/Ddc';
+    if (num >= 1e33) return (num / 1e33).toFixed(2) + 'Dc';
+    if (num >= 1e30) return (num / 1e30).toFixed(2) + 'N';
+    if (num >= 1e27) return (num / 1e27).toFixed(2) + 'O';
+    if (num >= 1e24) return (num / 1e24).toFixed(2) + 'Sep';
+    if (num >= 1e21) return (num / 1e21).toFixed(2) + 'S';
+    if (num >= 1e18) return (num / 1e18).toFixed(2) + 'Qa';
+    if (num >= 1e15) return (num / 1e15).toFixed(2) + 'Q';
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
     return num.toFixed(0);
 }
 
@@ -65,9 +90,12 @@ function initPacketInterceptorGame(difficulty = 'EASY') {
         speedEscalation = 0.7; // Speed increases by 70% by end
     }
 
-    // On desktop, increase speed for faster gameplay (mobile keeps normal speed)
-    if (!isMobile) {
-        baseSpeed *= 1.4; // 40% faster on desktop
+    // Adjust speed based on screen size for better mobile UX
+    if (isMobile) {
+        baseSpeed *= 1.0; // Same speed on mobile
+        spawnRate *= 1.0; // Same spawn rate on mobile
+    } else {
+        baseSpeed *= 1.0; // Same speed on desktop
     }
 
     packetGameState.speedEscalation = speedEscalation;
@@ -97,6 +125,7 @@ function createPacketInterceptorModal() {
         justify-content: center;
         z-index: 10000;
         font-family: Arial, sans-serif;
+        overflow: hidden;
     `;
 
     // Create canvas for game
@@ -130,10 +159,9 @@ function createPacketInterceptorModal() {
 }
 
 function handleCryptoClick(event) {
-    if (!packetGameState.isRunning) return;
+    if (!packetGameState.isRunning || !packetGameState.canvasRect) return;
 
-    const canvas = packetGameState.canvas;
-    const rect = canvas.getBoundingClientRect();
+    const rect = packetGameState.canvasRect;
     const clickX = event.clientX - rect.left;
     const clickY = event.clientY - rect.top;
 
@@ -141,11 +169,10 @@ function handleCryptoClick(event) {
 }
 
 function handleCryptoTouch(event) {
-    if (!packetGameState.isRunning) return;
+    if (!packetGameState.isRunning || !packetGameState.canvasRect) return;
 
     event.preventDefault();
-    const canvas = packetGameState.canvas;
-    const rect = canvas.getBoundingClientRect();
+    const rect = packetGameState.canvasRect;
 
     for (let touch of event.touches) {
         const touchX = touch.clientX - rect.left;
@@ -237,15 +264,15 @@ function spawnCryptoSymbol() {
     packetGameState.cryptoSymbols.push({
         x: x,
         y: y,
-        vx: packetGameState.baseSpeed * packetGameState.speed,
         vy: (Math.random() - 0.5) * 100 * packetGameState.speed,
         type: cryptoType.name,
         symbol: cryptoType.symbol,
         color: cryptoType.color,
         value: usdValue,
-        size: 50 + Math.random() * 20,
+        size: 50, // Fixed size - coins stay same scale
         rotation: 0,
-        rotationSpeed: (Math.random() - 0.5) * 6
+        rotationSpeed: (Math.random() - 0.5) * 6,
+        sizeMultiplier: cryptoType.sizeMultiplier || 1.0
     });
 }
 
@@ -258,6 +285,13 @@ function gameLoopPacketInterceptor() {
     const now = Date.now();
     const elapsedSeconds = (now - packetGameState.gameStartTime) / 1000;
     packetGameState.gameTime = elapsedSeconds;
+
+    // Cache canvas rect to avoid expensive getBoundingClientRect calls on every click
+    if (!packetGameState.canvasRect || now % 100 < 16.67) {  // Update rect every ~100ms
+        if (packetGameState.canvas) {
+            packetGameState.canvasRect = packetGameState.canvas.getBoundingClientRect();
+        }
+    }
 
     // Check if game should end
     if (packetGameState.gameTime >= packetGameState.maxGameTime) {
@@ -281,7 +315,8 @@ function gameLoopPacketInterceptor() {
     // Update symbols
     for (let i = packetGameState.cryptoSymbols.length - 1; i >= 0; i--) {
         const symbol = packetGameState.cryptoSymbols[i];
-        symbol.x += symbol.vx / 60; // Assuming ~60fps
+        // Use baseSpeed with current speed multiplier instead of stored vx (keeps speed consistent)
+        symbol.x += (packetGameState.baseSpeed * packetGameState.speed) / 60;
         symbol.y += symbol.vy / 60;
         symbol.rotation += symbol.rotationSpeed / 60;
 
@@ -307,15 +342,62 @@ function gameLoopPacketInterceptor() {
     requestAnimationFrame(gameLoopPacketInterceptor);
 }
 
+function drawBlockchainBackground(ctx, canvas) {
+    // Simple fast background
+    ctx.fillStyle = '#0a0a1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw simple grid lines for visual interest
+    ctx.strokeStyle = 'rgba(100, 150, 255, 0.08)';
+    ctx.lineWidth = 1;
+
+    // Vertical lines
+    for (let x = 0; x < canvas.width; x += 100) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+    }
+
+    // Horizontal lines
+    for (let y = 0; y < canvas.height; y += 100) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+    }
+
+    // Add a couple glowing nodes
+    ctx.fillStyle = 'rgba(100, 200, 255, 0.1)';
+    ctx.beginPath();
+    ctx.arc(canvas.width / 3, canvas.height / 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(canvas.width * 0.7, canvas.height * 0.7, 2, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawHexagon(ctx, x, y, size) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = (i * 60 - 30) * Math.PI / 180;
+        const px = x + size * Math.cos(angle);
+        const py = y + size * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+}
+
 function drawPacketInterceptorGame() {
     const ctx = packetGameState.ctx;
     const canvas = packetGameState.canvas;
 
     if (!ctx || !canvas) return;
 
-    // Clear canvas
-    ctx.fillStyle = 'rgba(26, 26, 46, 0.1)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Draw blockchain background
+    drawBlockchainBackground(ctx, canvas);
 
     // Draw crypto symbols
     for (let symbol of packetGameState.cryptoSymbols) {
@@ -338,18 +420,42 @@ function drawPacketInterceptorGame() {
         ctx.arc(0, 0, symbol.size * 0.9, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Draw filled circle background
-        ctx.fillStyle = symbol.color + 'cc';
-        ctx.beginPath();
-        ctx.arc(0, 0, symbol.size * 0.85, 0, Math.PI * 2);
-        ctx.fill();
+        // Draw crypto image
+        const img = cryptoImages[symbol.type];
+        if (img && img.complete) {
+            // Normalize image size to match the symbol size regardless of original dimensions
+            let displaySize = symbol.size * 1.7;
 
-        // Draw crypto symbol
-        ctx.fillStyle = '#fff';
-        ctx.font = `bold ${Math.floor(symbol.size * 0.8)}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(symbol.symbol, 0, 0);
+            // Apply size multiplier for specific coins (e.g., ETH is slightly bigger)
+            displaySize *= symbol.sizeMultiplier;
+
+            // Calculate aspect ratio correction to maintain square display
+            const aspectRatio = img.width / img.height;
+            let drawWidth = displaySize;
+            let drawHeight = displaySize;
+
+            // If image is not square, adjust to fit in square without distortion
+            if (aspectRatio > 1) {
+                drawHeight = displaySize / aspectRatio;
+            } else if (aspectRatio < 1) {
+                drawWidth = displaySize * aspectRatio;
+            }
+
+            ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        } else {
+            // Fallback to circle if image not loaded
+            ctx.fillStyle = symbol.color + 'cc';
+            ctx.beginPath();
+            ctx.arc(0, 0, symbol.size * 0.85, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw crypto symbol
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${Math.floor(symbol.size * 0.8)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(symbol.symbol, 0, 0);
+        }
 
         ctx.restore();
     }
@@ -400,7 +506,7 @@ function drawPacketInterceptorHUD() {
 }
 
 function endPacketInterceptorGame(quit = false) {
-    console.log('[Packet Interceptor] endPacketInterceptorGame called, quit:', quit);
+    console.log('[Coin Snag] endPacketInterceptorGame called, quit:', quit);
 
     // Only remove the game modal, not if we're showing results
     if (packetGameState.modalElement && document.body.contains(packetGameState.modalElement)) {
@@ -415,7 +521,7 @@ function endPacketInterceptorGame(quit = false) {
 
     // If quit early, don't award rewards
     if (quit) {
-        console.log('[Packet Interceptor] User quit, not showing rewards');
+        console.log('[Coin Snag] User quit, not showing rewards');
         switchTab('minigames');
         return;
     }
@@ -423,12 +529,12 @@ function endPacketInterceptorGame(quit = false) {
     // Calculate rewards (no difficulty multiplier - harder difficulty is challenge, not reward)
     const baseReward = packetGameState.score;
     const totalReward = baseReward;
-    console.log('[Packet Interceptor] Calculated reward - Base:', baseReward, 'Packets caught:', packetGameState.symbolsCaught, 'Total USD:', totalReward);
+    console.log('[Coin Snag] Calculated reward - Base:', baseReward, 'Packets caught:', packetGameState.symbolsCaught, 'Total USD:', totalReward);
 
     // Update game state (add rewards to dollar balance)
     // This must happen BEFORE showing results so packetLastRewards is populated
     if (typeof updatePacketInterceptorStats === 'function') {
-        console.log('[Packet Interceptor] Calling updatePacketInterceptorStats');
+        console.log('[Coin Snag] Calling updatePacketInterceptorStats');
         updatePacketInterceptorStats(
             packetGameState.symbolsCaught,
             totalReward
@@ -436,12 +542,12 @@ function endPacketInterceptorGame(quit = false) {
     }
 
     // Show results (after stats are updated so packetLastRewards is available)
-    console.log('[Packet Interceptor] About to show results modal');
+    console.log('[Coin Snag] About to show results modal');
     showPacketInterceptorResults(totalReward);
 }
 
 function showPacketInterceptorResults(totalReward) {
-    console.log('[Packet Interceptor] Showing results modal, totalReward:', totalReward);
+    console.log('[Coin Snag] Showing results modal, totalReward:', totalReward);
 
     // Create results modal
     const resultsModal = document.createElement('div');
@@ -467,7 +573,7 @@ function showPacketInterceptorResults(totalReward) {
 
     const resultsContent = document.createElement('div');
     resultsContent.style.cssText = `
-        background: linear-gradient(135deg, rgba(255, 140, 0, 0.2) 0%, rgba(255, 140, 0, 0.1) 100%);
+        background: rgba(0, 0, 0, 0.9);
         border: 3px solid #ff8c00;
         border-radius: 16px;
         padding: 40px;
@@ -484,8 +590,8 @@ function showPacketInterceptorResults(totalReward) {
         // Show multi-currency breakdown
         rewardDisplay = `
             <div style="font-size: 0.9rem; margin-top: 10px;">
-                <div>₿ ${packetLastRewards.btc.toFixed(8)} BTC</div>
-                <div>Ξ ${packetLastRewards.eth.toFixed(8)} ETH</div>
+                <div>₿ ${packetLastRewards.btc >= 1 ? packetLastRewards.btc.toFixed(4) : packetLastRewards.btc.toFixed(8)} BTC</div>
+                <div>Ξ ${packetLastRewards.eth >= 1 ? packetLastRewards.eth.toFixed(4) : packetLastRewards.eth.toFixed(8)} ETH</div>
                 <div>Ð ${packetLastRewards.doge.toFixed(2)} DOGE</div>
                 <div style="margin-top: 8px;">💵 $${abbreviateNumber(packetLastRewards.usd)} USD</div>
                 <div style="color: #ffff00; font-weight: 800; margin-top: 8px;">Total: $${abbreviateNumber(packetLastRewards.totalUsd)}</div>
@@ -503,17 +609,26 @@ function showPacketInterceptorResults(totalReward) {
                     <div style="color: #ff8c00; font-size: 1.2rem; font-weight: 800;">${difficultyLabels[packetGameState.difficulty]}</div>
                 </div>
                 <div>
-                    <div style="color: #888; font-size: 0.9rem;">Packets</div>
+                    <div style="color: #888; font-size: 0.9rem;">Coins</div>
                     <div style="color: #00ff00; font-size: 1.2rem; font-weight: 800;">${packetGameState.symbolsCaught}</div>
-                </div>
-                <div>
-                    <div style="color: #888; font-size: 0.9rem;">Base Score</div>
-                    <div style="color: #ffff00; font-size: 1.2rem; font-weight: 800;">$${abbreviateNumber(baseReward)}</div>
                 </div>
             </div>
 
             <div style="border-top: 2px solid #ff8c00; border-bottom: 2px solid #ff8c00; padding: 20px 0; margin: 20px 0;">
-                <div style="color: #888; font-size: 0.95rem; margin-bottom: 15px;">YOUR REWARDS</div>
+                <div style="color: #888; font-size: 0.95rem; margin-bottom: 8px; font-weight: 700;">FORMULA BREAKDOWN</div>
+                <div style="color: #fff; font-size: 0.85rem; margin-bottom: 15px; text-align: center; line-height: 1.6;">
+                    <div>Coins Caught: ${packetGameState.symbolsCaught}</div>
+                    <div style="margin: 6px 0;">×</div>
+                    <div style="font-size: 0.8rem; color: #ffb81c;">Per Coin Base Value:</div>
+                    <div style="font-size: 0.75rem; color: #aaa; margin: 4px 0;">₿ BTC = $30 | Ξ ETH = $20 | Ð DOGE = $10</div>
+                    <div style="font-size: 0.8rem; color: #ffb81c; margin-top: 4px;">(Plus your Mining Rate USD Value if available)</div>
+                    <div style="margin: 6px 0;">= Total Reward</div>
+                </div>
+
+                <div style="color: #888; font-size: 0.95rem; margin-bottom: 15px; font-weight: 700; margin-top: 15px;">YOUR REWARDS</div>
+                <div style="font-size: 0.75rem; color: #aaa; margin-bottom: 12px; font-style: italic;">
+                    Paid as: 40% BTC • 35% ETH • 20% DOGE • 5% Cash
+                </div>
                 ${rewardDisplay}
             </div>
         </div>
@@ -526,13 +641,13 @@ function showPacketInterceptorResults(totalReward) {
     resultsModal.appendChild(resultsContent);
     resultsModal.id = 'packet-results-modal';
     document.body.appendChild(resultsModal);
-    console.log('[Packet Interceptor] Results modal appended to document body');
+    console.log('[Coin Snag] Results modal appended to document body');
 
     // Add close button handler that triggers coin spawn and switches tab
     const closeBtn = document.getElementById('packet-close-btn');
     if (closeBtn) {
         closeBtn.onclick = () => {
-            console.log('[Packet Interceptor] Claiming rewards and closing modal');
+            console.log('[Coin Snag] Claiming rewards and closing modal');
             // Trigger coin spawn explosion before closing
             if (typeof spawnPacketInterceptorRewardCoins === 'function') {
                 spawnPacketInterceptorRewardCoins();
@@ -541,6 +656,6 @@ function showPacketInterceptorResults(totalReward) {
             switchTab('minigames');
         };
     } else {
-        console.error('[Packet Interceptor] Close button not found!');
+        console.error('[Coin Snag] Close button not found!');
     }
 }

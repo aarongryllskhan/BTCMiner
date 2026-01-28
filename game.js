@@ -1,8 +1,25 @@
-    // Abbreviate large numbers with K/M/B suffix
+    // Abbreviate large numbers with K/M/B suffix and beyond
     function abbreviateNumber(num) {
-        if (num >= 1e9) return (num / 1e9).toFixed(3) + 'B';
-        if (num >= 1e6) return (num / 1e6).toFixed(3) + 'M';
-        if (num >= 1e3) return (num / 1e3).toFixed(3) + 'K';
+        if (num >= 1e60) return (num / 1e60).toFixed(2) + 'Nmdc';
+        if (num >= 1e57) return (num / 1e57).toFixed(2) + 'O/Odc';
+        if (num >= 1e54) return (num / 1e54).toFixed(2) + 'Spdc';
+        if (num >= 1e51) return (num / 1e51).toFixed(2) + 'Sxdc';
+        if (num >= 1e48) return (num / 1e48).toFixed(2) + 'Qdc';
+        if (num >= 1e45) return (num / 1e45).toFixed(2) + 'Qdc';
+        if (num >= 1e42) return (num / 1e42).toFixed(2) + 'Tdc';
+        if (num >= 1e39) return (num / 1e39).toFixed(2) + 'U/Udc';
+        if (num >= 1e36) return (num / 1e36).toFixed(2) + 'D/Ddc';
+        if (num >= 1e33) return (num / 1e33).toFixed(2) + 'Dc';
+        if (num >= 1e30) return (num / 1e30).toFixed(2) + 'N';
+        if (num >= 1e27) return (num / 1e27).toFixed(2) + 'O';
+        if (num >= 1e24) return (num / 1e24).toFixed(2) + 'Sep';
+        if (num >= 1e21) return (num / 1e21).toFixed(2) + 'S';
+        if (num >= 1e18) return (num / 1e18).toFixed(2) + 'Qa';
+        if (num >= 1e15) return (num / 1e15).toFixed(2) + 'Q';
+        if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+        if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+        if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+        if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
         return num.toFixed(0);
     }
 
@@ -90,6 +107,7 @@
     let hackingConsecutiveWins = 0;
     let hackingNextNotificationTime = 0;
     let hackingTotalRewardsEarned = 0;
+    let hackingLastRewards = { btc: 0, eth: 0, doge: 0, usd: 0, totalUsd: 0 }; // Last game rewards
     let hackingCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 }; // Track cooldown end times
 
     // Whack-A-Block Minigame State
@@ -130,9 +148,9 @@
     // Network Stress Test gets harder with each play
     // Difficulty scales based on games played
 
-    // Data Packet Interceptor Minigame State
+    // Coin Snag Minigame State
     let packetGameGamesPlayed = 0;
-    let packetGameGamesWon = 0; // Games where at least 1 packet was caught
+    let packetGameGamesWon = 0; // Games where at least 1 coin was caught
     let packetGameTotalRewardsEarned = 0;
     let packetLastRewards = { btc: 0, eth: 0, doge: 0, usd: 0, totalUsd: 0 };
     let packetCooldowns = { 'EASY': 0, 'MEDIUM': 0, 'HARD': 0 }; // Track cooldown end times
@@ -141,19 +159,19 @@
     let totalPowerAvailable = 0; // Total watts available
     let totalPowerUsed = 0; // Total watts being used
     const powerUpgrades = [
-        { id: 0, name: "Basic Power Strip", baseUsd: 5, basePower: 10 },
-        { id: 1, name: "Regulated PSU", baseUsd: 50, basePower: 100 },
-        { id: 2, name: "High-Efficiency PSU", baseUsd: 550, basePower: 1100 },
-        { id: 3, name: "Server-Grade PSU", baseUsd: 6000, basePower: 12000 },
-        { id: 4, name: "Mining Power Distribution Unit", baseUsd: 66000, basePower: 132000 },
-        { id: 5, name: "Modular Data Center Power System", baseUsd: 726000, basePower: 1450000 },
-        { id: 6, name: "Dedicated Substation Power Unit", baseUsd: 8000000, basePower: 16000000 },
-        { id: 7, name: "Industrial Grid Connection", baseUsd: 88000000, basePower: 176000000 },
-        { id: 8, name: "Hydroelectric Power Station", baseUsd: 970000000, basePower: 1940000000 },
-        { id: 9, name: "Nuclear Reactor Array", baseUsd: 10700000000, basePower: 21400000000 },
-        { id: 10, name: "Fusion Energy Complex", baseUsd: 117000000000, basePower: 235000000000 },
-        { id: 11, name: "Dyson Sphere Power Collector", baseUsd: 1290000000000, basePower: 2580000000000 },
-        { id: 12, name: "Stellar Energy Tapestry", baseUsd: 14200000000000, basePower: 28400000000000 }
+        { id: 0, name: "Basic Power Strip", baseUsd: 10, basePower: 25 },
+        { id: 1, name: "Regulated PSU", baseUsd: 100, basePower: 750 },
+        { id: 2, name: "High-Efficiency PSU", baseUsd: 1100, basePower: 4500 },
+        { id: 3, name: "Server-Grade PSU", baseUsd: 12000, basePower: 12000 },
+        { id: 4, name: "Mining Power Distribution Unit", baseUsd: 132000, basePower: 35000 },
+        { id: 5, name: "Modular Data Center Power System", baseUsd: 1452000, basePower: 120000 },
+        { id: 6, name: "Dedicated Substation Power Unit", baseUsd: 16000000, basePower: 450000 },
+        { id: 7, name: "Industrial Grid Connection", baseUsd: 176000000, basePower: 3000000 },
+        { id: 8, name: "Hydroelectric Power Station", baseUsd: 1940000000, basePower: 15000000 },
+        { id: 9, name: "Nuclear Reactor Array", baseUsd: 21400000000, basePower: 50000000 },
+        { id: 10, name: "Fusion Energy Complex", baseUsd: 235000000000, basePower: 250000000 },
+        { id: 11, name: "Dyson Sphere Power Collector", baseUsd: 2580000000000, basePower: 1200000000 },
+        { id: 12, name: "Stellar Energy Tapestry", baseUsd: 28400000000000, basePower: 5000000000 }
     ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentPower: 0 }));
 
     // Power requirements for mining equipment (in watts)
@@ -503,7 +521,7 @@
 
     // Bitcoin mining upgrades
     const btcUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.000000250 },
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 100, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.000000250 },
         { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.00011 },
         { id: 2, name: "GTX 1660 Super", baseUsd: 50, baseYield: 0.000385 },
         { id: 3, name: "RTX 5090 Rig", baseUsd: 550, baseYield: 0.001348 },
@@ -523,7 +541,7 @@
 
     // Ethereum mining upgrades - Balanced to match BTC/DOGE USD/sec earnings
     const ethUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00007143 },
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 100, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00007143 },
         { id: 1, name: "Single GPU Rig", baseUsd: 5, baseYield: 0.002857 },
         { id: 2, name: "RTX 4090 Miner", baseUsd: 50, baseYield: 0.009991 },
         { id: 3, name: "8-GPU Mining Rig", baseUsd: 550, baseYield: 0.03497 },
@@ -544,7 +562,7 @@
     // Dogecoin mining upgrades - Balanced to match BTC/ETH USD/sec earnings
     // All three currencies earn the same USD/sec at each tier (DOGE yields are 400x higher to compensate for $0.25 price)
     const dogeUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.01 },
+	{ id: 0, name: "Manual Hash Rate", baseUsd: 100, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.01 },
         { id: 1, name: "Basic Scrypt Miner", baseUsd: 5, baseYield: 40 },
         { id: 2, name: "L3+ ASIC Miner", baseUsd: 50, baseYield: 140 },
         { id: 3, name: "Mini DOGE Farm", baseUsd: 550, baseYield: 490 },
@@ -775,7 +793,8 @@ function loadGame() {
                 const powerUpgradeToUpdate = powerUpgrades.find(u => u.id === savedU.id);
                 if (powerUpgradeToUpdate) {
                     powerUpgradeToUpdate.level = savedU.level || 0;
-                    powerUpgradeToUpdate.currentUsd = savedU.currentUsd || powerUpgradeToUpdate.baseUsd;
+                    // Recalculate currentUsd based on level and current baseUsd (picks up balance changes)
+                    powerUpgradeToUpdate.currentUsd = Math.floor(powerUpgradeToUpdate.baseUsd * Math.pow(1.15, powerUpgradeToUpdate.level));
                     powerUpgradeToUpdate.currentPower = savedU.currentPower || 0;
                 }
             });
@@ -945,14 +964,26 @@ function loadGame() {
         // Apply offline boost multiplier if purchased (2x earnings)
         const offlineBoostMultiplier = (typeof getOfflineBoost === 'function') ? (1 + getOfflineBoost()) : 1;
 
+        // Calculate offline corrupt tokens (from token_generation upgrades)
+        const tokenGenerationRate = (typeof getTokenGenerationRate === 'function') ? getTokenGenerationRate() : 0;
+        const offlineCorruptTokens = tokenGenerationRate * cappedOfflineSeconds;
+
         const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds * offlineBoostMultiplier;
         const offlineEthEarnings = ethPerSec * cappedOfflineSeconds * offlineBoostMultiplier;
         const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds * offlineBoostMultiplier;
 
         // Calculate offline staking earnings (cash from staked crypto)
-        const APR_RATE = 0.001; // 0.1% per 2 seconds
+        let APR_RATE = 0.001; // 0.1% per 2 seconds
+        // Apply staking APR bonus from tier upgrades
+        if (typeof getSkillBonus === 'function') {
+            const stakingAPRBonus = getSkillBonus('staking_apy') || 0;
+            APR_RATE = APR_RATE * (1 + stakingAPRBonus / 100);  // stakingAPRBonus is in percentage form
+        }
         const stakingIntervals = cappedOfflineSeconds / 2; // Number of 2-second intervals (capped)
         let offlineStakingCash = 0;
+        // Apply earnings boost bonus to staking rewards
+        const earningsBoostBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('earnings_boost') : 0;
+        const stakingMultiplier = 1 + earningsBoostBonus;
 
         if (state.staking) {
             const stakedBTC = state.staking.stakedBTC || 0;
@@ -961,15 +992,15 @@ function loadGame() {
 
             if (stakedBTC > 0) {
                 const btcStakingEarnings = stakedBTC * APR_RATE * stakingIntervals;
-                offlineStakingCash += btcStakingEarnings * btcPrice;
+                offlineStakingCash += btcStakingEarnings * btcPrice * stakingMultiplier;
             }
             if (stakedETH > 0) {
                 const ethStakingEarnings = stakedETH * APR_RATE * stakingIntervals;
-                offlineStakingCash += ethStakingEarnings * ethPrice;
+                offlineStakingCash += ethStakingEarnings * ethPrice * stakingMultiplier;
             }
             if (stakedDOGE > 0) {
                 const dogeStakingEarnings = stakedDOGE * APR_RATE * stakingIntervals;
-                offlineStakingCash += dogeStakingEarnings * dogePrice;
+                offlineStakingCash += dogeStakingEarnings * dogePrice * stakingMultiplier;
             }
 
             // Add staking cash to dollar balance
@@ -977,6 +1008,13 @@ function loadGame() {
                 dollarBalance += offlineStakingCash;
                 lifetimeEarnings += offlineStakingCash;
                 sessionEarnings += offlineStakingCash;
+            }
+        }
+
+        // Add offline corrupt tokens
+        if (offlineCorruptTokens > 0) {
+            if (typeof rugpullCurrency !== 'undefined') {
+                rugpullCurrency += offlineCorruptTokens;
             }
         }
 
@@ -1010,6 +1048,7 @@ function loadGame() {
                 eth: offlineEthEarnings,
                 doge: offlineDogeEarnings,
                 stakingCash: offlineStakingCash,
+                corruptTokens: offlineCorruptTokens,
                 seconds: offlineSeconds,
                 wasCapped: wasTimeCaped,
                 cappedSeconds: cappedOfflineSeconds
@@ -1489,7 +1528,11 @@ function loadGame() {
         });
 
         // Apply power efficiency skill bonus (reduces consumption)
-        const powerEfficiency = typeof getPowerEfficiency === 'function' ? getPowerEfficiency() : 0;
+        // Use miner_efficiency bonus from tier upgrades (capped at 99%)
+        let powerEfficiency = 0;
+        if (typeof getSkillBonus === 'function') {
+            powerEfficiency = getSkillBonus('miner_efficiency') || 0;
+        }
         totalPowerUsed = rawPowerUsed * (1 - powerEfficiency);
     }
 
@@ -1509,8 +1552,12 @@ function loadGame() {
         if (!powerReq || powerReq <= 0) return powerReq;
         try {
             if (typeof getSkillBonus === 'function') {
-                const powerEfficiency = getSkillBonus('power_efficiency');
-                return Math.max(0, powerReq * (1 - powerEfficiency));
+                // Get both miner_efficiency (from tier upgrades) and power_efficiency (from meta-upgrades)
+                const minerEfficiency = getSkillBonus('miner_efficiency') || 0;
+                const powerEfficiency = getSkillBonus('power_efficiency') || 0;
+                // Combine both reductions (additive)
+                const totalReduction = Math.min(minerEfficiency + powerEfficiency, 0.99);
+                return Math.max(0, powerReq * (1 - totalReduction));
             }
             return powerReq;
         } catch (e) {
@@ -1752,8 +1799,8 @@ function loadGame() {
         }
     }
 
-    function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds) {
-        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds);
+    function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, corruptTokens, secondsOffline, wasCapped, cappedSeconds) {
+        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, corruptTokens, secondsOffline, wasCapped, cappedSeconds);
 
         const overlay = document.createElement('div');
         overlay.className = 'offline-modal-overlay';
@@ -1794,6 +1841,9 @@ function loadGame() {
                 cashDisplay = '$' + stakingCash.toFixed(2);
             }
             earningsHtml += `<div class="earnings" style="color: #4caf50;">💰 ${cashDisplay}</div>`;
+        }
+        if (corruptTokens > 0) {
+            earningsHtml += `<div class="earnings" style="color: #ffeb3b;">🔴 ${Math.floor(corruptTokens)} Corrupt Tokens</div>`;
         }
 
         // If no earnings, show a message
@@ -2301,7 +2351,7 @@ function loadGame() {
             totalPowerAvailable += u.basePower;
 
             // Update price with 1.2x multiplier
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.2, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
 
             // Track Basic Power Strip purchase for tutorial
             if (i === 0 && typeof trackPowerStripPurchase === 'function') {
@@ -2370,27 +2420,27 @@ function loadGame() {
         'EASY': {
             timeLimit: 15000,
             lives: 14,
-            spawnRate: 460, // milliseconds between block spawns (very slightly faster)
-            blockVisibility: 770, // milliseconds block stays visible (very slightly shorter)
-            simultaneousBlocks: 2, // number of blocks visible at once
+            spawnRate: 700, // milliseconds between block spawns (slower = easier)
+            blockVisibility: 950, // milliseconds block stays visible (longer = easier)
+            simultaneousBlocks: 1, // number of blocks visible at once (reduced for easier play)
             baseUsdValue: 50,  // $50 base - scales with progression
             cooldown: 180000 // 3 minute cooldown
         },
         'MEDIUM': {
             timeLimit: 15000,
             lives: 18,
-            spawnRate: 350, // milliseconds between block spawns (slightly slower)
-            blockVisibility: 650, // milliseconds block stays visible (longer)
-            simultaneousBlocks: 3, // number of blocks visible at once (reduced from 4)
+            spawnRate: 550, // milliseconds between block spawns (slower = easier)
+            blockVisibility: 800, // milliseconds block stays visible (longer = easier)
+            simultaneousBlocks: 2, // number of blocks visible at once
             baseUsdValue: 500,  // $500 base - scales with progression
             cooldown: 600000 // 10 minute cooldown
         },
         'HARD': {
             timeLimit: 15000,
             lives: 22,
-            spawnRate: 350, // milliseconds between block spawns (slightly slower than before)
-            blockVisibility: 650, // milliseconds block stays visible (longer than before)
-            simultaneousBlocks: 3, // number of blocks visible at once (reduced from 4)
+            spawnRate: 480, // milliseconds between block spawns (slower = easier)
+            blockVisibility: 760, // milliseconds block stays visible (longer = easier)
+            simultaneousBlocks: 2, // number of blocks visible at once (reduced for easier play)
             baseUsdValue: 2000,  // $2K base - scales with progression
             cooldown: 1200000 // 20 minute cooldown
         }
@@ -2415,23 +2465,26 @@ function loadGame() {
     }
 
     function initHackingMinigame(difficulty) {
+        // Check if minigame_unlock is purchased (unlocks all minigames at start)
+        const hasMinigameUnlock = (typeof metaUpgrades !== 'undefined' && metaUpgrades.minigame_unlock && metaUpgrades.minigame_unlock.purchased);
+
         // Check difficulty-specific unlock requirements
         let requiredEarnings = 0;
         let difficultyName = '';
 
         if (difficulty === 'EASY') {
-            requiredEarnings = 500000;
+            requiredEarnings = 0;
             difficultyName = 'EASY';
         } else if (difficulty === 'MEDIUM') {
-            requiredEarnings = 1000000;
+            requiredEarnings = 0;
             difficultyName = 'MEDIUM';
         } else if (difficulty === 'HARD') {
-            requiredEarnings = 5000000;
+            requiredEarnings = 0;
             difficultyName = 'HARD';
         }
 
-        if (lifetimeEarnings < requiredEarnings) {
-            alert(`🔒 ${difficultyName} Difficulty Locked!\n\nRequires $${requiredEarnings.toLocaleString()} lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
+        if (!hasMinigameUnlock && lifetimeEarnings < requiredEarnings) {
+            // Lock overlay is already displayed on button by updateHackingCooldownDisplays()
             return;
         }
 
@@ -2440,13 +2493,13 @@ function loadGame() {
         const cooldownEnd = hackingCooldowns[difficulty] || 0;
 
         if (now < cooldownEnd) {
-            const remainingSeconds = Math.ceil((cooldownEnd - now) / 1000);
-            alert(`⏱️ ${difficulty} difficulty is on cooldown!\n\nTry again in ${remainingSeconds} seconds.`);
+            // Cooldown timer is already displayed on button by updateHackingCooldownDisplays()
             return;
         }
 
         hackingGameDifficulty = difficulty;
         hackingGameActive = true;
+        console.log(`[HACKING] Starting ${difficulty} game`);
         const config = hackingDifficultyConfig[difficulty];
         hackingGameTimeLimit = config.timeLimit;
         hackingGameStartTime = Date.now();
@@ -2468,6 +2521,7 @@ function loadGame() {
         if (!modal) return;
 
         modal.style.display = 'flex';
+        // NOTE: Disabled to prevent layout breaking - document.body.classList.add('minigame-modal-open');
 
         // Hide previous results and show game content
         const resultMessage = document.getElementById('hacking-result-message');
@@ -2588,6 +2642,10 @@ function loadGame() {
 
         // Set cooldown for this difficulty
         hackingCooldowns[hackingGameDifficulty] = Date.now() + config.cooldown;
+        const cooldownSeconds = Math.ceil(config.cooldown / 1000);
+        console.log(`[HACKING] Setting ${hackingGameDifficulty} cooldown to ${config.cooldown}ms (${cooldownSeconds}s)`);
+        console.log('[HACKING] All cooldowns:', hackingCooldowns);
+        window.hackingCooldowns = hackingCooldowns; // Make it accessible in console
 
         if (won) {
             hackingGamesWon++;
@@ -2601,6 +2659,9 @@ function loadGame() {
 
             // Award rewards and get the amounts
             const rewards = awardHackingRewards(hackingGameDifficulty, finalMultiplier);
+
+            // Store rewards for display in results modal
+            hackingLastRewards = rewards;
 
             // Apply speed boost - ADDITIVE stacking
             if (speedBoostActive) {
@@ -2620,55 +2681,56 @@ function loadGame() {
                 console.log(`⚡ Speed boost activated: +${((speedBoostMultiplier - 1) * 100).toFixed(0)}% for ${config.boostDuration/60000} minutes`);
             }
 
-            // Show success message with actual rewards
-            const result = document.getElementById('hacking-result-message');
-            if (result) {
-                // Format crypto amounts
-                const formatCrypto = (amount, decimals = 4) => {
-                    if (amount >= 1) return amount.toFixed(decimals);
-                    return amount.toFixed(8);
-                };
-
-                // Calculate speed boost percentage (subtract 1 and convert to %)
-                const speedBoostPercent = ((speedBoostMultiplier - 1) * 100).toFixed(0);
-                const boostMinutesRemaining = Math.ceil((speedBoostEndTime - Date.now()) / 60000);
-
-                result.innerHTML = `<span style="color: #00ff88; font-size: 1.5rem;">✓ VULNERABILITIES PATCHED!</span><br>
-                    <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
-                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
-                        <div style="color: #fff; font-size: 0.9rem;">
-                            ₿ ${abbreviateNumber(rewards.btc)} BTC<br>
-                            Ξ ${abbreviateNumber(rewards.eth)} ETH<br>
-                            Ð ${abbreviateNumber(rewards.doge)} DOGE<br>
-                            💵 $${abbreviateNumber(rewards.totalUsd)}
-                        </div>
-                    </div>
-                    <div style="margin-top: 10px; color: #00ff88; font-weight: 700;">
-                        ⚡ Speed Boost: +${speedBoostPercent}% for ${boostMinutesRemaining}m
-                    </div>`;
-            }
-
-            // Check achievements
+            // Check achievements (delay to ensure UI is ready)
             if (typeof checkAchievements === 'function') {
-                checkAchievements();
+                setTimeout(() => {
+                    checkAchievements();
+                }, 100);
             }
         } else {
             hackingConsecutiveWins = 0;
-
-            const result = document.getElementById('hacking-result-message');
-            if (result) {
-                result.innerHTML = `<span style="color: #ff3344; font-size: 1.5rem;">✗ TIME EXPIRED</span><br>
-                    <span style="color: #888;">Better luck next time!</span>`;
-            }
         }
 
         // Update stats
         updateHackingStats();
 
-        // Hide code, show result
-        document.getElementById('hacking-code-container').style.display = 'none';
-        document.getElementById('hacking-result-message').style.display = 'block';
-        document.getElementById('hacking-close-btn').style.display = 'block';
+        // Close game modal and show results modal
+        const gameModal = document.getElementById('hacking-modal');
+        const resultsModal = document.getElementById('hacking-results-modal');
+
+        if (gameModal) gameModal.style.display = 'none';
+
+        // Populate results modal
+        if (resultsModal) {
+            // Update title
+            const titleEl = document.getElementById('hacking-results-title');
+            if (titleEl) {
+                titleEl.textContent = won ? '🔐 AUDIT COMPLETE' : '🔐 AUDIT FAILED';
+            }
+
+            // Update vulnerabilities found
+            const linesEl = document.getElementById('hacking-results-lines');
+            if (linesEl) linesEl.textContent = hackingVulnerabilitiesFound.length;
+
+            // Update rewards breakdown
+            const rewardsEl = document.getElementById('hacking-results-rewards-breakdown');
+            if (rewardsEl) {
+                if (won) {
+                    rewardsEl.innerHTML = `<div style="color: #f7931a; font-weight: 700; margin-bottom: 8px;">Rewards Earned:</div>
+                        <div style="color: #fff; font-size: 0.9rem; line-height: 1.6;">
+                            ₿ ${hackingLastRewards.btc >= 1 ? hackingLastRewards.btc.toFixed(4) : hackingLastRewards.btc.toFixed(8)} BTC<br>
+                            Ξ ${hackingLastRewards.eth >= 1 ? hackingLastRewards.eth.toFixed(4) : hackingLastRewards.eth.toFixed(8)} ETH<br>
+                            Ð ${hackingLastRewards.doge.toFixed(2)} DOGE<br>
+                            💵 $${abbreviateNumber(hackingLastRewards.totalUsd)}
+                        </div>`;
+                } else {
+                    rewardsEl.innerHTML = `<div style="color: #888;">No rewards earned</div>`;
+                }
+            }
+
+            // Show the results modal
+            resultsModal.style.display = 'flex';
+        }
 
         // Schedule next notification
         scheduleHackingNotification();
@@ -2682,7 +2744,7 @@ function loadGame() {
         // Get current rugpull/ascension level (defined in rugpull.js)
         const rugpullLevel = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
 
-        // Hash rate-based reward system: each line validated = $10 base + (BTC/sec × BTC price + ETH/sec × ETH price + DOGE/sec × DOGE price)
+        // Hash rate-based reward system: each line validated = $50 base + (BTC/sec × BTC price + ETH/sec × ETH price + DOGE/sec × DOGE price)
         const currentBtcPerSec = window.btcPerSec ?? btcPerSec ?? 0;
         const currentEthPerSec = window.ethPerSec ?? ethPerSec ?? 0;
         const currentDogePerSec = window.dogePerSec ?? dogePerSec ?? 0;
@@ -2693,9 +2755,9 @@ function loadGame() {
         // Number of lines validated (vulnerabilities found)
         const linesValidated = hackingVulnerabilitiesFound.length;
 
-        // Reward per line formula: $10 base + (current hash rate value in USD)
+        // Reward per line formula: $50 base + (current hash rate value in USD)
         const hashRateUsdValue = (currentBtcPerSec * currentBtcPrice) + (currentEthPerSec * currentEthPrice) + (currentDogePerSec * currentDogePrice);
-        const rewardPerLine = 10 + hashRateUsdValue;
+        const rewardPerLine = 50 + hashRateUsdValue;
 
         // Total base USD value = lines validated × reward per line
         let baseUsdValue = linesValidated * rewardPerLine;
@@ -2703,12 +2765,16 @@ function loadGame() {
         // Time bonus and consecutive wins bonus (already in multiplier parameter)
         const totalMultiplier = multiplier;
 
-        // POWERFUL Rugpull multiplier: 10x per rugpull level
-        // Rugpull 1 = 10x, Rugpull 2 = 20x, Rugpull 5 = 50x
-        const ascensionMultiplier = rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+        // Rugpull multiplier: 1.15x per rugpull level (exponential scaling like buildings)
+        // Rugpull 0 = 1x, Rugpull 1 = 1.15x, Rugpull 5 = 2.01x, Rugpull 10 = 4.05x
+        const ascensionMultiplier = Math.pow(1.15, rugpullLevel);
+
+        // Minigame reward bonus from skill tree purchases
+        const minigameRewardBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('minigame_rewards') : 0;
+        const minigameRewardMultiplier = 1 + minigameRewardBonus / 100;
 
         // Calculate total USD value after all multipliers
-        const totalUsdValue = baseUsdValue * totalMultiplier * ascensionMultiplier;
+        const totalUsdValue = baseUsdValue * totalMultiplier * ascensionMultiplier * minigameRewardMultiplier;
 
         // Award BTC (40% of total USD value, converted to BTC at current price)
         const btcUsdValue = totalUsdValue * 0.40;
@@ -2778,6 +2844,7 @@ function loadGame() {
         if (modal) {
             modal.style.display = 'none';
         }
+        // document.body.classList.remove('minigame-modal-open');
 
         // Spawn explosion coins when closing results
         if (vfxEnabled && hackingGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
@@ -2794,6 +2861,23 @@ function loadGame() {
         document.getElementById('hacking-code-container').style.display = 'block';
         document.getElementById('hacking-result-message').style.display = 'none';
         document.getElementById('hacking-close-btn').style.display = 'none';
+    }
+
+    function closeHackingResultsModal() {
+        const modal = document.getElementById('hacking-results-modal');
+        if (modal) modal.style.display = 'none';
+        // document.body.classList.remove('minigame-modal-open');
+
+        // Spawn explosion coins when closing results
+        if (vfxEnabled && hackingGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
+            // Use last rewards if we just won
+            const totalUsdValue = (hackingLastRewards?.btc * btcPrice || 0) + (hackingLastRewards?.eth * ethPrice || 0) + (hackingLastRewards?.doge * dogePrice || 0);
+            const coinCount = Math.max(80, Math.min(300, Math.floor(totalUsdValue / 10)));
+            spawnExplosionCoins('btc', coinCount / 4);
+            spawnExplosionCoins('eth', coinCount / 4);
+            spawnExplosionCoins('doge', coinCount / 4);
+            spawnExplosionCoins('usd', coinCount / 4);
+        }
     }
 
     function dismissHackingNotification() {
@@ -2994,9 +3078,9 @@ function loadGame() {
 
         // Unlock requirements for each difficulty
         const unlockRequirements = {
-            'EASY': 500000,
-            'MEDIUM': 1000000,
-            'HARD': 5000000
+            'EASY': 0,
+            'MEDIUM': 0,
+            'HARD': 0
         };
 
         // Update each difficulty button's cooldown overlay
@@ -3014,32 +3098,39 @@ function loadGame() {
 
             // Update locked state
             if (isLocked) {
-                lockedElement.style.display = 'flex';
+                lockedElement.style.visibility = 'visible';
+                lockedElement.style.pointerEvents = 'none';
                 lockedElement.innerHTML = `🔒<br>$${(unlockRequirements[difficulty] || 0).toLocaleString()}`;
                 cooldownElement.style.visibility = 'hidden';
-                buttonElement.style.cursor = 'not-allowed';
-                buttonElement.style.pointerEvents = 'none';
+                buttonElement.style.cursor = 'pointer';
+                buttonElement.style.opacity = '1';
                 buttonElement.dataset.locked = 'true';
             } else if (isOnCooldown) {
-                lockedElement.style.display = 'none';
+                lockedElement.style.visibility = 'hidden';
                 cooldownElement.style.visibility = 'visible';
-                buttonElement.style.cursor = 'not-allowed';
-                buttonElement.style.pointerEvents = 'none';
+                cooldownElement.style.opacity = '1';
+                cooldownElement.style.pointerEvents = 'none';
+                buttonElement.style.cursor = 'pointer';
                 buttonElement.style.opacity = '0.6';
+                buttonElement.style.pointerEvents = 'auto';
                 buttonElement.dataset.locked = 'false';
                 // Update timer
                 const remainingMs = cooldownEnd - now;
                 const remainingSeconds = Math.ceil(remainingMs / 1000);
                 const minutes = Math.floor(remainingSeconds / 60);
                 const seconds = remainingSeconds % 60;
-                cooldownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                cooldownElement.textContent = timerText;
+                if (difficulty === 'MEDIUM' || difficulty === 'HARD') {
+                    console.log(`[HACKING-COOLDOWN] ${difficulty} timer set to: "${timerText}", element visibility: ${cooldownElement.style.visibility}, opacity: ${cooldownElement.style.opacity}`);
+                }
             } else {
                 // Button is active and clickable
-                lockedElement.style.display = 'none';
+                lockedElement.style.visibility = 'hidden';
                 cooldownElement.style.visibility = 'hidden';
                 buttonElement.style.cursor = 'pointer';
-                buttonElement.style.pointerEvents = 'auto';
                 buttonElement.style.opacity = '1';
+                buttonElement.style.pointerEvents = 'auto';
                 buttonElement.dataset.locked = 'false';
             }
         });
@@ -3069,17 +3160,18 @@ function loadGame() {
             // Update locked state
             if (isLocked) {
                 lockedElement.style.display = 'flex';
+                lockedElement.style.pointerEvents = 'none';
                 lockedElement.innerHTML = `🔒<br>$${(whackUnlockRequirements[difficulty] || 0).toLocaleString()}`;
                 cooldownElement.style.display = 'none';
-                buttonElement.style.cursor = 'not-allowed';
-                buttonElement.style.pointerEvents = 'none';
+                buttonElement.style.cursor = 'pointer';
+                buttonElement.style.opacity = '1';
                 buttonElement.dataset.locked = 'true';
             } else if (isOnCooldown) {
                 lockedElement.style.display = 'none';
                 cooldownElement.style.removeProperty('display');
                 cooldownElement.style.setProperty('display', 'flex', 'important');
+                cooldownElement.style.pointerEvents = 'none';
                 buttonElement.style.cursor = 'not-allowed';
-                buttonElement.style.pointerEvents = 'none';
                 buttonElement.style.opacity = '0.6';
                 buttonElement.dataset.locked = 'false';
                 // Update timer
@@ -3093,7 +3185,6 @@ function loadGame() {
                 lockedElement.style.display = 'none';
                 cooldownElement.style.display = 'none';
                 buttonElement.style.cursor = 'pointer';
-                buttonElement.style.pointerEvents = 'auto';
                 buttonElement.style.opacity = '1';
                 buttonElement.dataset.locked = 'false';
             }
@@ -3136,9 +3227,12 @@ function loadGame() {
         }
 
         // Check if network stress test minigame is locked (requires $20k)
+        // Check if minigame_unlock is purchased (unlocks all minigames at start)
+        const hasMinigameUnlock = (typeof metaUpgrades !== 'undefined' && metaUpgrades.minigame_unlock && metaUpgrades.minigame_unlock.purchased);
+
         const networkLockedCard = document.getElementById('network-card-locked');
         if (networkLockedCard) {
-            if (lifetimeEarnings < 20000) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 20000) {
                 networkLockedCard.style.display = 'flex';
             } else {
                 networkLockedCard.style.display = 'none';
@@ -3148,7 +3242,7 @@ function loadGame() {
         // Check if whack-a-block minigame is locked (Easy requires $50k)
         const whackLockedCard = document.getElementById('whack-card-locked');
         if (whackLockedCard) {
-            if (lifetimeEarnings < 50000) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 50000) {
                 whackLockedCard.style.display = 'flex';
             } else {
                 whackLockedCard.style.display = 'none';
@@ -3158,7 +3252,7 @@ function loadGame() {
         // Check if hacking minigame is locked (requires $500k)
         const hackingLockedCard = document.getElementById('hacking-card-locked');
         if (hackingLockedCard) {
-            if (lifetimeEarnings < 500000) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 500000) {
                 hackingLockedCard.style.display = 'flex';
             } else {
                 hackingLockedCard.style.display = 'none';
@@ -3175,10 +3269,11 @@ function loadGame() {
 
         // Scale reward based on current earnings and ascension bonus
         // All difficulties scale with progression so they remain valuable forever
-        // Use same scaling as other minigames: rugpull multiplier (10x per level) + ascension bonus
-        const rugpullMultiplier = typeof rugpullLevel !== 'undefined' && rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+        // Use same scaling as other minigames: rugpull multiplier (1.15x per level, exponential) + ascension bonus + minigame reward bonus
+        const rugpullMultiplier = typeof rugpullLevel !== 'undefined' ? Math.pow(1.15, rugpullLevel) : 1;
         const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-        const totalUsdValue = totalReward * rugpullMultiplier * (1 + ascensionBonus);
+        const minigameRewardBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('minigame_rewards') : 0;
+        const totalUsdValue = totalReward * rugpullMultiplier * (1 + ascensionBonus) * (1 + minigameRewardBonus / 100);
 
         console.log(`[Packet Interceptor] Base Reward: $${totalReward}, Rugpull: ${rugpullMultiplier.toFixed(1)}x, Ascension: ${(ascensionBonus * 100).toFixed(1)}%, Final: $${totalUsdValue.toFixed(2)}`);
 
@@ -3239,6 +3334,7 @@ function loadGame() {
         saveGame();
     }
 
+
     function updatePacketCooldownDisplays() {
         const now = Date.now();
 
@@ -3255,8 +3351,8 @@ function loadGame() {
             if (isOnCooldown) {
                 cooldownElement.style.removeProperty('display');
                 cooldownElement.style.setProperty('display', 'flex', 'important');
+                cooldownElement.style.pointerEvents = 'none';
                 buttonElement.style.cursor = 'not-allowed';
-                buttonElement.style.pointerEvents = 'none';
                 buttonElement.style.opacity = '0.6';
                 buttonElement.dataset.locked = 'false';
                 // Update timer
@@ -3269,7 +3365,6 @@ function loadGame() {
                 // Button is active and clickable
                 cooldownElement.style.display = 'none';
                 buttonElement.style.cursor = 'pointer';
-                buttonElement.style.pointerEvents = 'auto';
                 buttonElement.style.opacity = '1';
                 buttonElement.dataset.locked = 'false';
             }
@@ -3297,7 +3392,7 @@ function loadGame() {
         }
 
         if (lifetimeEarnings < requiredEarnings) {
-            alert(`🔒 ${difficultyName} Difficulty Locked!\n\nRequires $${requiredEarnings.toLocaleString()} lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
+            // Lock overlay is already displayed on button by updateHackingCooldownDisplays()
             return;
         }
 
@@ -3306,8 +3401,7 @@ function loadGame() {
         const cooldownEnd = whackCooldowns[difficulty] || 0;
 
         if (now < cooldownEnd) {
-            const remainingSeconds = Math.ceil((cooldownEnd - now) / 1000);
-            alert(`⏱️ ${difficulty} difficulty is on cooldown!\n\nTry again in ${remainingSeconds} seconds.`);
+            // Cooldown timer is already displayed on button by updateHackingCooldownDisplays()
             return;
         }
 
@@ -3328,6 +3422,7 @@ function loadGame() {
         if (!modal) return;
 
         modal.style.display = 'flex';
+        // NOTE: Disabled to prevent layout breaking - document.body.classList.add('minigame-modal-open');
 
         // Reset display - hide results, show game
         const gameInfo = document.getElementById('whack-game-info');
@@ -3510,9 +3605,9 @@ function loadGame() {
             // Use actual blocks hit (clicked/suppressed)
             const blocksHit = whackGameBlocksHit;
 
-            // Reward per block formula: $10 base + (current hash rate value in USD)
+            // Reward per block formula: $50 base + (current hash rate value in USD)
             const hashRateUsdValue = (currentBtcPerSec * currentBtcPrice) + (currentEthPerSec * currentEthPrice) + (currentDogePerSec * currentDogePrice);
-            const rewardPerBlock = 10 + hashRateUsdValue;
+            const rewardPerBlock = 50 + hashRateUsdValue;
 
             // Total base USD value = blocks hit × reward per block
             let baseUsdValue = blocksHit * rewardPerBlock;
@@ -3524,10 +3619,14 @@ function loadGame() {
 
             // POWERFUL Rugpull multiplier: 10x per rugpull level
             // Rugpull 1 = 10x, Rugpull 2 = 20x, Rugpull 5 = 50x
-            const ascensionMultiplier = rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+            const ascensionMultiplier = Math.pow(1.15, rugpullLevel);
+
+            // Minigame reward bonus from skill tree purchases
+            const minigameRewardBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('minigame_rewards') : 0;
+            const minigameRewardMultiplier = 1 + minigameRewardBonus / 100;
 
             // Calculate total USD value after all multipliers
-            const totalUsdValue = baseUsdValue * scoreMultiplier * ascensionMultiplier;
+            const totalUsdValue = baseUsdValue * scoreMultiplier * ascensionMultiplier * minigameRewardMultiplier;
 
             // Award BTC (40% of total USD value, converted to BTC at current price)
             const btcUsdValue = totalUsdValue * 0.40;
@@ -3570,39 +3669,57 @@ function loadGame() {
         // Set cooldown
         whackCooldowns[whackGameDifficulty] = Date.now() + config.cooldown;
 
-        // Show results - hide game, show result
-        const resultsMessage = document.getElementById('whack-results-message');
-        if (resultsMessage) {
-            if (whackGameLivesRemaining > 0) {
-                // Format crypto amounts (4 decimals if >= 1, else 8 decimals)
-                const formatAmount = (amount) => {
-                    if (amount >= 1) return amount.toFixed(4);
-                    return amount.toFixed(8);
-                };
+        // Close game modal and show results modal
+        const gameModal = document.getElementById('whack-modal');
+        const resultsModal = document.getElementById('whack-results-modal');
 
-                resultsMessage.innerHTML = `<span style="color: #00ff88; font-size: 1.5rem;">✓ BLOCKS SUPPRESSED!</span><br>
-                    <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
-                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
-                        <div style="color: #fff; font-size: 0.9rem;">
-                            ₿ ${abbreviateNumber(whackLastRewards.btc)} BTC<br>
-                            Ξ ${abbreviateNumber(whackLastRewards.eth)} ETH<br>
-                            Ð ${abbreviateNumber(whackLastRewards.doge)} DOGE<br>
+        if (gameModal) gameModal.style.display = 'none';
+
+        // Populate results modal
+        if (resultsModal) {
+            // Update title based on win/loss
+            const titleEl = document.getElementById('whack-results-title');
+            if (titleEl) {
+                titleEl.textContent = whackGameLivesRemaining > 0 ? '⚡ VICTORY!' : '⚡ DEFEAT!';
+            }
+
+            // Update score display
+            const scoreEl = document.getElementById('whack-results-score');
+            if (scoreEl) scoreEl.textContent = whackGameBlocksHit;
+
+            // Update blocks hit display
+            const blocksEl = document.getElementById('whack-results-blocks');
+            if (blocksEl) blocksEl.textContent = whackGameBlocksHit;
+
+            // Update lives display
+            const livesEl = document.getElementById('whack-results-lives');
+            if (livesEl) livesEl.textContent = whackGameLivesRemaining;
+
+            // Update rewards breakdown
+            const rewardsEl = document.getElementById('whack-results-rewards-breakdown');
+            if (rewardsEl) {
+                if (whackGameLivesRemaining > 0) {
+                    rewardsEl.innerHTML = `<div style="color: #f7931a; font-weight: 700; margin-bottom: 8px;">Rewards Earned:</div>
+                        <div style="color: #fff; font-size: 0.9rem; line-height: 1.6;">
+                            ₿ ${whackLastRewards.btc >= 1 ? whackLastRewards.btc.toFixed(4) : whackLastRewards.btc.toFixed(8)} BTC<br>
+                            Ξ ${whackLastRewards.eth >= 1 ? whackLastRewards.eth.toFixed(4) : whackLastRewards.eth.toFixed(8)} ETH<br>
+                            Ð ${whackLastRewards.doge.toFixed(2)} DOGE<br>
                             💵 $${abbreviateNumber(whackLastRewards.totalUsd)}
                         </div>
-                    </div>`;
-            } else {
-                resultsMessage.innerHTML = `<span style="color: #ff3344; font-size: 1.5rem;">✗ OUT OF LIVES</span><br>
-                    <span style="color: #888;">Better luck next time!</span>`;
+                        <div style="font-size: 0.75rem; color: #aaa; margin-top: 10px; margin-bottom: 5px; font-style: italic;">
+                            Paid as: 40% BTC • 35% ETH • 20% DOGE • 5% Cash
+                        </div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 0px;">
+                            Base Reward: $50 + your mining hash rate value
+                        </div>`;
+                } else {
+                    rewardsEl.innerHTML = `<div style="color: #888;">No rewards earned</div>`;
+                }
             }
+
+            // Show the results modal
+            resultsModal.style.display = 'flex';
         }
-
-        // Hide game info (grid and instructions), show results and close button
-        const gameInfo = document.getElementById('whack-game-info');
-        const closeBtn = document.getElementById('whack-close-btn');
-
-        if (gameInfo) gameInfo.style.display = 'none';
-        if (resultsMessage) resultsMessage.style.display = 'block';
-        if (closeBtn) closeBtn.style.display = 'block';
 
         updateUI();
         saveGame();
@@ -3611,11 +3728,24 @@ function loadGame() {
     function closeWhackResultsModal() {
         const modal = document.getElementById('whack-results-modal');
         if (modal) modal.style.display = 'none';
+        // document.body.classList.remove('minigame-modal-open');
+
+        // Spawn explosion coins when closing results
+        if (vfxEnabled && whackGameGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
+            // Use last rewards if we just won
+            const totalUsdValue = whackLastRewards?.totalUsd || 0;
+            const coinCount = Math.max(15, Math.min(50, Math.floor(totalUsdValue / 50)));
+            spawnExplosionCoins('btc', coinCount / 4);
+            spawnExplosionCoins('eth', coinCount / 4);
+            spawnExplosionCoins('doge', coinCount / 4);
+            spawnExplosionCoins('usd', coinCount / 4);
+        }
     }
 
     function closeWhackModal() {
         const modal = document.getElementById('whack-modal');
         if (modal) modal.style.display = 'none';
+        // document.body.classList.remove('minigame-modal-open');
 
         // Spawn explosion coins when closing results
         if (vfxEnabled && whackGameGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
@@ -3635,7 +3765,8 @@ function loadGame() {
 
     function initNetworkMinigame() {
         // Check unlock requirement (starts unlocked, but scales with gameplay)
-        if (lifetimeEarnings < 20000) {
+        const hasMinigameUnlock = (typeof metaUpgrades !== 'undefined' && metaUpgrades.minigame_unlock && metaUpgrades.minigame_unlock.purchased);
+        if (!hasMinigameUnlock && lifetimeEarnings < 20000) {
             alert(`🔒 Network Stress Test Locked!\n\nRequires $20,000 lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);
             return;
         }
@@ -3668,6 +3799,7 @@ function loadGame() {
         if (!modal) return;
 
         modal.style.display = 'flex';
+        // NOTE: Disabled to prevent layout breaking - document.body.classList.add('minigame-modal-open');
 
         // Reset display - hide results, show game
         const gameInfo = document.getElementById('network-game-info');
@@ -3803,7 +3935,7 @@ function loadGame() {
         const successMultiplier = 0.5 + (damageRatio * 1.5);
 
         // Ascension multiplier
-        const ascensionMultiplier = rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+        const ascensionMultiplier = Math.pow(1.15, rugpullLevel);
 
         // Total estimated USD value
         const estimatedUsdValue = baseReward * successMultiplier * ascensionMultiplier;
@@ -3885,7 +4017,7 @@ function loadGame() {
             const successMultiplier = 0.5 + (damageRatio * 1.5);
 
             // POWERFUL Rugpull multiplier: 10x per rugpull level
-            const ascensionMultiplier = rugpullLevel > 0 ? (rugpullLevel * 10) : 1;
+            const ascensionMultiplier = Math.pow(1.15, rugpullLevel);
 
             // Calculate total USD value after all multipliers
             const totalUsdValue = baseReward * successMultiplier * ascensionMultiplier;
@@ -3940,12 +4072,25 @@ function loadGame() {
 
                 resultsMessage.innerHTML = `<span style="color: #00b4ff; font-size: 1.5rem;">✓ NETWORK DESTROYED!</span><br>
                     <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 8px;">Formula Breakdown:</div>
+                        <div style="color: #fff; font-size: 0.75rem; margin-bottom: 10px; text-align: left; line-height: 1.4;">
+                            <div>Damage Dealt: ${Math.floor(networkGameTotalDamage)}</div>
+                            <div>Base Reward: (Damage × $10) × Score Multiplier</div>
+                            <div>Games Won Bonus: ${networkGameGamesWon} consecutive wins</div>
+                            <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #666;">Total Multiplier: ${(Math.pow(1.15, ascensionLevel || 0) * (1 + (getSkillBonus ? getSkillBonus('minigame_rewards') : 0) / 100)).toFixed(3)}x</div>
+                        </div>
                         <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
                         <div style="color: #fff; font-size: 0.9rem;">
                             ₿ ${formatAmount(networkLastRewards.btc)} BTC<br>
                             Ξ ${formatAmount(networkLastRewards.eth)} ETH<br>
                             Ð ${formatAmount(networkLastRewards.doge)} DOGE<br>
                             💵 $${networkLastRewards.usd.toFixed(2)}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #aaa; margin-top: 10px; margin-bottom: 5px; font-style: italic;">
+                            Paid as: 40% BTC • 35% ETH • 20% DOGE • 5% Cash
+                        </div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 0px;">
+                            Base Reward: $10 per damage dealt
                         </div>
                     </div>`;
             } else {
@@ -3969,6 +4114,7 @@ function loadGame() {
     function closeNetworkModal() {
         const modal = document.getElementById('network-modal');
         if (modal) modal.style.display = 'none';
+        // document.body.classList.remove('minigame-modal-open');
 
         // Spawn explosion coins when closing results
         if (vfxEnabled && networkGameGamesWon > 0 && typeof spawnExplosionCoins === 'function') {
@@ -4049,7 +4195,7 @@ function loadGame() {
                     canAfford++;
                     nextLevel++;
                     // Power upgrades: 1.2x multiplier
-                    nextCost = u.baseUsd * Math.pow(1.2, nextLevel);
+                    nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
                 }
 
                 affordEl.innerText = `x${canAfford}`;
@@ -4112,10 +4258,29 @@ function manualHash() {
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
 
-    // Apply ascension click multiplier (2x per ascension)
-    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
+    // Apply ascension click multiplier (Cookie Clicker-style: +1% per ascension)
+    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (1 + ascensionLevel * 0.01) : 1;
 
-    const actualClickValue = btcClickValue * clickBonus * ascensionClickMultiplier;
+    let actualClickValue = btcClickValue * clickBonus * ascensionClickMultiplier;
+
+    // Add rugpull click_hashrate bonus (% of current BTC hash rate)
+    if (typeof metaUpgrades !== 'undefined') {
+        let clickHashRateBonus = 0;
+        Object.entries(metaUpgrades).forEach(([key, upgrade]) => {
+            if (upgrade.purchased && key.includes('click_hashrate')) {
+                const tier = parseInt(key.match(/\d+$/)[0]);
+                clickHashRateBonus += 0.5 * Math.pow(1.15, tier - 1);
+            }
+        });
+        if (clickHashRateBonus > 0) {
+            actualClickValue += btcPerSec * (clickHashRateBonus / 100);
+        }
+    }
+
+    // Add +1% of current BTC hash rate if hash_rate_memory upgrade is purchased
+    if (typeof metaUpgrades !== 'undefined' && metaUpgrades.hash_rate_memory && metaUpgrades.hash_rate_memory.purchased) {
+        actualClickValue += btcPerSec * 0.01;
+    }
 
     // Try auto-sell first (before adding to balance)
     const btcAutoSold = tryAutoSellCrypto('btc', actualClickValue);
@@ -4153,9 +4318,29 @@ function manualHash() {
 function manualEthHash() {
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-    // Apply ascension click multiplier (2x per ascension)
-    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
-    const actualClickValue = ethClickValue * clickBonus * ascensionClickMultiplier;
+    // Apply ascension click multiplier (Cookie Clicker-style: +1% per ascension)
+    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (1 + ascensionLevel * 0.01) : 1;
+
+    let actualClickValue = ethClickValue * clickBonus * ascensionClickMultiplier;
+
+    // Add rugpull click_hashrate bonus (% of current ETH hash rate)
+    if (typeof metaUpgrades !== 'undefined') {
+        let clickHashRateBonus = 0;
+        Object.entries(metaUpgrades).forEach(([key, upgrade]) => {
+            if (upgrade.purchased && key.includes('click_hashrate')) {
+                const tier = parseInt(key.match(/\d+$/)[0]);
+                clickHashRateBonus += 0.5 * Math.pow(1.15, tier - 1);
+            }
+        });
+        if (clickHashRateBonus > 0) {
+            actualClickValue += ethPerSec * (clickHashRateBonus / 100);
+        }
+    }
+
+    // Add +1% of current ETH hash rate if hash_rate_memory upgrade is purchased
+    if (typeof metaUpgrades !== 'undefined' && metaUpgrades.hash_rate_memory && metaUpgrades.hash_rate_memory.purchased) {
+        actualClickValue += ethPerSec * 0.01;
+    }
 
     // Try auto-sell first (before adding to balance)
     const ethAutoSold = tryAutoSellCrypto('eth', actualClickValue);
@@ -4191,9 +4376,29 @@ function manualEthHash() {
 function manualDogeHash() {
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-    // Apply ascension click multiplier (2x per ascension)
-    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
-    const actualClickValue = dogeClickValue * clickBonus * ascensionClickMultiplier;
+    // Apply ascension click multiplier (Cookie Clicker-style: +1% per ascension)
+    const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (1 + ascensionLevel * 0.01) : 1;
+
+    let actualClickValue = dogeClickValue * clickBonus * ascensionClickMultiplier;
+
+    // Add rugpull click_hashrate bonus (% of current DOGE hash rate)
+    if (typeof metaUpgrades !== 'undefined') {
+        let clickHashRateBonus = 0;
+        Object.entries(metaUpgrades).forEach(([key, upgrade]) => {
+            if (upgrade.purchased && key.includes('click_hashrate')) {
+                const tier = parseInt(key.match(/\d+$/)[0]);
+                clickHashRateBonus += 0.5 * Math.pow(1.15, tier - 1);
+            }
+        });
+        if (clickHashRateBonus > 0) {
+            actualClickValue += dogePerSec * (clickHashRateBonus / 100);
+        }
+    }
+
+    // Add +1% of current DOGE hash rate if hash_rate_memory upgrade is purchased
+    if (typeof metaUpgrades !== 'undefined' && metaUpgrades.hash_rate_memory && metaUpgrades.hash_rate_memory.purchased) {
+        actualClickValue += dogePerSec * 0.01;
+    }
 
     // Try auto-sell first (before adding to balance)
     const dogeAutoSold = tryAutoSellCrypto('doge', actualClickValue);
@@ -4409,14 +4614,14 @@ function buyLevel(i) {
             btcClickValue *= 1.12;
 
             // FASTER PRICE SCALE: % increase per level
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
 
             // Update the main orange button text to show new click value
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
             // ALL OTHER MINERS: Standard 15% increase
-            u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
+            u.currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         }
 
         const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
@@ -4457,10 +4662,10 @@ function buyLevelMultiple(i, quantity) {
         // Update price and yield based on upgrade type
         if (u.id === 0 || u.isClickUpgrade) {
             btcClickValue *= 1.12;
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         } else {
-            u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
+            u.currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
+            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         }
 
         purchased++;
@@ -4607,12 +4812,12 @@ function buyDogeBoost(i) {
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
                 ethClickValue *= 1.12;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
                 // Update the ETH button text to show new click value
                 document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
             } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
+                u.currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
             }
 
             purchased++;
@@ -4658,12 +4863,12 @@ function buyDogeBoost(i) {
             // Update price and yield based on upgrade type
             if (u.id === 0 || u.isClickUpgrade) {
                 dogeClickValue *= 1.12;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
                 // Update the DOGE button text to show new click value
                 document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
             } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.12, u.level));
+                u.currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
+                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
             }
 
             purchased++;
@@ -4762,50 +4967,49 @@ function buyDogeBoost(i) {
 
         // Desktop: abbreviate at 10M+, mobile: use full numbers
         if (!isMobile) {
-            if (abs >= 1e30) {
-                return (num / 1e30).toFixed(1) + 'N';
-            } else if (abs >= 1e27) {
-                return (num / 1e27).toFixed(1) + 'O';
-            } else if (abs >= 1e24) {
-                return (num / 1e24).toFixed(1) + 'Sep';
-            } else if (abs >= 1e21) {
-                return (num / 1e21).toFixed(1) + 'S';
-            } else if (abs >= 1e18) {
-                return (num / 1e18).toFixed(1) + 'Qa';
-            } else if (abs >= 1e15) {
-                return (num / 1e15).toFixed(1) + 'Q';
-            } else if (abs >= 1e12) {
-                return (num / 1e12).toFixed(1) + 'T';
-            } else if (abs >= 1e9) {
-                return (num / 1e9).toFixed(1) + 'B';
-            } else if (abs >= 1e7) {
-                return (num / 1e6).toFixed(1) + 'M';
-            }
+            if (abs >= 1e60) return (num / 1e60).toFixed(1) + 'Nmdc';
+            else if (abs >= 1e57) return (num / 1e57).toFixed(1) + 'O/Odc';
+            else if (abs >= 1e54) return (num / 1e54).toFixed(1) + 'Spdc';
+            else if (abs >= 1e51) return (num / 1e51).toFixed(1) + 'Sxdc';
+            else if (abs >= 1e48) return (num / 1e48).toFixed(1) + 'Qdc';
+            else if (abs >= 1e45) return (num / 1e45).toFixed(1) + 'Qdc';
+            else if (abs >= 1e42) return (num / 1e42).toFixed(1) + 'Tdc';
+            else if (abs >= 1e39) return (num / 1e39).toFixed(1) + 'U/Udc';
+            else if (abs >= 1e36) return (num / 1e36).toFixed(1) + 'D/Ddc';
+            else if (abs >= 1e33) return (num / 1e33).toFixed(1) + 'Dc';
+            else if (abs >= 1e30) return (num / 1e30).toFixed(1) + 'N';
+            else if (abs >= 1e27) return (num / 1e27).toFixed(1) + 'O';
+            else if (abs >= 1e24) return (num / 1e24).toFixed(1) + 'Sep';
+            else if (abs >= 1e21) return (num / 1e21).toFixed(1) + 'S';
+            else if (abs >= 1e18) return (num / 1e18).toFixed(1) + 'Qa';
+            else if (abs >= 1e15) return (num / 1e15).toFixed(1) + 'Q';
+            else if (abs >= 1e12) return (num / 1e12).toFixed(1) + 'T';
+            else if (abs >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+            else if (abs >= 1e7) return (num / 1e6).toFixed(1) + 'M';
             return Math.floor(num).toLocaleString();
         }
 
-        // Mobile abbreviation: 1k, 1m, 1b, 1t, 1q, 1qa, 1s, 1sep, 1o, 1n, etc
-        if (abs >= 1e30) {
-            return (num / 1e30).toFixed(1) + 'N';
-        } else if (abs >= 1e27) {
-            return (num / 1e27).toFixed(1) + 'O';
-        } else if (abs >= 1e24) {
-            return (num / 1e24).toFixed(1) + 'Sep';
-        } else if (abs >= 1e21) {
-            return (num / 1e21).toFixed(1) + 'S';
-        } else if (abs >= 1e18) {
-            return (num / 1e18).toFixed(1) + 'Qa';
-        } else if (abs >= 1e15) {
-            return (num / 1e15).toFixed(1) + 'Q';
-        } else if (abs >= 1e12) {
-            return (num / 1e12).toFixed(1) + 'T';
-        } else if (abs >= 1e9) {
-            return (num / 1e9).toFixed(1) + 'B';
-        } else if (abs >= 1e6) {
-            return (num / 1e6).toFixed(1) + 'M';
-        } else if (abs >= 1e3) {
-            return (num / 1e3).toFixed(1) + 'K';
-        }
+        // Mobile abbreviation: extends to Novemcillion
+        if (abs >= 1e60) return (num / 1e60).toFixed(1) + 'Nmdc';
+        else if (abs >= 1e57) return (num / 1e57).toFixed(1) + 'O/Odc';
+        else if (abs >= 1e54) return (num / 1e54).toFixed(1) + 'Spdc';
+        else if (abs >= 1e51) return (num / 1e51).toFixed(1) + 'Sxdc';
+        else if (abs >= 1e48) return (num / 1e48).toFixed(1) + 'Qdc';
+        else if (abs >= 1e45) return (num / 1e45).toFixed(1) + 'Qdc';
+        else if (abs >= 1e42) return (num / 1e42).toFixed(1) + 'Tdc';
+        else if (abs >= 1e39) return (num / 1e39).toFixed(1) + 'U/Udc';
+        else if (abs >= 1e36) return (num / 1e36).toFixed(1) + 'D/Ddc';
+        else if (abs >= 1e33) return (num / 1e33).toFixed(1) + 'Dc';
+        else if (abs >= 1e30) return (num / 1e30).toFixed(1) + 'N';
+        else if (abs >= 1e27) return (num / 1e27).toFixed(1) + 'O';
+        else if (abs >= 1e24) return (num / 1e24).toFixed(1) + 'Sep';
+        else if (abs >= 1e21) return (num / 1e21).toFixed(1) + 'S';
+        else if (abs >= 1e18) return (num / 1e18).toFixed(1) + 'Qa';
+        else if (abs >= 1e15) return (num / 1e15).toFixed(1) + 'Q';
+        else if (abs >= 1e12) return (num / 1e12).toFixed(1) + 'T';
+        else if (abs >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+        else if (abs >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+        else if (abs >= 1e3) return (num / 1e3).toFixed(1) + 'K';
         return Math.floor(num).toLocaleString();
     }
 
@@ -4924,24 +5128,41 @@ function buyDogeBoost(i) {
         document.getElementById('bal-doge').innerText = formatCryptoBalance(dogeBalance);
 
         // Update manual hash button text (with ascension multiplier applied)
-        const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (ascensionLevel * 2) : 1;
+        const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (1 + ascensionLevel * 0.01) : 1;
         const clickSpeedBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('click_speed') : 0;
         const clickMultiplier = 1 + clickSpeedBonus;
+
+        // Calculate click hash rate bonus from rugpull upgrades
+        let clickHashRateBonus = 0;
+        if (typeof metaUpgrades !== 'undefined') {
+            Object.entries(metaUpgrades).forEach(([key, upgrade]) => {
+                if (upgrade.purchased && key.includes('click_hashrate')) {
+                    const tier = parseInt(key.match(/\d+$/)[0]);
+                    clickHashRateBonus += 0.5 * Math.pow(1.15, tier - 1);
+                }
+            });
+        }
 
         const mineBtnSpan = document.querySelector('.mine-btn span');
         if (mineBtnSpan) {
             const totalBtcClick = btcClickValue * clickMultiplier * ascensionClickMultiplier;
-            mineBtnSpan.innerText = `+${totalBtcClick.toFixed(8)} ₿`;
+            const hashRateAddition = btcPerSec * (clickHashRateBonus / 100);
+            const totalWithHashRate = totalBtcClick + hashRateAddition;
+            mineBtnSpan.innerText = `+${totalWithHashRate.toFixed(8)} ₿`;
         }
         const ethMineBtnSpan = document.querySelectorAll('.mine-btn span')[1];
         if (ethMineBtnSpan) {
             const totalEthClick = ethClickValue * clickMultiplier * ascensionClickMultiplier;
-            ethMineBtnSpan.innerText = `+${totalEthClick.toFixed(8)} Ξ`;
+            const hashRateAddition = ethPerSec * (clickHashRateBonus / 100);
+            const totalWithHashRate = totalEthClick + hashRateAddition;
+            ethMineBtnSpan.innerText = `+${totalWithHashRate.toFixed(8)} Ξ`;
         }
         const dogeMineBtnSpan = document.querySelectorAll('.mine-btn span')[2];
         if (dogeMineBtnSpan) {
             const totalDogeClick = dogeClickValue * clickMultiplier * ascensionClickMultiplier;
-            dogeMineBtnSpan.innerText = `+${totalDogeClick.toFixed(8)} Ð`;
+            const hashRateAddition = dogePerSec * (clickHashRateBonus / 100);
+            const totalWithHashRate = totalDogeClick + hashRateAddition;
+            dogeMineBtnSpan.innerText = `+${totalWithHashRate.toFixed(8)} Ð`;
         }
 
         // Update hardware equity with smart abbreviations
@@ -5119,12 +5340,14 @@ function buyDogeBoost(i) {
         }
 
         // Update difficulty button states based on lifetime earnings
+        const hasMinigameUnlock = (typeof metaUpgrades !== 'undefined' && metaUpgrades.minigame_unlock && metaUpgrades.minigame_unlock.purchased);
+
         const easyBtn = document.getElementById('hacking-easy-btn');
         const mediumBtn = document.getElementById('hacking-medium-btn');
         const hardBtn = document.getElementById('hacking-hard-btn');
 
         if (easyBtn) {
-            if (lifetimeEarnings < 10000) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 10000) {
                 easyBtn.style.opacity = '0.5';
                 easyBtn.style.cursor = 'not-allowed';
             } else {
@@ -5134,7 +5357,7 @@ function buyDogeBoost(i) {
         }
 
         if (mediumBtn) {
-            if (lifetimeEarnings < 50000) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 50000) {
                 mediumBtn.style.opacity = '0.5';
                 mediumBtn.style.cursor = 'not-allowed';
                 const currentAbbrev = lifetimeEarnings >= 1000 ? '$' + (lifetimeEarnings / 1000).toFixed(1) + 'K' : '$' + lifetimeEarnings.toFixed(0);
@@ -5150,7 +5373,7 @@ function buyDogeBoost(i) {
         }
 
         if (hardBtn) {
-            if (lifetimeEarnings < 100000) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 100000) {
                 hardBtn.style.opacity = '0.5';
                 hardBtn.style.cursor = 'not-allowed';
                 const currentAbbrev = lifetimeEarnings >= 1000 ? '$' + (lifetimeEarnings / 1000).toFixed(1) + 'K' : '$' + lifetimeEarnings.toFixed(0);
@@ -5177,7 +5400,7 @@ function buyDogeBoost(i) {
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus + ascensionBonus);
             yEl.innerText = `+${formatCryptoYield(currentSpeed)} ₿/s - Current Speed`;
         }
@@ -5192,7 +5415,7 @@ function buyDogeBoost(i) {
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.15, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus + ascensionBonus);
             increaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} ₿/s per level`;
             increaseEl.style.display = 'block';
@@ -5206,9 +5429,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
             }
             tempLevel++;
         }
@@ -5241,10 +5464,10 @@ function buyDogeBoost(i) {
             // Calculate next cost based on upgrade type
             if (u.isClickUpgrade) {
                 // Manual hash: 1.12x multiplier
-                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             } else {
                 // Other miners: 1.12x multiplier
-                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             }
         }
 
@@ -5260,9 +5483,9 @@ function buyDogeBoost(i) {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
             }
             tempLevel++;
         }
@@ -5275,6 +5498,11 @@ function buyDogeBoost(i) {
         const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
         bEl.disabled = shouldDisable;
         if (u.id === 1) console.log(`USB Miner: dollars=${dollarBalance}/${totalCost}, power=${totalPowerUsed}/${availablePower}, needed=${powerNeeded}, qty=${buyQuantity}, disabled=${shouldDisable}`);
+
+        // Ensure button has relative positioning for overlay to work
+        if (bEl.style.position !== 'absolute' && bEl.style.position !== 'fixed') {
+            bEl.style.position = 'relative';
+        }
 
         // Change button appearance based on what's missing
         if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
@@ -5294,15 +5522,15 @@ function buyDogeBoost(i) {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE CASH';
             }
             bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - availablePower).toLocaleString()}W more power`;
         } else if (!hasEnoughDollars) {
-            // Only need cash
+            // Need cash (regardless of power)
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -5318,15 +5546,15 @@ function buyDogeBoost(i) {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE CASH';
             }
             bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
         } else if (!hasEnoughPower && powerReq > 0) {
-            // Only need power
+            // Need power (and have enough cash)
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -5342,8 +5570,8 @@ function buyDogeBoost(i) {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE POWER';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE POWER';
@@ -5366,7 +5594,7 @@ function buyDogeBoost(i) {
     if(boostCostEl) boostCostEl.innerText = `$${Math.floor(u.boostCost).toLocaleString()}`;
 
     // Format the current yield amount (after all boosts applied)
-    const currentYield = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+    const currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
     const boostAmtEl = document.getElementById(`boost-amt-${u.id}`);
     if(boostAmtEl) {
         if (currentYield >= 1) {
@@ -5403,7 +5631,7 @@ ethUpgrades.forEach(u => {
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus + ascensionBonus);
             yEl.innerText = `+${formatCryptoYield(currentSpeed)} Ξ/s - Current Speed`;
         }
@@ -5418,7 +5646,7 @@ ethUpgrades.forEach(u => {
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.15, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus + ascensionBonus);
             ethIncreaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} Ξ/s per level`;
             ethIncreaseEl.style.display = 'block';
@@ -5432,9 +5660,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
             }
             tempLevel++;
         }
@@ -5463,9 +5691,9 @@ ethUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             }
         }
 
@@ -5481,9 +5709,9 @@ ethUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
             }
             tempLevel++;
         }
@@ -5494,6 +5722,11 @@ ethUpgrades.forEach(u => {
         const ethAvailablePower = getTotalPowerAvailableWithBonus();
         const hasEnoughPower = powerNeeded <= ethAvailablePower || powerReq === 0;
         bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
+
+        // Ensure button has relative positioning for overlay to work
+        if (bEl.style.position !== 'absolute' && bEl.style.position !== 'fixed') {
+            bEl.style.position = 'relative';
+        }
 
         // Change button appearance based on what's missing
         if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
@@ -5513,15 +5746,15 @@ ethUpgrades.forEach(u => {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE CASH';
             }
             bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - ethAvailablePower).toLocaleString()}W more power`;
         } else if (!hasEnoughDollars) {
-            // Only need cash
+            // Need cash (regardless of power)
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -5537,15 +5770,15 @@ ethUpgrades.forEach(u => {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE CASH';
             }
             bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
         } else if (!hasEnoughPower && powerReq > 0) {
-            // Only need power
+            // Need power (and have enough cash)
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -5561,8 +5794,8 @@ ethUpgrades.forEach(u => {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE POWER';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE POWER';
@@ -5603,7 +5836,7 @@ dogeUpgrades.forEach(u => {
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.12, u.boostLevel);
+            const baseSpeed = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
             const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus + ascensionBonus);
             yEl.innerText = `+${formatCryptoYield(currentSpeed)} Ð/s - Current Speed`;
         }
@@ -5618,7 +5851,7 @@ dogeUpgrades.forEach(u => {
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.12, u.boostLevel);
+            const baseIncrease = u.baseYield * Math.pow(1.15, u.boostLevel);
             const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus + ascensionBonus);
             dogeIncreaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} Ð/s per level`;
             dogeIncreaseEl.style.display = 'block';
@@ -5632,9 +5865,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
             } else {
-                displayCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                displayCost += u.baseUsd * Math.pow(1.15, tempLevel);
             }
             tempLevel++;
         }
@@ -5663,9 +5896,9 @@ dogeUpgrades.forEach(u => {
             canAfford++;
             nextLevel++;
             if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             } else {
-                nextCost = u.baseUsd * Math.pow(1.12, nextLevel);
+                nextCost = u.baseUsd * Math.pow(1.15, nextLevel);
             }
         }
 
@@ -5681,9 +5914,9 @@ dogeUpgrades.forEach(u => {
         let tempLevel = u.level;
         for (let i = 0; i < buyQuantity; i++) {
             if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
             } else {
-                totalCost += u.baseUsd * Math.pow(1.12, tempLevel);
+                totalCost += u.baseUsd * Math.pow(1.15, tempLevel);
             }
             tempLevel++;
         }
@@ -5694,6 +5927,11 @@ dogeUpgrades.forEach(u => {
         const dogeAvailablePower = getTotalPowerAvailableWithBonus();
         const hasEnoughPower = powerNeeded <= dogeAvailablePower || powerReq === 0;
         bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
+
+        // Ensure button has relative positioning for overlay to work
+        if (bEl.style.position !== 'absolute' && bEl.style.position !== 'fixed') {
+            bEl.style.position = 'relative';
+        }
 
         // Change button appearance based on what's missing
         if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
@@ -5713,15 +5951,15 @@ dogeUpgrades.forEach(u => {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE CASH';
             }
             bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - dogeAvailablePower).toLocaleString()}W more power`;
         } else if (!hasEnoughDollars) {
-            // Only need cash
+            // Need cash (regardless of power)
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -5737,15 +5975,15 @@ dogeUpgrades.forEach(u => {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE CASH';
             }
             bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
         } else if (!hasEnoughPower && powerReq > 0) {
-            // Only need power
+            // Need power (and have enough cash)
             let overlay = bEl.querySelector('.power-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -5761,8 +5999,8 @@ dogeUpgrades.forEach(u => {
                 overlay.style.fontWeight = 'bold';
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
+                overlay.style.zIndex = '9999';
                 overlay.innerHTML = 'YOU NEED MORE POWER';
-                bEl.style.position = 'relative';
                 bEl.appendChild(overlay);
             } else {
                 overlay.innerHTML = 'YOU NEED MORE POWER';
@@ -5901,6 +6139,14 @@ dogeUpgrades.forEach(u => {
 
     // Initialize all shops after DOM is ready
     function initializeGame() {
+        // FIX: Ensure any stuck minigame modal class is removed on page load
+        // document.body.classList.remove('minigame-modal-open');
+        document.body.style.overflow = 'auto';
+        document.body.style.position = 'static';
+
+        // Don't force close modals - they're controlled by their respective functions
+        // The modals start with display: none in the HTML and are opened when needed
+
         // Test localStorage availability
         try {
             localStorage.setItem('test', 'test');
@@ -5974,6 +6220,89 @@ dogeUpgrades.forEach(u => {
         updateNetworkStats();
         updateMinigamesTab();
 
+        // Initialize event handlers for manual hash buttons (mobile + desktop support)
+        const manualBtcBtn = document.getElementById('manual-hash-btc-btn');
+        const manualEthBtn = document.getElementById('manual-hash-eth-btn');
+        const manualDogeBtn = document.getElementById('manual-hash-doge-btn');
+
+        if (manualBtcBtn) {
+            let btcAnimTimeout = null;
+            const btcClick = () => {
+                trackManualHashClick();
+                manualHash();
+            };
+            const triggerBtcAnimation = () => {
+                // Clear any pending timeout to prevent glitching on rapid clicks
+                if (btcAnimTimeout) clearTimeout(btcAnimTimeout);
+                // Add active state class
+                manualBtcBtn.classList.add('active');
+                // Schedule removal - shorter timeout for faster bounce
+                btcAnimTimeout = setTimeout(() => {
+                    manualBtcBtn.classList.remove('active');
+                    btcAnimTimeout = null;
+                }, 50);
+            };
+            manualBtcBtn.addEventListener('click', () => {
+                triggerBtcAnimation();
+                btcClick();
+            });
+            manualBtcBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                triggerBtcAnimation();
+                btcClick();
+            });
+        }
+
+        if (manualEthBtn) {
+            let ethAnimTimeout = null;
+            const ethClick = () => {
+                trackManualHashClick();
+                manualEthHash();
+            };
+            const triggerEthAnimation = () => {
+                if (ethAnimTimeout) clearTimeout(ethAnimTimeout);
+                manualEthBtn.classList.add('active');
+                ethAnimTimeout = setTimeout(() => {
+                    manualEthBtn.classList.remove('active');
+                    ethAnimTimeout = null;
+                }, 50);
+            };
+            manualEthBtn.addEventListener('click', () => {
+                triggerEthAnimation();
+                ethClick();
+            });
+            manualEthBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                triggerEthAnimation();
+                ethClick();
+            });
+        }
+
+        if (manualDogeBtn) {
+            let dogeAnimTimeout = null;
+            const dogeClick = () => {
+                trackManualHashClick();
+                manualDogeHash();
+            };
+            const triggerDogeAnimation = () => {
+                if (dogeAnimTimeout) clearTimeout(dogeAnimTimeout);
+                manualDogeBtn.classList.add('active');
+                dogeAnimTimeout = setTimeout(() => {
+                    manualDogeBtn.classList.remove('active');
+                    dogeAnimTimeout = null;
+                }, 50);
+            };
+            manualDogeBtn.addEventListener('click', () => {
+                triggerDogeAnimation();
+                dogeClick();
+            });
+            manualDogeBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                triggerDogeAnimation();
+                dogeClick();
+            });
+        }
+
         // Show instructions modal if not dismissed and player hasn't ascended yet
         // BUT: don't show if tutorial is active for new players or if tutorial was completed
         const tutorialCompleted = localStorage.getItem('tutorialCompleted') === 'true';
@@ -6005,6 +6334,7 @@ dogeUpgrades.forEach(u => {
                     window.offlineEarningsToShow.eth || 0,
                     window.offlineEarningsToShow.doge || 0,
                     window.offlineEarningsToShow.stakingCash || 0,
+                    window.offlineEarningsToShow.corruptTokens || 0,
                     window.offlineEarningsToShow.seconds,
                     window.offlineEarningsToShow.wasCapped || false,
                     window.offlineEarningsToShow.cappedSeconds || window.offlineEarningsToShow.seconds
@@ -6033,6 +6363,15 @@ dogeUpgrades.forEach(u => {
 
         // Function to initialize the chart
         const initChart = () => {
+            // Ensure canvas has proper dimensions
+            const wrapper = canvasElement.parentElement;
+            if (wrapper) {
+                const rect = wrapper.getBoundingClientRect();
+                canvasElement.width = rect.width - 20; // Account for padding
+                canvasElement.height = rect.height - 20; // Account for padding
+                console.log('Canvas dimensions set to:', canvasElement.width, 'x', canvasElement.height);
+            }
+
             const ctx = canvasElement.getContext('2d');
             console.log('Canvas context:', ctx);
 
@@ -6137,6 +6476,7 @@ dogeUpgrades.forEach(u => {
                     }
                 }
             });
+
 
                 console.log('Chart object created:', nwChart);
                 console.log('Chart initialized with data:', chartHistory);

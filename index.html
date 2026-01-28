@@ -42,7 +42,7 @@
 <body>
 
     <!-- Combined Age & Terms Acceptance Modal -->
-    <div id="age-terms-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10001; justify-content: center; align-items: center; overflow: auto; padding-bottom: 60px;">
+    <div id="age-terms-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,1); z-index: 10001; justify-content: center; align-items: center; overflow: auto; padding-bottom: 60px;">
         <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 18px; border-radius: 12px; max-width: 600px; max-height: 70vh; overflow-y: auto; text-align: center; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5); margin: 12px;">
             <h2 style="color: #f7931a; margin-bottom: 10px; font-size: 1.3rem;">⚠️ Age Requirement & Terms</h2>
 
@@ -81,7 +81,7 @@
     </div>
 
     <!-- Privacy & Cookie Policy Modal -->
-    <div id="privacy-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; overflow: auto;">
+    <div id="privacy-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,1); z-index: 10000; justify-content: center; align-items: center; overflow: auto;">
         <div style="background: #fff; padding: 20px; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; margin: 20px; position: relative; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
             <button onclick="closePrivacyModal()" style="position: absolute; top: 15px; right: 15px; background: #f7931a; color: #000; border: none; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s; z-index: 1;">
                 CLOSE
@@ -146,27 +146,29 @@
             <div style="position: absolute; top: 24px; left: 24px; right: 24px; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0px; gap: 12px; pointer-events: none;" class="desktop-button-layout">
 
                 <!-- RUGPULL BUTTON - CENTER -->
-                <div style="position: absolute; left: 50%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: row; align-items: flex-start; z-index: 5; pointer-events: auto; gap: 4px;">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 4px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
-                        <div id="rugpull-tooltip" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
-                            <span id="tooltip-text">Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
+                <div style="position: absolute; left: 50%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 5; pointer-events: auto; gap: 4px;">
+                    <div id="rugpull-button-row" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 4px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
+                            <div id="rugpull-tooltip" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
+                                <span id="tooltip-text">Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
+                            </div>
+                            <div id="rugpull-progress-text" style="color: #ffeb3b; font-size: 0.65rem; font-weight: bold; margin-top: 2px; text-align: center;">$0 / $1B</div>
                         </div>
-                        <div id="rugpull-progress-text" style="color: #ffeb3b; font-size: 0.65rem; font-weight: bold; margin-top: 2px; text-align: center;">$0 / $1B</div>
+                        <!-- RUGPULL STORE button - shown on all resolutions above mobile -->
+                        <button id="rugpull-store-btn" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.65rem; transition: all 0.3s ease; display: none; white-space: nowrap; height: fit-content;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
                     </div>
-                    
                 </div>
 
-                <!-- OTHER BUTTONS - RIGHT SIDE, VERTICAL COLUMN -->
-                <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto; pointer-events: auto;">
+                <!-- OTHER BUTTONS - RIGHT SIDE, VERTICAL COLUMN on mobile, HORIZONTAL ROW on desktop -->
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto; pointer-events: auto;" id="utility-buttons-container">
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
                     <button id="vfx-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleVFX()">VFX ON</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #2196F3; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
                     <button style="background: #ff3344; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
-                    <button style="background: #ff6b35; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
-                    <button id="rugpull-store-btn" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.65rem; transition: all 0.3s ease; display: none; white-space: nowrap; height: fit-content;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+                    <button id="achievements-btn" style="background: #ff6b35; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
                 </div>
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
@@ -248,7 +250,7 @@
             </div>
 
             <div class="chart-wrapper" style="position: relative;">
-                <canvas id="nwChart"></canvas>
+                <canvas id="nwChart" width="800" height="300"></canvas>
                 <!-- News ticker overlay -->
                 <div id="news-ticker-overlay">
                     <div id="news-ticker-content"></div>
@@ -262,16 +264,44 @@
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
-            <button id="manual-hash-btc-btn" class="mine-btn" onclick="trackManualHashClick(); manualHash()" style="position: relative; z-index: 100; line-height: 1.2;">MANUAL BTC HASH <img src="bitcointoken.png" style="width: 28px; height: 28px; vertical-align: text-top; margin-left: 2px;" alt="BTC"><br>
+            <button id="manual-hash-btc-btn" class="mine-btn" style="position: relative; z-index: 100; line-height: 1.2;">MANUAL BTC HASH <img src="bitcointoken.png" style="width: 28px; height: 28px; vertical-align: text-top; margin-left: 2px;" alt="BTC"><br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
             </button>
-            <button id="manual-hash-eth-btn" class="mine-btn" style="background: #627eea; padding: 8px; line-height: 1.2;" onclick="trackManualHashClick(); manualEthHash()">MANUAL ETH HASH <img src="ethcoin.png" style="width: 36px; height: 36px; vertical-align: text-top; margin-left: 2px;" alt="ETH"><br>
+            <button id="manual-hash-eth-btn" class="mine-btn" style="background: #627eea; padding: 8px; line-height: 1.2;">MANUAL ETH HASH <img src="ethcoin.png" style="width: 36px; height: 36px; vertical-align: text-top; margin-left: 2px;" alt="ETH"><br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00007143 Ξ</span>
             </button>
-            <button id="manual-hash-doge-btn" class="mine-btn" style="background: #c2a633; padding: 8px; line-height: 1.2;" onclick="trackManualHashClick(); manualDogeHash()">MANUAL DOGE HASH <img src="dogecoin.png" style="width: 28px; height: 28px; vertical-align: text-top; margin-left: 2px;" alt="DOGE"><br>
+            <button id="manual-hash-doge-btn" class="mine-btn" style="background: #c2a633; padding: 8px; line-height: 1.2;">MANUAL DOGE HASH <img src="dogecoin.png" style="width: 28px; height: 28px; vertical-align: text-top; margin-left: 2px;" alt="DOGE"><br>
                 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+1.00000000 Ð</span>
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 8px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-size: 0.75rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
+
+            <!-- Desktop RUGPULL Section - Side by side (shown on non-mobile) -->
+            <div id="desktop-rugpull-section" style="display: none; gap: 8px; margin-bottom: 12px; flex-direction: row; align-items: stretch;">
+                <!-- RUGPULL Button -->
+                <button id="rugpull-btn-desktop" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 8px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.75rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.2px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
+                    <span>RUGPULL</span>
+                    <span id="rugpull-progress-text-desktop" style="color: #ffeb3b; font-size: 0.6rem; font-weight: bold;">$0 / $1B</span>
+                    <div id="rugpull-tooltip-desktop" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
+                        <span>Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
+                    </div>
+                </button>
+                <!-- RUGPULL STORE Button -->
+                <button id="rugpull-store-btn-desktop" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 8px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.7rem; transition: all 0.3s ease; flex: 1; display: none; text-transform: uppercase; display: flex; align-items: center; justify-content: center;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+            </div>
+
+            <!-- Mobile RUGPULL Section - Side by side -->
+            <div id="mobile-rugpull-section" style="display: none; gap: 8px; margin-bottom: 12px; flex-direction: row; align-items: stretch;">
+                <!-- RUGPULL Button with counter inside -->
+                <button id="rugpull-btn-mobile" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 8px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.75rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.2px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
+                    <span>RUGPULL</span>
+                    <span id="rugpull-progress-text-mobile" style="color: #ffeb3b; font-size: 0.6rem; font-weight: bold;">$0 / $1B</span>
+                    <div id="rugpull-tooltip-mobile" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
+                        <span>Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
+                    </div>
+                </button>
+                <!-- RUGPULL STORE Button -->
+                <button id="rugpull-store-btn-mobile-main" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 8px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.7rem; transition: all 0.3s ease; flex: 1; display: none; text-transform: uppercase;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+            </div>
 
             <!-- Power Status Bar -->
             <div style="padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222; margin-bottom: 8px;">
@@ -427,7 +457,7 @@
                     <!-- Staking Section -->
                     <div style="margin: 15px 0 15px 0; padding-top: 15px; padding-bottom: 0; border-top: 2px solid #222;">
                         <h3 style="color: #ffaa33; margin: 0 0 10px 0; font-size: 1.2rem;">🏦 Crypto Staking Bank</h3>
-                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 15px 0;">Lock your crypto to earn 0.1% APR every 2 seconds, paid directly to your cash balance!</p>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 15px 0;">Lock your crypto to earn <span id="staking-apr-rate">0.1%</span> APR every 2 seconds, paid directly to your cash balance!</p>
                     </div>
 
                     <!-- BTC Staking -->
@@ -530,17 +560,17 @@
                         <p style="color: #888; font-size: 0.85rem; margin: 0;">Select a minigame to play and earn rewards while waiting for upgrades!</p>
                     </div>
 
-                    <!-- Data Packet Interceptor Card -->
+                    <!-- Coin Snag Card -->
                     <div style="background: linear-gradient(135deg, rgba(255, 140, 0, 0.1) 0%, rgba(255, 140, 0, 0.05) 100%); border: 2px solid #ff8c00; border-radius: 12px; padding: 20px; margin-bottom: 20px; position: relative;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
                             <div>
-                                <h3 style="color: #ff8c00; margin: 0 0 5px 0; font-size: 1.2rem;">📡 Data Packet Interceptor</h3>
-                                <p style="color: #888; font-size: 0.8rem; margin: 0;">Tap fast-moving packets to steal crypto value</p>
+                                <h3 style="color: #ff8c00; margin: 0 0 5px 0; font-size: 1.2rem;">💰 Coin Snag</h3>
+                                <p style="color: #888; font-size: 0.8rem; margin: 0;">Tap fast-moving coins to earn crypto rewards</p>
                             </div>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                             <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">PACKETS CAUGHT</div>
+                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">COINS CAUGHT</div>
                                 <div style="color: #ff8c00; font-weight: 800; font-size: 1rem;" id="packet-games-won-display">0</div>
                             </div>
                             <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
@@ -629,38 +659,6 @@
                         </div>
                     </div>
 
-                    <!-- Protocol Auditing Card -->
-                    <div style="background: linear-gradient(135deg, rgba(255, 0, 255, 0.1) 0%, rgba(255, 0, 255, 0.05) 100%); border: 2px solid #ff00ff; border-radius: 12px; padding: 20px; position: relative;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                            <div>
-                                <h3 style="color: #ff00ff; margin: 0 0 5px 0; font-size: 1.2rem;">🔐 Protocol Auditing</h3>
-                                <p style="color: #888; font-size: 0.8rem; margin: 0;">Find vulnerabilities & earn speed boosts</p>
-                            </div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES WON</div>
-                                <div style="color: #ff00ff; font-weight: 800; font-size: 1rem;" id="hacking-games-won-display">0</div>
-                            </div>
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">GAMES PLAYED</div>
-                                <div style="color: #ff00ff; font-weight: 800; font-size: 1rem;" id="hacking-games-played-display">0</div>
-                            </div>
-                            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: center;">
-                                <div style="color: #888; font-size: 0.7rem; margin-bottom: 3px;">TOTAL REWARDS</div>
-                                <div style="color: #ff00ff; font-weight: 800; font-size: 0.9rem;" id="hacking-rewards-display">$0</div>
-                            </div>
-                        </div>
-                        <button onclick="switchTab('hacking')" style="background: #ff00ff; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
-                            PLAY NOW →
-                        </button>
-                        <div id="hacking-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                                <div style="font-size: 1.5rem;">🔒</div>
-                                <div>Unlock at $500,000 Lifetime Earnings</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -671,8 +669,8 @@
                         <button onclick="switchTab('minigames')" style="background: rgba(255, 140, 0, 0.2); color: #ff8c00; border: 1px solid #ff8c00; padding: 8px 15px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.8rem; margin-bottom: 15px;">
                             ← BACK TO MINIGAMES
                         </button>
-                        <h3 style="color: #ff8c00; margin: 0 0 10px 0; font-size: 1.3rem;">📡 Data Packet Interceptor</h3>
-                        <p style="color: #888; font-size: 0.8rem; margin: 0;">Intercept fast-moving data packets to earn crypto rewards. No penalties, just pure rewards!</p>
+                        <h3 style="color: #ff8c00; margin: 0 0 10px 0; font-size: 1.3rem;">💰 Coin Snag</h3>
+                        <p style="color: #888; font-size: 0.8rem; margin: 0;">Tap fast-moving coins to earn crypto rewards. No penalties, just pure rewards!</p>
                     </div>
 
                     <!-- Stats Display -->
@@ -688,21 +686,21 @@
                                 <div style="margin-bottom: 5px;">EASY</div>
                                 <div style="font-size: 0.7rem; font-weight: 400;">15s | 1x Speed</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">Easiest Challenge</div>
-                                <div id="packet-easy-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column;"></div>
+                                <div id="packet-easy-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column; pointer-events: none;"></div>
                             </button>
                             <button id="packet-medium-btn" onclick="initPacketInterceptorGame('MEDIUM')" style="background: #f39c12; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
                                 <div style="margin-bottom: 5px;">MEDIUM</div>
                                 <div style="font-size: 0.7rem; font-weight: 400;">15s | 1.5x Speed</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">Medium Challenge</div>
-                                <div id="packet-medium-locked" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column;"><div>🔒 LOCKED</div><div style="font-size: 0.7rem; margin-top: 5px;">Earn $100k lifetime</div></div>
-                                <div id="packet-medium-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column;"></div>
+                                <div id="packet-medium-locked" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column; pointer-events: none;"><div>🔒 LOCKED</div><div style="font-size: 0.7rem; margin-top: 5px;">Earn $100k lifetime</div></div>
+                                <div id="packet-medium-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column; pointer-events: none;"></div>
                             </button>
                             <button id="packet-hard-btn" onclick="initPacketInterceptorGame('HARD')" style="background: #e74c3c; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
                                 <div style="margin-bottom: 5px;">HARD</div>
                                 <div style="font-size: 0.7rem; font-weight: 400;">15s | 2x Speed</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">Hardest Challenge</div>
-                                <div id="packet-hard-locked" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column;"><div>🔒 LOCKED</div><div style="font-size: 0.7rem; margin-top: 5px;">Earn $1M lifetime</div></div>
-                                <div id="packet-hard-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column;"></div>
+                                <div id="packet-hard-locked" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column; pointer-events: none;"><div>🔒 LOCKED</div><div style="font-size: 0.7rem; margin-top: 5px;">Earn $1M lifetime</div></div>
+                                <div id="packet-hard-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column; pointer-events: none;"></div>
                             </button>
                         </div>
                     </div>
@@ -727,95 +725,13 @@
                             </div>
                             <div style="border-top: 1px solid #555; padding-top: 12px; margin-top: 12px;">
                                 <div style="color: #fff; font-weight: 700; margin-bottom: 8px;">Final Reward Formula:</div>
-                                <div style="color: #ddd; font-size: 0.8rem;">Packets Caught × Hash Rate Value × Rugpull (10x per level) × Ascension Bonus</div>
+                                <div style="color: #ddd; font-size: 0.8rem;">Packets Caught × Hash Rate Value × Rugpull (1.15x per level exponential) × Ascension Bonus × Minigame Reward Bonus</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Game Container -->
                     <div id="packet-interceptor-game-container" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
-                </div>
-            </div>
-
-            <!-- HACKING Tab -->
-            <div id="hacking-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
-                <div class="upgrade-list" style="flex: 1; min-height: 0; overflow-y: auto; padding: 10px;">
-                    <div style="margin-bottom: 20px;">
-                        <button onclick="switchTab('minigames')" style="background: rgba(255, 0, 255, 0.2); color: #ff00ff; border: 1px solid #ff00ff; padding: 8px 15px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.8rem; margin-bottom: 15px;">
-                            ← BACK TO MINIGAMES
-                        </button>
-                        <h3 style="color: #ff00ff; margin: 0 0 10px 0; font-size: 1.3rem;">🔐 Protocol Auditing Minigame</h3>
-                        <p style="color: #888; font-size: 0.8rem; margin: 0;">Find vulnerabilities in smart contract code to earn crypto rewards and mining speed boosts!</p>
-                    </div>
-
-                    <!-- Stats Display -->
-                    <div id="hacking-stats-content" style="background: rgba(255, 0, 255, 0.1); border: 1px solid #ff00ff; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                        <!-- Stats will be populated by JavaScript -->
-                    </div>
-
-                    <!-- Difficulty Selector -->
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="color: #fff; margin: 0 0 10px 0; font-size: 1rem;">Select Difficulty</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                            <button id="hacking-easy-btn" onclick="initHackingMinigame('EASY')" style="background: #2ecc71; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
-                                <div style="margin-bottom: 5px;">EASY</div>
-                                <div style="font-size: 0.7rem; font-weight: 400;">3 bugs | 30s | 6 lives</div>
-                                <div style="font-size: 0.65rem; margin-top: 5px;">+10% speed for 2min</div>
-                                <div id="hacking-easy-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4;"></div>
-                                <div id="hacking-easy-cooldown" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 11; align-items: center; justify-content: center; flex-direction: column; visibility: hidden;"></div>
-                            </button>
-                            <button id="hacking-medium-btn" onclick="initHackingMinigame('MEDIUM')" style="background: #f39c12; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
-                                <div style="margin-bottom: 5px;">MEDIUM</div>
-                                <div style="font-size: 0.7rem; font-weight: 400;">4 bugs | 20s | 8 lives</div>
-                                <div style="font-size: 0.65rem; margin-top: 5px;">+25% speed for 2min</div>
-                                <div id="hacking-medium-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4;"></div>
-                                <div id="hacking-medium-cooldown" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 11; align-items: center; justify-content: center; flex-direction: column; visibility: hidden;"></div>
-                            </button>
-                            <button id="hacking-hard-btn" onclick="initHackingMinigame('HARD')" style="background: #e74c3c; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
-                                <div style="margin-bottom: 5px;">HARD</div>
-                                <div style="font-size: 0.7rem; font-weight: 400;">5 bugs | 12s | 10 lives</div>
-                                <div style="font-size: 0.65rem; margin-top: 5px;">+50% speed for 2min</div>
-                                <div id="hacking-hard-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4;"></div>
-                                <div id="hacking-hard-cooldown" style="display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; align-items: center; justify-content: center; flex-direction: column; visibility: hidden;"></div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Rewards Info -->
-                    <div style="background: rgba(247, 147, 26, 0.1); border: 1px solid #f7931a; border-radius: 8px; padding: 15px;">
-                        <h4 style="color: #f7931a; margin: 0 0 10px 0; font-size: 1rem;">💰 Hash Rate-Based Rewards!</h4>
-                        <div style="color: #888; font-size: 0.85rem; margin-bottom: 12px;">
-                            Each line validated = your current mining power in USD!
-                        </div>
-                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 12px; margin-bottom: 10px;">
-                            <div style="color: #fff; font-weight: 700; margin-bottom: 8px;">Base Formula: ($10 + BTC/sec × BTC Price + ETH/sec × ETH Price + DOGE/sec × DOGE Price) × Lines Validated × Time Bonus × Rugpull Level</div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.75rem;">
-                                <div style="text-align: center;">
-                                    <div style="color: #00ff88; font-weight: 700;">EASY</div>
-                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">Standard Difficulty</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">5 vulnerabilities</div>
-                                    <div style="color: #666; font-size: 0.65rem;">6 lives | 5m cooldown</div>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div style="color: #ffaa33; font-weight: 700;">MEDIUM</div>
-                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">Higher Difficulty</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">8 vulnerabilities</div>
-                                    <div style="color: #666; font-size: 0.65rem;">8 lives | 15m cooldown</div>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div style="color: #ff3344; font-weight: 700;">HARD</div>
-                                    <div style="color: #fff; font-size: 0.95rem; margin: 5px 0;">Maximum Difficulty</div>
-                                    <div style="color: #888; font-size: 0.65rem; margin-bottom: 3px;">10 vulnerabilities</div>
-                                    <div style="color: #666; font-size: 0.65rem;">10 lives | 30m cooldown</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="font-size: 0.7rem; color: #888; line-height: 1.5;">
-                            • 1 Line = ($10 + BTC/sec × BTC Price + ETH/sec × ETH Price + DOGE/sec × DOGE Price) × Time Bonus × Consecutive Win Multiplier<br>
-                            ⚡ Speed boosts: +10%, +25%, +50% (can stack!)<br>
-                            🚀 POWERFUL Rugpull: 10x reward per rugpull level!
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -847,22 +763,22 @@
                                 <div style="margin-bottom: 5px;">EASY</div>
                                 <div style="font-size: 0.7rem; font-weight: 400;">10 lives | 15s</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">Slow spawn rate</div>
-                                <div id="whack-easy-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column;"></div>
-                                <div id="whack-easy-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; flex-direction: column;"></div>
+                                <div id="whack-easy-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column; pointer-events: none;"></div>
+                                <div id="whack-easy-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; flex-direction: column; pointer-events: none;"></div>
                             </button>
                             <button id="whack-medium-btn" onclick="initWhackMinigame('MEDIUM')" style="background: #f39c12; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
                                 <div style="margin-bottom: 5px;">MEDIUM</div>
                                 <div style="font-size: 0.7rem; font-weight: 400;">10 lives | 15s</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">+25% speed for 2min</div>
-                                <div id="whack-medium-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column;"></div>
-                                <div id="whack-medium-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; flex-direction: column;"></div>
+                                <div id="whack-medium-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column; pointer-events: none;"></div>
+                                <div id="whack-medium-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; flex-direction: column; pointer-events: none;"></div>
                             </button>
                             <button id="whack-hard-btn" onclick="initWhackMinigame('HARD')" style="background: #e74c3c; color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.9rem; position: relative; transition: all 0.3s ease; overflow: hidden;">
                                 <div style="margin-bottom: 5px;">HARD</div>
                                 <div style="font-size: 0.7rem; font-weight: 400;">10 lives | 15s</div>
                                 <div style="font-size: 0.65rem; margin-top: 5px;">Fast spawn rate</div>
-                                <div id="whack-hard-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column;"></div>
-                                <div id="whack-hard-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; flex-direction: column;"></div>
+                                <div id="whack-hard-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 700; z-index: 10; text-align: center; padding: 10px; line-height: 1.4; flex-direction: column; pointer-events: none;"></div>
+                                <div id="whack-hard-cooldown" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); border-radius: 8px; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; font-weight: 700; z-index: 10; flex-direction: column; pointer-events: none;"></div>
                             </button>
                         </div>
                     </div>
@@ -899,7 +815,7 @@
                         <div style="font-size: 0.7rem; color: #888; line-height: 1.5;">
                             • 1 Block = ($10 + BTC/sec × BTC Price + ETH/sec × ETH Price + DOGE/sec × DOGE Price) × Score Multiplier × Rugpull Level<br>
                             ⚡ Score bonus: up to 1.5x multiplier (higher score = higher multiplier)<br>
-                            🚀 Rugpull level: 10x per level (scales infinitely!)
+                            🚀 Rugpull multiplier: 1.15x per level (exponential scaling)
                         </div>
                     </div>
                 </div>
@@ -951,12 +867,13 @@
                         </div>
                         <div style="font-size: 0.7rem; color: #888; line-height: 1.5;">
                             ⚡ Win Speed Boost: 2 minutes of +10-15% mining speed per win!<br>
-                            🚀 POWERFUL Rugpull: 10x reward multiplier per level!<br>
+                            🚀 Rugpull multiplier: 1.15x per level (exponential scaling) × Minigame Reward Bonus<br>
                             💡 Tip: Upgrade your miners to increase passive damage!
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -1008,12 +925,12 @@
 
 <!-- Meta-Upgrades Modal (Rugpull System) -->
 <div id="meta-upgrades-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
-        <div class="modal-header">
-            <h2>🔴 RUGPULL META UPGRADES</h2>
+    <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column;">
+        <div class="modal-header" style="position: sticky; top: 0; z-index: 10; background: #111; border-bottom: 1px solid #333; flex-shrink: 0;">
+            <h2 id="rugpull-header">🔴 RUGPULL UPGRADES</h2>
             <button onclick="closeMetaUpgradesModal()" class="modal-close">&times;</button>
         </div>
-        <div class="modal-body" style="padding: 20px;">
+        <div class="modal-body" style="padding: 20px; overflow-y: auto; flex: 1;">
             <div id="meta-upgrades-container" style="color: #ccc; font-size: 0.9rem;">
                 <!-- Populated dynamically by rugpull.js -->
             </div>
@@ -1105,7 +1022,7 @@
                     <li>Upgrade your power supply to run more miners</li>
                     <li>Balance your investments across all three cryptocurrencies</li>
                     <li>Higher miner levels generate more crypto</li>
-                    <li>Once you hit your first <strong>$1 Billion</strong>, use <strong>RUGPULL</strong> to reset your progress and gain permanent bonuses that make everything grow faster</li>
+                    <li>Once you hit your first <strong>$1 Million</strong>, use <strong>RUGPULL</strong> to reset your progress and gain permanent bonuses that make everything grow faster</li>
                 </ul>
             </div>
         </div>
@@ -1550,71 +1467,9 @@
 <!-- Load tutorial system before game.js so tutorial is available when game initializes -->
 <script src="tutorial.js?v=1.1.0"></script>
 
-<!-- Hacking Minigame Modal -->
-<div id="hacking-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10002; justify-content: center; align-items: center; overflow: auto;">
-    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #ff00ff; box-shadow: 0 0 30px rgba(255,0,255,0.5);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="color: #ff00ff; margin: 0; font-size: 1.5rem;">🔐 SMART CONTRACT AUDIT</h2>
-            <div style="text-align: right;">
-                <div style="color: #00ff88; font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">
-                    <span id="hacking-difficulty-display">EASY</span>
-                </div>
-                <div style="color: #fff; font-size: 1rem;">
-                    <span id="hacking-timer">30s</span>
-                </div>
-                <div style="color: #888; font-size: 0.8rem; margin-top: 3px;">
-                    Found: <span id="hacking-found-count">0/3</span>
-                </div>
-                <div style="color: #ff3344; font-size: 0.9rem; margin-top: 5px; font-weight: 800;">
-                    Lives: <span id="hacking-lives-display">❤️ 3/3</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Code Container -->
-        <div id="hacking-code-container" style="background: #0a0a0a; border: 1px solid #ff00ff; border-radius: 8px; padding: 15px; font-family: 'Courier New', monospace; font-size: 0.8rem; line-height: 1.4; max-height: 65vh; overflow-y: auto; overflow-x: hidden; margin-bottom: 20px; word-wrap: break-word; white-space: pre-wrap;">
-            <!-- Code lines will be inserted here by JavaScript -->
-        </div>
-
-        <!-- Result Message (hidden initially) -->
-        <div id="hacking-result-message" style="display: none; text-align: center; padding: 30px; margin-bottom: 20px;">
-            <!-- Result will be shown here -->
-        </div>
-
-        <!-- Close Button (hidden initially, shown after game ends) -->
-        <div style="text-align: center;">
-            <button id="hacking-close-btn" onclick="closeHackingModal()" style="display: none; background: #ff00ff; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem;">
-                CLOSE
-            </button>
-        </div>
-
-        <div style="color: #888; font-size: 0.75rem; text-align: center; margin-top: 15px;">
-            Click on lines with security vulnerabilities to patch them!
-        </div>
-    </div>
-</div>
-
-<!-- Hacking Notification Banner -->
-<div id="hacking-notification" style="display: none; position: fixed; bottom: 20px; left: 20px; right: 20px; background: linear-gradient(135deg, #ff00ff 0%, #ff00aa 100%); padding: 15px; border-radius: 12px; box-shadow: 0 0 30px rgba(255,0,255,0.5); z-index: 9999; max-width: 350px; border: 2px solid #ff00ff; animation: pulse 2s infinite;">
-    <div style="color: #fff; font-weight: 800; font-size: 1rem; margin-bottom: 8px;">
-        ⚠️ HACKING OPPORTUNITY!
-    </div>
-    <div style="color: #fff; font-size: 0.85rem; margin-bottom: 12px;">
-        A vulnerable smart contract has been detected on the network!
-    </div>
-    <div style="display: flex; gap: 8px;">
-        <button onclick="dismissHackingNotification(); initHackingMinigame('EASY')" style="background: #fff; color: #ff00ff; border: none; padding: 10px 15px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.85rem; flex: 1;">
-            START HACK
-        </button>
-        <button onclick="dismissHackingNotification()" style="background: rgba(0,0,0,0.3); color: #fff; border: 1px solid #fff; padding: 10px 15px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-            DISMISS
-        </button>
-    </div>
-</div>
-
 <!-- Whack-A-Block Modal -->
-<div id="whack-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10002; justify-content: center; align-items: center; overflow: auto;">
-    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #00ff88; box-shadow: 0 0 30px rgba(0,255,136,0.5); display: flex; flex-direction: column; align-items: center;">
+<div id="whack-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,1); z-index: 10002; justify-content: center; align-items: center; overflow: hidden;">
+    <div style="background: linear-gradient(135deg, #1a2a1a 0%, #2d3d2d 100%); background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,255,136,0.03) 20px, rgba(0,255,136,0.03) 21px), repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,255,136,0.03) 20px, rgba(0,255,136,0.03) 21px), radial-gradient(circle at 20% 50%, rgba(0,255,136,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(0,255,136,0.05) 0%, transparent 50%); padding: 30px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #00ff88; box-shadow: 0 0 30px rgba(0,255,136,0.5), inset 0 0 30px rgba(0,255,136,0.1); display: flex; flex-direction: column; align-items: center;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
             <h2 style="color: #00ff88; margin: 0; font-size: 1.5rem;">⚡ BLOCK SUPPRESSION</h2>
             <div style="text-align: right;">
@@ -1659,7 +1514,7 @@
 </div>
 
 <!-- Whack-A-Block Results Modal -->
-<div id="whack-results-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10003; justify-content: center; align-items: center; flex-direction: column;">
+<div id="whack-results-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,1); z-index: 10003; justify-content: center; align-items: center; flex-direction: column;">
     <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px; border-radius: 12px; max-width: 500px; width: 90%; border: 2px solid #00ff88; box-shadow: 0 0 30px rgba(0,255,136,0.5); text-align: center;">
         <div id="whack-results-title" style="color: #00ff88; font-size: 1.8rem; font-weight: 800; margin-bottom: 20px;">⚡ GAME OVER</div>
 
@@ -1698,17 +1553,20 @@
 </div>
 
 <!-- Network Stress Test Modal -->
-<div id="network-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10002; justify-content: center; align-items: center; overflow: auto;">
-    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #00b4ff; box-shadow: 0 0 30px rgba(0,180,255,0.5); display: flex; flex-direction: column; align-items: center;">
+<div id="network-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,1); z-index: 10002; justify-content: center; align-items: center; overflow: auto;">
+    <div style="background: linear-gradient(135deg, #0a1a2a 0%, #1a2d3d 100%); background-image: repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(0,180,255,0.03) 30px, rgba(0,180,255,0.03) 31px), repeating-linear-gradient(-45deg, transparent, transparent 30px, rgba(0,180,255,0.03) 30px, rgba(0,180,255,0.03) 31px), radial-gradient(circle at 10% 90%, rgba(0,180,255,0.08) 0%, transparent 50%), radial-gradient(circle at 90% 10%, rgba(0,180,255,0.08) 0%, transparent 50%); padding: 30px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; border: 2px solid #00b4ff; box-shadow: 0 0 30px rgba(0,180,255,0.5), inset 0 0 30px rgba(0,180,255,0.1); display: flex; flex-direction: column; align-items: center;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
             <h2 style="color: #00b4ff; margin: 0; font-size: 1.5rem;">🌐 NETWORK STRESS TEST</h2>
-            <div style="text-align: right;">
-                <div style="color: #00b4ff; font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">
-                    <span id="network-difficulty-display">EASY</span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="text-align: right;">
+                    <div style="color: #00b4ff; font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">
+                        <span id="network-difficulty-display">EASY</span>
+                    </div>
+                    <div style="color: #fff; font-size: 1rem;">
+                        <span id="network-time-display">10s</span>
+                    </div>
                 </div>
-                <div style="color: #fff; font-size: 1rem;">
-                    <span id="network-time-display">10s</span>
-                </div>
+                <button onclick="closeNetworkModal()" style="background: #00b4ff; color: #000; border: none; padding: 8px 12px; font-weight: 800; border-radius: 4px; cursor: pointer; font-size: 1.2rem; line-height: 1; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">×</button>
             </div>
         </div>
 
@@ -1833,10 +1691,19 @@
         box-shadow: inset 0 0 20px rgba(255, 51, 68, 0.8), 0 0 30px rgba(255, 51, 68, 0.6);
     }
 }
+
+/* Responsive utility buttons layout */
+@media (min-width: 1561px) {
+    #utility-buttons-container {
+        flex-direction: row !important;
+        gap: 8px !important;
+        align-items: center !important;
+    }
+}
 </style>
 
 <script src="game.js?v=1.2.0"></script>
-<script src="packet-interceptor.js"></script>
+<script src="packet-interceptor.js?v=1.0.0"></script>
 
 <!-- Load staking system after main game variables are defined -->
 <script src="staking.js?v=1.1.0"></script>
