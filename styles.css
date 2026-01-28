@@ -56,34 +56,16 @@
 
         #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
 
-        /* Left panel - Mining section with subtle pattern */
+        /* Left panel - Mining section */
         #main-layout > div:first-child {
             position: relative;
-            background-image:
-                linear-gradient(90deg, transparent 48%, rgba(247, 147, 26, 0.03) 49%, rgba(247, 147, 26, 0.03) 51%, transparent 52%),
-                linear-gradient(0deg, transparent 48%, rgba(51, 168, 255, 0.02) 49%, rgba(51, 168, 255, 0.02) 51%, transparent 52%);
-            background-size:
-                250px 250px,
-                250px 250px;
-            background-position:
-                0 0,
-                0 0;
-            background-attachment: fixed;
+            background-color: #050505;
         }
 
-        /* Right panel - Controls section with subtle pattern */
+        /* Right panel - Controls section */
         #main-layout > div:last-child {
             position: relative;
-            background-image:
-                linear-gradient(180deg, transparent 48%, rgba(51, 168, 255, 0.02) 49%, rgba(51, 168, 255, 0.02) 51%, transparent 52%),
-                linear-gradient(90deg, transparent 48%, rgba(247, 147, 26, 0.02) 49%, rgba(247, 147, 26, 0.02) 51%, transparent 52%);
-            background-size:
-                250px 250px,
-                250px 250px;
-            background-position:
-                0 0,
-                0 0;
-            background-attachment: fixed;
+            background-color: #050505;
         }
 
         .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; }

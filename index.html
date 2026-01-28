@@ -225,65 +225,74 @@
                 </div>
             </div>
 
-            <!-- Crypto Prices -->
-            <div style="position: fixed; top: 0; right: 0; padding: 12px; background: rgba(0,0,0,0.8); border-radius: 0 0 0 8px; border: 1px solid #222; border-top: none; border-right: none; z-index: 1000;">
-                <div id="crypto-prices-flex" style="display: flex; gap: 15px; flex-wrap: nowrap; justify-content: flex-end;">
-                    <div style="min-width: 140px;">
-                        <div style="font-size: 0.65rem; color: #f7931a; font-weight: 800;">BITCOIN</div>
-                        <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+            <!-- Crypto Prices Header -->
+            <div style="padding: 12px 10px; text-align: center; background: rgba(0,0,0,0.3); border-bottom: 1px solid #222;">
+                <span style="font-size: 0.85rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 8px;">Crypto Prices (Virtual)</span>
+                <div id="crypto-prices-flex" style="display: flex; flex-wrap: nowrap; align-items: flex-start; width: 100%;">
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 0.65rem; color: #f7931a; font-weight: 800; display: block; margin-bottom: 4px;">BITCOIN</div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <b class="stat-val" id="btc-price" style="font-size: 1.4rem;">$100,000</b>
-                            <span id="btc-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
-                            <span id="btc-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
+                            <div style="display: flex; align-items: center; gap: 4px; height: 16px;">
+                                <span id="btc-indicator" style="font-size: 1.2rem; font-weight: bold;"></span>
+                                <span id="btc-change" style="font-size: 0.9rem; font-weight: bold;"></span>
+                            </div>
                         </div>
                     </div>
-                    <div style="min-width: 140px;">
-                        <div style="font-size: 0.65rem; color: #627eea; font-weight: 800;">ETHEREUM</div>
-                        <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 0.65rem; color: #627eea; font-weight: 800; display: block; margin-bottom: 4px;">ETHEREUM</div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <b class="stat-val" id="eth-price" style="font-size: 1.4rem;">$3,500</b>
-                            <span id="eth-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
-                            <span id="eth-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
+                            <div style="display: flex; align-items: center; gap: 4px; height: 16px;">
+                                <span id="eth-indicator" style="font-size: 1.2rem; font-weight: bold;"></span>
+                                <span id="eth-change" style="font-size: 0.9rem; font-weight: bold;"></span>
+                            </div>
                         </div>
                     </div>
-                    <div style="min-width: 140px;">
-                        <div style="font-size: 0.65rem; color: #c2a633; font-weight: 800;">DOGECOIN</div>
-                        <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 0.65rem; color: #c2a633; font-weight: 800; display: block; margin-bottom: 4px;">DOGECOIN</div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <b class="stat-val" id="doge-price" style="font-size: 1.4rem;">$0.25</b>
-                            <span id="doge-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
-                            <span id="doge-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
+                            <div style="display: flex; align-items: center; gap: 4px; height: 16px;">
+                                <span id="doge-indicator" style="font-size: 1.2rem; font-weight: bold;"></span>
+                                <span id="doge-change" style="font-size: 0.9rem; font-weight: bold;"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Net Worth Chart -->
-            <div id="nw-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 300px; display: block;">
-                <canvas id="nwChart" width="800" height="300"></canvas>
-                <!-- News ticker overlay -->
-                <div id="news-ticker-overlay" style="position: absolute; bottom: 0; right: 0; width: 100%; max-width: 400px; max-height: 200px; overflow-y: auto; background: transparent; pointer-events: none;">
-                    <div id="news-ticker-content" style="display: flex; flex-direction: column; gap: 4px;"></div>
+            <!-- Charts Container -->
+            <div style="display: flex; flex-direction: column; width: 100%; gap: 0; overflow: visible; flex: 1; min-height: 0;">
+                <!-- Net Worth Chart -->
+                <div id="nw-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 0; flex: 0 0 53%; display: block;">
+                    <!-- Chart refresh message -->
+                    <div style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); text-align: center; color: #666; font-size: 0.65rem; z-index: 5;">
+                        <p style="margin: 0;">📊 Graph not showing? Refresh the page</p>
+                    </div>
+                    <canvas id="nwChart" width="800" height="300"></canvas>
+                    <!-- News ticker overlay -->
+                    <div id="news-ticker-overlay" style="position: absolute; bottom: 0; right: 0; width: 100%; max-width: 400px; max-height: 200px; overflow-y: auto; background: transparent; pointer-events: none;">
+                        <div id="news-ticker-content" style="display: flex; flex-direction: column; gap: 4px;"></div>
+                    </div>
+                    <!-- Chart Marker Tooltip -->
+                    <div id="chart-marker-tooltip" style="display: none; position: absolute; background: white; color: #333; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; pointer-events: none;"></div>
                 </div>
-                <!-- Chart Marker Tooltip -->
-                <div id="chart-marker-tooltip" style="display: none; position: absolute; background: white; color: #333; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; pointer-events: none;"></div>
-            </div>
 
-            <!-- Hash Rate Chart -->
-            <div id="hr-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 300px; display: block;">
-                <canvas id="hashRateChart" width="800" height="300"></canvas>
+                <!-- Hash Rate Chart -->
+                <div id="hr-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 0; flex: 0 0 35%; display: block;">
+                    <canvas id="hashRateChart" width="800" height="300"></canvas>
+                </div>
+
+                <!-- Chart Time Range Slider -->
+                <div style="padding: 3px 10px 12px 10px; text-align: center; flex-shrink: 0; margin-top: 2px;">
+                    <label for="chart-time-slider" style="color: #999; font-size: 0.85rem; margin-right: 10px; display: inline-block;">Time Range:</label>
+                    <input type="range" id="chart-time-slider" min="5" max="100" value="50" style="width: 200px; cursor: pointer; vertical-align: middle;">
+                    <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 10px; display: inline-block; min-width: 80px;">50%</span>
+                </div>
             </div>
             <!-- Chart Date Tracker -->
             <div id="chart-date-tracker" style="text-align: center; padding: 2px 0; color: #f7931a; font-size: 0.85rem; font-weight: 600; min-height: 16px; display: none;"></div>
-
-            <!-- Chart Time Range Slider -->
-            <div style="padding: 4px 10px; text-align: center;">
-                <label for="chart-time-slider" style="color: #999; font-size: 0.85rem; margin-right: 10px; display: inline-block;">Time Range:</label>
-                <input type="range" id="chart-time-slider" min="5" max="100" value="50" style="width: 200px; cursor: pointer; vertical-align: middle;">
-                <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 10px; display: inline-block; min-width: 80px;">50%</span>
-            </div>
-
-            <!-- Chart refresh message -->
-            <div style="text-align: center; padding: 2px 0; color: #666; font-size: 0.65rem;">
-                <p style="margin: 0;">📊 Graph not showing? Refresh the page</p>
-            </div>
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">

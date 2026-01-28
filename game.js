@@ -7006,14 +7006,25 @@ dogeUpgrades.forEach(u => {
                     hashRateChartInstance.destroy();
                 }
 
-                // Ensure we have data
+                // Ensure we have data - bootstrap from existing chart history if available
                 if (hashRateChartHistory.length === 0) {
-                    // Initialize with starting data if empty
-                    hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
-                    ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
-                    dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
-                    powerChartHistory.push(totalPowerUsed);
-                    hashRateChartTimestamps.push({ time: Date.now() });
+                    if (chartHistory.length > 0 && chartTimestamps.length > 0) {
+                        // Copy existing data from main chart
+                        for (let i = 0; i < chartHistory.length; i++) {
+                            hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
+                            ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
+                            dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
+                            powerChartHistory.push(totalPowerUsed);
+                            hashRateChartTimestamps.push(chartTimestamps[i]);
+                        }
+                    } else {
+                        // If no data yet, create one initial point
+                        hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
+                        ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
+                        dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
+                        powerChartHistory.push(totalPowerUsed);
+                        hashRateChartTimestamps.push({ time: Date.now() });
+                    }
                 }
 
                 const timeRangeSlider = document.getElementById('chart-time-slider');
