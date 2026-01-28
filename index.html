@@ -228,11 +228,11 @@
             <!-- Crypto Prices Header -->
             <div style="padding: 12px 10px; text-align: center; background: rgba(0,0,0,0.3); border-bottom: 1px solid #222;">
                 <span style="font-size: 0.85rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 8px;">Crypto Prices (Virtual)</span>
-                <div id="crypto-prices-flex" style="display: flex; flex-wrap: nowrap; align-items: flex-start; width: 100%;">
+                <div id="crypto-prices-flex" style="display: flex; flex-wrap: nowrap; align-items: flex-start; width: 100%; margin-right: 100px;">
                     <div style="flex: 1; text-align: center;">
                         <div style="font-size: 0.65rem; color: #f7931a; font-weight: 800; display: block; margin-bottom: 4px;">BITCOIN</div>
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                            <b class="stat-val" id="btc-price" style="font-size: 1.4rem;">$100,000</b>
+                            <b class="stat-val" id="btc-price" style="font-size: 1.4rem; white-space: nowrap;">$100,000</b>
                             <div style="display: flex; align-items: center; gap: 4px; height: 16px;">
                                 <span id="btc-indicator" style="font-size: 1.2rem; font-weight: bold;"></span>
                                 <span id="btc-change" style="font-size: 0.9rem; font-weight: bold;"></span>
@@ -242,7 +242,7 @@
                     <div style="flex: 1; text-align: center;">
                         <div style="font-size: 0.65rem; color: #627eea; font-weight: 800; display: block; margin-bottom: 4px;">ETHEREUM</div>
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                            <b class="stat-val" id="eth-price" style="font-size: 1.4rem;">$3,500</b>
+                            <b class="stat-val" id="eth-price" style="font-size: 1.4rem; white-space: nowrap;">$3,500</b>
                             <div style="display: flex; align-items: center; gap: 4px; height: 16px;">
                                 <span id="eth-indicator" style="font-size: 1.2rem; font-weight: bold;"></span>
                                 <span id="eth-change" style="font-size: 0.9rem; font-weight: bold;"></span>
@@ -1683,6 +1683,15 @@
 </div>
 
 <style>
+#crypto-prices-flex > div {
+    flex-shrink: 0 !important;
+}
+
+.stat-val {
+    min-width: 80px;
+    display: inline-block;
+}
+
 .whack-block {
     background: #333;
     border: 2px solid #555;

@@ -256,6 +256,13 @@ function initTutorial() {
         // First time starting the tutorial
         console.log('🎓 Starting new tutorial');
         tutorialData.currentStep = 0;
+        // Scroll down to show manual hash buttons
+        setTimeout(() => {
+            const manualHashBtn = document.getElementById('manual-hash-btc-btn');
+            if (manualHashBtn) {
+                manualHashBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 300);
     } else {
         // Resume from saved state
         console.log(`🎓 Resuming tutorial from step ${tutorialData.currentStep}`);
