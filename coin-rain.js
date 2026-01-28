@@ -156,15 +156,13 @@
             // Consistent sizes for all coins
             let size;
             if (coinType.name === 'usd') {
-                size = 96; // Much bigger dollar bills (60 * 1.6 = 96)
+                size = 150; // Much bigger dollar bills (120 * 1.25 = 150)
             } else if (coinType.name === 'usd_stack') {
-                size = 110; // Even bigger for dollar stacks
+                size = 171.875; // Even bigger for dollar stacks (137.5 * 1.25 = 171.875)
             } else if (coinType.name === 'usd_stack_2') {
-                size = 77; // Smaller for mega dollar stacks - 30% less than usd_stack (110 * 0.7 = 77)
-            } else if (coinType.name === 'eth') {
-                size = 26.4; // ETH 10% bigger (24 * 1.1 = 26.4)
+                size = 120.3125; // Smaller for mega dollar stacks (96.25 * 1.25 = 120.3125)
             } else {
-                size = 24; // Fixed size for BTC and DOGE
+                size = 37.5; // Fixed size for BTC, ETH, and DOGE - all same size now (30 * 1.25 = 37.5)
             }
 
             // Increase randomization for click coins

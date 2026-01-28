@@ -18,7 +18,7 @@
   gtag('config', 'G-2H559N5J64');
 </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Idle BTC Miner - Play Now! | Free Cryptocurrency Idle Game</title>
     <meta name="description" content="Idle BTC Miner - Play our free browser-based idle game and build your crypto mining empire. Earn Bitcoin, Ethereum, and Dogecoin through passive gameplay. No investment required. 18+">
     <meta name="keywords" content="idle game, cryptocurrency, bitcoin, ethereum, dogecoin, mining simulator, incremental game, clicker game, free online game">
@@ -39,6 +39,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="coin-rain.js?v=1.2.0"></script>
     <link rel="stylesheet" href="styles.css">
+    <script>
+        // Allow zoom functionality - user can zoom in/out naturally
+        // The interface scales responsively based on viewport size
+        // No zoom restrictions
+    </script>
 </head>
 <body>
 
@@ -150,7 +155,7 @@
                 <div style="position: absolute; left: 50%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 5; pointer-events: auto; gap: 4px;">
                     <div id="rugpull-button-row" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
                         <div style="display: flex; flex-direction: column; align-items: center;">
-                            <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 4px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
+                            <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 4px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.4), 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
                             <div id="rugpull-tooltip" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
                                 <span id="tooltip-text">Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
                             </div>
@@ -165,6 +170,7 @@
                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto; pointer-events: auto;" id="utility-buttons-container">
                     <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
                     <button id="vfx-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleVFX()">VFX ON</button>
+                    <button style="background: #9c27b0; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleFullscreen()">⛶ FULLSCREEN</button>
                     <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
                     <button style="background: #2196F3; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
                     <button style="background: #ffa500; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
@@ -192,7 +198,7 @@
             <div id="ascension-info" style="margin-bottom: 4px;"></div>
 
             <!-- Hashrate Display -->
-            <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 4px; justify-content: flex-end; flex-wrap: wrap;">
+            <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 4px; justify-content: flex-end; flex-wrap: wrap; align-items: center;">
                 <div class="stat-box stat-box-session" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">TIME THIS SESSION</span>
                     <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-time">0m 0s</b>
@@ -205,43 +211,42 @@
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">LIFETIME EARNINGS</span>
                     <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="lifetime-earning">$0.00</b>
                 </div>
-                <div class="stat-box stat-box-btc" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                <div class="stat-box stat-box-btc" style="padding: 9px 15px; background: rgba(247, 147, 26, 0.15); border-radius: 4px; border: 1px solid #f7931a; min-width: 120px;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">BTC HASHRATE</span>
                     <b style="font-size: 1.1rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00000000/s</b>
                 </div>
-                <div class="stat-box stat-box-eth" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                <div class="stat-box stat-box-eth" style="padding: 9px 15px; background: rgba(98, 126, 234, 0.15); border-radius: 4px; border: 1px solid #627eea; min-width: 120px;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">ETH HASHRATE</span>
                     <b style="font-size: 1.1rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00000000/s</b>
                 </div>
-                <div class="stat-box stat-box-doge" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
+                <div class="stat-box stat-box-doge" style="padding: 9px 15px; background: rgba(194, 166, 51, 0.15); border-radius: 4px; border: 1px solid #c2a633; min-width: 120px;">
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">DOGE HASHRATE</span>
                     <b style="font-size: 1.1rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00000000/s</b>
                 </div>
             </div>
 
             <!-- Crypto Prices -->
-            <div style="margin-top: 0; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222;">
-                <span style="font-size: 0.85rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 8px;">Crypto Prices (Virtual)</span>
-                <div id="crypto-prices-flex" style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 120px;">
+            <div style="position: fixed; top: 0; right: 0; padding: 12px; background: rgba(0,0,0,0.8); border-radius: 0 0 0 8px; border: 1px solid #222; border-top: none; border-right: none; z-index: 1000;">
+                <div id="crypto-prices-flex" style="display: flex; gap: 15px; flex-wrap: nowrap; justify-content: flex-end;">
+                    <div style="min-width: 140px;">
                         <div style="font-size: 0.65rem; color: #f7931a; font-weight: 800;">BITCOIN</div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
                             <b class="stat-val" id="btc-price" style="font-size: 1.4rem;">$100,000</b>
                             <span id="btc-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
                             <span id="btc-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
                         </div>
                     </div>
-                    <div style="flex: 1; min-width: 120px;">
+                    <div style="min-width: 140px;">
                         <div style="font-size: 0.65rem; color: #627eea; font-weight: 800;">ETHEREUM</div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
                             <b class="stat-val" id="eth-price" style="font-size: 1.4rem;">$3,500</b>
                             <span id="eth-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
                             <span id="eth-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
                         </div>
                     </div>
-                    <div style="flex: 1; min-width: 120px;">
+                    <div style="min-width: 140px;">
                         <div style="font-size: 0.65rem; color: #c2a633; font-weight: 800;">DOGECOIN</div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
                             <b class="stat-val" id="doge-price" style="font-size: 1.4rem;">$0.25</b>
                             <span id="doge-indicator" style="font-size: 1.2rem; font-weight: bold; min-width: 20px;"></span>
                             <span id="doge-change" style="font-size: 0.9rem; font-weight: bold; min-width: 50px;"></span>
@@ -250,33 +255,58 @@
                 </div>
             </div>
 
-            <div class="chart-wrapper" style="position: relative; width: 100%; height: 300px;">
+            <!-- Net Worth Chart -->
+            <div id="nw-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 300px; display: block;">
                 <canvas id="nwChart" width="800" height="300"></canvas>
                 <!-- News ticker overlay -->
-                <div id="news-ticker-overlay">
-                    <div id="news-ticker-content"></div>
+                <div id="news-ticker-overlay" style="position: absolute; bottom: 0; right: 0; width: 100%; max-width: 400px; max-height: 200px; overflow-y: auto; background: transparent; pointer-events: none;">
+                    <div id="news-ticker-content" style="display: flex; flex-direction: column; gap: 4px;"></div>
                 </div>
                 <!-- Chart Marker Tooltip -->
                 <div id="chart-marker-tooltip" style="display: none; position: absolute; background: white; color: #333; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; pointer-events: none;"></div>
             </div>
+
+            <!-- Hash Rate Chart -->
+            <div id="hr-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 300px; display: block;">
+                <canvas id="hashRateChart" width="800" height="300"></canvas>
+            </div>
             <!-- Chart Date Tracker -->
-            <div id="chart-date-tracker" style="text-align: center; padding: 8px 0; color: #f7931a; font-size: 0.85rem; font-weight: 600; min-height: 20px; display: none;"></div>
+            <div id="chart-date-tracker" style="text-align: center; padding: 2px 0; color: #f7931a; font-size: 0.85rem; font-weight: 600; min-height: 16px; display: none;"></div>
+
+            <!-- Chart Time Range Slider -->
+            <div style="padding: 4px 10px; text-align: center;">
+                <label for="chart-time-slider" style="color: #999; font-size: 0.85rem; margin-right: 10px; display: inline-block;">Time Range:</label>
+                <input type="range" id="chart-time-slider" min="5" max="100" value="50" style="width: 200px; cursor: pointer; vertical-align: middle;">
+                <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 10px; display: inline-block; min-width: 80px;">50%</span>
+            </div>
 
             <!-- Chart refresh message -->
-            <div style="text-align: center; padding: 4px 0; color: #666; font-size: 0.65rem;">
+            <div style="text-align: center; padding: 2px 0; color: #666; font-size: 0.65rem;">
                 <p style="margin: 0;">📊 Graph not showing? Refresh the page</p>
             </div>
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
-            <button id="manual-hash-btc-btn" class="mine-btn" style="position: relative; z-index: 100; line-height: 1.2;">MANUAL BTC HASH <img src="bitcointoken.png" style="width: 28px; height: 28px; vertical-align: text-top; margin-left: 2px;" alt="BTC"><br>
-                <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00000250 ₿</span>
+            <button id="manual-hash-btc-btn" class="mine-btn" style="background: #f7931a; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="flex: 1; text-align: center;">
+                    MANUAL BTC HASH<br>
+                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7; display: block; margin-top: 2px;">+0.00000250 ₿</span>
+                </div>
+                <img src="bitcointoken.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="BTC">
             </button>
-            <button id="manual-hash-eth-btn" class="mine-btn" style="background: #627eea; padding: 8px; line-height: 1.2;">MANUAL ETH HASH <img src="ethcoin.png" style="width: 36px; height: 36px; vertical-align: text-top; margin-left: 2px;" alt="ETH"><br>
-                <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+0.00007143 Ξ</span>
+            <button id="manual-hash-eth-btn" class="mine-btn" style="background: #627eea; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="flex: 1; text-align: center;">
+                    MANUAL ETH HASH<br>
+                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7; display: block; margin-top: 2px;">+0.00007143 Ξ</span>
+                </div>
+                <img src="ethcoin.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="ETH">
             </button>
-            <button id="manual-hash-doge-btn" class="mine-btn" style="background: #c2a633; padding: 8px; line-height: 1.2;">MANUAL DOGE HASH <img src="dogecoin.png" style="width: 28px; height: 28px; vertical-align: text-top; margin-left: 2px;" alt="DOGE"><br>
-                <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7;">+1.00000000 Ð</span>
+            <button id="manual-hash-doge-btn" class="mine-btn" style="background: #c2a633; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="flex: 1; text-align: center;">
+                    MANUAL DOGE HASH<br>
+                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7; display: block; margin-top: 2px;">+1.00000000 Ð</span>
+                </div>
+                <img src="dogecoin.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="DOGE">
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 8px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-size: 0.75rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
 
@@ -421,12 +451,12 @@
                             <span style="color: #888; font-size: 0.8rem;">$<span id="market-btc-price">100,000</span> each</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                            <button onclick="quickSellBTC(10)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
-                            <button onclick="quickSellBTC(25)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
-                            <button onclick="quickSellBTC(50)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
-                            <button onclick="quickSellBTC(75)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
+                            <button onclick="quickSellBTC(10, this)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
+                            <button onclick="quickSellBTC(25, this)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
+                            <button onclick="quickSellBTC(50, this)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
+                            <button onclick="quickSellBTC(75, this)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
-                        <button onclick="sellAllBTC()" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                        <button onclick="sellAllBTC(this)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
 
                     <!-- ETH Sell -->
@@ -436,12 +466,12 @@
                             <span style="color: #888; font-size: 0.8rem;">$<span id="market-eth-price">3,500</span> each</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                            <button onclick="quickSellETH(10)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
-                            <button onclick="quickSellETH(25)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
-                            <button onclick="quickSellETH(50)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
-                            <button onclick="quickSellETH(75)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
+                            <button onclick="quickSellETH(10, this)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
+                            <button onclick="quickSellETH(25, this)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
+                            <button onclick="quickSellETH(50, this)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
+                            <button onclick="quickSellETH(75, this)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
-                        <button onclick="sellAllETH()" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                        <button onclick="sellAllETH(this)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
 
                     <!-- DOGE Sell -->
@@ -451,12 +481,12 @@
                             <span style="color: #888; font-size: 0.8rem;">$<span id="market-doge-price">0.25</span> each</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                            <button onclick="quickSellDOGE(10)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
-                            <button onclick="quickSellDOGE(25)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
-                            <button onclick="quickSellDOGE(50)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
-                            <button onclick="quickSellDOGE(75)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
+                            <button onclick="quickSellDOGE(10, this)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 10%</button>
+                            <button onclick="quickSellDOGE(25, this)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 25%</button>
+                            <button onclick="quickSellDOGE(50, this)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
+                            <button onclick="quickSellDOGE(75, this)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
-                        <button onclick="sellAllDOGE()" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                        <button onclick="sellAllDOGE(this)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
                     </div>
 
                     <!-- Staking Section -->
@@ -1705,6 +1735,63 @@
         align-items: center !important;
     }
 }
+
+/* News ticker styles */
+.news-item {
+    display: flex;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.7);
+    border-left: 3px solid #f7931a;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    pointer-events: auto;
+    animation: slideInRight 0.3s ease;
+}
+
+.news-item-emoji {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.news-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.news-item-title {
+    font-weight: 700;
+    color: #f7931a;
+}
+
+.news-item-text {
+    color: #999;
+    font-size: 0.7rem;
+}
+
+.news-item-price {
+    font-weight: 600;
+}
+
+.news-item-price.up {
+    color: #00ff88;
+}
+
+.news-item-price.down {
+    color: #ff3344;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
 </style>
 
 <script src="game.js?v=1.2.0"></script>
@@ -1726,7 +1813,7 @@
     <a href="#" onclick="openPrivacyModal(); switchPolicyTab('cookies'); return false;" style="color: #f7931a; text-decoration: none;">Cookie Policy</a> |
     <a href="#" onclick="openPrivacyModal(); switchPolicyTab('terms'); return false;" style="color: #f7931a; text-decoration: none;">Terms & Conditions</a> |
     <a href="#" onclick="openPrivacyModal(); switchPolicyTab('contact'); return false;" style="color: #f7931a; text-decoration: none;">Contact</a> |
-    Idle BTC Miner 2026 - Aaron Khan
+    © 2026 Idle BTC Miner - Aaron Khan
 </footer>
 
 <script>

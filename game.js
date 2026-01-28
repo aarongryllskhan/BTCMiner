@@ -92,6 +92,16 @@
     let chartMarkers = []; // Fixed markers every 60 seconds: { index, time, value }
     let lastMarkerTime = Date.now();
 
+    // Multi-axis hash rate chart tracking
+    let hashRateChartHistory = [];
+    let powerChartHistory = [];
+    let ethHashRateChartHistory = [];
+    let dogeHashRateChartHistory = [];
+    let hashRateChartTimestamps = [];
+    let lastHashRateChartUpdateTime = Date.now();
+    let currentChartView = 'networth'; // 'networth' or 'hashrate'
+    let hashRateChartInstance = null;
+
     // Hacking Minigame State
     let hackingGameActive = false;
     let hackingGameDifficulty = 'EASY';
@@ -1900,6 +1910,34 @@ function loadGame() {
         }
     }
 
+    // Fullscreen toggle
+    function toggleFullscreen() {
+        const elem = document.documentElement;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            // Enter fullscreen
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        } else {
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+    }
+
     // Auto-clicker state
     let autoClickerActive = false;
     let autoClickerCooldownEnd = 0;
@@ -1982,15 +2020,16 @@ function loadGame() {
             boostBtn.id = `boost-${u.id}`;
             boostBtn.style.background = '#ff9500';
             boostBtn.style.border = 'none';
-            boostBtn.style.borderRadius = '6px';
+            boostBtn.style.borderRadius = '0 0 6px 6px';
             boostBtn.style.padding = '6px 10px';
             boostBtn.style.fontSize = '0.7rem';
             boostBtn.style.fontWeight = '700';
             boostBtn.style.color = '#000';
             boostBtn.style.cursor = 'pointer';
-            boostBtn.style.marginTop = '2px';
+            boostBtn.style.marginTop = '-1px';
             boostBtn.style.width = '100%';
             boostBtn.style.transition = '0.1s';
+            boostBtn.style.boxShadow = 'inset 0 -2px 4px rgba(0,0,0,0.4)';
             boostBtn.onclick = () => buyBoost(i);
             boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$0</span>`;
             boostBtn.disabled = u.level === 0;
@@ -2204,7 +2243,7 @@ function loadGame() {
         playUpgradeSound();
     }
 
-    function sellAllBTC() {
+    function sellAllBTC(button) {
         if (btcBalance <= 0) return;
         const effectivePrice = getEffectiveCryptoPrice(btcPrice);
         const saleValue = btcBalance * effectivePrice * 0.95; // 5% fee
@@ -2219,6 +2258,11 @@ function loadGame() {
         updateUI();
         saveGame();
         playUpgradeSound();
+        // Flash the button
+        if (button) {
+            button.classList.add('button-flash');
+            setTimeout(() => button.classList.remove('button-flash'), 300);
+        }
     }
 
     function sellETH(amount) {
@@ -2241,7 +2285,7 @@ function loadGame() {
         playUpgradeSound();
     }
 
-    function sellAllETH() {
+    function sellAllETH(button) {
         if (ethBalance <= 0) return;
         const effectivePrice = getEffectiveCryptoPrice(ethPrice);
         const saleValue = ethBalance * effectivePrice * 0.95; // 5% fee
@@ -2256,6 +2300,11 @@ function loadGame() {
         updateUI();
         saveGame();
         playUpgradeSound();
+        // Flash the button
+        if (button) {
+            button.classList.add('button-flash');
+            setTimeout(() => button.classList.remove('button-flash'), 300);
+        }
     }
 
     function sellDOGE(amount) {
@@ -2279,7 +2328,7 @@ function loadGame() {
         playUpgradeSound();
     }
 
-    function sellAllDOGE() {
+    function sellAllDOGE(button) {
         if (dogeBalance <= 0) return;
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
         const saleValue = dogeBalance * effectivePrice;
@@ -2294,12 +2343,17 @@ function loadGame() {
         updateUI();
         saveGame();
         playUpgradeSound();
+        // Flash the button
+        if (button) {
+            button.classList.add('button-flash');
+            setTimeout(() => button.classList.remove('button-flash'), 300);
+        }
     }
 
     /**
      * Quick sell functions that use percentages (like staking)
      */
-    function quickSellBTC(percentage) {
+    function quickSellBTC(percentage, button) {
         if (btcBalance <= 0) return;
         const amountToSell = btcBalance * (percentage / 100);
         const effectivePrice = getEffectiveCryptoPrice(btcPrice);
@@ -2311,9 +2365,14 @@ function loadGame() {
         updateUI();
         saveGame();
         playUpgradeSound();
+        // Flash the button
+        if (button) {
+            button.classList.add('button-flash');
+            setTimeout(() => button.classList.remove('button-flash'), 300);
+        }
     }
 
-    function quickSellETH(percentage) {
+    function quickSellETH(percentage, button) {
         if (ethBalance <= 0) return;
         const amountToSell = ethBalance * (percentage / 100);
         const effectivePrice = getEffectiveCryptoPrice(ethPrice);
@@ -2325,9 +2384,14 @@ function loadGame() {
         updateUI();
         saveGame();
         playUpgradeSound();
+        // Flash the button
+        if (button) {
+            button.classList.add('button-flash');
+            setTimeout(() => button.classList.remove('button-flash'), 300);
+        }
     }
 
-    function quickSellDOGE(percentage) {
+    function quickSellDOGE(percentage, button) {
         if (dogeBalance <= 0) return;
         const amountToSell = dogeBalance * (percentage / 100);
         const effectivePrice = getEffectiveCryptoPrice(dogePrice);
@@ -2339,6 +2403,11 @@ function loadGame() {
         updateUI();
         saveGame();
         playUpgradeSound();
+        // Flash the button
+        if (button) {
+            button.classList.add('button-flash');
+            setTimeout(() => button.classList.remove('button-flash'), 300);
+        }
     }
 
     function buyPowerUpgrade(i) {
@@ -6638,8 +6707,23 @@ dogeUpgrades.forEach(u => {
         };
 
         // Try immediate initialization
+        const isDesktop = window.innerWidth > 1200;
+
         setTimeout(() => {
             tryInitChart();
+
+            // Initialize hash rate chart on all screen sizes
+            // On mobile it will be hidden but ready to show when swapped to
+            console.log('Initializing hash rate chart...');
+            const hrInitResult = initializeHashRateChart();
+            if (!hrInitResult) {
+                console.log('Hash rate chart init failed, will retry...');
+                // Retry hash rate chart initialization
+                setTimeout(() => {
+                    console.log('Retrying hash rate chart initialization...');
+                    initializeHashRateChart();
+                }, 200);
+            }
 
             // Retry with delays (especially important for mobile)
             if (!chartInitialized) {
@@ -6657,9 +6741,17 @@ dogeUpgrades.forEach(u => {
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
+                const isDesktop = window.innerWidth > 1200;
                 if (nwChart) {
-                    console.log('Window resized, re-rendering chart...');
+                    console.log('Window resized, re-rendering net worth chart...');
                     nwChart.resize();
+                }
+                if (isDesktop && hashRateChartInstance) {
+                    console.log('Window resized to desktop, re-rendering hash rate chart...');
+                    hashRateChartInstance.resize();
+                } else if (isDesktop && !hashRateChartInstance) {
+                    console.log('Window resized to desktop, initializing hash rate chart...');
+                    initializeHashRateChart();
                 }
             }, 300);
         });
@@ -6681,6 +6773,13 @@ dogeUpgrades.forEach(u => {
             chartHistory.push(netWorth);
             chartTimestamps.push({ time: now, value: netWorth });
 
+            // Also track hash rates and power for the secondary chart
+            hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
+            ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
+            dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
+            powerChartHistory.push(totalPowerUsed);
+            hashRateChartTimestamps.push({ time: now });
+
             // Add a marker every minute (60 seconds)
             if (now - lastMarkerTime >= 60000) {
                 chartMarkers.push({
@@ -6698,12 +6797,65 @@ dogeUpgrades.forEach(u => {
                 }
             }
 
-            // Update chart with new data
-            nwChart.data.labels = chartTimestamps.map((ts) =>
-                new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-            );
-            nwChart.data.datasets[0].data = chartHistory;
-            nwChart.update('none'); // Update without animation
+            // Update chart with new data - respecting time range slider
+            if (nwChart && chartHistory.length > 0) {
+                const timeRangeSlider = document.getElementById('chart-time-slider');
+                const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
+                const startIndex = Math.max(0, chartHistory.length - Math.ceil(chartHistory.length * (timeRangePercent / 100)));
+
+                // Only update if data has changed
+                const visibleDataLength = chartHistory.length - startIndex;
+                if (!nwChart._lastVisibleLength || nwChart._lastVisibleLength !== visibleDataLength) {
+                    nwChart.data.labels = chartTimestamps.slice(startIndex).map((ts) =>
+                        new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                    );
+                    nwChart.data.datasets[0].data = chartHistory.slice(startIndex);
+                    nwChart._lastVisibleLength = visibleDataLength;
+                    nwChart.update('none'); // Update without animation
+                } else {
+                    // Just add new data point without full redraw
+                    const lastTimestamp = chartTimestamps[chartTimestamps.length - 1];
+                    if (lastTimestamp) {
+                        nwChart.data.labels[nwChart.data.labels.length] = new Date(lastTimestamp.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        nwChart.data.datasets[0].data[nwChart.data.datasets[0].data.length] = netWorth;
+                        nwChart.update('none');
+                    }
+                }
+            }
+
+            // Update hash rate chart if it's initialized (always visible)
+            if (hashRateChartInstance && hashRateChartHistory.length > 0) {
+                const timeRangeSlider = document.getElementById('chart-time-slider');
+                const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
+                const startIndex = Math.max(0, hashRateChartHistory.length - Math.ceil(hashRateChartHistory.length * (timeRangePercent / 100)));
+
+                // Ensure all data arrays are the same length
+                const dataLength = Math.min(
+                    hashRateChartHistory.length,
+                    ethHashRateChartHistory.length,
+                    dogeHashRateChartHistory.length,
+                    powerChartHistory.length,
+                    hashRateChartTimestamps.length
+                );
+
+                const visibleDataLength = dataLength - startIndex;
+                if (!hashRateChartInstance._lastVisibleLength || hashRateChartInstance._lastVisibleLength !== visibleDataLength) {
+                    // Scale hash rates by USD value per second
+                    const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * btcPrice);
+                    const ethUsdPerSec = ethHashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * ethPrice);
+                    const dogeUsdPerSec = dogeHashRateChartHistory.slice(startIndex, startIndex + visibleDataLength).map(v => v * dogePrice);
+
+                    hashRateChartInstance.data.labels = hashRateChartTimestamps.slice(startIndex, startIndex + visibleDataLength).map((ts) => {
+                        const time = ts?.time || Date.now();
+                        return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    });
+                    hashRateChartInstance.data.datasets[0].data = btcUsdPerSec;
+                    hashRateChartInstance.data.datasets[1].data = ethUsdPerSec;
+                    hashRateChartInstance.data.datasets[2].data = dogeUsdPerSec;
+                    hashRateChartInstance._lastVisibleLength = visibleDataLength;
+                    hashRateChartInstance.update('none');
+                }
+            }
 
             // Update chart date tracker
             updateChartDateTracker();
@@ -6727,6 +6879,258 @@ dogeUpgrades.forEach(u => {
                 updateChartDateTracker();
             });
         }
+
+        // Add chart time range slider functionality with debouncing
+        const timeRangeSlider = document.getElementById('chart-time-slider');
+        const timeRangeLabel = document.getElementById('chart-time-label');
+        let sliderUpdateTimeout;
+
+        if (timeRangeSlider) {
+            timeRangeSlider.addEventListener('input', (e) => {
+                const percent = parseInt(e.target.value);
+                const labels = ['5%', '10%', '25%', '50%', '75%', 'Last 100%'];
+                const percents = [5, 10, 25, 50, 75, 100];
+                const labelIndex = percents.indexOf(percent);
+
+                // Update label immediately
+                if (labelIndex !== -1) {
+                    timeRangeLabel.textContent = labels[labelIndex];
+                } else {
+                    timeRangeLabel.textContent = `Last ${percent}%`;
+                }
+
+                // Debounce chart update to avoid lag while dragging
+                clearTimeout(sliderUpdateTimeout);
+                sliderUpdateTimeout = setTimeout(() => {
+                    const isDesktop = window.innerWidth > 1200;
+
+                    if (nwChart && chartHistory.length > 0) {
+                        const startIndex = Math.max(0, chartHistory.length - Math.ceil(chartHistory.length * (percent / 100)));
+                        nwChart.data.labels = chartTimestamps.slice(startIndex).map((ts) =>
+                            new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                        );
+                        nwChart.data.datasets[0].data = chartHistory.slice(startIndex);
+                        nwChart.update('none');
+                    }
+
+                    // Update hash rate chart (always visible)
+                    if (hashRateChartInstance && hashRateChartHistory.length > 0) {
+                        const startIndex = Math.max(0, hashRateChartHistory.length - Math.ceil(hashRateChartHistory.length * (percent / 100)));
+
+                        // Ensure all data arrays are the same length
+                        const dataLength = Math.min(
+                            hashRateChartHistory.length,
+                            ethHashRateChartHistory.length,
+                            dogeHashRateChartHistory.length,
+                            hashRateChartTimestamps.length
+                        );
+
+                        const sliceLength = dataLength - startIndex;
+
+                        // Scale hash rates by USD value per second
+                        const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + sliceLength).map(v => v * btcPrice);
+                        const ethUsdPerSec = ethHashRateChartHistory.slice(startIndex, startIndex + sliceLength).map(v => v * ethPrice);
+                        const dogeUsdPerSec = dogeHashRateChartHistory.slice(startIndex, startIndex + sliceLength).map(v => v * dogePrice);
+
+                        const labels = hashRateChartTimestamps.slice(startIndex, startIndex + sliceLength).map((ts) => {
+                            const time = ts?.time || Date.now();
+                            return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        });
+
+                        hashRateChartInstance.data.labels = labels;
+                        hashRateChartInstance.data.datasets[0].data = btcUsdPerSec;
+                        hashRateChartInstance.data.datasets[1].data = ethUsdPerSec;
+                        hashRateChartInstance.data.datasets[2].data = dogeUsdPerSec;
+                        hashRateChartInstance.update('none');
+                    }
+                }, 100); // Update 100ms after user stops dragging
+            });
+        }
+
+        // Chart swap function (mobile only)
+        window.swapChartView = function() {
+            // Only swap on mobile
+            if (window.innerWidth <= 1200) {
+                const nwContainer = document.getElementById('nw-chart-container');
+                const hrContainer = document.getElementById('hr-chart-container');
+                const swapBtn = document.getElementById('swap-chart-btn');
+
+                if (currentChartView === 'networth') {
+                    // Switch to hash rate view
+                    currentChartView = 'hashrate';
+                    nwContainer.style.cssText = 'display: none !important;';
+                    hrContainer.style.cssText = 'display: block !important;';
+                    swapBtn.textContent = 'SWAP CHARTS (NET WORTH)';
+
+                    // Initialize hash rate chart if not already done
+                    setTimeout(() => {
+                        if (!hashRateChartInstance) {
+                            initializeHashRateChart();
+                        } else {
+                            hashRateChartInstance.resize();
+                        }
+                    }, 50);
+                } else {
+                    // Switch to net worth view
+                    currentChartView = 'networth';
+                    nwContainer.style.cssText = 'display: block !important;';
+                    hrContainer.style.cssText = 'display: none !important;';
+                    swapBtn.textContent = 'SWAP CHARTS';
+
+                    // Update the net worth chart
+                    setTimeout(() => {
+                        if (nwChart) {
+                            nwChart.resize();
+                        }
+                    }, 50);
+                }
+            }
+        };
+
+        // Initialize hash rate chart
+        window.initializeHashRateChart = function() {
+            try {
+                const canvasEl = document.getElementById('hashRateChart');
+                if (!canvasEl) {
+                    console.warn('Hash rate chart canvas not found in DOM yet');
+                    return false;
+                }
+
+                const ctx = canvasEl.getContext('2d');
+                if (!ctx) {
+                    console.warn('Could not get canvas context for hash rate chart');
+                    return false;
+                }
+
+                if (hashRateChartInstance) {
+                    hashRateChartInstance.destroy();
+                }
+
+                // Ensure we have data
+                if (hashRateChartHistory.length === 0) {
+                    // Initialize with starting data if empty
+                    hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
+                    ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
+                    dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
+                    powerChartHistory.push(totalPowerUsed);
+                    hashRateChartTimestamps.push({ time: Date.now() });
+                }
+
+                const timeRangeSlider = document.getElementById('chart-time-slider');
+            const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
+            const startIndex = Math.max(0, hashRateChartHistory.length - Math.ceil(hashRateChartHistory.length * (timeRangePercent / 100)));
+
+            // Ensure all data arrays are the same length
+            const dataLength = Math.min(
+                hashRateChartHistory.length,
+                ethHashRateChartHistory.length,
+                dogeHashRateChartHistory.length,
+                hashRateChartTimestamps.length
+            );
+
+            // Scale hash rates by their USD value per second
+            const btcUsdPerSec = hashRateChartHistory.slice(startIndex, startIndex + dataLength).map(v => v * btcPrice);
+            const ethUsdPerSec = ethHashRateChartHistory.slice(startIndex, startIndex + dataLength).map(v => v * ethPrice);
+            const dogeUsdPerSec = dogeHashRateChartHistory.slice(startIndex, startIndex + dataLength).map(v => v * dogePrice);
+
+            const labels = hashRateChartTimestamps.slice(startIndex, startIndex + dataLength).map((ts) => {
+                const time = ts?.time || Date.now();
+                return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            });
+
+            hashRateChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'BTC',
+                            data: btcUsdPerSec,
+                            borderColor: '#f7931a',
+                            backgroundColor: 'rgba(247, 147, 26, 0.1)',
+                            pointBackgroundColor: '#f7931a',
+                            pointBorderColor: '#f7931a',
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            fill: false,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'ETH',
+                            data: ethUsdPerSec,
+                            borderColor: '#627eea',
+                            backgroundColor: 'rgba(98, 126, 234, 0.1)',
+                            pointBackgroundColor: '#627eea',
+                            pointBorderColor: '#627eea',
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            fill: false,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'DOGE',
+                            data: dogeUsdPerSec,
+                            borderColor: '#c2a633',
+                            backgroundColor: 'rgba(194, 166, 51, 0.1)',
+                            pointBackgroundColor: '#c2a633',
+                            pointBorderColor: '#c2a633',
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            fill: false,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    stacked: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#999',
+                                font: { size: 10 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#999' },
+                            grid: { color: 'rgba(100, 100, 100, 0.1)' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: { color: '#999', font: { size: 10 } },
+                            grid: { color: 'rgba(100, 100, 100, 0.1)' },
+                            title: { display: true, text: 'USD Value per Second', color: '#999' }
+                        }
+                    }
+                }
+            });
+
+            // Both charts are always visible now, no need to hide
+
+            console.log('✅ Hash rate chart initialized successfully');
+            return true;
+        } catch (error) {
+            console.error('Error creating hash rate chart:', error);
+            return false;
+        }
+        };
 
         // Auto-save every 1.5 seconds
         setInterval(saveGame, 1500);
@@ -6861,14 +7265,23 @@ dogeUpgrades.forEach(u => {
         if (localStorage.getItem('backupReminderDismissed') === 'true') {
             return;
         }
-        // Don't show if already shown this session
-        if (window.backupReminderShownThisSession) {
-            return;
-        }
-        window.backupReminderShownThisSession = true;
         const modal = document.getElementById('backup-reminder-modal');
         if (modal) {
             modal.style.display = 'flex';
+        }
+
+        // Schedule next reminder in 10 minutes if this is the first time shown this session
+        if (!window.backupReminderShownThisSession) {
+            window.backupReminderShownThisSession = true;
+            // Schedule recurring reminders every 10 minutes
+            setInterval(() => {
+                if (localStorage.getItem('backupReminderDismissed') !== 'true') {
+                    const modal = document.getElementById('backup-reminder-modal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                    }
+                }
+            }, 600000); // 600000ms = 10 minutes
         }
     }
 
