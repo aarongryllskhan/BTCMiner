@@ -215,6 +215,8 @@
     let hashRateChartInstance = null;
     let powerChartInstance = null;
     let currentHashrateView = 'hashrate'; // 'hashrate' or 'power'
+    let lastUIUpdateTime = 0; // Throttle balance display updates to 1000ms
+    let lastChartDataCollectionTime = 0; // Track when chart data was last collected (5000ms interval)
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -2359,6 +2361,27 @@ function loadGame() {
         // Add active class to the button that was clicked
         if (event && event.target) {
             event.target.classList.add('active');
+        }
+
+        // Update power chart if switching to power tab
+        if (tab === 'power' && powerChartInstance && hashRateChartInstance && hashRateChartInstance.data.labels) {
+            setTimeout(() => {
+                // Use the exact same number of data points as hash rate chart
+                const hashChartDataCount = hashRateChartInstance.data.labels.length;
+                const powerStartIndex = Math.max(0, hashRateChartTimestamps.length - hashChartDataCount);
+                const powerSliceLength = hashChartDataCount;
+
+                const powerDataPercent = powerChartHistory.slice(powerStartIndex, powerStartIndex + powerSliceLength);
+                const powerLabels = hashRateChartTimestamps.slice(powerStartIndex, powerStartIndex + powerSliceLength).map((ts) => {
+                    const time = ts?.time || Date.now();
+                    return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                });
+
+                powerChartInstance.data.labels = powerLabels;
+                powerChartInstance.data.datasets[0].data = powerDataPercent;
+                powerChartInstance._powerChartColors = powerChartColors.slice(powerStartIndex, powerStartIndex + powerSliceLength);
+                powerChartInstance.update('none');
+            }, 50);
         }
 
         // Reset purchase quantity to 1x when switching tabs
@@ -5562,6 +5585,14 @@ function buyDogeBoost(i) {
     }
 
     function updateUI() {
+        const now = Date.now();
+        const timeSinceLastUpdate = now - lastUIUpdateTime;
+
+        // Throttle balance display updates to 1000ms - skip expensive operations if too soon
+        if (timeSinceLastUpdate < 1000) {
+            return;
+        }
+        lastUIUpdateTime = now;
 
         // Update rugpull progress display and UI (calls rugpull.js function)
         if (typeof window.updateAscensionUI === 'function') {
@@ -5575,10 +5606,7 @@ function buyDogeBoost(i) {
             checkAchievements();
         }
 
-        // Update chart data in real-time with every UI update
-        const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-        chartHistory.push(netWorth);
-        chartTimestamps.push({ time: Date.now(), value: netWorth, cash: dollarBalance });
+        // NOTE: Chart data collection has been moved to the main game loop (line ~7200)
 
         // Crypto portfolio value = value of all crypto holdings only
         let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
@@ -7110,11 +7138,19 @@ dogeUpgrades.forEach(u => {
             const powerInitResult = initializePowerChart();
             if (!powerInitResult) {
                 console.log('Power chart init failed, will retry...');
-                // Retry power chart initialization
+                // Retry power chart initialization with multiple attempts
                 setTimeout(() => {
-                    console.log('Retrying power chart initialization...');
+                    console.log('Retrying power chart initialization (attempt 1)...');
                     initializePowerChart();
                 }, 200);
+                setTimeout(() => {
+                    console.log('Retrying power chart initialization (attempt 2)...');
+                    initializePowerChart();
+                }, 500);
+                setTimeout(() => {
+                    console.log('Retrying power chart initialization (attempt 3)...');
+                    initializePowerChart();
+                }, 1000);
             }
 
             // Setup chart swap buttons
@@ -7149,9 +7185,14 @@ dogeUpgrades.forEach(u => {
                     hashrateBtn.style.background = 'rgba(0,255,136,0.3)';
                     hashrateBtn.style.color = '#00ff88';
                     hashrateBtn.style.borderColor = '#00ff88';
-                    if (powerChartInstance) {
-                        setTimeout(() => powerChartInstance.resize(), 50);
-                    }
+
+                    setTimeout(() => {
+                        if (!powerChartInstance) {
+                            initializePowerChart();
+                        } else {
+                            powerChartInstance.resize();
+                        }
+                    }, 50);
                 });
             }
 
@@ -7202,12 +7243,10 @@ dogeUpgrades.forEach(u => {
             const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
             const now = Date.now();
 
-            // Collect hash rate and power data for secondary charts
-            hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
-            ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
-            dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
+            // Calculate net worth every interval (used for charts and markers)
+            const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
 
-            // Track current power usage for display
+            // Track current power usage continuously
             const timeDeltaSeconds = (now - lastHashRateChartUpdateTime) / 1000;
             cumulativePowerUsed += totalPowerUsed * timeDeltaSeconds;
 
@@ -7221,17 +7260,33 @@ dogeUpgrades.forEach(u => {
             const currentPercentage = (totalPowerUsed / availablePower) * 100;
             const color = currentPercentage > 50 ? '#ff3333' : '#00ff88';
 
-            powerChartHistory.push(currentPercentage);
-            currentPowerValues.push(totalPowerUsed);
-            powerChartColors.push(color);
-            hashRateChartTimestamps.push({ time: now });
+            // Update power tracking for continuous rendering
             lastHashRateChartUpdateTime = now;
 
-            // Trim arrays to prevent memory growth - keep last 4,800 points (1 hour at 750ms)
+            // Collect chart data points every 5000ms (5 second intervals)
+            if (now - lastChartDataCollectionTime >= 5000) {
+                lastChartDataCollectionTime = now;
+
+                // Collect net worth data for primary chart
+                chartHistory.push(netWorth);
+                chartTimestamps.push({ time: now, value: netWorth, cash: dollarBalance });
+
+                // Collect hash rate and power data for secondary charts
+                hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
+                ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
+                dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
+
+                powerChartHistory.push(currentPercentage);
+                currentPowerValues.push(totalPowerUsed);
+                powerChartColors.push(color);
+                hashRateChartTimestamps.push({ time: now });
+            }
+
+            // Trim arrays to prevent memory growth - keep last 720 points (1 hour at 5000ms = 5 sec intervals)
             // Only trim every 30 seconds to avoid constant trimming during chart updates
             if (now - lastTrimTime >= 30000) {
                 lastTrimTime = now;
-                const maxChartPointsRuntime = 4800;
+                const maxChartPointsRuntime = 720;
                 if (chartHistory.length > maxChartPointsRuntime) {
                     chartHistory.splice(0, chartHistory.length - maxChartPointsRuntime);
                     chartTimestamps.splice(0, chartTimestamps.length - maxChartPointsRuntime);
@@ -7329,32 +7384,49 @@ dogeUpgrades.forEach(u => {
                 hashRateChartInstance.update('none');
             }
 
-            // Update power chart
-            if (powerChartInstance && powerChartHistory.length > 0 && hashRateChartTimestamps.length > 0) {
-                // Calculate start index based on actual data length to prevent empty arrays
-                const powerDataLength = Math.min(powerChartHistory.length, hashRateChartTimestamps.length);
-                const powerStartIndex = Math.max(0, powerDataLength - Math.max(1, Math.ceil(powerDataLength * (timeRangePercent / 100))));
+            // Update power chart - use SAME start index as hash rate chart for identical timestamps
+            if (powerChartInstance && hashRateChartTimestamps.length > 0) {
+                // Ensure we have power data to match timestamps
+                while (powerChartHistory.length < hashRateChartTimestamps.length) {
+                    const currentPercentage = (totalPowerUsed / (maxPowerCapacity || 1)) * 100;
+                    const color = currentPercentage > 50 ? '#ff3333' : '#00ff88';
+                    powerChartHistory.push(currentPercentage);
+                    powerChartColors.push(color);
+                }
 
-                const powerDataPercent = powerChartHistory.slice(powerStartIndex);
-                const powerLabels = hashRateChartTimestamps.slice(powerStartIndex).map((ts) => {
-                    const time = ts?.time || Date.now();
-                    return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                });
+                // Ensure hash rate chart has been calculated so we know the indices
+                if (hashRateChartInstance && hashRateChartInstance.data.labels && hashRateChartInstance.data.labels.length > 0) {
+                    // Use the EXACT same number of data points as hash rate chart
+                    const hashChartDataCount = hashRateChartInstance.data.labels.length;
+                    const powerStartIndex = Math.max(0, hashRateChartTimestamps.length - hashChartDataCount);
+                    const powerSliceLength = hashChartDataCount;
 
-                powerChartInstance.data.labels = powerLabels;
-                powerChartInstance.data.datasets[0].data = powerDataPercent;
-                powerChartInstance._powerChartColors = powerChartColors.slice(powerStartIndex);
-                powerChartInstance.update('none');
+                    const powerDataPercent = powerChartHistory.slice(powerStartIndex, powerStartIndex + powerSliceLength);
+                    const powerLabels = hashRateChartTimestamps.slice(powerStartIndex, powerStartIndex + powerSliceLength).map((ts) => {
+                        const time = ts?.time || Date.now();
+                        return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    });
+
+                    if (powerDataPercent.length > 0) {
+                        powerChartInstance.data.labels = powerLabels;
+                        powerChartInstance.data.datasets[0].data = powerDataPercent;
+                        powerChartInstance._powerChartColors = powerChartColors.slice(powerStartIndex, powerStartIndex + powerSliceLength);
+                        powerChartInstance.update('none');
+                    }
+                }
             }
 
             // Update chart date tracker
             updateChartDateTracker();
 
+            // Trigger balance display update check (will only update if 1000ms throttle has elapsed)
+            updateUI();
+
             updateCount++;
             if (updateCount % 20 === 0) {
                 console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length);
             }
-        }, 750);
+        }, 800);
 
         // Add mouse tracking for marker hover detection
         const nwChartCanvas = document.getElementById('nwChart');
@@ -7378,16 +7450,21 @@ dogeUpgrades.forEach(u => {
         if (timeRangeSlider) {
             timeRangeSlider.addEventListener('input', (e) => {
                 const percent = parseInt(e.target.value);
-                const labels = ['5%', '10%', '25%', '50%', '75%', 'Last 100%'];
-                const percents = [5, 10, 25, 50, 75, 100];
-                const labelIndex = percents.indexOf(percent);
+
+                // Calculate minutes from percent (slider goes 1-100, representing 1-60 minutes)
+                const minutes = Math.round((percent / 100) * 60);
+
+                // Use friendly time range labels for common positions
+                let label = `Last ${minutes} Min`;
+                if (minutes === 1) label = 'Last 1 Minute';
+                else if (minutes === 3) label = 'Last 3 Minutes';
+                else if (minutes === 5) label = 'Last 5 Minutes';
+                else if (minutes === 15) label = 'Last 15 Minutes';
+                else if (minutes === 30) label = 'Last 30 Minutes';
+                else if (minutes === 60) label = 'Last 60 Minutes (Full Hour)';
 
                 // Update label immediately
-                if (labelIndex !== -1) {
-                    timeRangeLabel.textContent = labels[labelIndex];
-                } else {
-                    timeRangeLabel.textContent = `Last ${percent}%`;
-                }
+                timeRangeLabel.textContent = label;
 
                 // Debounce chart update to avoid lag while dragging
                 clearTimeout(sliderUpdateTimeout);
@@ -7439,22 +7516,25 @@ dogeUpgrades.forEach(u => {
                         hashRateChartInstance.update('none');
                     }
 
-                    // Update power chart - use actual data length for consistency
+                    // Update power chart - use SAME start index as hash rate chart for identical timestamps
                     if (powerChartInstance && hashRateChartTimestamps.length > 0) {
-                        // Calculate start index based on actual data length
-                        const powerDataLength = Math.min(powerChartHistory.length, hashRateChartTimestamps.length);
-                        const startIndex = Math.max(0, powerDataLength - Math.max(1, Math.ceil(powerDataLength * (percent / 100))));
+                        // Use the exact same filtering as hash rate chart
+                        if (hashRateChartInstance && hashRateChartInstance.data.labels && hashRateChartInstance.data.labels.length > 0) {
+                            const hashChartDataCount = hashRateChartInstance.data.labels.length;
+                            const startIndex = Math.max(0, hashRateChartTimestamps.length - hashChartDataCount);
+                            const sliceLength = hashChartDataCount;
 
-                        const powerDataPercent = powerChartHistory.slice(startIndex);
-                        const labels = hashRateChartTimestamps.slice(startIndex).map((ts) => {
-                            const time = ts?.time || Date.now();
-                            return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                        });
+                            const powerDataPercent = powerChartHistory.slice(startIndex, startIndex + sliceLength);
+                            const labels = hashRateChartTimestamps.slice(startIndex, startIndex + sliceLength).map((ts) => {
+                                const time = ts?.time || Date.now();
+                                return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                            });
 
-                        powerChartInstance.data.labels = labels;
-                        powerChartInstance.data.datasets[0].data = powerDataPercent;
-                        powerChartInstance._powerChartColors = powerChartColors.slice(startIndex);
-                        powerChartInstance.update('none');
+                            powerChartInstance.data.labels = labels;
+                            powerChartInstance.data.datasets[0].data = powerDataPercent;
+                            powerChartInstance._powerChartColors = powerChartColors.slice(startIndex, startIndex + sliceLength);
+                            powerChartInstance.update('none');
+                        }
                     }
                 }, 100); // Update 100ms after user stops dragging
             });
@@ -7527,7 +7607,12 @@ dogeUpgrades.forEach(u => {
                             hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
                             ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
                             dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
-                            powerChartHistory.push(totalPowerUsed);
+                            // Store as percentage for consistency with other data collection
+                            const availablePower = getTotalPowerAvailableWithBonus();
+                            const powerPercentage = availablePower > 0 ? (totalPowerUsed / availablePower) * 100 : 0;
+                            powerChartHistory.push(powerPercentage);
+                            const color = powerPercentage > 50 ? '#ff3333' : '#00ff88';
+                            powerChartColors.push(color);
                             hashRateChartTimestamps.push(chartTimestamps[i]);
                         }
                     } else {
@@ -7535,7 +7620,12 @@ dogeUpgrades.forEach(u => {
                         hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
                         ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
                         dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
-                        powerChartHistory.push(totalPowerUsed);
+                        // Store as percentage for consistency with other data collection
+                        const availablePower = getTotalPowerAvailableWithBonus();
+                        const powerPercentage = availablePower > 0 ? (totalPowerUsed / availablePower) * 100 : 0;
+                        powerChartHistory.push(powerPercentage);
+                        const color = powerPercentage > 50 ? '#ff3333' : '#00ff88';
+                        powerChartColors.push(color);
                         hashRateChartTimestamps.push({ time: Date.now() });
                     }
                 }
@@ -7685,7 +7775,7 @@ dogeUpgrades.forEach(u => {
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            beginAtZero: true,
+                            beginAtZero: false,
                             ticks: { color: '#999', font: { size: 10 } },
                             grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
                             title: { display: true, text: 'USD Value per Second', color: '#999' }
@@ -7723,35 +7813,74 @@ dogeUpgrades.forEach(u => {
                     powerChartInstance.destroy();
                 }
 
-                // Simple power chart with current power values
-                if (powerChartHistory.length === 0 || hashRateChartTimestamps.length === 0) {
+                // If we have no power data yet, bootstrap from current values
+                if (powerChartHistory.length === 0) {
+                    // Initialize with current power percentage
+                    const availablePower = getTotalPowerAvailableWithBonus();
+                    const currentPercentage = (totalPowerUsed / availablePower) * 100;
+                    const color = currentPercentage > 50 ? '#ff3333' : '#00ff88';
+
+                    // Bootstrap with at least some initial data points
+                    const dataPointsNeeded = Math.max(hashRateChartTimestamps.length, 10);
+                    for (let i = 0; i < dataPointsNeeded; i++) {
+                        powerChartHistory.push(currentPercentage);
+                        powerChartColors.push(color);
+                    }
+                }
+
+                if (powerChartHistory.length === 0) {
                     return false; // No data yet
                 }
 
-                const timeRangeSlider = document.getElementById('chart-time-slider');
-                const timeRangePercent = timeRangeSlider ? parseInt(timeRangeSlider.value) : 100;
-                const startIndex = Math.max(0, hashRateChartTimestamps.length - Math.ceil(hashRateChartTimestamps.length * (timeRangePercent / 100)));
+                // Use SAME filtering as hashrate chart for identical time ranges
+                // If hashrate chart exists and has data, use its exact data point count
+                let startIndex = 0;
+                let sliceLength = Math.max(powerChartHistory.length, 1); // Use all available power data
 
-                const powerData = powerChartHistory.slice(startIndex);
+                if (hashRateChartInstance && hashRateChartInstance.data.labels && hashRateChartInstance.data.labels.length > 0) {
+                    // Use the EXACT same number of data points as hash rate chart
+                    const hashChartDataCount = hashRateChartInstance.data.labels.length;
+                    startIndex = Math.max(0, powerChartHistory.length - hashChartDataCount);
+                    sliceLength = Math.min(hashChartDataCount, powerChartHistory.length - startIndex);
+                }
+
+                const powerData = powerChartHistory.slice(startIndex, startIndex + sliceLength);
                 if (powerData.length === 0) {
                     return false;
                 }
 
-                // Use the max capacity we've seen (which only increases)
-                const chartMaxPower = Math.max(maxPowerCapacity, 1);
-                // Convert to percentages (0-100%) based on max capacity
-                const powerDataPercent = powerData.map(p => (p / chartMaxPower) * 100);
+                // powerChartHistory already contains percentages (0-100%), so use them directly
+                const powerDataPercent = powerData;
 
-                // Create time labels
-                let labels = [];
-                if (hashRateChartTimestamps.length > startIndex) {
-                    labels = hashRateChartTimestamps.slice(startIndex, startIndex + powerData.length).map((ts) => {
+                // Create time labels - use same slice length for consistency
+                const labels = [];
+                const timestampsSlice = hashRateChartTimestamps.slice(startIndex, startIndex + sliceLength);
+
+                // If we have enough timestamps, use them; otherwise create placeholder labels
+                if (timestampsSlice.length >= sliceLength) {
+                    for (let i = 0; i < sliceLength; i++) {
+                        const ts = timestampsSlice[i];
                         const time = ts?.time || Date.now();
-                        return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                    });
+                        labels.push(new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                    }
                 } else {
-                    labels = powerData.map((_, i) => '');
+                    // Create placeholder labels when timestamps aren't available
+                    for (let i = 0; i < sliceLength; i++) {
+                        labels.push('');
+                    }
                 }
+
+                console.log('🔋 Creating power chart with data:', {
+                    labels: labels.length,
+                    powerDataPercent: powerDataPercent.length,
+                    dataPoints: powerDataPercent.slice(0, 5),
+                    startIndex: startIndex,
+                    sliceLength: sliceLength,
+                    powerChartHistoryLength: powerChartHistory.length,
+                    hashRateTimestampsLength: hashRateChartTimestamps.length,
+                    totalPowerUsed: totalPowerUsed,
+                    availablePower: getTotalPowerAvailableWithBonus()
+                });
 
                 powerChartInstance = new Chart(ctx, {
                     type: 'line',
@@ -7819,30 +7948,6 @@ dogeUpgrades.forEach(u => {
                                         return percentValue.toFixed(1) + '%';
                                     }
                                 }
-                            },
-                            // Plugin to draw 50% threshold line
-                            thresholdLine: {
-                                id: 'thresholdLine',
-                                afterDatasetsDraw(chart) {
-                                    const ctx = chart.ctx;
-                                    const yScale = chart.scales.y;
-                                    const canvasHeight = chart.chartArea.bottom;
-                                    const canvasTop = chart.chartArea.top;
-
-                                    // Calculate the y position for 50%
-                                    const y50Percent = yScale.getPixelForValue(50);
-
-                                    // Draw the line
-                                    ctx.save();
-                                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                                    ctx.lineWidth = 1;
-                                    ctx.setLineDash([5, 5]);
-                                    ctx.beginPath();
-                                    ctx.moveTo(chart.chartArea.left, y50Percent);
-                                    ctx.lineTo(chart.chartArea.right, y50Percent);
-                                    ctx.stroke();
-                                    ctx.restore();
-                                }
                             }
                         },
                         interaction: {
@@ -7888,7 +7993,12 @@ dogeUpgrades.forEach(u => {
                 // Store the colors that were recorded at the time of each data point
                 powerChartInstance._powerChartColors = powerChartColors.slice(startIndex, startIndex + powerDataPercent.length);
 
-                console.log('✅ Power chart initialized successfully');
+                console.log('✅ Power chart initialized successfully', {
+                    instance: !!powerChartInstance,
+                    dataLength: powerDataPercent.length,
+                    minValue: Math.min(...powerDataPercent),
+                    maxValue: Math.max(...powerDataPercent)
+                });
                 return true;
             } catch (error) {
                 console.error('Error creating power chart:', error);
@@ -7926,7 +8036,7 @@ dogeUpgrades.forEach(u => {
 
             // Update minigame card lock states
             updateMinigameCardLocks();
-        }, 750);
+        }, 1000);
 
         // Start price swings: separate timing for each crypto
         // Only start if not already running (prevents multiple loops on refresh)

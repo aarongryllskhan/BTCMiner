@@ -272,8 +272,8 @@
                 <!-- Chart Time Range Slider (positioned at top of container) -->
                 <div style="padding: 8px 10px 6px 10px; text-align: center; flex-shrink: 0; background: rgba(0,0,0,0.3); border-bottom: 1px solid #333; position: relative; z-index: 100;">
                     <label for="chart-time-slider" style="color: #999; font-size: 0.85rem; margin-right: 10px; display: inline-block;">Time Range:</label>
-                    <input type="range" id="chart-time-slider" min="5" max="100" value="10" style="width: 200px; cursor: pointer; vertical-align: middle;">
-                    <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 10px; display: inline-block; min-width: 80px;">10%</span>
+                    <input type="range" id="chart-time-slider" min="1" max="100" value="10" step="1" style="width: 200px; cursor: pointer; vertical-align: middle;">
+                    <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 10px; display: inline-block; min-width: 100px;">Last 6 Min</span>
                 </div>
                 <!-- Net Worth Chart -->
                 <div id="nw-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 0; flex: 1; display: block;">
@@ -292,8 +292,8 @@
                         <button id="hashrate-chart-btn" class="chart-tab-btn" style="background: #00ff88; color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; cursor: pointer; text-transform: uppercase;">Hashrate</button>
                         <button id="power-chart-btn" class="chart-tab-btn" style="background: rgba(0,255,136,0.3); color: #00ff88; border: 1px solid #00ff88; padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; cursor: pointer; text-transform: uppercase;">Power Usage</button>
                     </div>
-                    <canvas id="hashRateChart" width="800" height="200"></canvas>
-                    <canvas id="powerChart" width="800" height="200" style="display: none;"></canvas>
+                    <canvas id="hashRateChart" width="800" height="200" style="width: 100% !important; height: 100% !important; display: block !important;"></canvas>
+                    <canvas id="powerChart" width="800" height="200" style="width: 100% !important; height: 100% !important; display: none;"></canvas>
                 </div>
             </div>
             <!-- Chart Date Tracker -->
