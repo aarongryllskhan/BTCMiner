@@ -408,7 +408,7 @@
 
             /* Net worth and pie chart side by side */
             .nw-label { display: none; }
-            .nw-amount { font-size: 2.8rem; margin: 12px 0 12px 0; text-align: left; font-family: monospace; font-weight: 900; }
+            .nw-amount { font-size: clamp(3rem, 10vw, 6rem); margin: 12px 0 12px 0; text-align: left; font-family: monospace; font-weight: 900; }
 
             /* Portfolio layout - net worth on left, pie chart on right */
             div[style*="display: flex"][style*="gap: 10px"][style*="align-items: flex-start"][style*="margin-bottom: 12px"] {
@@ -2215,8 +2215,8 @@ button:disabled:hover {
 
             /* Pie chart - above balance amount */
             #main-layout > div:first-child > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) {
-                width: 45px !important;
-                height: 45px !important;
+                width: 62px !important;
+                height: 62px !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -2228,7 +2228,7 @@ button:disabled:hover {
             }
 
             .nw-amount {
-                font-size: 4.5rem !important;
+                font-size: clamp(3rem, 10vw, 6rem) !important;
                 margin-bottom: 0 !important;
                 margin-top: 13px !important;
                 font-weight: 900 !important;
