@@ -7406,10 +7406,10 @@ dogeUpgrades.forEach(u => {
 
         if (timeRangeSlider) {
             timeRangeSlider.addEventListener('input', (e) => {
-                const percent = parseInt(e.target.value);
+                const sliderValue = parseInt(e.target.value);
 
-                // Calculate minutes from percent (slider goes 1-100, representing 1-60 minutes)
-                const minutes = Math.round((percent / 100) * 60);
+                // Slider goes 1-30, representing 1-30 minutes directly
+                const minutes = sliderValue;
 
                 // Use friendly time range labels for common positions
                 let label = `Last ${minutes} Min`;
@@ -7418,7 +7418,6 @@ dogeUpgrades.forEach(u => {
                 else if (minutes === 5) label = 'Last 5 Minutes';
                 else if (minutes === 15) label = 'Last 15 Minutes';
                 else if (minutes === 30) label = 'Last 30 Minutes';
-                else if (minutes === 60) label = '1 Hour';
 
                 // Update label immediately
                 timeRangeLabel.textContent = label;
@@ -7427,11 +7426,12 @@ dogeUpgrades.forEach(u => {
                 clearTimeout(sliderUpdateTimeout);
                 sliderUpdateTimeout = setTimeout(() => {
                     const isDesktop = window.innerWidth > 1200;
+                    const percentRatio = sliderValue / 30; // Convert 1-30 to 0-1 ratio
 
                     if (nwChart && chartHistory.length > 0) {
                         // Ensure both arrays are the same length
                         const dataLength = Math.min(chartHistory.length, chartTimestamps.length);
-                        const startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (percent / 100))));
+                        const startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * percentRatio)));
                         const sliceLength = Math.max(1, dataLength - startIndex);
 
                         nwChart.data.labels = chartTimestamps.slice(startIndex, startIndex + sliceLength).map((ts) =>
@@ -7453,7 +7453,7 @@ dogeUpgrades.forEach(u => {
                         );
 
                         // Calculate start index based on actual data length
-                        const startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (percent / 100))));
+                        const startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * percentRatio)));
                         const sliceLength = Math.max(1, dataLength - startIndex);
 
                         // Scale hash rates by USD value per second

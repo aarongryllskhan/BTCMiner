@@ -145,87 +145,79 @@
 
     <div id="main-layout">
         <div class="panel">
-            <!-- Title -->
-            <span class="nw-label" style="color: #555 !important; text-transform: uppercase !important; letter-spacing: 3px !important; font-weight: 700 !important; margin-bottom: 0px;">Crypto Portfolio Valuation</span>
+            <!-- Top Horizontal Button Row -->
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; margin-bottom: 12px; pointer-events: auto;" id="utility-buttons-container">
+                <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
+                <button id="vfx-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleVFX()">VFX ON</button>
+                <button style="background: #9c27b0; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleFullscreen()">⛶ FULLSCREEN</button>
+                <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
+                <button style="background: #2196F3; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
+                <button style="background: #ffa500; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
+                <button style="background: #ff3344; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
+                <button id="achievements-btn" style="background: #ff6b35; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
+            </div>
 
-            <!-- Top row: RUGPULL centered, utility buttons on right -->
-            <div style="position: absolute; top: 24px; left: 24px; right: 24px; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0px; gap: 12px; pointer-events: none;" class="desktop-button-layout">
+            <!-- Three-Column Layout -->
+            <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px;">
+                <!-- Left Sidebar: Hardware Equity -->
+                <div class="stat-box stat-box-hardware" style="padding: 9px 15px; background: rgba(76, 175, 80, 0.15); border-radius: 4px; border: 1px solid #4CAF50; min-width: 120px; flex-shrink: 0;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">HARDWARE EQUITY</span>
+                    <b style="font-size: 1.1rem; color: #4CAF50; font-family: monospace; font-weight: 900; white-space: nowrap;" id="asset-usd">$0</b>
+                </div>
 
-                <!-- RUGPULL BUTTON - CENTER -->
-                <div style="position: absolute; left: 50%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 5; pointer-events: auto; gap: 4px;">
-                    <div id="rugpull-button-row" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <button id="rugpull-btn" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 4px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.4), 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.5px;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">RUGPULL</button>
-                            <div id="rugpull-tooltip" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
-                                <span id="tooltip-text">Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
-                            </div>
-                            <div id="rugpull-progress-text" style="color: #ffeb3b; font-size: 0.65rem; font-weight: bold; margin-top: 2px; text-align: center;">$0 / $1B</div>
+                <!-- Center Content -->
+                <div style="flex: 1; text-align: center;">
+                    <!-- Money Counter with Crypto Breakdown inline -->
+                    <div style="text-align: center; margin-bottom: 8px;">
+                        <div class="nw-amount" id="nw-val" style="margin-bottom: 4px;">$0.00</div>
+                        <div style="text-align: center; font-size: 0.9rem; color: #888; font-family: monospace;" id="nw-breakdown">
+                            <span style="color: #f7931a;">₿ <span id="nw-btc">0.00</span></span> &nbsp; | &nbsp; <span style="color: #627eea;">Ξ <span id="nw-eth">0.00</span></span> &nbsp; | &nbsp; <span style="color: #c2a633;">Ð <span id="nw-doge">0.00</span></span>
                         </div>
-                        <!-- RUGPULL STORE button - shown on all resolutions above mobile -->
-                        <button id="rugpull-store-btn" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.65rem; transition: all 0.3s ease; display: none; white-space: nowrap; height: fit-content;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+                    </div>
+
+                    <!-- Pie Chart Centered -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 4px; align-items: center; justify-content: center;">
+                        <div style="width: 90px; height: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="cryptoPieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Hashrate Boxes - BTC, ETH, DOGE centered -->
+                    <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; align-items: center; margin-bottom: 4px;">
+                        <div class="stat-box stat-box-btc" style="padding: 9px 15px; background: rgba(247, 147, 26, 0.15); border-radius: 4px; border: 1px solid #f7931a; min-width: 120px;">
+                            <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">BTC HASHRATE</span>
+                            <b style="font-size: 1.1rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00000000/s</b>
+                        </div>
+                        <div class="stat-box stat-box-eth" style="padding: 9px 15px; background: rgba(98, 126, 234, 0.15); border-radius: 4px; border: 1px solid #627eea; min-width: 120px;">
+                            <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">ETH HASHRATE</span>
+                            <b style="font-size: 1.1rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00000000/s</b>
+                        </div>
+                        <div class="stat-box stat-box-doge" style="padding: 9px 15px; background: rgba(194, 166, 51, 0.15); border-radius: 4px; border: 1px solid #c2a633; min-width: 120px;">
+                            <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">DOGE HASHRATE</span>
+                            <b style="font-size: 1.1rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00000000/s</b>
+                        </div>
                     </div>
                 </div>
 
-                <!-- OTHER BUTTONS - RIGHT SIDE, VERTICAL COLUMN on mobile, HORIZONTAL ROW on desktop -->
-                <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex-shrink: 0; margin-left: auto; pointer-events: auto;" id="utility-buttons-container">
-                    <button id="mute-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleMute()">SOUND ON</button>
-                    <button id="vfx-btn" style="background: #888; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleVFX()">VFX ON</button>
-                    <button style="background: #9c27b0; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="toggleFullscreen()">⛶ FULLSCREEN</button>
-                    <button style="background: #4CAF50; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
-                    <button style="background: #2196F3; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
-                    <button style="background: #ffa500; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetEarningsStats()">RESET EARNINGS</button>
-                    <button style="background: #ff3344; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="resetGame()">RESET SAVE</button>
-                    <button id="achievements-btn" style="background: #ff6b35; color: white; border: none; padding: 6px 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.55rem; white-space: nowrap;" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
-                </div>
-            </div>
-            <div class="nw-amount" id="nw-val">$0.00</div>
-
-            <!-- Net Worth Breakdown (Desktop Only) -->
-            <div style="display: none; text-align: center; font-size: 0.9rem; color: #888; font-family: monospace; margin-bottom: 4px;" class="desktop-only" id="nw-breakdown">
-                <span style="color: #f7931a;">₿ <span id="nw-btc">0.00</span></span> &nbsp; | &nbsp; <span style="color: #627eea;">Ξ <span id="nw-eth">0.00</span></span> &nbsp; | &nbsp; <span style="color: #c2a633;">Ð <span id="nw-doge">0.00</span></span>
-            </div>
-
-            <!-- Pie Chart Only -->
-            <div style="display: flex; gap: 10px; margin-bottom: 4px; align-items: center; justify-content: center;">
-                <div style="width: 90px; height: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                    <canvas id="cryptoPieChart"></canvas>
+                <!-- Right Sidebar: Time, Earning, Lifetime -->
+                <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+                    <div class="stat-box stat-box-session" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: 140px;">
+                        <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">TIME THIS SESSION</span>
+                        <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-time">0m 0s</b>
+                    </div>
+                    <div class="stat-box stat-box-session-earnings" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: 140px;">
+                        <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">EARNING THIS SESSION</span>
+                        <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-earning">$0.00</b>
+                    </div>
+                    <div class="stat-box stat-box-earnings" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: 140px;">
+                        <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">LIFETIME EARNINGS</span>
+                        <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="lifetime-earning">$0.00</b>
+                    </div>
                 </div>
             </div>
 
             <!-- Ascension Info -->
             <div id="ascension-info" style="margin-bottom: 4px;"></div>
-
-            <!-- Hashrate Display -->
-            <div id="hashrate-display" style="display: flex; gap: 6px; margin-bottom: 4px; justify-content: flex-end; flex-wrap: wrap; align-items: center;">
-                <div class="stat-box stat-box-session" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">TIME THIS SESSION</span>
-                    <b style="font-size: 1.1rem; color: #ffffff; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-time">0m 0s</b>
-                </div>
-                <div class="stat-box stat-box-session-earnings" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">EARNING THIS SESSION</span>
-                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-earning">$0.00</b>
-                </div>
-                <div class="stat-box stat-box-earnings" style="padding: 9px 15px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">LIFETIME EARNINGS</span>
-                    <b style="font-size: 1.1rem; color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="lifetime-earning">$0.00</b>
-                </div>
-                <div class="stat-box stat-box-btc" style="padding: 9px 15px; background: rgba(247, 147, 26, 0.15); border-radius: 4px; border: 1px solid #f7931a; min-width: 120px;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">BTC HASHRATE</span>
-                    <b style="font-size: 1.1rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-btc">0.00000000/s</b>
-                </div>
-                <div class="stat-box stat-box-eth" style="padding: 9px 15px; background: rgba(98, 126, 234, 0.15); border-radius: 4px; border: 1px solid #627eea; min-width: 120px;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">ETH HASHRATE</span>
-                    <b style="font-size: 1.1rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-eth">0.00000000/s</b>
-                </div>
-                <div class="stat-box stat-box-doge" style="padding: 9px 15px; background: rgba(194, 166, 51, 0.15); border-radius: 4px; border: 1px solid #c2a633; min-width: 120px;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">DOGE HASHRATE</span>
-                    <b style="font-size: 1.1rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00000000/s</b>
-                </div>
-                <div class="stat-box stat-box-hardware" style="padding: 9px 15px; background: rgba(76, 175, 80, 0.15); border-radius: 4px; border: 1px solid #4CAF50; min-width: 120px;">
-                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">HARDWARE EQUITY</span>
-                    <b style="font-size: 1.1rem; color: #4CAF50; font-family: monospace; font-weight: 900; white-space: nowrap;" id="asset-usd">$0</b>
-                </div>
-            </div>
 
             <!-- Crypto Prices Header -->
             <div style="padding: 12px 10px; text-align: center; background: rgba(0,0,0,0.3); border-bottom: 1px solid #222;">
@@ -269,11 +261,13 @@
                 <!-- Chart Time Range Slider (positioned at top of container) -->
                 <div style="padding: 8px 10px 6px 10px; text-align: center; flex-shrink: 0; background: rgba(0,0,0,0.3); border-bottom: 1px solid #333; position: relative; z-index: 100;">
                     <label for="chart-time-slider" style="color: #999; font-size: 0.85rem; margin-right: 10px; display: inline-block;">Time Range:</label>
-                    <input type="range" id="chart-time-slider" min="1" max="100" value="8" step="1" style="width: 200px; cursor: pointer; vertical-align: middle;">
+                    <input type="range" id="chart-time-slider" min="1" max="30" value="5" step="1" style="width: 200px; cursor: pointer; vertical-align: middle;">
                     <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 10px; display: inline-block; min-width: 100px;">Last 5 Minutes</span>
                 </div>
                 <!-- Net Worth Chart -->
                 <div id="nw-chart-container" class="chart-wrapper" style="position: relative; width: 100%; flex: 1.86; display: block; box-sizing: border-box;">
+                    <!-- Portfolio Valuation Title (overlaid on chart) -->
+                    <span style="position: absolute; top: 10px; left: 10px; color: #888; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; font-size: 0.85rem; z-index: 10; pointer-events: none;">Portfolio Valuation</span>
                     <canvas id="nwChart" width="800" height="300"></canvas>
                     <!-- News ticker overlay -->
                     <div id="news-ticker-overlay" style="position: absolute; bottom: 0; right: 0; width: 100%; max-width: 400px; max-height: 200px; overflow-y: auto; background: transparent; pointer-events: none;">
