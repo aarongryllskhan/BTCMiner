@@ -34,54 +34,6 @@
             body { padding: 20px 20px 0 20px; }
         }
 
-        /* Mobile landscape orientation - swap to desktop layout */
-        @media (max-width: 1180px) and (orientation: landscape) and (max-height: 500px) {
-            #main-layout {
-                display: grid !important;
-                grid-template-columns: 1.86fr 1fr !important;
-                gap: 0 !important;
-                height: auto !important;
-                flex-direction: unset !important;
-            }
-
-            #main-layout > div:first-child {
-                border-right: 1px solid #333 !important;
-                border-bottom: none !important;
-                flex: unset !important;
-                overflow: visible !important;
-                padding-top: 0 !important;
-            }
-
-            #main-layout > div:last-child {
-                flex: unset !important;
-                order: unset !important;
-                display: flex !important;
-                width: auto !important;
-                padding-top: 0 !important;
-            }
-
-            .panel {
-                padding: 12px !important;
-                padding-top: unset !important;
-            }
-
-            .panel:first-child {
-                padding-top: 12px !important;
-            }
-
-            .desktop-button-layout {
-                position: static !important;
-                display: flex !important;
-                flex-direction: row !important;
-                gap: 6px !important;
-                width: auto !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                background: transparent !important;
-                flex-wrap: wrap !important;
-            }
-        }
-
         /* Grey background to match panels */
         body::before {
             content: '';
@@ -441,6 +393,128 @@
             /* Hide mobile RUGPULL section on tablets */
             #mobile-rugpull-section {
                 display: none !important;
+            }
+        }
+
+        /* Mobile landscape orientation - swap to desktop layout */
+        @media (max-width: 1180px) and (orientation: landscape) {
+            body { padding: 20px 20px 0 20px !important; overflow: visible !important; overflow-y: auto !important; }
+            body::-webkit-scrollbar { display: auto !important; }
+
+            #main-layout {
+                display: grid !important;
+                grid-template-columns: 1.86fr 1fr !important;
+                gap: 0 !important;
+                height: auto !important;
+                flex-direction: unset !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: auto !important;
+            }
+
+            #main-layout > div:first-child {
+                border-right: 1px solid #333 !important;
+                border-bottom: none !important;
+                flex: unset !important;
+                overflow: visible !important;
+                padding-top: 12px !important;
+                padding: 12px !important;
+                width: auto !important;
+            }
+
+            #main-layout > div:last-child {
+                flex: unset !important;
+                order: unset !important;
+                display: flex !important;
+                flex-direction: column !important;
+                width: auto !important;
+                padding: 12px !important;
+                padding-top: 12px !important;
+            }
+
+            .panel {
+                padding: 12px !important;
+                margin: 0 !important;
+                padding-top: 0 !important;
+                flex: unset !important;
+                overflow: visible !important;
+            }
+
+            .panel:first-child {
+                padding-top: 12px !important;
+            }
+
+            /* On landscape, position buttons as desktop layout */
+            .desktop-button-layout {
+                position: static !important;
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 6px !important;
+                width: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
+                flex-wrap: wrap !important;
+                top: unset !important;
+                left: unset !important;
+                right: unset !important;
+                z-index: auto !important;
+            }
+
+            .desktop-button-layout > div {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 6px !important;
+            }
+
+            .desktop-button-layout > div:first-child {
+                display: none !important;
+            }
+
+            /* Show desktop RUGPULL section */
+            #desktop-rugpull-section {
+                display: flex !important;
+            }
+
+            #rugpull-store-btn-desktop {
+                display: flex !important;
+            }
+
+            /* Hide mobile RUGPULL section */
+            #mobile-rugpull-section {
+                display: none !important;
+            }
+
+            /* Restore normal hashrate display */
+            #hashrate-display {
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                margin-bottom: 0 !important;
+                order: unset !important;
+                display: flex !important;
+                justify-content: flex-start !important;
+            }
+
+            #hashrate-display .stat-box {
+                padding: 8px 6px !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* Restore crypto prices flex layout */
+            #crypto-prices-flex {
+                display: flex !important;
+                grid-template-columns: unset !important;
+                gap: 6px !important;
+                overflow: visible !important;
+                margin: 12px 0 !important;
+                width: 100% !important;
+                flex-wrap: wrap !important;
+            }
+
+            #crypto-prices-flex > div {
+                flex: 1 1 auto !important;
+                min-width: 120px !important;
+                max-width: none !important;
             }
         }
 
