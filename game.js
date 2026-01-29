@@ -1084,11 +1084,11 @@ function loadGame() {
         // Restore autoclicker cooldown
         autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
 
-        // Calculate offline earnings (max 6 hours of earnings to prevent exploits)
+        // Calculate offline earnings (max 4 hours of earnings to prevent exploits)
         const lastSaveTime = state.lastSaveTime || Date.now();
         const currentTime = Date.now();
         let offlineSeconds = (currentTime - lastSaveTime) / 1000;
-        const maxOfflineSeconds = 21600; // Cap at 6 hours
+        const maxOfflineSeconds = 14400; // Cap at 4 hours
         if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
 
         console.log('=== OFFLINE EARNINGS DEBUG ===');
@@ -1097,8 +1097,8 @@ function loadGame() {
         console.log('Offline seconds:', offlineSeconds);
         console.log('Will show modal:', offlineSeconds >= 5);
 
-        // Cap offline time at 6 hours (21600 seconds) + skill tree bonuses
-        const BASE_OFFLINE_CAP = 21600; // 6 hours
+        // Cap offline time at 4 hours (14400 seconds) + skill tree bonuses
+        const BASE_OFFLINE_CAP = 14400; // 4 hours
         const MAX_OFFLINE_SECONDS = (typeof getOfflineCap === 'function') ? getOfflineCap() : BASE_OFFLINE_CAP;
         const cappedOfflineSeconds = Math.min(offlineSeconds, MAX_OFFLINE_SECONDS);
         const wasTimeCaped = offlineSeconds > MAX_OFFLINE_SECONDS;
@@ -1784,16 +1784,14 @@ function loadGame() {
         const toggleState = typeof window.upgradeToggleState !== 'undefined' ? window.upgradeToggleState : null;
 
         if (!metaUpgradesData || !toggleState) {
-            console.debug(`[AUTO-SELL] ${cryptoType}: Missing data objects`, { metaUpgradesData: !!metaUpgradesData, toggleState: !!toggleState });
             return false;
         }
 
-        const hasUpgrade = metaUpgradesData.auto_sell_crypto && metaUpgradesData.auto_sell_crypto.purchased;
+        const hasUpgrade = metaUpgradesData.auto_sell && metaUpgradesData.auto_sell.purchased;
         const isEnabled = toggleState.auto_sell === true;
         const autoSellEnabled = hasUpgrade && isEnabled;
 
         if (!autoSellEnabled) {
-            console.debug(`[AUTO-SELL] ${cryptoType}: Disabled or not purchased`, { hasUpgrade, isEnabled, auto_sell: toggleState.auto_sell });
             return false;
         }
 
@@ -1802,21 +1800,18 @@ function loadGame() {
 
         if (cryptoType === 'btc') {
             const effectivePrice = getEffectiveCryptoPrice(btcPrice);
-            const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
+            const cashValue = amount * effectivePrice * 0.75 * cashMultiplier; // 25% fee, then apply cash multiplier
             addEarnings(cashValue);
-            console.log(`[AUTO-SELL] BTC: Sold ${amount} BTC for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
             return true;  // Sold instead of adding to balance
         } else if (cryptoType === 'eth') {
             const effectivePrice = getEffectiveCryptoPrice(ethPrice);
-            const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
+            const cashValue = amount * effectivePrice * 0.75 * cashMultiplier; // 25% fee, then apply cash multiplier
             addEarnings(cashValue);
-            console.log(`[AUTO-SELL] ETH: Sold ${amount} ETH for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
             return true;  // Sold instead of adding to balance
         } else if (cryptoType === 'doge') {
             const effectivePrice = getEffectiveCryptoPrice(dogePrice);
-            const cashValue = amount * effectivePrice * 0.95 * cashMultiplier; // 5% fee, then apply cash multiplier
+            const cashValue = amount * effectivePrice * 0.75 * cashMultiplier; // 25% fee, then apply cash multiplier
             addEarnings(cashValue);
-            console.log(`[AUTO-SELL] DOGE: Sold ${amount} DOGE for $${cashValue.toFixed(2)} (before multiplier: $${(amount * effectivePrice * 0.95).toFixed(2)})`);
             return true;  // Sold instead of adding to balance
         }
 
@@ -2046,12 +2041,12 @@ function loadGame() {
         // Add cap notice if time was capped
         let capNotice = '';
         if (wasCapped) {
-            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 6 hours</div>`;
+            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 4 hours</div>`;
         }
 
         modal.innerHTML = `
             <h2>⏰ Welcome Back!</h2>
-            <div class="earnings-label">Offline Earnings${wasCapped ? ' (6 hour max)' : ''}</div>
+            <div class="earnings-label">Offline Earnings${wasCapped ? ' (4 hour max)' : ''}</div>
             ${earningsHtml}
             <div class="time-offline">While you were away for ${timeStr}</div>
             ${capNotice}
@@ -4566,7 +4561,7 @@ function updateAutoSellButtonUI() {
     const metaUpgrades = typeof window.metaUpgrades !== 'undefined' ? window.metaUpgrades : null;
     const upgradeToggleState = typeof window.upgradeToggleState !== 'undefined' ? window.upgradeToggleState : null;
 
-    const isPurchased = metaUpgrades && metaUpgrades.auto_sell_crypto && metaUpgrades.auto_sell_crypto.purchased;
+    const isPurchased = metaUpgrades && metaUpgrades.auto_sell && metaUpgrades.auto_sell.purchased;
 
     if (isPurchased) {
         const isEnabled = upgradeToggleState && upgradeToggleState.auto_sell === true;
@@ -4576,7 +4571,7 @@ function updateAutoSellButtonUI() {
         btn.style.background = isEnabled ? 'rgba(0,255,136,0.2)' : 'rgba(255,100,255,0.15)';
         btn.style.borderColor = isEnabled ? '#00ff88' : '#ff64ff';
         btn.style.color = isEnabled ? '#00ff88' : '#ff64ff';
-        btn.innerHTML = (isEnabled ? '🟢' : '⭕') + ' Auto-Sell: <span id="auto-sell-status">' + (isEnabled ? 'ON' : 'OFF') + '</span>';
+        btn.innerHTML = (isEnabled ? '🟢' : '⭕') + ' Auto-Sell: <span id="auto-sell-status">' + (isEnabled ? 'ON' : 'OFF') + '</span> (25% Fee)';
         btn.title = 'Click to toggle automatic crypto to USD conversion';
     } else {
         // Keep disabled
@@ -4586,15 +4581,15 @@ function updateAutoSellButtonUI() {
         btn.style.borderColor = '#666';
         btn.style.color = '#999';
         statusEl.innerText = 'LOCKED';
-        btn.title = 'Purchase "Auto-Sell Crypto to USD" upgrade to enable';
+        btn.title = 'Purchase "Auto-Sell Crypto to Cash" upgrade to enable';
     }
 }
 
 function toggleAutoSellButton() {
     // Check if upgrade is purchased
     const metaUpgrades = typeof window.metaUpgrades !== 'undefined' ? window.metaUpgrades : null;
-    if (!metaUpgrades || !metaUpgrades.auto_sell_crypto || !metaUpgrades.auto_sell_crypto.purchased) {
-        alert('Purchase the "Auto-Sell Crypto to USD" upgrade first!');
+    if (!metaUpgrades || !metaUpgrades.auto_sell || !metaUpgrades.auto_sell.purchased) {
+        alert('Purchase the "Auto-Sell Crypto to Cash" upgrade first!');
         return;
     }
 
@@ -7477,7 +7472,7 @@ dogeUpgrades.forEach(u => {
                             powerChartInstance.update('none');
                         }
                     }
-                }, 100); // Update 100ms after user stops dragging
+                }, 200); // Update 200ms after user stops dragging
             });
         }
 

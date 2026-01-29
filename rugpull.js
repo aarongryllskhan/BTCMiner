@@ -27,236 +27,235 @@ let ascensionStats = {
 
 // Meta-upgrades purchased by the player (persists across resets)
 let metaUpgrades = {
-    // TIER 1 (Basic) - 10 tokens (10 × 1³)
-    power_capacity_1: { purchased: false, cost: 10 },
-    miner_efficiency_1: { purchased: false, cost: 10 },
-    staking_apy_1: { purchased: false, cost: 10 },
-    miner_hashrate_1: { purchased: false, cost: 10 },
-    click_hashrate_1: { purchased: false, cost: 10 },
-    offline_earnings_1: { purchased: false, cost: 10 },
-    earnings_boost_1: { purchased: false, cost: 10 },
-    minigame_reward_1: { purchased: false, cost: 10 },
-    token_generation_0: { purchased: false, cost: 10 },
-    // TIER 2 (Advanced) - 80 tokens (10 × 2³)
-    power_capacity_2: { purchased: false, cost: 80 },
-    miner_efficiency_2: { purchased: false, cost: 80 },
-    staking_apy_2: { purchased: false, cost: 80 },
-    miner_hashrate_2: { purchased: false, cost: 80 },
-    click_hashrate_2: { purchased: false, cost: 80 },
-    offline_earnings_2: { purchased: false, cost: 80 },
-    earnings_boost_2: { purchased: false, cost: 80 },
-    minigame_reward_2: { purchased: false, cost: 80 },
-    token_generation_1_alt: { purchased: false, cost: 80 },
-    // TIER 3 (Expert) - 270 tokens (10 × 3³)
-    power_capacity_3: { purchased: false, cost: 270 },
-    miner_efficiency_3: { purchased: false, cost: 270 },
-    staking_apy_3: { purchased: false, cost: 270 },
-    miner_hashrate_3: { purchased: false, cost: 270 },
-    click_hashrate_3: { purchased: false, cost: 270 },
-    offline_earnings_3: { purchased: false, cost: 270 },
-    earnings_boost_3: { purchased: false, cost: 270 },
-    minigame_reward_3: { purchased: false, cost: 270 },
-    auto_sell: { purchased: false, cost: 270 },
-    token_generation_2_alt: { purchased: false, cost: 270 },
-    // TIER 4 (Prestige) - 640 tokens (10 × 4³)
-    power_capacity_4: { purchased: false, cost: 640 },
-    miner_efficiency_4: { purchased: false, cost: 640 },
-    staking_apy_4: { purchased: false, cost: 640 },
-    miner_hashrate_4: { purchased: false, cost: 640 },
-    click_hashrate_4: { purchased: false, cost: 640 },
-    offline_earnings_4: { purchased: false, cost: 640 },
-    earnings_boost_4: { purchased: false, cost: 640 },
-    minigame_reward_4: { purchased: false, cost: 640 },
-    token_generation_3_alt: { purchased: false, cost: 640 },
-    // TIER 5 (Infinite) - 1,250 tokens (10 × 5³)
-    power_capacity_5: { purchased: false, cost: 1250 },
-    miner_efficiency_5: { purchased: false, cost: 1250 },
-    staking_apy_5: { purchased: false, cost: 1250 },
-    miner_hashrate_5: { purchased: false, cost: 1250 },
-    click_hashrate_5: { purchased: false, cost: 1250 },
-    offline_earnings_5: { purchased: false, cost: 1250 },
-    earnings_boost_5: { purchased: false, cost: 1250 },
-    minigame_reward_5: { purchased: false, cost: 1250 },
-    starter_miners_t4: { purchased: false, cost: 1250 },
-    starter_power_p3: { purchased: false, cost: 1250 },
-    token_generation_4_alt: { purchased: false, cost: 1250 },
-    // TIER 6 (Cosmic) - 2,160 tokens (10 × 6³)
-    power_capacity_6: { purchased: false, cost: 2160 },
-    miner_efficiency_6: { purchased: false, cost: 2160 },
-    staking_apy_6: { purchased: false, cost: 2160 },
-    miner_hashrate_6: { purchased: false, cost: 2160 },
-    click_hashrate_6: { purchased: false, cost: 2160 },
-    offline_earnings_6: { purchased: false, cost: 2160 },
-    earnings_boost_6: { purchased: false, cost: 2160 },
-    minigame_reward_6: { purchased: false, cost: 2160 },
-    starter_miners_t5: { purchased: false, cost: 2160 },
-    starter_power_p4: { purchased: false, cost: 2160 },
-    token_generation_1: { purchased: false, cost: 2160 },
-    // TIER 7 (Transcendent) - 3,430 tokens (10 × 7³)
-    power_capacity_7: { purchased: false, cost: 3430 },
-    miner_efficiency_7: { purchased: false, cost: 3430 },
-    staking_apy_7: { purchased: false, cost: 3430 },
-    miner_hashrate_7: { purchased: false, cost: 3430 },
-    click_hashrate_7: { purchased: false, cost: 3430 },
-    offline_earnings_7: { purchased: false, cost: 3430 },
-    earnings_boost_7: { purchased: false, cost: 3430 },
-    minigame_reward_7: { purchased: false, cost: 3430 },
-    starter_miners_t6: { purchased: false, cost: 3430 },
-    starter_power_p5: { purchased: false, cost: 3430 },
-    minigame_unlock: { purchased: false, cost: 3430 },
-    token_generation_t7: { purchased: false, cost: 3430 },
-    // TIER 8 (Omnipotent) - 5,120 tokens (10 × 8³)
-    power_capacity_8: { purchased: false, cost: 5120 },
-    miner_efficiency_8: { purchased: false, cost: 5120 },
-    staking_apy_8: { purchased: false, cost: 5120 },
-    miner_hashrate_8: { purchased: false, cost: 5120 },
-    click_hashrate_8: { purchased: false, cost: 5120 },
-    offline_earnings_8: { purchased: false, cost: 5120 },
-    earnings_boost_8: { purchased: false, cost: 5120 },
-    minigame_reward_8: { purchased: false, cost: 5120 },
-    starter_miners_t7: { purchased: false, cost: 5120 },
-    starter_power_p6: { purchased: false, cost: 5120 },
-    cash_multiplier: { purchased: false, cost: 5120 },
-    token_generation_t8: { purchased: false, cost: 5120 },
-    // TIER 9 (Supreme) - 7,290 tokens (10 × 9³)
-    power_capacity_9: { purchased: false, cost: 7290 },
-    miner_efficiency_9: { purchased: false, cost: 7290 },
-    staking_apy_9: { purchased: false, cost: 7290 },
-    miner_hashrate_9: { purchased: false, cost: 7290 },
-    click_hashrate_9: { purchased: false, cost: 7290 },
-    offline_earnings_9: { purchased: false, cost: 7290 },
-    earnings_boost_9: { purchased: false, cost: 7290 },
-    minigame_reward_9: { purchased: false, cost: 7290 },
-    starter_miners_t8: { purchased: false, cost: 7290 },
-    starter_power_p7: { purchased: false, cost: 7290 },
-    token_generation_t9: { purchased: false, cost: 7290 },
-    // TIER 10 (Godlike) - 10,000 tokens (10 × 10³)
-    power_capacity_10: { purchased: false, cost: 10000 },
-    miner_efficiency_10: { purchased: false, cost: 10000 },
-    staking_apy_10: { purchased: false, cost: 10000 },
-    miner_hashrate_10: { purchased: false, cost: 10000 },
-    click_hashrate_10: { purchased: false, cost: 10000 },
-    offline_earnings_10: { purchased: false, cost: 10000 },
-    earnings_boost_10: { purchased: false, cost: 10000 },
-    minigame_reward_10: { purchased: false, cost: 10000 },
-    starter_miners_t9: { purchased: false, cost: 10000 },
-    starter_power_p8: { purchased: false, cost: 10000 },
-    token_generation_t10: { purchased: false, cost: 10000 },
-    // TIER 11 (Transcendence) - 13,310 tokens (10 × 11³)
-    power_capacity_11: { purchased: false, cost: 13310 },
-    miner_efficiency_11: { purchased: false, cost: 13310 },
-    staking_apy_11: { purchased: false, cost: 13310 },
-    miner_hashrate_11: { purchased: false, cost: 13310 },
-    click_hashrate_11: { purchased: false, cost: 13310 },
-    offline_earnings_11: { purchased: false, cost: 13310 },
-    earnings_boost_11: { purchased: false, cost: 13310 },
-    minigame_reward_11: { purchased: false, cost: 13310 },
-    starter_miners_t10: { purchased: false, cost: 13310 },
-    starter_power_p9: { purchased: false, cost: 13310 },
-    token_generation_t11: { purchased: false, cost: 13310 },
-    // TIER 12 (Beyond) - 17,280 tokens (10 × 12³)
-    power_capacity_12: { purchased: false, cost: 17280 },
-    miner_efficiency_12: { purchased: false, cost: 17280 },
-    staking_apy_12: { purchased: false, cost: 17280 },
-    miner_hashrate_12: { purchased: false, cost: 17280 },
-    click_hashrate_12: { purchased: false, cost: 17280 },
-    offline_earnings_12: { purchased: false, cost: 17280 },
-    earnings_boost_12: { purchased: false, cost: 17280 },
-    minigame_reward_12: { purchased: false, cost: 17280 },
-    starter_miners_t11: { purchased: false, cost: 17280 },
-    starter_power_p10: { purchased: false, cost: 17280 },
-    token_generation_t12: { purchased: false, cost: 17280 },
-    // TIER 13 (Godhood) - 21,970 tokens (10 × 13³)
-    power_capacity_13: { purchased: false, cost: 21970 },
-    miner_efficiency_13: { purchased: false, cost: 21970 },
-    staking_apy_13: { purchased: false, cost: 21970 },
-    miner_hashrate_13: { purchased: false, cost: 21970 },
-    click_hashrate_13: { purchased: false, cost: 21970 },
-    offline_earnings_13: { purchased: false, cost: 21970 },
-    earnings_boost_13: { purchased: false, cost: 21970 },
-    minigame_reward_13: { purchased: false, cost: 21970 },
-    starter_miners_t12: { purchased: false, cost: 21970 },
-    starter_power_p11: { purchased: false, cost: 21970 },
-    token_generation_t13: { purchased: false, cost: 21970 },
-    // TIER 14 (Supreme Being) - 27,440 tokens (10 × 14³)
-    power_capacity_14: { purchased: false, cost: 27440 },
-    miner_efficiency_14: { purchased: false, cost: 27440 },
-    staking_apy_14: { purchased: false, cost: 27440 },
-    miner_hashrate_14: { purchased: false, cost: 27440 },
-    click_hashrate_14: { purchased: false, cost: 27440 },
-    offline_earnings_14: { purchased: false, cost: 27440 },
-    earnings_boost_14: { purchased: false, cost: 27440 },
-    minigame_reward_14: { purchased: false, cost: 27440 },
-    starter_miners_t13: { purchased: false, cost: 27440 },
-    starter_power_p12: { purchased: false, cost: 27440 },
-    token_generation_t14: { purchased: false, cost: 27440 },
-    // TIER 15 (Decillion) - 33,750 tokens (10 × 15³)
-    power_capacity_15: { purchased: false, cost: 33750 },
-    miner_efficiency_15: { purchased: false, cost: 33750 },
-    staking_apy_15: { purchased: false, cost: 33750 },
-    miner_hashrate_15: { purchased: false, cost: 33750 },
-    click_hashrate_15: { purchased: false, cost: 33750 },
-    offline_earnings_15: { purchased: false, cost: 33750 },
-    earnings_boost_15: { purchased: false, cost: 33750 },
-    minigame_reward_15: { purchased: false, cost: 33750 },
-    starter_miners_t14: { purchased: false, cost: 33750 },
-    starter_power_p13: { purchased: false, cost: 33750 },
-    token_generation_t15: { purchased: false, cost: 33750 },
-    // TIER 16 (Undecillion) - 40,960 tokens (10 × 16³)
-    power_capacity_16: { purchased: false, cost: 40960 },
-    miner_efficiency_16: { purchased: false, cost: 40960 },
-    staking_apy_16: { purchased: false, cost: 40960 },
-    miner_hashrate_16: { purchased: false, cost: 40960 },
-    click_hashrate_16: { purchased: false, cost: 40960 },
-    offline_earnings_16: { purchased: false, cost: 40960 },
-    earnings_boost_16: { purchased: false, cost: 40960 },
-    minigame_reward_16: { purchased: false, cost: 40960 },
-    starter_miners_t15: { purchased: false, cost: 40960 },
-    token_generation_t16: { purchased: false, cost: 40960 },
-    // TIER 17 (Duodecillion) - 49,130 tokens (10 × 17³)
-    power_capacity_17: { purchased: false, cost: 49130 },
-    miner_efficiency_17: { purchased: false, cost: 49130 },
-    staking_apy_17: { purchased: false, cost: 49130 },
-    miner_hashrate_17: { purchased: false, cost: 49130 },
-    click_hashrate_17: { purchased: false, cost: 49130 },
-    offline_earnings_17: { purchased: false, cost: 49130 },
-    earnings_boost_17: { purchased: false, cost: 49130 },
-    minigame_reward_17: { purchased: false, cost: 49130 },
-    starter_miners_t16: { purchased: false, cost: 49130 },
-    token_generation_t17: { purchased: false, cost: 49130 },
-    // TIER 18 (Tredecillion) - 58,320 tokens (10 × 18³)
-    power_capacity_18: { purchased: false, cost: 58320 },
-    miner_efficiency_18: { purchased: false, cost: 58320 },
-    staking_apy_18: { purchased: false, cost: 58320 },
-    miner_hashrate_18: { purchased: false, cost: 58320 },
-    click_hashrate_18: { purchased: false, cost: 58320 },
-    offline_earnings_18: { purchased: false, cost: 58320 },
-    earnings_boost_18: { purchased: false, cost: 58320 },
-    minigame_reward_18: { purchased: false, cost: 58320 },
-    starter_miners_t17: { purchased: false, cost: 58320 },
-    token_generation_t18: { purchased: false, cost: 58320 },
-    // TIER 19 (Quattuordecillion) - 68,590 tokens (10 × 19³)
-    power_capacity_19: { purchased: false, cost: 68590 },
-    miner_efficiency_19: { purchased: false, cost: 68590 },
-    staking_apy_19: { purchased: false, cost: 68590 },
-    miner_hashrate_19: { purchased: false, cost: 68590 },
-    click_hashrate_19: { purchased: false, cost: 68590 },
-    offline_earnings_19: { purchased: false, cost: 68590 },
-    earnings_boost_19: { purchased: false, cost: 68590 },
-    minigame_reward_19: { purchased: false, cost: 68590 },
-    starter_miners_t18: { purchased: false, cost: 68590 },
-    token_generation_t19: { purchased: false, cost: 68590 },
-    // TIER 20 (Novemcillion) - 80,000 tokens (10 × 20³)
-    power_capacity_20: { purchased: false, cost: 80000 },
-    miner_efficiency_20: { purchased: false, cost: 80000 },
-    staking_apy_20: { purchased: false, cost: 80000 },
-    miner_hashrate_20: { purchased: false, cost: 80000 },
-    click_hashrate_20: { purchased: false, cost: 80000 },
-    offline_earnings_20: { purchased: false, cost: 80000 },
-    earnings_boost_20: { purchased: false, cost: 80000 },
-    minigame_reward_20: { purchased: false, cost: 80000 },
-    starter_miners_t19: { purchased: false, cost: 80000 },
-    token_generation_t20: { purchased: false, cost: 80000 }
+    // TIER 1 (Basic) - 20 tokens each
+    power_capacity_1: { purchased: false, cost: 20 },
+    miner_efficiency_1: { purchased: false, cost: 20 },
+    staking_apy_1: { purchased: false, cost: 20 },
+    miner_hashrate_1: { purchased: false, cost: 20 },
+    click_hashrate_1: { purchased: false, cost: 20 },
+    offline_earnings_1: { purchased: false, cost: 20 },
+    earnings_boost_1: { purchased: false, cost: 20 },
+    minigame_reward_1: { purchased: false, cost: 20 },
+    token_generation_0: { purchased: false, cost: 20 },
+    // TIER 2 (Advanced) - 100 tokens each
+    power_capacity_2: { purchased: false, cost: 100 },
+    miner_efficiency_2: { purchased: false, cost: 100 },
+    staking_apy_2: { purchased: false, cost: 100 },
+    miner_hashrate_2: { purchased: false, cost: 100 },
+    click_hashrate_2: { purchased: false, cost: 100 },
+    offline_earnings_2: { purchased: false, cost: 100 },
+    earnings_boost_2: { purchased: false, cost: 100 },
+    minigame_reward_2: { purchased: false, cost: 100 },
+    token_generation_1_alt: { purchased: false, cost: 100 },
+    // TIER 3 (Expert) - 400 tokens each
+    power_capacity_3: { purchased: false, cost: 400 },
+    miner_efficiency_3: { purchased: false, cost: 400 },
+    staking_apy_3: { purchased: false, cost: 400 },
+    miner_hashrate_3: { purchased: false, cost: 400 },
+    click_hashrate_3: { purchased: false, cost: 400 },
+    offline_earnings_3: { purchased: false, cost: 400 },
+    earnings_boost_3: { purchased: false, cost: 400 },
+    minigame_reward_3: { purchased: false, cost: 400 },
+    auto_sell: { purchased: false, cost: 400 },
+    token_generation_2_alt: { purchased: false, cost: 400 },
+    // TIER 4 (Prestige) - 1000 tokens each
+    power_capacity_4: { purchased: false, cost: 1000 },
+    miner_efficiency_4: { purchased: false, cost: 1000 },
+    staking_apy_4: { purchased: false, cost: 1000 },
+    miner_hashrate_4: { purchased: false, cost: 1000 },
+    click_hashrate_4: { purchased: false, cost: 1000 },
+    offline_earnings_4: { purchased: false, cost: 1000 },
+    earnings_boost_4: { purchased: false, cost: 1000 },
+    minigame_reward_4: { purchased: false, cost: 1000 },
+    token_generation_3_alt: { purchased: false, cost: 1000 },
+    // TIER 5 (Infinite) - 2000 tokens each
+    power_capacity_5: { purchased: false, cost: 2000 },
+    miner_efficiency_5: { purchased: false, cost: 2000 },
+    staking_apy_5: { purchased: false, cost: 2000 },
+    miner_hashrate_5: { purchased: false, cost: 2000 },
+    click_hashrate_5: { purchased: false, cost: 2000 },
+    offline_earnings_5: { purchased: false, cost: 2000 },
+    earnings_boost_5: { purchased: false, cost: 2000 },
+    minigame_reward_5: { purchased: false, cost: 2000 },
+    starter_miners_t4: { purchased: false, cost: 2000 },
+    starter_power_p3: { purchased: false, cost: 2000 },
+    token_generation_4_alt: { purchased: false, cost: 2000 },
+    // TIER 6 (Cosmic) - 3500 tokens each
+    power_capacity_6: { purchased: false, cost: 3500 },
+    miner_efficiency_6: { purchased: false, cost: 3500 },
+    staking_apy_6: { purchased: false, cost: 3500 },
+    miner_hashrate_6: { purchased: false, cost: 3500 },
+    click_hashrate_6: { purchased: false, cost: 3500 },
+    offline_earnings_6: { purchased: false, cost: 3500 },
+    earnings_boost_6: { purchased: false, cost: 3500 },
+    minigame_reward_6: { purchased: false, cost: 3500 },
+    starter_miners_t5: { purchased: false, cost: 3500 },
+    starter_power_p4: { purchased: false, cost: 3500 },
+    token_generation_1: { purchased: false, cost: 3500 },
+    // TIER 7 (Transcendent) - 5000 tokens each
+    power_capacity_7: { purchased: false, cost: 5000 },
+    miner_efficiency_7: { purchased: false, cost: 5000 },
+    staking_apy_7: { purchased: false, cost: 5000 },
+    miner_hashrate_7: { purchased: false, cost: 5000 },
+    click_hashrate_7: { purchased: false, cost: 5000 },
+    offline_earnings_7: { purchased: false, cost: 5000 },
+    earnings_boost_7: { purchased: false, cost: 5000 },
+    minigame_reward_7: { purchased: false, cost: 5000 },
+    starter_miners_t6: { purchased: false, cost: 5000 },
+    starter_power_p5: { purchased: false, cost: 5000 },
+    minigame_unlock: { purchased: false, cost: 5000 },
+    token_generation_t7: { purchased: false, cost: 5000 },
+    // TIER 8 (Omnipotent) - 7000 tokens each
+    power_capacity_8: { purchased: false, cost: 7000 },
+    miner_efficiency_8: { purchased: false, cost: 7000 },
+    staking_apy_8: { purchased: false, cost: 7000 },
+    miner_hashrate_8: { purchased: false, cost: 7000 },
+    click_hashrate_8: { purchased: false, cost: 7000 },
+    offline_earnings_8: { purchased: false, cost: 7000 },
+    earnings_boost_8: { purchased: false, cost: 7000 },
+    minigame_reward_8: { purchased: false, cost: 7000 },
+    starter_miners_t7: { purchased: false, cost: 7000 },
+    starter_power_p6: { purchased: false, cost: 7000 },
+    cash_multiplier: { purchased: false, cost: 7000 },
+    token_generation_t8: { purchased: false, cost: 7000 },
+    // TIER 9 (Supreme) - 10000 tokens each
+    power_capacity_9: { purchased: false, cost: 10000 },
+    miner_efficiency_9: { purchased: false, cost: 10000 },
+    staking_apy_9: { purchased: false, cost: 10000 },
+    miner_hashrate_9: { purchased: false, cost: 10000 },
+    click_hashrate_9: { purchased: false, cost: 10000 },
+    offline_earnings_9: { purchased: false, cost: 10000 },
+    earnings_boost_9: { purchased: false, cost: 10000 },
+    minigame_reward_9: { purchased: false, cost: 10000 },
+    starter_miners_t8: { purchased: false, cost: 10000 },
+    starter_power_p7: { purchased: false, cost: 10000 },
+    token_generation_t9: { purchased: false, cost: 10000 },
+    // TIER 10 (Godlike) - 15000 tokens each
+    power_capacity_10: { purchased: false, cost: 15000 },
+    miner_efficiency_10: { purchased: false, cost: 15000 },
+    staking_apy_10: { purchased: false, cost: 15000 },
+    miner_hashrate_10: { purchased: false, cost: 15000 },
+    click_hashrate_10: { purchased: false, cost: 15000 },
+    offline_earnings_10: { purchased: false, cost: 15000 },
+    earnings_boost_10: { purchased: false, cost: 15000 },
+    minigame_reward_10: { purchased: false, cost: 15000 },
+    starter_miners_t9: { purchased: false, cost: 15000 },
+    starter_power_p8: { purchased: false, cost: 15000 },
+    token_generation_t10: { purchased: false, cost: 15000 },
+    // TIER 11 (Transcendence) - 22000 tokens each
+    power_capacity_11: { purchased: false, cost: 22000 },
+    miner_efficiency_11: { purchased: false, cost: 22000 },
+    staking_apy_11: { purchased: false, cost: 22000 },
+    miner_hashrate_11: { purchased: false, cost: 22000 },
+    click_hashrate_11: { purchased: false, cost: 22000 },
+    offline_earnings_11: { purchased: false, cost: 22000 },
+    earnings_boost_11: { purchased: false, cost: 22000 },
+    minigame_reward_11: { purchased: false, cost: 22000 },
+    starter_miners_t10: { purchased: false, cost: 22000 },
+    starter_power_p9: { purchased: false, cost: 22000 },
+    token_generation_t11: { purchased: false, cost: 22000 },
+    // TIER 12 (Beyond) - 32000 tokens each
+    power_capacity_12: { purchased: false, cost: 32000 },
+    miner_efficiency_12: { purchased: false, cost: 32000 },
+    staking_apy_12: { purchased: false, cost: 32000 },
+    miner_hashrate_12: { purchased: false, cost: 32000 },
+    click_hashrate_12: { purchased: false, cost: 32000 },
+    offline_earnings_12: { purchased: false, cost: 32000 },
+    earnings_boost_12: { purchased: false, cost: 32000 },
+    minigame_reward_12: { purchased: false, cost: 32000 },
+    starter_miners_t11: { purchased: false, cost: 32000 },
+    starter_power_p10: { purchased: false, cost: 32000 },
+    token_generation_t12: { purchased: false, cost: 32000 },
+    // TIER 13 (Godhood) - 45000 tokens each
+    power_capacity_13: { purchased: false, cost: 45000 },
+    miner_efficiency_13: { purchased: false, cost: 45000 },
+    staking_apy_13: { purchased: false, cost: 45000 },
+    miner_hashrate_13: { purchased: false, cost: 45000 },
+    click_hashrate_13: { purchased: false, cost: 45000 },
+    offline_earnings_13: { purchased: false, cost: 45000 },
+    earnings_boost_13: { purchased: false, cost: 45000 },
+    minigame_reward_13: { purchased: false, cost: 45000 },
+    starter_miners_t12: { purchased: false, cost: 45000 },
+    starter_power_p11: { purchased: false, cost: 45000 },
+    token_generation_t13: { purchased: false, cost: 45000 },
+    // TIER 14 (Supreme Being) - 60000 tokens each
+    power_capacity_14: { purchased: false, cost: 60000 },
+    miner_efficiency_14: { purchased: false, cost: 60000 },
+    staking_apy_14: { purchased: false, cost: 60000 },
+    miner_hashrate_14: { purchased: false, cost: 60000 },
+    click_hashrate_14: { purchased: false, cost: 60000 },
+    offline_earnings_14: { purchased: false, cost: 60000 },
+    earnings_boost_14: { purchased: false, cost: 60000 },
+    minigame_reward_14: { purchased: false, cost: 60000 },
+    starter_miners_t13: { purchased: false, cost: 60000 },
+    starter_power_p12: { purchased: false, cost: 60000 },
+    token_generation_t14: { purchased: false, cost: 60000 },
+    // TIER 15 (Decillion) - 80000 tokens each
+    power_capacity_15: { purchased: false, cost: 80000 },
+    miner_efficiency_15: { purchased: false, cost: 80000 },
+    staking_apy_15: { purchased: false, cost: 80000 },
+    miner_hashrate_15: { purchased: false, cost: 80000 },
+    click_hashrate_15: { purchased: false, cost: 80000 },
+    offline_earnings_15: { purchased: false, cost: 80000 },
+    earnings_boost_15: { purchased: false, cost: 80000 },
+    minigame_reward_15: { purchased: false, cost: 80000 },
+    starter_miners_t14: { purchased: false, cost: 80000 },
+    token_generation_t15: { purchased: false, cost: 80000 },
+    // TIER 16 (Undecillion) - 100000 tokens each
+    power_capacity_16: { purchased: false, cost: 100000 },
+    miner_efficiency_16: { purchased: false, cost: 100000 },
+    staking_apy_16: { purchased: false, cost: 100000 },
+    miner_hashrate_16: { purchased: false, cost: 100000 },
+    click_hashrate_16: { purchased: false, cost: 100000 },
+    offline_earnings_16: { purchased: false, cost: 100000 },
+    earnings_boost_16: { purchased: false, cost: 100000 },
+    minigame_reward_16: { purchased: false, cost: 100000 },
+    starter_miners_t15: { purchased: false, cost: 100000 },
+    token_generation_t16: { purchased: false, cost: 100000 },
+    // TIER 17 (Duodecillion) - 130000 tokens each
+    power_capacity_17: { purchased: false, cost: 130000 },
+    miner_efficiency_17: { purchased: false, cost: 130000 },
+    staking_apy_17: { purchased: false, cost: 130000 },
+    miner_hashrate_17: { purchased: false, cost: 130000 },
+    click_hashrate_17: { purchased: false, cost: 130000 },
+    offline_earnings_17: { purchased: false, cost: 130000 },
+    earnings_boost_17: { purchased: false, cost: 130000 },
+    minigame_reward_17: { purchased: false, cost: 130000 },
+    starter_miners_t16: { purchased: false, cost: 130000 },
+    token_generation_t17: { purchased: false, cost: 130000 },
+    // TIER 18 (Tredecillion) - 160000 tokens each
+    power_capacity_18: { purchased: false, cost: 160000 },
+    miner_efficiency_18: { purchased: false, cost: 160000 },
+    staking_apy_18: { purchased: false, cost: 160000 },
+    miner_hashrate_18: { purchased: false, cost: 160000 },
+    click_hashrate_18: { purchased: false, cost: 160000 },
+    offline_earnings_18: { purchased: false, cost: 160000 },
+    earnings_boost_18: { purchased: false, cost: 160000 },
+    minigame_reward_18: { purchased: false, cost: 160000 },
+    starter_miners_t17: { purchased: false, cost: 160000 },
+    token_generation_t18: { purchased: false, cost: 160000 },
+    // TIER 19 (Quattuordecillion) - 200000 tokens each
+    power_capacity_19: { purchased: false, cost: 200000 },
+    miner_efficiency_19: { purchased: false, cost: 200000 },
+    staking_apy_19: { purchased: false, cost: 200000 },
+    miner_hashrate_19: { purchased: false, cost: 200000 },
+    click_hashrate_19: { purchased: false, cost: 200000 },
+    offline_earnings_19: { purchased: false, cost: 200000 },
+    earnings_boost_19: { purchased: false, cost: 200000 },
+    minigame_reward_19: { purchased: false, cost: 200000 },
+    starter_miners_t18: { purchased: false, cost: 200000 },
+    token_generation_t19: { purchased: false, cost: 200000 },
+    // TIER 20 (Novemcillion) - 250000 tokens each
+    power_capacity_20: { purchased: false, cost: 250000 },
+    miner_efficiency_20: { purchased: false, cost: 250000 },
+    staking_apy_20: { purchased: false, cost: 250000 },
+    miner_hashrate_20: { purchased: false, cost: 250000 },
+    click_hashrate_20: { purchased: false, cost: 250000 },
+    offline_earnings_20: { purchased: false, cost: 250000 },
+    earnings_boost_20: { purchased: false, cost: 250000 },
+    minigame_reward_20: { purchased: false, cost: 250000 },
+    starter_miners_t19: { purchased: false, cost: 250000 },
+    token_generation_t20: { purchased: false, cost: 250000 }
 };
 
 // Unlocked systems (unlock new content after ascensions)
@@ -349,7 +348,6 @@ function ensureMetaUpgradesInitialized() {
         starter_power_p10: { purchased: false, cost: 17280 },
         starter_power_p11: { purchased: false, cost: 21970 },
         starter_power_p12: { purchased: false, cost: 27440 },
-        starter_power_p13: { purchased: false, cost: 33750 },
         token_generation_1: { purchased: false, cost: 2160 },
         minigame_unlock: { purchased: false, cost: 3430 },
         cash_multiplier: { purchased: false, cost: 5120 },
@@ -360,9 +358,7 @@ function ensureMetaUpgradesInitialized() {
         token_generation_2: { purchased: false, cost: 10000 },
         token_generation_3: { purchased: false, cost: 21970 },
         token_generation_4: { purchased: false, cost: 40960 },
-        token_generation_5: { purchased: false, cost: 68590 },
-        // Auto-sell toggle upgrade
-        auto_sell_crypto: { purchased: false, cost: 10000 }
+        token_generation_5: { purchased: false, cost: 68590 }
     };
 
     for (const [key, defaultValue] of Object.entries(fullDefaults)) {
@@ -388,12 +384,13 @@ function calculateRugpullReward() {
     const baseReward = 40 * Math.pow(level, 3);
 
     // Bonus tokens for exceeding requirement
-    // Scales with requirement: 40 tokens per $1M requirement
-    // At $1M requirement: 40 bonus tokens per $1M excess
-    // At $1.5M requirement: 60 bonus tokens per $1.5M excess
-    // At $2M requirement: 80 bonus tokens per $2M excess
+    // Capped logarithmic scaling: bonus grows slower as earnings get higher
+    // This prevents early rugpulls from giving too many tokens
     const excessEarnings = Math.max(0, earnings - requirement);
-    const bonusTokens = Math.floor((excessEarnings / requirement) * (requirement / 1000000) * 40);
+    const excessMultiplier = excessEarnings / requirement; // How many times the requirement was exceeded
+    // Use logarithmic scaling: log(1 + x) grows slower than x
+    // Max bonus is 4x the base reward (so at most 5x total with base)
+    const bonusTokens = Math.floor(baseReward * Math.log(1 + excessMultiplier) * 2);
 
     const totalReward = baseReward + bonusTokens;
 
@@ -405,17 +402,68 @@ function calculateRugpullReward() {
  * Show the rugpull confirmation modal
  */
 function showRugpullOffer() {
+    // Helper function to abbreviate large numbers
+    function abbreviateNumber(num) {
+        if (num >= 1e60) return (num / 1e60).toFixed(2) + 'Nmdc';
+        if (num >= 1e57) return (num / 1e57).toFixed(2) + 'O/Odc';
+        if (num >= 1e54) return (num / 1e54).toFixed(2) + 'Spdc';
+        if (num >= 1e51) return (num / 1e51).toFixed(2) + 'Sxdc';
+        if (num >= 1e48) return (num / 1e48).toFixed(2) + 'Qdc';
+        if (num >= 1e45) return (num / 1e45).toFixed(2) + 'Qdc';
+        if (num >= 1e42) return (num / 1e42).toFixed(2) + 'Tdc';
+        if (num >= 1e39) return (num / 1e39).toFixed(2) + 'U/Udc';
+        if (num >= 1e36) return (num / 1e36).toFixed(2) + 'D/Ddc';
+        if (num >= 1e33) return (num / 1e33).toFixed(2) + 'Dc';
+        if (num >= 1e30) return (num / 1e30).toFixed(2) + 'N';
+        if (num >= 1e27) return (num / 1e27).toFixed(2) + 'O';
+        if (num >= 1e24) return (num / 1e24).toFixed(2) + 'Sep';
+        if (num >= 1e21) return (num / 1e21).toFixed(2) + 'S';
+        if (num >= 1e18) return (num / 1e18).toFixed(2) + 'Qa';
+        if (num >= 1e15) return (num / 1e15).toFixed(2) + 'Q';
+        if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+        if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+        if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+        if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+        return num.toLocaleString();
+    }
+
     // Get values from game.js with fallbacks
     const earnings = lifetimeEarningsThisRugpull;
     const cash = window.gameState && window.gameState.dollarBalance ? window.gameState.dollarBalance : 0;
 
-    // Calculate token reward using cubic scaling (40 × level³)
+    // Calculate token reward - scales with rugpull level
+    // Each rugpull gets more base tokens as you progress
+    // Level 1: base 10 tokens
+    // Level 5: base 50 tokens
+    // Level 10: base 100 tokens
+    // Level 20: base 200 tokens
+    // Level 40: base 400 tokens
     const requirement = getRugpullRequirement();
     const level = ascensionLevel + 1;  // Convert to 1-indexed
-    const baseReward = 40 * Math.pow(level, 3);
+
+    // Base reward: 10 × level (linear scaling with rugpull number)
+    // This allows you to get more tokens per rugpull as you progress
+    // Level 1: 10, Level 2: 20, Level 3: 30, Level 4: 40, Level 5: 50, ...
+    const baseReward = 10 * level;
+
+    // Excess bonus: rewards grinding significantly beyond the requirement
+    // At exactly requirement: 0x bonus
+    // At 2x requirement: ~1.4x bonus
+    // At 10x requirement: ~4.6x bonus
+    // At 100x requirement: ~6.9x bonus (capped at 20x max)
+    // At 10,000x requirement (10B): ~46x bonus, capped at 20x
     const excessEarnings = Math.max(0, earnings - requirement);
-    const bonusTokens = Math.floor((excessEarnings / requirement) * (requirement / 1000000) * 40);
+    const excessMultiplier = excessEarnings / requirement;
+
+    // Use amplified logarithmic scaling: log(1 + x) * 5 to reward grinding
+    // This grows much faster: 1.4x at 2x, 4.6x at 10x, 6.9x at 100x, 46x at 10,000x
+    // Cap at 20x bonus so maximum total reward is 21x base
+    const bonusMultiplier = Math.min(20.0, Math.log(1 + excessMultiplier) * 5);
+    const bonusTokens = Math.floor(baseReward * bonusMultiplier);
     const reward = Math.max(1, Math.floor(baseReward + bonusTokens));
+
+    // DEBUG: Log the calculation
+    console.log('[RUGPULL CALC]', { earnings, requirement, excessEarnings, excessMultiplier, baseReward, bonusMultiplier, bonusTokens, reward });
 
     const starterCash = 1000 + (ascensionLevel * 1000);
 
@@ -430,15 +478,15 @@ function showRugpullOffer() {
             <div style="color: #fff; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.8;">
                 <div style="color: #ccc; margin-bottom: 15px;">Current Progress:</div>
                 <div style="margin-bottom: 10px;">
-                    • Lifetime Earnings: <span style="color: #4CAF50; font-weight: bold;">$${earnings.toLocaleString()}</span><br>
-                    • Current Cash: <span style="color: #4CAF50; font-weight: bold;">$${cash.toLocaleString()}</span><br>
+                    • Lifetime Earnings: <span style="color: #4CAF50; font-weight: bold;">$${abbreviateNumber(earnings)}</span><br>
+                    • Current Cash: <span style="color: #4CAF50; font-weight: bold;">$${abbreviateNumber(cash)}</span><br>
                     • Ascensions Completed: <span style="color: #4CAF50; font-weight: bold;">${ascensionLevel}</span>
                 </div>
                 <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
                     <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 10px;">TOKEN CALCULATION:</div>
                     <div style="margin-bottom: 15px; color: #ddd; font-size: 0.85rem;">
-                        • Base Tokens: 40 × ${level}<sup>3</sup> = <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
-                        ${bonusTokens > 0 ? `• Bonus Tokens: (40 × $${(requirement / 1000000).toLocaleString()}) = <span style="color: #4CAF50;">+${bonusTokens}</span> tokens per $${(requirement / 1000000).toLocaleString()}M<br>` : ''}
+                        • Base Tokens: 10 × ${level} = <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
+                        ${bonusTokens > 0 ? `• Bonus Tokens: <span style="color: #4CAF50;">+${bonusTokens}</span> tokens (scaled by excess earnings)<br>` : ''}
                         • <span style="color: #ffeb3b; font-weight: bold;">TOTAL: ${reward} Corrupt Tokens</span><br>
                     </div>
                 </div>
@@ -447,8 +495,8 @@ function showRugpullOffer() {
                     <div style="margin-bottom: 10px;">
                         • Earn <span style="color: #ffeb3b; font-weight: bold;">${reward} Corrupt Tokens</span><br>
                         • Start with <span style="color: #ffeb3b; font-weight: bold;">$${starterCash}</span> cash<br>
-                        • +1% mining speed per rugpull <span style="color: #ffeb3b;">(+${(ascensionLevel * 1).toFixed(0)}% total)</span><br>
-                        • +1% manual hash per rugpull <span style="color: #ffeb3b;">(+${(ascensionLevel * 1).toFixed(0)}% total)</span><br>
+                        • +1% mining speed per rugpull <span style="color: #ffeb3b;">(+${(ascensionLevel * 1).toFixed(0)}% Total)</span><br>
+                        • +1% manual hash per rugpull <span style="color: #ffeb3b;">(+${(ascensionLevel * 1).toFixed(0)}% Total)</span><br>
                     </div>
                     <div style="border-top: 1px solid #555; padding-top: 10px; margin-top: 10px; color: #ccc; font-size: 0.85rem;">
                         This will:<br>
@@ -974,7 +1022,7 @@ function purchaseMetaUpgrade(upgradeKey) {
     updateMetaUpgradesUI();
 
     // Update the auto-sell button UI if the auto-sell upgrade was purchased
-    if (upgradeKey === 'auto_sell_crypto' && typeof updateAutoSellButtonUI === 'function') {
+    if (upgradeKey === 'auto_sell' && typeof updateAutoSellButtonUI === 'function') {
         updateAutoSellButtonUI();
     }
 
@@ -1181,6 +1229,27 @@ function getOfflineBoost() {
 }
 
 /**
+ * Get offline earnings cap in seconds based on purchased upgrades
+ * Base cap is 4 hours (14400 seconds)
+ * Each offline_earnings upgrade adds 1 hour (3600 seconds)
+ */
+function getOfflineCap() {
+    const BASE_OFFLINE_CAP = 14400; // 4 hours in seconds
+    let additionalSeconds = 0;
+
+    // Check each offline earnings upgrade tier
+    for (let tier = 1; tier <= 20; tier++) {
+        const key = `offline_earnings_${tier}`;
+        if (metaUpgrades[key] && metaUpgrades[key].purchased) {
+            // Each tier adds 1 hour (3600 seconds)
+            additionalSeconds += 3600;
+        }
+    }
+
+    return BASE_OFFLINE_CAP + additionalSeconds;
+}
+
+/**
  * Get token conversion rate from earnings (how much earnings auto-convert to tokens)
  * Token generation is handled through tier upgrades
  */
@@ -1217,7 +1286,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_1': '+0.05% Staking APR',
         'miner_hashrate_1': '+0.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_1': '+0.5% Manual Hash Rate',
-        'offline_earnings_1': '+1 Hour Offline Earnings Cap (1h total)',
+        'offline_earnings_1': '+1 Hour Offline Earnings Cap (5h Total)',
         'earnings_boost_1': '+1% Crypto Sale & Stake Value',
         'minigame_reward_1': '+1% Minigame Rewards',
         'token_generation_0': '+0.005 Corrupt Tokens/s Offline',
@@ -1228,7 +1297,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_2': '+0.1% Staking APR',
         'miner_hashrate_2': '+1% Miner Hash Rate (All Crypto)',
         'click_hashrate_2': '+1% Manual Hash Rate',
-        'offline_earnings_2': '+1 Hour Offline Earnings Cap (3h total)',
+        'offline_earnings_2': '+1 Hour Offline Earnings Cap (6h Total)',
         'earnings_boost_2': '+1.15% Crypto Sale & Stake Value',
         'minigame_reward_2': '+1.15% Minigame Rewards',
         'starter_miners_t1': 'Start All Future Rugpulls With LVL1 T1 Miner For All Cryptos!',
@@ -1241,10 +1310,10 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_3': '+0.15% Staking APR',
         'miner_hashrate_3': '+1.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_3': '+1.5% Manual Hash Rate',
-        'offline_earnings_3': '+1 Hour Offline Earnings Cap (4h total)',
+        'offline_earnings_3': '+1 Hour Offline Earnings Cap (7h Total)',
         'earnings_boost_3': '+1.32% Crypto Sale & Stake Value',
         'minigame_reward_3': '+1.32% Minigame Rewards',
-        'auto_sell': 'Auto-Sell Crypto to Cash',
+        'auto_sell': 'Auto-Sell Crypto to Cash (25% Fee)',
         'starter_miners_t2': 'Start All Future Rugpulls With LVL1 T2 Miner For All Cryptos!',
         'starter_power_p1': 'Start All Future Rugpulls With LVL1 Regulated PSU',
         'token_generation_2_alt': '+0.00661 Corrupt Tokens/s Offline',
@@ -1255,7 +1324,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_4': '+0.2% Staking APR',
         'miner_hashrate_4': '+2% Miner Hash Rate (All Crypto)',
         'click_hashrate_4': '+2% Manual Hash Rate',
-        'offline_earnings_4': '+4 Hours Offline Earnings Cap (10h total)',
+        'offline_earnings_4': '+1 Hour Offline Earnings Cap (8h Total)',
         'earnings_boost_4': '+1.52% Crypto Sale & Stake Value',
         'minigame_reward_4': '+1.52% Minigame Rewards',
         'starter_miners_t3': 'Start All Future Rugpulls With LVL1 T3 Miner For All Cryptos!',
@@ -1268,7 +1337,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_5': '+0.25% Staking APR',
         'miner_hashrate_5': '+2.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_5': '+2.5% Manual Hash Rate',
-        'offline_earnings_5': '+5 Hours Offline Earnings Cap (11h total)',
+        'offline_earnings_5': '+1 Hour Offline Earnings Cap (9h Total)',
         'earnings_boost_5': '+1.75% Crypto Sale & Stake Value',
         'minigame_reward_5': '+1.75% Minigame Rewards',
         'starter_miners_t4': 'Start All Future Rugpulls With LVL1 T4 Miner For All Cryptos!',
@@ -1281,7 +1350,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_6': '+0.3% Staking APR',
         'miner_hashrate_6': '+3% Miner Hash Rate (All Crypto)',
         'click_hashrate_6': '+3% Manual Hash Rate',
-        'offline_earnings_6': '+5 Hours Offline Earnings Cap (12h total)',
+        'offline_earnings_6': '+1 Hour Offline Earnings Cap (10h Total)',
         'earnings_boost_6': '+2.01% Crypto Sale & Stake Value',
         'minigame_reward_6': '+2.01% Minigame Rewards',
         'starter_miners_t5': 'Start All Future Rugpulls With LVL1 T5 Miner For All Cryptos!',
@@ -1308,7 +1377,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_7': '+0.35% Staking APR',
         'miner_hashrate_7': '+3.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_7': '+1.16% Manual Hash Rate',
-        'offline_earnings_7': '+6 Hours Offline Earnings Cap (13h total)',
+        'offline_earnings_7': '+1 Hour Offline Earnings Cap (11h Total)',
         'earnings_boost_7': '+2.31% Crypto Sale & Stake Value',
         'minigame_reward_7': '+2.31% Minigame Rewards',
         'starter_miners_t6': 'Start All Future Rugpulls With LVL1 T6 Miner For All Cryptos!',
@@ -1321,7 +1390,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_8': '+0.4% Staking APR',
         'miner_hashrate_8': '+4% Miner Hash Rate (All Crypto)',
         'click_hashrate_8': '+1.33% Manual Hash Rate',
-        'offline_earnings_8': '+7 Hours Offline Earnings Cap (14h total)',
+        'offline_earnings_8': '+1 Hour Offline Earnings Cap (12h Total)',
         'earnings_boost_8': '+2.66% Crypto Sale & Stake Value',
         'minigame_reward_8': '+2.66% Minigame Rewards',
         'starter_miners_t7': 'Start All Future Rugpulls With LVL1 T7 Miner For All Cryptos!',
@@ -1334,7 +1403,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_9': '+0.45% Staking APR',
         'miner_hashrate_9': '+4.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_9': '+1.53% Manual Hash Rate',
-        'offline_earnings_9': '+8 Hours Offline Earnings Cap (15h total)',
+        'offline_earnings_9': '+1 Hour Offline Earnings Cap (13h Total)',
         'earnings_boost_9': '+3.06% Crypto Sale & Stake Value',
         'minigame_reward_9': '+3.06% Minigame Rewards',
         'starter_miners_t8': 'Start All Future Rugpulls With LVL1 T8 Miner For All Cryptos!',
@@ -1347,7 +1416,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_10': '+0.5% Staking APR',
         'miner_hashrate_10': '+5% Miner Hash Rate (All Crypto)',
         'click_hashrate_10': '+1.76% Manual Hash Rate',
-        'offline_earnings_10': '+9 Hours Offline Earnings Cap (16h total)',
+        'offline_earnings_10': '+1 Hour Offline Earnings Cap (14h Total)',
         'earnings_boost_10': '+3.52% Crypto Sale & Stake Value',
         'minigame_reward_10': '+3.52% Minigame Rewards',
         'starter_miners_t9': 'Start All Future Rugpulls With LVL1 T9 Miner For All Cryptos!',
@@ -1359,7 +1428,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_11': '+0.55% Staking APR',
         'miner_hashrate_11': '+5.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_11': '+2.03% Manual Hash Rate',
-        'offline_earnings_11': '+10 Hours Offline Earnings Cap (17h total)',
+        'offline_earnings_11': '+1 Hour Offline Earnings Cap (15h Total)',
         'earnings_boost_11': '+4.05% Crypto Sale & Stake Value',
         'minigame_reward_11': '+4.05% Minigame Rewards',
         'starter_miners_t10': 'Start All Future Rugpulls With LVL1 T10 Miner For All Cryptos!',
@@ -1371,7 +1440,7 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_12': '+0.6% Staking APR',
         'miner_hashrate_12': '+6% Miner Hash Rate (All Crypto)',
         'click_hashrate_12': '+2.34% Manual Hash Rate',
-        'offline_earnings_12': '+11 Hours Offline Earnings Cap (18h total)',
+        'offline_earnings_12': '+1 Hour Offline Earnings Cap (16h Total)',
         'earnings_boost_12': '+4.65% Crypto Sale & Stake Value',
         'minigame_reward_12': '+4.65% Minigame Rewards',
         'starter_miners_t11': 'Start All Future Rugpulls With LVL1 T11 Miner For All Cryptos!',
@@ -1384,9 +1453,9 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_13': '+0.65% Staking APR',
         'miner_hashrate_13': '+6.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_13': '+2.69% Manual Hash Rate',
-        'offline_earnings_13': '+12 Hours Offline Earnings Cap (19h total)',
+        'offline_earnings_13': '+1 Hour Offline Earnings Cap (17h Total)',
         'earnings_boost_13': '+5.35% Crypto Sale & Stake Value',
-        'minigame_reward_13': '+5.35% Minigame Rewards',
+        'minigame_reward_13': '+5.35% Crypto Sale & Stake Value',
         'starter_miners_t12': 'Start All Future Rugpulls With LVL1 T12 Miner For All Cryptos!',
         'starter_power_p11': 'Start All Future Rugpulls With LVL1 Dyson Sphere Power Collector',
 
@@ -1396,33 +1465,33 @@ function getUpgradeName(upgradeKey) {
         'staking_apy_14': '+0.7% Staking APR',
         'miner_hashrate_14': '+7% Miner Hash Rate (All Crypto)',
         'click_hashrate_14': '+3.09% Manual Hash Rate',
-        'offline_earnings_14': '+13 Hours Offline Earnings Cap (20h total)',
+        'offline_earnings_14': '+1 Hour Offline Earnings Cap (18h Total)',
         'earnings_boost_14': '+6.15% Crypto Sale & Stake Value',
         'minigame_reward_14': '+6.15% Minigame Rewards',
         'starter_miners_t13': 'Start All Future Rugpulls With LVL1 T13 Miner For All Cryptos!',
         'starter_power_p12': 'Start All Future Rugpulls With LVL1 Stellar Energy Tapestry',
 
         // TIER 15 (Decillion) - 8 base + 2 unique (starter_miners_t14, crypto_efficiency_3)
-        'power_capacity_15': '+23.36% Max Power Capacity',
-        'miner_efficiency_15': '-23.36% Miner Power Consumption',
-        'staking_apy_15': '+2.34% Staking APR',
-        'miner_hashrate_15': '+23.36% Miner Hash Rate (All Crypto)',
-        'click_hashrate_15': '+3.56% Manual Hash Rate',
-        'offline_earnings_15': '+21 Hours Offline Earnings Cap',
-        'earnings_boost_15': '+7.08% Crypto Sale & Stake Value',
-        'minigame_reward_15': '+7.08% Minigame Rewards',
+        'power_capacity_15': '+7.5% Max Power Capacity',
+        'miner_efficiency_15': '-7.5% Miner Power Consumption',
+        'staking_apy_15': '+0.75% Staking APR',
+        'miner_hashrate_15': '+7.5% Miner Hash Rate (All Crypto)',
+        'click_hashrate_15': '+2.78% Manual Hash Rate',
+        'offline_earnings_15': '+1 Hour Offline Earnings Cap (19h Total)',
+        'earnings_boost_15': '+5.35% Crypto Sale & Stake Value',
+        'minigame_reward_15': '+5.35% Minigame Rewards',
         'starter_miners_t14': 'Start All Future Rugpulls With LVL1 T14 Miner For All Cryptos!',
         'crypto_efficiency_3': '+60% Mining Efficiency',
 
         // TIER 16 (Undecillion) - 8 base + 2 unique (starter_miners_t15, token_generation_4)
-        'power_capacity_16': '+26.86% Max Power Capacity',
-        'miner_efficiency_16': '-26.86% Miner Power Consumption',
-        'staking_apy_16': '+2.69% Staking APR',
-        'miner_hashrate_16': '+26.86% Miner Hash Rate (All Crypto)',
-        'click_hashrate_16': '+4.10% Manual Hash Rate',
-        'offline_earnings_16': '+24 Hours Offline Earnings Cap',
-        'earnings_boost_16': '+8.14% Crypto Sale & Stake Value',
-        'minigame_reward_16': '+8.14% Minigame Rewards',
+        'power_capacity_16': '+7.5% Max Power Capacity',
+        'miner_efficiency_16': '-7.5% Miner Power Consumption',
+        'staking_apy_16': '+0.75% Staking APR',
+        'miner_hashrate_16': '+7.5% Miner Hash Rate (All Crypto)',
+        'click_hashrate_16': '+2.78% Manual Hash Rate',
+        'offline_earnings_16': '+1 Hour Offline Earnings Cap (20h Total)',
+        'earnings_boost_16': '+5.35% Crypto Sale & Stake Value',
+        'minigame_reward_16': '+5.35% Minigame Rewards',
         'starter_miners_t15': 'Start All Future Rugpulls With LVL1 T15 Miner For All Cryptos!',
         'token_generation_4': '+0.02599 Corrupt Tokens/s Offline',
 
@@ -1430,45 +1499,45 @@ function getUpgradeName(upgradeKey) {
         'token_generation_5': '+0.02989 Corrupt Tokens/s Offline',
 
         // TIER 17 (Duodecillion) - 8 base + 1 unique (token_generation_6)
-        'power_capacity_17': '+30.5% Max Power Capacity',
-        'miner_efficiency_17': '-30.5% Miner Power Consumption',
-        'staking_apy_17': '+3.05% Staking APR',
-        'miner_hashrate_17': '+30.5% Miner Hash Rate (All Crypto)',
-        'click_hashrate_17': '+4.72% Manual Hash Rate',
-        'offline_earnings_17': '+27 Hours Offline Earnings Cap',
-        'earnings_boost_17': '+9.32% Crypto Sale & Stake Value',
-        'minigame_reward_17': '+9.32% Minigame Rewards',
+        'power_capacity_17': '+7.5% Max Power Capacity',
+        'miner_efficiency_17': '-7.5% Miner Power Consumption',
+        'staking_apy_17': '+0.75% Staking APR',
+        'miner_hashrate_17': '+7.5% Miner Hash Rate (All Crypto)',
+        'click_hashrate_17': '+2.78% Manual Hash Rate',
+        'offline_earnings_17': '+1 Hour Offline Earnings Cap (21h Total)',
+        'earnings_boost_17': '+5.35% Crypto Sale & Stake Value',
+        'minigame_reward_17': '+5.35% Minigame Rewards',
         'token_generation_6': '+0.03963 Corrupt Tokens/s Offline',
 
         // TIER 18 (Tredecillion) - 8 base
-        'power_capacity_18': '+34.56% Max Power Capacity',
-        'miner_efficiency_18': '-34.56% Miner Power Consumption',
-        'staking_apy_18': '+3.46% Staking APR',
-        'miner_hashrate_18': '+34.56% Miner Hash Rate (All Crypto)',
-        'click_hashrate_18': '+5.43% Manual Hash Rate',
-        'offline_earnings_18': '+30 Hours Offline Earnings Cap',
-        'earnings_boost_18': '+10.6% Crypto Sale & Stake Value',
-        'minigame_reward_18': '+10.6% Minigame Rewards',
+        'power_capacity_18': '+7.5% Max Power Capacity',
+        'miner_efficiency_18': '-7.5% Miner Power Consumption',
+        'staking_apy_18': '+0.75% Staking APR',
+        'miner_hashrate_18': '+7.5% Miner Hash Rate (All Crypto)',
+        'click_hashrate_18': '+2.78% Manual Hash Rate',
+        'offline_earnings_18': '+1 Hour Offline Earnings Cap (22h Total)',
+        'earnings_boost_18': '+5.35% Crypto Sale & Stake Value',
+        'minigame_reward_18': '+5.35% Minigame Rewards',
 
         // TIER 19 (Quattuordecillion) - 8 base
-        'power_capacity_19': '+39.06% Max Power Capacity',
-        'miner_efficiency_19': '-39.06% Miner Power Consumption',
-        'staking_apy_19': '+3.91% Staking APR',
-        'miner_hashrate_19': '+39.06% Miner Hash Rate (All Crypto)',
-        'click_hashrate_19': '+6.25% Manual Hash Rate',
-        'offline_earnings_19': '+33 Hours Offline Earnings Cap',
-        'earnings_boost_19': '+12.03% Crypto Sale & Stake Value',
-        'minigame_reward_19': '+12.03% Minigame Rewards',
+        'power_capacity_19': '+7.5% Max Power Capacity',
+        'miner_efficiency_19': '-7.5% Miner Power Consumption',
+        'staking_apy_19': '+0.75% Staking APR',
+        'miner_hashrate_19': '+7.5% Miner Hash Rate (All Crypto)',
+        'click_hashrate_19': '+2.78% Manual Hash Rate',
+        'offline_earnings_19': '+1 Hour Offline Earnings Cap (23h Total)',
+        'earnings_boost_19': '+5.35% Crypto Sale & Stake Value',
+        'minigame_reward_19': '+5.35% Minigame Rewards',
 
         // TIER 20 (Novemcillion) - 8 base
-        'power_capacity_20': '+40% Max Power Capacity',
-        'miner_efficiency_20': '-40% Miner Power Consumption',
-        'staking_apy_20': '+4% Staking APR',
-        'miner_hashrate_20': '+40% Miner Hash Rate (All Crypto)',
-        'click_hashrate_20': '+7.19% Manual Hash Rate',
-        'offline_earnings_20': '+36 Hours Offline Earnings Cap',
-        'earnings_boost_20': '+13.59% Crypto Sale & Stake Value',
-        'minigame_reward_20': '+13.59% Minigame Rewards'
+        'power_capacity_20': '+7.5% Max Power Capacity',
+        'miner_efficiency_20': '-7.5% Miner Power Consumption',
+        'staking_apy_20': '+0.75% Staking APR',
+        'miner_hashrate_20': '+7.5% Miner Hash Rate (All Crypto)',
+        'click_hashrate_20': '+2.78% Manual Hash Rate',
+        'offline_earnings_20': '+1 Hour Offline Earnings Cap (24h Total)',
+        'earnings_boost_20': '+5.35% Crypto Sale & Stake Value',
+        'minigame_reward_20': '+5.35% Minigame Rewards'
     };
 
     return names[upgradeKey] || upgradeKey;
@@ -1636,7 +1705,7 @@ function updateMetaUpgradesUI() {
         { name: 'Tier 12 (Beyond)', upgrades: ['power_capacity_12', 'miner_efficiency_12', 'staking_apy_12', 'miner_hashrate_12', 'click_hashrate_12', 'offline_earnings_12', 'earnings_boost_12', 'minigame_reward_12', 'starter_miners_t11', 'starter_power_p10', 'token_generation_t12'] },
         { name: 'Tier 13 (Godhood)', upgrades: ['power_capacity_13', 'miner_efficiency_13', 'staking_apy_13', 'miner_hashrate_13', 'click_hashrate_13', 'offline_earnings_13', 'earnings_boost_13', 'minigame_reward_13', 'starter_miners_t12', 'starter_power_p11', 'token_generation_t13'] },
         { name: 'Tier 14 (Supreme Being)', upgrades: ['power_capacity_14', 'miner_efficiency_14', 'staking_apy_14', 'miner_hashrate_14', 'click_hashrate_14', 'offline_earnings_14', 'earnings_boost_14', 'minigame_reward_14', 'starter_miners_t13', 'starter_power_p12', 'token_generation_t14'] },
-        { name: 'Tier 15 (Decillion)', upgrades: ['power_capacity_15', 'miner_efficiency_15', 'staking_apy_15', 'miner_hashrate_15', 'click_hashrate_15', 'offline_earnings_15', 'earnings_boost_15', 'minigame_reward_15', 'starter_miners_t14', 'starter_power_p13', 'token_generation_t15'] },
+        { name: 'Tier 15 (Decillion)', upgrades: ['power_capacity_15', 'miner_efficiency_15', 'staking_apy_15', 'miner_hashrate_15', 'click_hashrate_15', 'offline_earnings_15', 'earnings_boost_15', 'minigame_reward_15', 'starter_miners_t14', 'token_generation_t15'] },
         { name: 'Tier 16 (Undecillion)', upgrades: ['power_capacity_16', 'miner_efficiency_16', 'staking_apy_16', 'miner_hashrate_16', 'click_hashrate_16', 'offline_earnings_16', 'earnings_boost_16', 'minigame_reward_16', 'starter_miners_t15', 'token_generation_t16'] },
         { name: 'Tier 17 (Duodecillion)', upgrades: ['power_capacity_17', 'miner_efficiency_17', 'staking_apy_17', 'miner_hashrate_17', 'click_hashrate_17', 'offline_earnings_17', 'earnings_boost_17', 'minigame_reward_17', 'token_generation_t17'] },
         { name: 'Tier 18 (Tredecillion)', upgrades: ['power_capacity_18', 'miner_efficiency_18', 'staking_apy_18', 'miner_hashrate_18', 'click_hashrate_18', 'offline_earnings_18', 'earnings_boost_18', 'minigame_reward_18', 'token_generation_t18'] },
@@ -1682,9 +1751,9 @@ function updateMetaUpgradesUI() {
             const costDisplay = formatTokenCost(upgrade.cost);
             const status = upgrade.purchased ? '✓ OWNED' : `💎 ${costDisplay}`;
 
-            // Add toggle indicator for auto_sell_crypto
+            // Add toggle indicator for auto_sell
             let toggleStatus = '';
-            if (upgradeKey === 'auto_sell_crypto' && upgrade.purchased) {
+            if (upgradeKey === 'auto_sell' && upgrade.purchased) {
                 const autoSellState = typeof upgradeToggleState !== 'undefined' ? upgradeToggleState.auto_sell : true;
                 toggleStatus = ` [${autoSellState ? 'ON' : 'OFF'}]`;
             }
@@ -1695,7 +1764,7 @@ function updateMetaUpgradesUI() {
                 btn.onclick = () => purchaseMetaUpgrade(upgradeKey);
                 btn.onmouseover = () => btn.style.background = '#2a2a4e';
                 btn.onmouseout = () => btn.style.background = '#1a1a2e';
-            } else if (upgradeKey === 'auto_sell_crypto') {
+            } else if (upgradeKey === 'auto_sell') {
                 // Add toggle functionality for auto-sell
                 btn.style.cursor = 'pointer';
                 btn.onclick = () => toggleAutoSell();
@@ -1857,19 +1926,23 @@ function tryAutoBuyBasicUpgrades() {
  * $1M, $10M, $100M, $500M, $1B, etc
  */
 function getRugpullRequirement() {
-    // Cookie Clicker-style cubic scaling for strategic progression
-    // Each level requires (level+1)^3 × base amount
-    // Rugpull 0: $1M (1^3)
-    // Rugpull 1: $8M (2^3)
-    // Rugpull 2: $27M (3^3)
-    // Rugpull 3: $64M (4^3)
-    // Rugpull 4: $125M (5^3)
-    // Rugpull 5: $216M (6^3)
-    // Rugpull 10: $1.331B (11^3)
-    // Rugpull 15: $4.096B (16^3)
-    // Rugpull 20: $9.261B (21^3)
+    // First rugpull is always $1M
+    // Subsequent rugpulls scale exponentially at HALF the rate
+    // Original was 10x per rugpull, now halved to 5x per rugpull
+    // Rugpull 0: $1M (fixed)
+    // Rugpull 1: $5M (half of $10M)
+    // Rugpull 2: $50M (half of $100M)
+    // Rugpull 3: $500M (half of $1B)
+    // Rugpull 4: $5B (half of $10B)
+    // Rugpull 5: $50B (half of $100B)
+    // Rugpull 10: $5Q (half of $10Q)
+    // Rugpull 20: Half of exponential scaling
+    if (ascensionLevel === 0) {
+        return 1000000;  // First rugpull always costs $1M
+    }
     const level = ascensionLevel + 1;  // Convert 0-indexed to 1-indexed
-    const requirement = 1000000 * Math.pow(level, 3);  // $1M × level^3
+    // $1M × 10^(level-1) / 2 - half of the full 10x exponential scaling
+    const requirement = (1000000 * Math.pow(10, level - 1)) / 2;
     console.log('[RUGPULL] getRugpullRequirement:', { ascensionLevel, level, requirement });
     return requirement;
 }
@@ -2055,16 +2128,8 @@ function updateAscensionUI() {
             else return `$${Math.floor(num).toLocaleString()}`;
         }
 
-        // Always show requirement in consistent format (no decimals for whole numbers)
-        if (requirement >= 1e12) {
-            requirementLabel = `$${(requirement / 1e12).toFixed(0)}T`;
-        } else if (requirement >= 1e9) {
-            requirementLabel = `$${(requirement / 1e9).toFixed(0)}B`;
-        } else if (requirement >= 1e6) {
-            requirementLabel = `$${(requirement / 1e6).toFixed(0)}M`;
-        } else {
-            requirementLabel = `$${Math.floor(requirement).toLocaleString()}`;
-        }
+        // Use the same formatting function for requirement as for earnings
+        requirementLabel = formatLargeNumber(requirement);
 
         earningsLabel = formatLargeNumber(lifetimeEarningsThisRugpull);
 
