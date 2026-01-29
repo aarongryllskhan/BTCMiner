@@ -1981,7 +1981,8 @@ function updateAscensionUI() {
     const rugpullBtn = document.getElementById('rugpull-btn');
     const rugpullBtnMobile = document.getElementById('rugpull-btn-mobile');
     const rugpullBtnDesktop = document.getElementById('rugpull-btn-desktop');
-    const progressText = document.getElementById('rugpull-progress-text');
+    const progressTextMobile = document.getElementById('rugpull-progress-text-mobile');
+    const progressTextDesktop = document.getElementById('rugpull-progress-text-desktop');
 
     if (rugpullBtn || rugpullBtnMobile || rugpullBtnDesktop) {
         const isEligible = isRugpullEligible();
@@ -2024,7 +2025,7 @@ function updateAscensionUI() {
     }
 
     // Update progress text below button - always show
-    if (progressText) {
+    if (progressTextMobile || progressTextDesktop) {
         const requirement = getRugpullRequirement();
         let requirementLabel = '';
         let earningsLabel = '';
@@ -2069,16 +2070,12 @@ function updateAscensionUI() {
 
         console.log('[RUGPULL UI] Updating progress text:', { earningsLabel, requirementLabel, lifetimeEarningsThisRugpull });
 
-        progressText.textContent = `${earningsLabel} / ${requirementLabel}`;
-
-        // Also update mobile version
-        const progressTextMobile = document.getElementById('rugpull-progress-text-mobile');
+        // Update mobile version
         if (progressTextMobile) {
             progressTextMobile.textContent = `${earningsLabel} / ${requirementLabel}`;
         }
 
-        // Also update desktop version
-        const progressTextDesktop = document.getElementById('rugpull-progress-text-desktop');
+        // Update desktop version
         if (progressTextDesktop) {
             progressTextDesktop.textContent = `${earningsLabel} / ${requirementLabel}`;
         }

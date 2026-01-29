@@ -2,9 +2,9 @@
         html { touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background: #000000;
+            background: #1a1a1a;
             background-attachment: fixed;
-            background-color: #000000;
+            background-color: #1a1a1a;
             color: #fff;
             margin: 0;
             padding: 0;
@@ -25,7 +25,7 @@
             body { padding: 20px 20px 0 20px; }
         }
 
-        /* Pure black background */
+        /* Grey background to match panels */
         body::before {
             content: '';
             position: fixed;
@@ -33,7 +33,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #000000;
+            background-color: #1a1a1a;
             pointer-events: none;
             z-index: 0;
             will-change: auto;
@@ -77,22 +77,23 @@
         #coin-rain-canvas { image-rendering: crisp-edges; image-rendering: pixelated; }
 
 
-        #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 0; height: 100vh; width: 100%; margin: 0; padding: 0; }
+        #main-layout { display: grid; grid-template-columns: 1.86fr 1fr; gap: 0; height: 100vh; width: 100%; margin: 0; padding: 0; }
 
         @media (min-width: 1300px) {
-            #main-layout { height: calc(100vh - 40px); gap: 20px; }
+            #main-layout { height: calc(100vh - 40px); gap: 0; }
         }
 
         /* Left panel - Mining section */
         #main-layout > div:first-child {
             position: relative;
-            background-color: #050505;
+            background-color: transparent;
+            border-right: 1px solid #333;
         }
 
         /* Right panel - Controls section */
         #main-layout > div:last-child {
             position: relative;
-            background-color: #050505;
+            background-color: transparent;
         }
 
         .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; width: 100%; box-sizing: border-box; }
@@ -222,14 +223,36 @@
                 max-width: 100%;
             }
 
-            /* Ensure desktop button layout is on top */
+            /* Center buttons at the top */
             .desktop-button-layout {
                 z-index: 1000 !important;
                 pointer-events: auto !important;
+                position: fixed !important;
+                top: 20px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                padding: 0 !important;
+                background: transparent !important;
+                margin: 0 !important;
+                flex-wrap: wrap !important;
+                width: 80% !important;
+                max-width: 1200px !important;
             }
 
             .desktop-button-layout > div {
                 pointer-events: auto !important;
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 6px !important;
+                flex-wrap: wrap !important;
+                width: auto !important;
             }
 
             .desktop-button-layout button {
@@ -374,39 +397,97 @@
             }
         }
 
-        @media (max-width: 768px) {
-            body { padding: 6px 6px 0 6px; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-bottom: 0 !important; }
-            .panel:first-child { overflow: visible; flex: 0 0 auto; }
-            .panel:last-child { overflow: visible; flex: 0 0 auto; }
-            .desktop-button-layout { overflow: hidden !important; }
-            .upgrade-list { overflow-y: auto !important; }
-            .nw-label { font-size: 0.65rem; letter-spacing: 0.5px; color: #555; }
-            .nw-amount { font-size: 1.6rem; margin: 2px 0; }
-            .mini-stats { gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-            .stat-item span { font-size: 0.55rem; }
-            .stat-val { font-size: 1.1rem !important; }
-            .chart-wrapper { min-height: 250px !important; height: 250px !important; flex: 0 0 250px !important; padding: 2px; margin-top: 2px; overflow: hidden; position: relative; }
+        @media (max-width: 600px) {
+            body { padding: 0; margin: 0; height: auto; overflow-y: scroll; }
+            #main-layout { grid-template-columns: 1fr !important; gap: 0; display: flex !important; flex-direction: column !important; height: auto; margin: 0; padding: 0; width: 100%; box-sizing: border-box; }
+            .panel { padding: 12px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; border: none; background: transparent; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; padding-top: 60px; }
+            .panel:last-child { display: none !important; }
+            .desktop-button-layout { overflow: visible !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 100 !important; width: 100% !important; padding: 6px !important; background: rgba(0,0,0,0.9) !important; }
+            .upgrade-list { overflow-y: auto !important; max-height: 600px; }
+
+            /* Net worth and pie chart side by side */
+            .nw-label { display: none; }
+            .nw-amount { font-size: 2.8rem; margin: 12px 0 12px 0; text-align: left; font-family: monospace; font-weight: 900; }
+
+            /* Portfolio layout - net worth on left, pie chart on right */
+            div[style*="display: flex"][style*="gap: 10px"][style*="align-items: flex-start"][style*="margin-bottom: 12px"] {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: flex-start !important;
+                justify-content: flex-start !important;
+                gap: 12px !important;
+                margin-bottom: 12px !important;
+                flex-wrap: wrap !important;
+            }
+
+            /* Hide hardware equity from left sidebar initially */
+            .stat-box-hardware { display: none !important; }
+
+            /* Show center content (net worth + breakdown) */
+            div[style*="flex: 1"][style*="text-align: center"] {
+                flex: 0 1 60% !important;
+                text-align: left !important;
+            }
+
+            /* Pie chart on the right */
+            div[style*="width: 90px"] {
+                flex: 0 0 auto !important;
+            }
+
+            #cryptoPieChart { width: 100px !important; height: 100px !important; }
+
+            /* Right sidebar stat boxes - display as full-width 4-column row below */
+            div[style*="flex-direction: column"][style*="gap: 6px"][style*="flex-shrink: 0"] {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 1fr 1fr !important;
+                gap: 6px !important;
+                width: 100% !important;
+                margin-bottom: 12px !important;
+                flex-basis: 100% !important;
+                order: 10 !important;
+            }
+
+            /* Stat boxes sizing */
+            .stat-box-session, .stat-box-session-earnings, .stat-box-earnings {
+                padding: 8px 6px !important;
+                min-width: auto !important;
+                flex: 1 !important;
+                font-size: 0.6rem !important;
+                margin-bottom: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+            }
+
+            .stat-box span { font-size: 0.55rem !important; line-height: 1.1 !important; margin-bottom: 2px !important; color: #888; text-transform: uppercase; font-weight: 700; }
+            .stat-box b { font-size: 0.85rem !important; line-height: 1.2 !important; }
+
+            /* Hashrate boxes in 1 row of 3 - full width */
+            #hashrate-display {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: 6px !important;
+                margin-bottom: 12px !important;
+                order: 11 !important;
+            }
+            #hashrate-display .stat-box {
+                padding: 8px 6px !important;
+                min-width: auto !important;
+                margin-bottom: 0 !important;
+            }
+            #hashrate-display .stat-box span { font-size: 0.55rem !important; }
+            #hashrate-display .stat-box b { font-size: 0.8rem !important; }
+
+            .chart-wrapper { min-height: 250px !important; height: 250px !important; flex: 0 0 250px !important; padding: 0; margin: 6px 0; overflow: hidden; position: relative; }
+
             /* Keep crypto prices in a 3-column row on mobile */
-            #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin-bottom: 6px !important; width: 100% !important; max-width: 100% !important; }
+            #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 12px 0 !important; width: 100% !important; max-width: 100% !important; }
             #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 8px !important; background: rgba(0,0,0,0.3) !important; border-radius: 4px !important; border: 1px solid #333 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
             #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
             #crypto-prices-flex span { font-size: 0.6rem !important; }
-            #crypto-prices-flex > div > div { width: 100% !important; }
-
-            /* Professional grid layout for stat boxes on mobile - 4 on top row, 3 on bottom row */
-            #hashrate-display {
-                display: grid !important;
-                grid-template-columns: repeat(12, 1fr) !important;
-                gap: 4px !important;
-                margin-bottom: 8px;
-            }
-            /* All stats in grid on mobile - 4 boxes, each gets 3 columns (3+3+3+3=12) */
-            .stat-box-session {
-                width: auto !important;
-                order: 1 !important;
-                grid-column: 1 / 4 !important;
+            #crypto-prices-flex > div > div { width: 100% !important;
                 grid-row: 1 !important;
             }
             .stat-box-session-earnings {
@@ -476,7 +557,7 @@
             }
             /* Responsive dollar balance for mobile */
             #dollar-balance {
-                font-size: 1.05rem !important;
+                font-size: 1.8rem !important;
                 margin-bottom: 4px !important;
                 line-height: 1.1;
                 display: block;
@@ -2036,5 +2117,405 @@ button:disabled:hover {
         /* Show hardware equity on desktop and mobile */
         .stat-box-hardware {
             display: block !important;
+        }
+
+        /* ===== MOBILE LAYOUT OPTIMIZATION FOR REFERENCE PHOTO ===== */
+
+        @media (max-width: 768px) {
+            /* Switch to single column layout on mobile */
+            #main-layout {
+                display: flex !important;
+                flex-direction: column !important;
+                grid-template-columns: unset !important;
+                height: auto !important;
+                gap: 0 !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+
+            /* Left panel - main content */
+            #main-layout > div:first-child {
+                border-right: none !important;
+                border-bottom: none !important;
+                flex: 1 !important;
+            }
+
+            /* Right panel - mining buttons */
+            #main-layout > div:last-child {
+                flex: 1 !important;
+                order: 2 !important;
+                display: flex !important;
+                width: 100% !important;
+            }
+
+            /* Optimize panel padding on mobile */
+            .panel {
+                padding: 10px !important;
+                border: none !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                gap: 8px !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+
+            /* Utility buttons row optimization */
+            #utility-buttons-container {
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                margin-bottom: 8px !important;
+                justify-content: center !important;
+                display: flex !important;
+            }
+
+            #utility-buttons-container button {
+                font-size: 0.55rem !important;
+                padding: 6px 10px !important;
+                flex: 0 1 auto !important;
+                white-space: nowrap !important;
+            }
+
+            /* Main content area - vertical stack on mobile */
+            #main-layout > div:first-child > div:nth-of-type(2) {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+                margin-bottom: 8px !important;
+                width: 100% !important;
+                position: relative !important;
+                align-items: center !important;
+            }
+
+            /* Left sidebar - hardware equity - HIDE */
+            #main-layout > div:first-child > div:nth-of-type(2) > div:first-child {
+                display: none !important;
+            }
+
+            /* Center content - balance and pie chart side by side */
+            #main-layout > div:first-child > div:nth-of-type(2) > div:nth-of-type(2) {
+                width: 100% !important;
+                text-align: center !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 6px !important;
+                align-items: center !important;
+            }
+
+            /* Balance section - vertical stack with pie chart on top */
+            #main-layout > div:first-child > div:nth-of-type(2) > div:nth-of-type(2) > div:first-child {
+                text-align: center !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 4px !important;
+                width: 100% !important;
+                margin-bottom: 6px !important;
+                justify-content: center !important;
+            }
+
+            /* Pie chart - above balance amount */
+            #main-layout > div:first-child > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) {
+                width: 45px !important;
+                height: 45px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin: 12px 0 0 0 !important;
+                padding: 0 !important;
+                position: static !important;
+                flex-shrink: 0 !important;
+                order: -1 !important;
+            }
+
+            .nw-amount {
+                font-size: 4.5rem !important;
+                margin-bottom: 0 !important;
+                margin-top: 13px !important;
+                font-weight: 900 !important;
+                line-height: 1 !important;
+            }
+
+            .nw-breakdown {
+                font-size: 0.65rem !important;
+                text-align: center !important;
+                width: 100% !important;
+                margin: 2px 0 0 0 !important;
+            }
+
+            /* Hashrate boxes - all 3 in a row */
+            #main-layout > div:first-child > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 6px !important;
+                width: 100% !important;
+                justify-content: space-between !important;
+                flex-wrap: nowrap !important;
+                margin-bottom: 8px !important;
+            }
+
+            .stat-box-btc,
+            .stat-box-eth,
+            .stat-box-doge {
+                flex: 1 !important;
+                padding: 8px 6px !important;
+                text-align: center !important;
+                font-size: 0.65rem !important;
+            }
+
+            .stat-box-btc b,
+            .stat-box-eth b,
+            .stat-box-doge b {
+                font-size: 0.85rem !important;
+            }
+
+            .stat-box-btc span,
+            .stat-box-eth span,
+            .stat-box-doge span {
+                font-size: 0.6rem !important;
+            }
+
+            /* Right sidebar - session stats in a row */
+            #main-layout > div:first-child > div:nth-of-type(2) > div:last-child {
+                flex-direction: row !important;
+                gap: 6px !important;
+                width: 100% !important;
+                align-items: center !important;
+                display: flex !important;
+                position: static !important;
+                justify-content: center !important;
+                margin-bottom: 2px !important;
+            }
+
+            .stat-box-session,
+            .stat-box-session-earnings,
+            .stat-box-earnings {
+                flex: 1 !important;
+                min-width: 85px !important;
+                text-align: center !important;
+                padding: 6px 8px !important;
+                font-size: 0.55rem !important;
+                background: rgba(255, 165, 0, 0.1) !important;
+                border: 1px solid #333 !important;
+            }
+
+            .stat-box-session b,
+            .stat-box-session-earnings b,
+            .stat-box-earnings b {
+                font-size: 0.75rem !important;
+                color: #00ff88 !important;
+            }
+
+            .stat-box-session span,
+            .stat-box-session-earnings span,
+            .stat-box-earnings span {
+                font-size: 0.5rem !important;
+                color: #999 !important;
+            }
+
+            /* Ascension info */
+            #ascension-info {
+                margin-bottom: 0 !important;
+                margin-top: 0 !important;
+            }
+
+            /* Crypto prices section mobile */
+            #crypto-prices-flex {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 8px !important;
+                justify-content: center !important;
+            }
+
+            #crypto-prices-flex > div {
+                flex: 1 !important;
+                text-align: center !important;
+                padding: 8px !important;
+                min-width: auto !important;
+            }
+
+            #crypto-prices-flex .stat-val {
+                font-size: 1.1rem !important;
+            }
+
+            #crypto-prices-flex span {
+                font-size: 0.65rem !important;
+            }
+
+            /* Hide crypto price header container padding and background */
+            #main-layout > div:first-child > div:nth-of-type(3) {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
+                border: none !important;
+            }
+
+            /* Move crypto prices header text down */
+            #main-layout > div:first-child > div:nth-of-type(3) > span {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                padding-top: 8px !important;
+                display: block !important;
+            }
+
+            /* Remove gap after crypto prices */
+            #main-layout > div:first-child > div:nth-of-type(3) > div {
+                margin-bottom: 0 !important;
+            }
+
+            /* Session stats container - remove gaps */
+            #main-layout > div:first-child > div:nth-of-type(2) {
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+            }
+
+            /* Remove gap before ascension info */
+            #ascension-info {
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+            }
+
+            /* Time range slider container */
+            #main-layout > div:first-child > div:nth-of-type(4) {
+                margin-bottom: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Show charts on mobile but optimize sizing */
+            #main-layout > div:first-child > div:nth-of-type(5) {
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+                height: 280px !important;
+                margin-bottom: 0 !important;
+                margin-top: 0 !important;
+                gap: 0 !important;
+            }
+
+            .chart-wrapper {
+                flex: 1 !important;
+                min-height: 130px !important;
+                overflow: visible !important;
+            }
+
+            /* Reduce portfolio valuation text size on mobile */
+            .portfolio-title {
+                font-size: 0.45rem !important;
+                letter-spacing: 1px !important;
+            }
+
+            /* Hide chart date tracker on mobile */
+            #chart-date-tracker {
+                display: none !important;
+            }
+
+            /* Right panel styling on mobile */
+            #main-layout > div:last-child {
+                flex-direction: column !important;
+                gap: 6px !important;
+                padding: 10px !important;
+                min-height: auto !important;
+            }
+
+            .mine-btn {
+                font-size: 0.7rem !important;
+                padding: 6px !important;
+                line-height: 1.2 !important;
+                min-height: 60px !important;
+                gap: 6px !important;
+            }
+
+            .mine-btn img {
+                width: 40px !important;
+                height: 40px !important;
+                flex: 0 0 40px !important;
+            }
+
+            .mine-btn span {
+                font-size: 0.7rem !important;
+            }
+
+            #autoclicker-btn {
+                font-size: 0.7rem !important;
+                padding: 6px !important;
+                margin-bottom: 6px !important;
+            }
+
+            #mobile-rugpull-section {
+                gap: 4px !important;
+                margin-bottom: 6px !important;
+            }
+
+            #rugpull-btn-mobile,
+            #rugpull-store-btn-mobile-main {
+                font-size: 0.65rem !important;
+                padding: 6px !important;
+            }
+
+            /* Power status bar */
+            #main-layout > div:last-child > div:nth-of-type(3) {
+                padding: 10px !important;
+                font-size: 0.75rem !important;
+            }
+
+            /* Power status and button styling */
+            #main-layout > div:last-child > div:nth-of-type(3) span {
+                font-size: 0.75rem !important;
+            }
+
+            #main-layout > div:last-child > div:nth-of-type(3) #power-used {
+                font-size: 0.8rem !important;
+            }
+
+            #power-upgrade-btn {
+                font-size: 0.75rem !important;
+                padding: 8px 12px !important;
+            }
+
+            /* Hide desktop buttons, show mobile */
+            #desktop-rugpull-section {
+                display: none !important;
+            }
+
+            #mobile-rugpull-section {
+                display: flex !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Extra small screens optimization */
+            .panel {
+                padding: 8px !important;
+            }
+
+            #utility-buttons-container button {
+                font-size: 0.5rem !important;
+                padding: 4px 8px !important;
+            }
+
+            .nw-amount {
+                font-size: 1.8rem !important;
+            }
+
+            .stat-box-session,
+            .stat-box-session-earnings,
+            .stat-box-earnings {
+                font-size: 0.6rem !important;
+                padding: 4px 6px !important;
+                min-width: 100px !important;
+            }
+
+            .stat-box-session b,
+            .stat-box-session-earnings b,
+            .stat-box-earnings b {
+                font-size: 0.75rem !important;
+            }
+
+            #crypto-prices-flex > div {
+                padding: 4px !important;
+            }
+
+            #crypto-prices-flex .stat-val {
+                font-size: 0.95rem !important;
+            }
         }
 

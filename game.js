@@ -5552,7 +5552,7 @@ function buyDogeBoost(i) {
     }
 
     function updateRugpullProgressDisplay() {
-        // Get current lifetime earnings from rugpull.js
+        // Get earnings since last rugpull (from rugpull.js tracking)
         let earningsThisSession = (typeof window.lifetimeEarningsThisRugpull !== 'undefined') ? window.lifetimeEarningsThisRugpull : 0;
 
         // Calculate rugpull requirement (Rugpull 0 = $1M, Rugpull 1 = $8M, etc)
@@ -6656,6 +6656,11 @@ dogeUpgrades.forEach(u => {
         updateNetworkStats();
         updateMinigamesTab();
 
+        // Update rugpull progress display to reflect current earnings
+        if (typeof window.updateAscensionUI === 'function') {
+            window.updateAscensionUI();
+        }
+
         // Check for rugpull milestone
         if (typeof window.checkRugpullMilestone === 'function') {
             window.checkRugpullMilestone();
@@ -7145,29 +7150,8 @@ dogeUpgrades.forEach(u => {
                 console.log('Pie chart successfully initialized');
             }
 
-            // Initialize power chart with retry logic
-            console.log('Initializing power chart...');
-            const powerInitResult = initializePowerChart();
-            if (!powerInitResult) {
-                console.log('Power chart init failed, will retry...');
-                // Retry power chart initialization with multiple attempts
-                setTimeout(() => {
-                    console.log('Retrying power chart initialization (attempt 1)...');
-                    initializePowerChart();
-                }, 200);
-                setTimeout(() => {
-                    console.log('Retrying power chart initialization (attempt 2)...');
-                    initializePowerChart();
-                }, 500);
-                setTimeout(() => {
-                    console.log('Retrying power chart initialization (attempt 3)...');
-                    initializePowerChart();
-                }, 1000);
-            }
-
-            // Setup chart swap buttons
-            const hashrateBtn = document.getElementById('hashrate-chart-btn');
-            // Power chart removed - only showing hashrate chart now
+            // Power chart has been removed from the UI - skipping initialization
+            // (Power chart canvas no longer exists in the DOM)
 
             // Retry with delays (especially important for mobile)
             if (!chartInitialized) {
