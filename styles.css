@@ -395,32 +395,59 @@
             #crypto-prices-flex span { font-size: 0.6rem !important; }
             #crypto-prices-flex > div > div { width: 100% !important; }
 
-            /* Professional 3-column grid layout for stat boxes on mobile */
+            /* Professional grid layout for stat boxes on mobile - 4 on top row, 3 on bottom row */
             #hashrate-display {
                 display: grid !important;
-                grid-template-columns: 1fr 1fr 1fr !important;
+                grid-template-columns: repeat(12, 1fr) !important;
                 gap: 4px !important;
                 margin-bottom: 8px;
             }
-            /* All stats in 3x3 grid on mobile */
+            /* All stats in grid on mobile - 4 boxes, each gets 3 columns (3+3+3+3=12) */
             .stat-box-session {
                 width: auto !important;
+                order: 1 !important;
+                grid-column: 1 / 4 !important;
+                grid-row: 1 !important;
             }
             .stat-box-session-earnings {
                 width: auto !important;
+                order: 2 !important;
+                grid-column: 4 / 7 !important;
+                grid-row: 1 !important;
             }
             .stat-box-earnings {
                 width: auto !important;
+                order: 3 !important;
+                grid-column: 7 / 10 !important;
+                grid-row: 1 !important;
             }
-            /* BTC, ETH, DOGE in grid */
+            .stat-box-hardware {
+                width: auto !important;
+                order: 7 !important;
+                grid-column: 10 / 13 !important;
+                grid-row: 1 !important;
+            }
+            /* BTC, ETH, DOGE in second row - each gets 4 columns (4+4+4=12) */
             .stat-box-btc {
                 width: auto !important;
+                order: 4 !important;
+                grid-column: 1 / 5 !important;
+                grid-row: 2 !important;
+                min-width: 0 !important;
             }
             .stat-box-eth {
                 width: auto !important;
+                order: 5 !important;
+                grid-column: 5 / 9 !important;
+                grid-row: 2 !important;
+                min-width: 0 !important;
             }
             .stat-box-doge {
                 width: auto !important;
+                order: 6 !important;
+                grid-column: 9 / 13 !important;
+                grid-row: 2 !important;
+                min-width: 0 !important;
             }
             #hashrate-display .stat-box {
                 padding: 8px 10px !important;
@@ -429,12 +456,20 @@
                 flex: none !important;
                 min-width: 0;
                 overflow: hidden;
+                height: 65px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
             }
             #hashrate-display .stat-box-session,
             #hashrate-display .stat-box-session-earnings,
-            #hashrate-display .stat-box-earnings {
+            #hashrate-display .stat-box-earnings,
+            #hashrate-display .stat-box-hardware {
                 background: rgba(0,0,0,0.4) !important;
                 border: 1px solid #333 !important;
+                padding: 8px 10px !important;
+                border-radius: 6px !important;
             }
             #hashrate-display span {
                 font-size: 0.6rem !important;
@@ -1985,5 +2020,21 @@ button:disabled:hover {
                 margin-top: 0 !important;
             }
             .panel { padding-top: 65px !important; }
+        }
+
+        /* Desktop-only display for net worth breakdown */
+        .desktop-only {
+            display: none !important;
+        }
+
+        @media (min-width: 1300px) {
+            .desktop-only {
+                display: block !important;
+            }
+        }
+
+        /* Show hardware equity on desktop and mobile */
+        .stat-box-hardware {
+            display: block !important;
         }
 

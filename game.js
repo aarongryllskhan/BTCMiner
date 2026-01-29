@@ -5622,6 +5622,16 @@ function buyDogeBoost(i) {
             document.getElementById('nw-val').innerText = "$" + cryptoPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2});
         }
 
+        // Update net worth breakdown (desktop only)
+        if (document.getElementById('nw-breakdown')) {
+            const btcValue = (btcBalance * btcPrice).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const ethValue = (ethBalance * ethPrice).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const dogeValue = (dogeBalance * dogePrice).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('nw-btc').innerText = btcValue;
+            document.getElementById('nw-eth').innerText = ethValue;
+            document.getElementById('nw-doge').innerText = dogeValue;
+        }
+
         // Format balances with smart abbreviations
         const formatCryptoBalance = (balance, decimals = 8) => {
             if (balance >= 1e9) {
@@ -5635,10 +5645,10 @@ function buyDogeBoost(i) {
             }
         };
 
-        // Update balances
-        document.getElementById('bal-btc').innerText = formatCryptoBalance(btcBalance);
-        document.getElementById('bal-eth').innerText = formatCryptoBalance(ethBalance);
-        document.getElementById('bal-doge').innerText = formatCryptoBalance(dogeBalance);
+        // Update balances (if elements exist)
+        if (document.getElementById('bal-btc')) document.getElementById('bal-btc').innerText = formatCryptoBalance(btcBalance);
+        if (document.getElementById('bal-eth')) document.getElementById('bal-eth').innerText = formatCryptoBalance(ethBalance);
+        if (document.getElementById('bal-doge')) document.getElementById('bal-doge').innerText = formatCryptoBalance(dogeBalance);
 
         // Update pie chart with current crypto distribution
         updateCryptoPieChart();

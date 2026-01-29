@@ -180,6 +180,11 @@
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
 
+            <!-- Net Worth Breakdown (Desktop Only) -->
+            <div style="display: none; text-align: center; font-size: 0.9rem; color: #888; font-family: monospace; margin-bottom: 4px;" class="desktop-only" id="nw-breakdown">
+                <span style="color: #f7931a;">₿ <span id="nw-btc">0.00</span></span> &nbsp; | &nbsp; <span style="color: #627eea;">Ξ <span id="nw-eth">0.00</span></span> &nbsp; | &nbsp; <span style="color: #c2a633;">Ð <span id="nw-doge">0.00</span></span>
+            </div>
+
             <!-- Pie Chart Only -->
             <div style="display: flex; gap: 10px; margin-bottom: 4px; align-items: center; justify-content: center;">
                 <div style="width: 90px; height: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
@@ -216,18 +221,9 @@
                     <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">DOGE HASHRATE</span>
                     <b style="font-size: 1.1rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;" id="yield-doge">0.00000000/s</b>
                 </div>
-            </div>
-
-            <!-- Crypto Earnings Display (underneath hashrates) -->
-            <div style="display: flex; gap: 6px; margin-bottom: 4px; justify-content: flex-end; flex-wrap: wrap; align-items: center;">
-                <div style="flex: 1; min-width: 120px; text-align: center;">
-                    <b style="font-size: 1.1rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;">₿ <span id="bal-btc">0.00000000</span></b>
-                </div>
-                <div style="flex: 1; min-width: 120px; text-align: center;">
-                    <b style="font-size: 1.1rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;">Ξ <span id="bal-eth">0.00000000</span></b>
-                </div>
-                <div style="flex: 1; min-width: 120px; text-align: center;">
-                    <b style="font-size: 1.1rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;">Ð <span id="bal-doge">0.00</span></b>
+                <div class="stat-box stat-box-hardware" style="padding: 9px 15px; background: rgba(76, 175, 80, 0.15); border-radius: 4px; border: 1px solid #4CAF50; min-width: 120px;">
+                    <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px; font-weight: 800;">HARDWARE EQUITY</span>
+                    <b style="font-size: 1.1rem; color: #4CAF50; font-family: monospace; font-weight: 900; white-space: nowrap;" id="asset-usd">$0</b>
                 </div>
             </div>
 
