@@ -34,6 +34,54 @@
             body { padding: 20px 20px 0 20px; }
         }
 
+        /* Mobile landscape orientation - swap to desktop layout */
+        @media (max-width: 1180px) and (orientation: landscape) and (max-height: 500px) {
+            #main-layout {
+                display: grid !important;
+                grid-template-columns: 1.86fr 1fr !important;
+                gap: 0 !important;
+                height: auto !important;
+                flex-direction: unset !important;
+            }
+
+            #main-layout > div:first-child {
+                border-right: 1px solid #333 !important;
+                border-bottom: none !important;
+                flex: unset !important;
+                overflow: visible !important;
+                padding-top: 0 !important;
+            }
+
+            #main-layout > div:last-child {
+                flex: unset !important;
+                order: unset !important;
+                display: flex !important;
+                width: auto !important;
+                padding-top: 0 !important;
+            }
+
+            .panel {
+                padding: 12px !important;
+                padding-top: unset !important;
+            }
+
+            .panel:first-child {
+                padding-top: 12px !important;
+            }
+
+            .desktop-button-layout {
+                position: static !important;
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 6px !important;
+                width: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
+                flex-wrap: wrap !important;
+            }
+        }
+
         /* Grey background to match panels */
         body::before {
             content: '';
@@ -354,27 +402,13 @@
             #hashrate-display .stat-box { padding: 4px 6px !important; }
             #hashrate-display span { font-size: 0.55rem !important; line-height: 1.1 !important; margin-bottom: 1px !important; }
             #hashrate-display b { font-size: 0.75rem !important; line-height: 1.1 !important; }
-            #crypto-prices-flex {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 6px !important;
-                overflow: visible !important;
-                margin-bottom: 8px !important;
-            }
-            #crypto-prices-flex > div {
-                flex: 1 1 100% !important;
-                min-width: 100% !important;
-                width: 100% !important;
-                padding: 8px 10px !important;
-                background: rgba(0,0,0,0.3) !important;
-                border-radius: 4px !important;
-                border: 1px solid #333 !important;
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-            }
+
+            /* Crypto prices - 3 column grid like 600px layout */
+            #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 12px 0 !important; width: 100% !important; max-width: 100% !important; }
+            #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 8px !important; background: rgba(0,0,0,0.3) !important; border-radius: 4px !important; border: 1px solid #333 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
             #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
-            #crypto-prices-flex span { font-size: 0.65rem !important; }
+            #crypto-prices-flex span { font-size: 0.6rem !important; }
+            #crypto-prices-flex > div > div { width: 100% !important; grid-row: 1 !important; }
             /* Make ALL manual hash buttons smaller on mobile */
             .mine-btn { padding: 6px 8px !important; font-size: 1rem !important; margin-bottom: 4px !important; }
             /* Reduce stat boxes height and padding */
