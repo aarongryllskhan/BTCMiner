@@ -7,7 +7,7 @@
             background-color: #000000;
             color: #fff;
             margin: 0;
-            padding: 20px 20px 35px 20px;
+            padding: 0;
             overflow: hidden;
             height: 100vh;
             box-sizing: border-box;
@@ -19,6 +19,10 @@
             -ms-user-select: none;
             position: relative;
             will-change: auto;
+        }
+
+        @media (min-width: 1300px) {
+            body { padding: 20px 20px 0 20px; }
         }
 
         /* Pure black background */
@@ -48,13 +52,36 @@
             margin: 0 !important;
             padding: 0 !important;
         }
+
+        /* Prevent page scroll when modals are open */
+        #whack-modal[style*="display: flex"],
+        #network-modal[style*="display: flex"],
+        #hacking-modal[style*="display: flex"] {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 10002 !important;
+        }
+
+        /* Lock body when modal is showing */
+        body.modal-open {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+        }
         #dollar-balance { font-size: 1.5rem; }
 
         /* Coin Rain Animation */
         #coin-rain-canvas { image-rendering: crisp-edges; image-rendering: pixelated; }
 
 
-        #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; height: calc(100vh - 40px); }
+        #main-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 0; height: 100vh; width: 100%; margin: 0; padding: 0; }
+
+        @media (min-width: 1300px) {
+            #main-layout { height: calc(100vh - 40px); gap: 20px; }
+        }
 
         /* Left panel - Mining section */
         #main-layout > div:first-child {
@@ -68,7 +95,7 @@
             background-color: #050505;
         }
 
-        .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; }
+        .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; width: 100%; box-sizing: border-box; }
 
         /* Manual Hash Buttons - Lightweight patterns */
         #manual-hash-btc-btn::before,
@@ -237,17 +264,33 @@
         }
 
         @media (max-width: 1299px) {
-            body { padding: 6px 6px 6px 6px; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-top: 50px !important; }
-            .panel:first-child { overflow: visible; flex: 0 0 auto; }
-            .panel:last-child { overflow: visible; flex: 0 0 auto; padding-top: 0 !important; }
+            body { padding: 0; margin: 0; height: 100vh; overflow-y: scroll; width: 100%; box-sizing: border-box; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+            body::-webkit-scrollbar { display: none; }
+            #main-layout { grid-template-columns: 1fr; gap: 0; display: flex; flex-direction: column; height: auto; margin: 0; padding: 0; width: 100%; box-sizing: border-box; }
+            .panel { padding: 0; margin: 0; display: flex; flex-direction: column; padding-top: 50px !important; width: 100%; box-sizing: border-box; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; width: 100%; }
+            .panel:last-child { overflow: visible; flex: 0 0 auto; padding-top: 0 !important; width: 100%; }
             .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
             .stat-box b { word-break: break-word; }
 
+            /* Constrain upgrade lists to show ~6 items with internal scrolling on mobile */
+            .upgrade-list { max-height: 600px !important; overflow-y: auto !important; flex: 0 0 600px !important; }
+
             /* Mobile portfolio section - give it proper spacing */
             .nw-label { display: block; margin-bottom: 4px !important; margin-top: 0 !important; padding-top: 0; order: -1; position: relative; z-index: 10; font-size: 1.8rem !important; }
-            .nw-amount { margin-bottom: 8px; }
+            .nw-amount { margin-bottom: 8px !important; text-align: center !important; }
+
+            /* Pie chart sizing */
+            #cryptoPieChart { width: 90px !important; height: 90px !important; }
+
+            /* Ensure portfolio layout is horizontal on mobile */
+            div[style*="gap: 10px"][style*="flex-start"][style*="space-between"] { display: flex !important; flex-direction: row !important; align-items: flex-start !important; justify-content: space-between !important; }
+
+            /* Reduce net worth chart height by 30% on mobile */
+            #nw-chart-container { flex: 0 0 175px !important; height: 175px !important; min-height: 175px !important; }
+
+            /* Reduce hashrate chart height by 35% initially, then further 7.5% */
+            #hr-chart-container { flex: 0 0 150.3px !important; height: 150.3px !important; min-height: 150.3px !important; }
 
             /* On mobile, position buttons container as row above content */
             .desktop-button-layout { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: center !important; z-index: 100 !important; padding: 6px !important; margin: 0 !important; background: transparent !important; pointer-events: auto !important; }
@@ -332,9 +375,9 @@
         }
 
         @media (max-width: 768px) {
-            body { padding: 6px 6px 14px 6px; margin: 0; height: auto; overflow-y: scroll; }
+            body { padding: 6px 6px 0 6px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { grid-template-columns: 1fr; gap: 6px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-bottom: 35px !important; }
+            .panel { padding: 8px; margin: 0; display: flex; flex-direction: column; padding-bottom: 0 !important; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .desktop-button-layout { overflow: hidden !important; }
@@ -345,11 +388,12 @@
             .stat-item span { font-size: 0.55rem; }
             .stat-val { font-size: 1.1rem !important; }
             .chart-wrapper { min-height: 250px !important; height: 250px !important; flex: 0 0 250px !important; padding: 2px; margin-top: 2px; overflow: hidden; position: relative; }
-            /* Keep crypto prices in a compact row on mobile */
-            #crypto-prices-flex { gap: 6px !important; flex-wrap: wrap !important; overflow: visible !important; justify-content: flex-start !important; margin-bottom: 6px !important; }
-            #crypto-prices-flex > div { flex: 1 1 auto !important; min-width: 80px !important; padding: 6px !important; }
-            #crypto-prices-flex .stat-val { font-size: 0.75rem !important; }
-            #crypto-prices-flex span { font-size: 0.5rem !important; }
+            /* Keep crypto prices in a 3-column row on mobile */
+            #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin-bottom: 6px !important; width: 100% !important; max-width: 100% !important; }
+            #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 8px !important; background: rgba(0,0,0,0.3) !important; border-radius: 4px !important; border: 1px solid #333 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
+            #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
+            #crypto-prices-flex span { font-size: 0.6rem !important; }
+            #crypto-prices-flex > div > div { width: 100% !important; }
 
             /* Professional 3-column grid layout for stat boxes on mobile */
             #hashrate-display {
@@ -464,11 +508,12 @@
             .stat-val { font-size: 0.95rem !important; }
             .chart-wrapper { min-height: 200px !important; height: 200px !important; flex: 0 0 200px !important; margin-top: 2px; padding: 2px; overflow: hidden; position: relative; }
             #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 200px !important; }
-            /* Keep crypto prices in compact row on small phones */
-            #crypto-prices-flex { gap: 4px !important; flex-wrap: wrap !important; overflow: visible !important; justify-content: flex-start !important; margin-bottom: 6px !important; }
-            #crypto-prices-flex > div { flex: 1 1 auto !important; min-width: 70px !important; padding: 4px !important; }
-            #crypto-prices-flex .stat-val { font-size: 0.65rem !important; }
-            #crypto-prices-flex span { font-size: 0.4rem !important; }
+            /* Keep crypto prices in 3-column row on small phones */
+            #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 4px !important; overflow: visible !important; margin-bottom: 6px !important; width: 100% !important; max-width: 100% !important; }
+            #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 6px !important; background: rgba(0,0,0,0.3) !important; border-radius: 4px !important; border: 1px solid #333 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
+            #crypto-prices-flex .stat-val { font-size: 0.75rem !important; }
+            #crypto-prices-flex span { font-size: 0.5rem !important; }
+            #crypto-prices-flex > div > div { width: 100% !important; }
 
             /* Professional 3-column grid layout for small phones */
             #hashrate-display {
@@ -570,8 +615,8 @@
             color: var(--green);
             font-family: monospace;
             line-height: 1;
-            margin: 0px 0; 
-            letter-spacing: -3px; 
+            margin: 0px 0;
+            letter-spacing: -3px;
             white-space: nowrap;
         }
         .btc-stat { font-size: 2.2rem; color: var(--btc); font-weight: bold; font-family: monospace; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 25px; }
@@ -747,8 +792,10 @@ button:disabled:hover {
         }
 
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #333; }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
 
         #price-notif-container {
             display: flex;

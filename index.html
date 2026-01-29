@@ -180,22 +180,10 @@
             </div>
             <div class="nw-amount" id="nw-val">$0.00</div>
 
-            <!-- Crypto Balances and Pie Chart -->
-            <div style="display: flex; gap: 10px; margin-bottom: 0px; align-items: center;">
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                    <div style="font-size: 1.4rem; color: #f7931a; font-weight: bold; font-family: monospace;">₿ <span id="bal-btc">0.00000000</span></div>
-                    <div style="font-size: 1.4rem; color: #627eea; font-weight: bold; font-family: monospace;">Ξ <span id="bal-eth">0.00000000</span></div>
-                    <div style="font-size: 1.4rem; color: #c2a633; font-weight: bold; font-family: monospace;">Ð <span id="bal-doge">0.00</span></div>
-                </div>
-                <div style="width: 90px; height: 90px; flex-shrink: 0;">
+            <!-- Pie Chart Only -->
+            <div style="display: flex; gap: 10px; margin-bottom: 4px; align-items: center; justify-content: center;">
+                <div style="width: 90px; height: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
                     <canvas id="cryptoPieChart"></canvas>
-                </div>
-            </div>
-
-            <div class="mini-stats" style="margin-bottom: 4px;">
-                <div class="stat-item">
-                    <span>Hardware Equity</span>
-                    <b class="stat-val" id="asset-usd">$0</b>
                 </div>
             </div>
 
@@ -230,10 +218,23 @@
                 </div>
             </div>
 
+            <!-- Crypto Earnings Display (underneath hashrates) -->
+            <div style="display: flex; gap: 6px; margin-bottom: 4px; justify-content: flex-end; flex-wrap: wrap; align-items: center;">
+                <div style="flex: 1; min-width: 120px; text-align: center;">
+                    <b style="font-size: 1.1rem; color: #f7931a; font-family: monospace; font-weight: 900; white-space: nowrap;">₿ <span id="bal-btc">0.00000000</span></b>
+                </div>
+                <div style="flex: 1; min-width: 120px; text-align: center;">
+                    <b style="font-size: 1.1rem; color: #627eea; font-family: monospace; font-weight: 900; white-space: nowrap;">Ξ <span id="bal-eth">0.00000000</span></b>
+                </div>
+                <div style="flex: 1; min-width: 120px; text-align: center;">
+                    <b style="font-size: 1.1rem; color: #c2a633; font-family: monospace; font-weight: 900; white-space: nowrap;">Ð <span id="bal-doge">0.00</span></b>
+                </div>
+            </div>
+
             <!-- Crypto Prices Header -->
             <div style="padding: 12px 10px; text-align: center; background: rgba(0,0,0,0.3); border-bottom: 1px solid #222;">
                 <span style="font-size: 0.85rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 8px;">Crypto Prices (Virtual)</span>
-                <div id="crypto-prices-flex" style="display: flex; flex-wrap: nowrap; align-items: flex-start; width: 100%; margin-right: 100px;">
+                <div id="crypto-prices-flex" style="display: flex; flex-wrap: nowrap; align-items: flex-start; width: 100%; margin-right: 0;">
                     <div style="flex: 1; text-align: center;">
                         <div style="font-size: 0.65rem; color: #f7931a; font-weight: 800; display: block; margin-bottom: 4px;">BITCOIN</div>
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
@@ -268,15 +269,15 @@
             </div>
 
             <!-- Charts Container -->
-            <div style="display: flex; flex-direction: column; width: 100%; gap: 0; overflow: visible; flex: 1; min-height: 0; position: relative;">
+            <div style="display: flex; flex-direction: column; width: 100%; gap: 0; overflow: visible; flex: 1; min-height: 0; position: relative; padding-bottom: 0; margin-bottom: 0; box-sizing: border-box;">
                 <!-- Chart Time Range Slider (positioned at top of container) -->
                 <div style="padding: 8px 10px 6px 10px; text-align: center; flex-shrink: 0; background: rgba(0,0,0,0.3); border-bottom: 1px solid #333; position: relative; z-index: 100;">
                     <label for="chart-time-slider" style="color: #999; font-size: 0.85rem; margin-right: 10px; display: inline-block;">Time Range:</label>
-                    <input type="range" id="chart-time-slider" min="1" max="100" value="10" step="1" style="width: 200px; cursor: pointer; vertical-align: middle;">
-                    <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 10px; display: inline-block; min-width: 100px;">Last 6 Min</span>
+                    <input type="range" id="chart-time-slider" min="1" max="100" value="8" step="1" style="width: 200px; cursor: pointer; vertical-align: middle;">
+                    <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 10px; display: inline-block; min-width: 100px;">Last 5 Minutes</span>
                 </div>
                 <!-- Net Worth Chart -->
-                <div id="nw-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 0; flex: 1; display: block;">
+                <div id="nw-chart-container" class="chart-wrapper" style="position: relative; width: 100%; flex: 1.86; display: block; box-sizing: border-box;">
                     <canvas id="nwChart" width="800" height="300"></canvas>
                     <!-- News ticker overlay -->
                     <div id="news-ticker-overlay" style="position: absolute; bottom: 0; right: 0; width: 100%; max-width: 400px; max-height: 200px; overflow-y: auto; background: transparent; pointer-events: none;">
@@ -287,17 +288,12 @@
                 </div>
 
                 <!-- Hash Rate Chart -->
-                <div id="hr-chart-container" class="chart-wrapper" style="position: relative; width: 100%; height: 0; flex: 1; display: block;">
-                    <div style="position: absolute; top: 8px; right: 10px; display: flex; gap: 6px; z-index: 10;">
-                        <button id="hashrate-chart-btn" class="chart-tab-btn" style="background: #00ff88; color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; cursor: pointer; text-transform: uppercase;">Hashrate</button>
-                        <button id="power-chart-btn" class="chart-tab-btn" style="background: rgba(0,255,136,0.3); color: #00ff88; border: 1px solid #00ff88; padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; cursor: pointer; text-transform: uppercase;">Power Usage</button>
-                    </div>
+                <div id="hr-chart-container" class="chart-wrapper" style="position: relative; width: 100%; flex: 1; display: block; margin-bottom: 0; box-sizing: border-box;">
                     <canvas id="hashRateChart" width="800" height="200" style="width: 100% !important; height: 100% !important; display: block !important;"></canvas>
-                    <canvas id="powerChart" width="800" height="200" style="width: 100% !important; height: 100% !important; display: none;"></canvas>
                 </div>
             </div>
-            <!-- Chart Date Tracker -->
-            <div id="chart-date-tracker" style="text-align: center; padding: 2px 0; color: #f7931a; font-size: 0.85rem; font-weight: 600; min-height: 16px; display: none;"></div>
+            <!-- Chart Date Tracker - Fixed to footer -->
+            <div id="chart-date-tracker" style="text-align: center; padding: 2px 0; color: #f7931a; font-size: 0.85rem; font-weight: 600; min-height: 16px; display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); z-index: 40; border-top: 1px solid #333;"></div>
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
@@ -367,9 +363,9 @@
             </div>
 
             <!-- Dollar Balance Display -->
-            <div style="padding: 6px; background: rgba(0,255,136,0.1); border-radius: 8px; border: 2px solid #00ff88; margin-bottom: 8px; text-align: center;">
-                <span style="font-size: 0.6rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 1px; font-weight: 800;">Cash Balance</span>
-                <b style="color: #00ff88; font-family: monospace; font-weight: 900;" id="dollar-balance">$0</b>
+            <div style="padding: 3px 0; margin-bottom: 6px; text-align: center; line-height: 1.1;">
+                <span style="font-size: 0.45rem; color: #666; text-transform: uppercase; display: block; margin-bottom: 0px; font-weight: 700; letter-spacing: 1px;">Cash Balance</span>
+                <b style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 1.6rem; line-height: 1.1;" id="dollar-balance">$0</b>
             </div>
 
             <!-- Auto-Sell Toggle Button -->

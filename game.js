@@ -215,8 +215,9 @@
     let hashRateChartInstance = null;
     let powerChartInstance = null;
     let currentHashrateView = 'hashrate'; // 'hashrate' or 'power'
-    let lastUIUpdateTime = 0; // Throttle balance display updates to 1000ms
-    let lastChartDataCollectionTime = 0; // Track when chart data was last collected (5000ms interval)
+    let lastUIUpdateTime = 0; // Throttle balance display updates to 150ms
+    let lastChartDataCollectionTime = 0; // Track when chart data was last collected (1500ms interval)
+    let lastPowerChartUpdateTime = 0; // Track when power chart was last updated (3000ms interval)
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -1217,7 +1218,8 @@ function loadGame() {
         if (state.powerChartHistory && state.powerChartHistory.length > 0) {
             powerChartHistory = state.powerChartHistory;
             powerChartColors = state.powerChartColors || [];
-            hashRateChartTimestamps = state.hashRateChartTimestamps || [];
+            // Don't restore old timestamps - start fresh with current time to avoid showing stale data
+            hashRateChartTimestamps = [];
             console.log('Power chart data restored:', powerChartHistory.length, 'data points');
         } else {
             // Start fresh if no saved power chart data
@@ -3731,7 +3733,7 @@ function loadGame() {
         if (!modal) return;
 
         modal.style.display = 'flex';
-        // NOTE: Disabled to prevent layout breaking - document.body.classList.add('minigame-modal-open');
+        document.body.classList.add('modal-open');
 
         // Reset display - hide results, show game
         const gameInfo = document.getElementById('whack-game-info');
@@ -4087,7 +4089,7 @@ function loadGame() {
     function closeWhackModal() {
         const modal = document.getElementById('whack-modal');
         if (modal) modal.style.display = 'none';
-        // document.body.classList.remove('minigame-modal-open');
+        document.body.classList.remove('modal-open');
 
         // Only spawn explosion coins if we actually won (not from manual close)
         // whackGameGamesWon only increments when endWhackGame(true) is called
@@ -4151,7 +4153,7 @@ function loadGame() {
         if (!modal) return;
 
         modal.style.display = 'flex';
-        // NOTE: Disabled to prevent layout breaking - document.body.classList.add('minigame-modal-open');
+        document.body.classList.add('modal-open');
 
         // Reset display - hide results, show game
         const gameInfo = document.getElementById('network-game-info');
@@ -4462,7 +4464,7 @@ function loadGame() {
     function closeNetworkModal() {
         const modal = document.getElementById('network-modal');
         if (modal) modal.style.display = 'none';
-        // document.body.classList.remove('minigame-modal-open');
+        document.body.classList.remove('modal-open');
 
         // Spawn explosion coins only if we just won this game (not if we lost and are closing)
         if (vfxEnabled && networkGameWonThisRound && typeof spawnExplosionCoins === 'function') {
@@ -5588,8 +5590,8 @@ function buyDogeBoost(i) {
         const now = Date.now();
         const timeSinceLastUpdate = now - lastUIUpdateTime;
 
-        // Throttle balance display updates to 1000ms - skip expensive operations if too soon
-        if (timeSinceLastUpdate < 1000) {
+        // Throttle balance display updates to 150ms - skip expensive operations if too soon
+        if (timeSinceLastUpdate < 150) {
             return;
         }
         lastUIUpdateTime = now;
@@ -6951,7 +6953,7 @@ dogeUpgrades.forEach(u => {
                             backgroundColor: 'transparent',
                             borderWidth: 2.5,
                             fill: false,
-                            tension: 0.1,
+                            tension: 0.95,
                             pointRadius: 0,
                             pointBackgroundColor: '#FFD700',
                             pointBorderColor: 'transparent',
@@ -6967,7 +6969,7 @@ dogeUpgrades.forEach(u => {
                             backgroundColor: 'transparent',
                             borderWidth: 2.5,
                             fill: false,
-                            tension: 0.1,
+                            tension: 0.95,
                             pointRadius: 0,
                             pointBackgroundColor: '#00ff88',
                             pointBorderColor: 'transparent',
@@ -7155,46 +7157,7 @@ dogeUpgrades.forEach(u => {
 
             // Setup chart swap buttons
             const hashrateBtn = document.getElementById('hashrate-chart-btn');
-            const powerBtn = document.getElementById('power-chart-btn');
-            const hashRateCanvas = document.getElementById('hashRateChart');
-            const powerCanvas = document.getElementById('powerChart');
-
-            if (hashrateBtn && powerBtn && hashRateCanvas && powerCanvas) {
-                hashrateBtn.addEventListener('click', () => {
-                    currentHashrateView = 'hashrate';
-                    hashRateCanvas.style.display = 'block';
-                    powerCanvas.style.display = 'none';
-                    hashrateBtn.style.background = '#00ff88';
-                    hashrateBtn.style.color = '#000';
-                    hashrateBtn.style.borderColor = '#00ff88';
-                    powerBtn.style.background = 'rgba(0,255,136,0.3)';
-                    powerBtn.style.color = '#00ff88';
-                    powerBtn.style.borderColor = '#00ff88';
-                    if (hashRateChartInstance) {
-                        setTimeout(() => hashRateChartInstance.resize(), 50);
-                    }
-                });
-
-                powerBtn.addEventListener('click', () => {
-                    currentHashrateView = 'power';
-                    hashRateCanvas.style.display = 'none';
-                    powerCanvas.style.display = 'block';
-                    powerBtn.style.background = '#00ff88';
-                    powerBtn.style.color = '#000';
-                    powerBtn.style.borderColor = '#00ff88';
-                    hashrateBtn.style.background = 'rgba(0,255,136,0.3)';
-                    hashrateBtn.style.color = '#00ff88';
-                    hashrateBtn.style.borderColor = '#00ff88';
-
-                    setTimeout(() => {
-                        if (!powerChartInstance) {
-                            initializePowerChart();
-                        } else {
-                            powerChartInstance.resize();
-                        }
-                    }, 50);
-                });
-            }
+            // Power chart removed - only showing hashrate chart now
 
             // Retry with delays (especially important for mobile)
             if (!chartInitialized) {
@@ -7227,7 +7190,7 @@ dogeUpgrades.forEach(u => {
             }, 300);
         });
 
-        // Master chart update loop - handles all data collection and rendering at 333ms frequency
+        // Master chart update loop - renders every 500ms, collects new data every 1500ms with interpolation
         let updateCount = 0;
         let lastTrimTime = Date.now();
         setInterval(() => {
@@ -7246,6 +7209,9 @@ dogeUpgrades.forEach(u => {
             // Calculate net worth every interval (used for charts and markers)
             const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
 
+            // Recalculate power usage every frame for accurate chart rendering
+            calculateTotalPowerUsed();
+
             // Track current power usage continuously
             const timeDeltaSeconds = (now - lastHashRateChartUpdateTime) / 1000;
             cumulativePowerUsed += totalPowerUsed * timeDeltaSeconds;
@@ -7263,8 +7229,8 @@ dogeUpgrades.forEach(u => {
             // Update power tracking for continuous rendering
             lastHashRateChartUpdateTime = now;
 
-            // Collect chart data points every 5000ms (5 second intervals)
-            if (now - lastChartDataCollectionTime >= 5000) {
+            // Collect chart data points every 1500ms with heavy interpolation between points
+            if (now - lastChartDataCollectionTime >= 1500) {
                 lastChartDataCollectionTime = now;
 
                 // Collect net worth data for primary chart
@@ -7280,6 +7246,13 @@ dogeUpgrades.forEach(u => {
                 currentPowerValues.push(totalPowerUsed);
                 powerChartColors.push(color);
                 hashRateChartTimestamps.push({ time: now });
+            } else {
+                // Even when not collecting full data, keep power chart updated every frame for smooth rendering
+                if (powerChartHistory.length > 0 && hashRateChartTimestamps.length > 0) {
+                    // Update the last power data point to reflect current usage
+                    powerChartHistory[powerChartHistory.length - 1] = currentPercentage;
+                    powerChartColors[powerChartColors.length - 1] = color;
+                }
             }
 
             // Trim arrays to prevent memory growth - keep last 720 points (1 hour at 5000ms = 5 sec intervals)
@@ -7330,7 +7303,9 @@ dogeUpgrades.forEach(u => {
                 // Calculate start index based on the actual synchronized data length
                 let startIndex = 0;
                 if (timeRangePercent < 100) {
-                    startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (timeRangePercent / 100))));
+                    // Ensure minimum of 3 data points even for very small percentages
+                    const minPoints = Math.max(3, Math.ceil(dataLength * (timeRangePercent / 100)));
+                    startIndex = Math.max(0, dataLength - minPoints);
                 }
 
                 const slicedTimestamps = chartTimestamps.slice(startIndex, startIndex + (dataLength - startIndex));
@@ -7364,8 +7339,10 @@ dogeUpgrades.forEach(u => {
                 );
 
                 // Calculate start index based on filtered data length, not raw array length
-                const hashRateStartIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * (timeRangePercent / 100))));
-                const sliceLength = Math.max(1, dataLength - hashRateStartIndex);
+                // Ensure minimum of 3 data points even for very small percentages
+                const minHashPoints = Math.max(3, Math.ceil(dataLength * (timeRangePercent / 100)));
+                const hashRateStartIndex = Math.max(0, dataLength - minHashPoints);
+                const sliceLength = Math.max(3, dataLength - hashRateStartIndex);
 
                 // Scale hash rates by USD value per second
                 const btcUsdPerSec = hashRateChartHistory.slice(hashRateStartIndex, hashRateStartIndex + sliceLength).map(v => v * btcPrice);
@@ -7384,37 +7361,7 @@ dogeUpgrades.forEach(u => {
                 hashRateChartInstance.update('none');
             }
 
-            // Update power chart - use SAME start index as hash rate chart for identical timestamps
-            if (powerChartInstance && hashRateChartTimestamps.length > 0) {
-                // Ensure we have power data to match timestamps
-                while (powerChartHistory.length < hashRateChartTimestamps.length) {
-                    const currentPercentage = (totalPowerUsed / (maxPowerCapacity || 1)) * 100;
-                    const color = currentPercentage > 50 ? '#ff3333' : '#00ff88';
-                    powerChartHistory.push(currentPercentage);
-                    powerChartColors.push(color);
-                }
-
-                // Ensure hash rate chart has been calculated so we know the indices
-                if (hashRateChartInstance && hashRateChartInstance.data.labels && hashRateChartInstance.data.labels.length > 0) {
-                    // Use the EXACT same number of data points as hash rate chart
-                    const hashChartDataCount = hashRateChartInstance.data.labels.length;
-                    const powerStartIndex = Math.max(0, hashRateChartTimestamps.length - hashChartDataCount);
-                    const powerSliceLength = hashChartDataCount;
-
-                    const powerDataPercent = powerChartHistory.slice(powerStartIndex, powerStartIndex + powerSliceLength);
-                    const powerLabels = hashRateChartTimestamps.slice(powerStartIndex, powerStartIndex + powerSliceLength).map((ts) => {
-                        const time = ts?.time || Date.now();
-                        return new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                    });
-
-                    if (powerDataPercent.length > 0) {
-                        powerChartInstance.data.labels = powerLabels;
-                        powerChartInstance.data.datasets[0].data = powerDataPercent;
-                        powerChartInstance._powerChartColors = powerChartColors.slice(powerStartIndex, powerStartIndex + powerSliceLength);
-                        powerChartInstance.update('none');
-                    }
-                }
-            }
+            // Power chart update removed
 
             // Update chart date tracker
             updateChartDateTracker();
@@ -7426,7 +7373,7 @@ dogeUpgrades.forEach(u => {
             if (updateCount % 20 === 0) {
                 console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length);
             }
-        }, 800);
+        }, 500);
 
         // Add mouse tracking for marker hover detection
         const nwChartCanvas = document.getElementById('nwChart');
@@ -7461,7 +7408,7 @@ dogeUpgrades.forEach(u => {
                 else if (minutes === 5) label = 'Last 5 Minutes';
                 else if (minutes === 15) label = 'Last 15 Minutes';
                 else if (minutes === 30) label = 'Last 30 Minutes';
-                else if (minutes === 60) label = 'Last 60 Minutes (Full Hour)';
+                else if (minutes === 60) label = '1 Hour';
 
                 // Update label immediately
                 timeRangeLabel.textContent = label;
@@ -7670,7 +7617,7 @@ dogeUpgrades.forEach(u => {
                             pointRadius: 0,
                             pointHoverRadius: 0,
                             yAxisID: 'y',
-                            tension: 0.3,
+                            tension: 0.95,
                             fill: false,
                             borderWidth: 2
                         },
@@ -7684,7 +7631,7 @@ dogeUpgrades.forEach(u => {
                             pointRadius: 0,
                             pointHoverRadius: 0,
                             yAxisID: 'y',
-                            tension: 0.3,
+                            tension: 0.95,
                             fill: false,
                             borderWidth: 2
                         },
@@ -7698,7 +7645,7 @@ dogeUpgrades.forEach(u => {
                             pointRadius: 0,
                             pointHoverRadius: 0,
                             yAxisID: 'y',
-                            tension: 0.3,
+                            tension: 0.95,
                             fill: false,
                             borderWidth: 2
                         }
@@ -7896,7 +7843,7 @@ dogeUpgrades.forEach(u => {
                                 pointHoverRadius: 5,
                                 borderWidth: 2,
                                 fill: false,
-                                tension: 0.4,
+                                stepped: 'middle',
                                 spanGaps: true,
                                 segment: {
                                     borderColor: function(context) {
