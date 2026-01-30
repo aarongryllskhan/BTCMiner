@@ -949,8 +949,8 @@
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item {
             background: #181818;
-            border: 1px solid #252525;
-            border-radius: 10px 10px 0 0;
+            border: 1px solid #181818;
+            border-radius: 0;
             padding: 15px;
             margin-bottom: 0;
             display: flex;
@@ -973,7 +973,7 @@
 
         @media (hover: none) {
             .u-item {
-                border-color: #252525 !important;
+                border-color: #181818 !important;
             }
         }
 
@@ -1010,6 +1010,34 @@
         .u-item:disabled {
             opacity: 0.2;
             cursor: not-allowed;
+        }
+
+        /* Preserve emboss on permanent multiplier buttons - always maintain emboss */
+        #btc-global-multiplier-btn,
+        #eth-global-multiplier-btn,
+        #doge-global-multiplier-btn {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+        }
+
+        #btc-global-multiplier-btn:active,
+        #btc-global-multiplier-btn:focus,
+        #eth-global-multiplier-btn:active,
+        #eth-global-multiplier-btn:focus,
+        #doge-global-multiplier-btn:active,
+        #doge-global-multiplier-btn:focus {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+            outline: none;
+        }
+
+        /* Preserve emboss on other buttons with box-shadow */
+        button[style*="box-shadow"]:active,
+        button[style*="box-shadow"]:focus {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+            outline: none;
+        }
+
+        button[style*="box-shadow"] {
+            outline: none;
         }
 
 /* Disabled boost buttons styling */
@@ -1346,6 +1374,37 @@ button:disabled:hover {
         #reset-earnings-success-modal,
         #reset-save-success-modal {
             z-index: 3000 !important;
+        }
+
+        /* Desktop: Scale down permanent multiplier buttons to fit more miners in view */
+        @media (min-width: 1181px) {
+            #btc-global-multiplier-btn,
+            #eth-global-multiplier-btn,
+            #doge-global-multiplier-btn {
+                padding: 6px 10px !important;
+                font-size: 0.75rem !important;
+                margin-bottom: 6px !important;
+            }
+            #btc-global-multiplier-btn span,
+            #eth-global-multiplier-btn span,
+            #doge-global-multiplier-btn span {
+                font-size: 0.75rem !important;
+                margin-top: 1px !important;
+                letter-spacing: 0.5px !important;
+            }
+            #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
+                font-size: 0.7rem !important;
+            }
+            #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
+                font-size: 0.65rem !important;
+            }
+        }
+
+        /* Mobile: Ensure embossing is visible on buttons */
+        @media (hover: none) {
+            button[style*="box-shadow: inset"] {
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+            }
         }
 
         .modal-content {

@@ -12,31 +12,6 @@
         return cost;
     }
 
-    // Abbreviate large numbers with K/M/B suffix and beyond
-    function abbreviateNumber(num) {
-        if (num >= 1e60) return (num / 1e60).toFixed(2) + 'Nmdc';
-        if (num >= 1e57) return (num / 1e57).toFixed(2) + 'O/Odc';
-        if (num >= 1e54) return (num / 1e54).toFixed(2) + 'Spdc';
-        if (num >= 1e51) return (num / 1e51).toFixed(2) + 'Sxdc';
-        if (num >= 1e48) return (num / 1e48).toFixed(2) + 'Qdc';
-        if (num >= 1e45) return (num / 1e45).toFixed(2) + 'Qdc';
-        if (num >= 1e42) return (num / 1e42).toFixed(2) + 'Tdc';
-        if (num >= 1e39) return (num / 1e39).toFixed(2) + 'U/Udc';
-        if (num >= 1e36) return (num / 1e36).toFixed(2) + 'D/Ddc';
-        if (num >= 1e33) return (num / 1e33).toFixed(2) + 'Dc';
-        if (num >= 1e30) return (num / 1e30).toFixed(2) + 'N';
-        if (num >= 1e27) return (num / 1e27).toFixed(2) + 'O';
-        if (num >= 1e24) return (num / 1e24).toFixed(2) + 'Sep';
-        if (num >= 1e21) return (num / 1e21).toFixed(2) + 'S';
-        if (num >= 1e18) return (num / 1e18).toFixed(2) + 'Qa';
-        if (num >= 1e15) return (num / 1e15).toFixed(2) + 'Q';
-        if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-        if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-        if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-        if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-        return num.toFixed(0);
-    }
-
     // Bitcoin
     let btcPrice = 100000; // Set manually each day - everyone starts at 100k
     let btcBalance = 0;
@@ -90,108 +65,200 @@
 
     // Master abbreviation system for all number formatting
     const ABBREVIATIONS = [
-        { threshold: 1e306, suffix: 'Ce' },
-        { threshold: 1e303, suffix: 'UCe' },
-        { threshold: 1e300, suffix: 'NoN' },
-        { threshold: 1e297, suffix: 'OcN' },
-        { threshold: 1e294, suffix: 'SpN' },
-        { threshold: 1e291, suffix: 'SxN' },
-        { threshold: 1e288, suffix: 'QiNg' },
-        { threshold: 1e285, suffix: 'QNg' },
-        { threshold: 1e282, suffix: 'TNg' },
-        { threshold: 1e279, suffix: 'DNg' },
-        { threshold: 1e276, suffix: 'UNg' },
-        { threshold: 1e273, suffix: 'Ng' },
-        { threshold: 1e270, suffix: 'NoO' },
-        { threshold: 1e267, suffix: 'OcO' },
-        { threshold: 1e264, suffix: 'SpO' },
-        { threshold: 1e261, suffix: 'SxO' },
-        { threshold: 1e258, suffix: 'QiO' },
-        { threshold: 1e255, suffix: 'QOg' },
-        { threshold: 1e252, suffix: 'TOg' },
-        { threshold: 1e249, suffix: 'DOg' },
-        { threshold: 1e246, suffix: 'UOg' },
-        { threshold: 1e243, suffix: 'Og' },
-        { threshold: 1e240, suffix: 'NoSp' },
-        { threshold: 1e237, suffix: 'OcSp' },
-        { threshold: 1e234, suffix: 'SpSp' },
-        { threshold: 1e231, suffix: 'SxSp' },
-        { threshold: 1e228, suffix: 'QiSp' },
-        { threshold: 1e225, suffix: 'QSp' },
-        { threshold: 1e222, suffix: 'TSp' },
-        { threshold: 1e219, suffix: 'DSp' },
-        { threshold: 1e216, suffix: 'USp' },
-        { threshold: 1e213, suffix: 'Spt' },
-        { threshold: 1e210, suffix: 'NoS' },
-        { threshold: 1e207, suffix: 'OcS' },
-        { threshold: 1e204, suffix: 'SpS' },
-        { threshold: 1e201, suffix: 'SxS' },
-        { threshold: 1e198, suffix: 'QiS' },
-        { threshold: 1e195, suffix: 'QSg' },
-        { threshold: 1e192, suffix: 'TSg' },
-        { threshold: 1e189, suffix: 'DSg' },
-        { threshold: 1e186, suffix: 'USg' },
-        { threshold: 1e183, suffix: 'Sg' },
-        { threshold: 1e180, suffix: 'NoQi' },
-        { threshold: 1e177, suffix: 'OcQi' },
-        { threshold: 1e174, suffix: 'SpQi' },
-        { threshold: 1e171, suffix: 'SxQi' },
-        { threshold: 1e168, suffix: 'QiQi' },
-        { threshold: 1e165, suffix: 'QQi' },
-        { threshold: 1e162, suffix: 'TQi' },
-        { threshold: 1e159, suffix: 'DQi' },
-        { threshold: 1e156, suffix: 'UQi' },
-        { threshold: 1e153, suffix: 'Qui' },
-        { threshold: 1e150, suffix: 'NoQ' },
-        { threshold: 1e147, suffix: 'OcQ' },
-        { threshold: 1e144, suffix: 'SpQ' },
-        { threshold: 1e141, suffix: 'SxQ' },
-        { threshold: 1e138, suffix: 'QiQ' },
-        { threshold: 1e135, suffix: 'QQu' },
-        { threshold: 1e132, suffix: 'TQu' },
-        { threshold: 1e129, suffix: 'DQu' },
-        { threshold: 1e126, suffix: 'UQu' },
-        { threshold: 1e123, suffix: 'Qua' },
-        { threshold: 1e120, suffix: 'NoT' },
-        { threshold: 1e117, suffix: 'OcT' },
-        { threshold: 1e114, suffix: 'SpT' },
-        { threshold: 1e111, suffix: 'SxT' },
-        { threshold: 1e108, suffix: 'QiT' },
-        { threshold: 1e105, suffix: 'QaT' },
-        { threshold: 1e102, suffix: 'TTr' },
-        { threshold: 1e99, suffix: 'DTr' },
-        { threshold: 1e96, suffix: 'UTr' },
-        { threshold: 1e93, suffix: 'Tr' },
-        { threshold: 1e90, suffix: 'NoV' },
-        { threshold: 1e87, suffix: 'OcV' },
-        { threshold: 1e84, suffix: 'SpV' },
-        { threshold: 1e81, suffix: 'SxV' },
-        { threshold: 1e78, suffix: 'QiV' },
-        { threshold: 1e75, suffix: 'QaV' },
-        { threshold: 1e72, suffix: 'TVi' },
-        { threshold: 1e69, suffix: 'DVi' },
-        { threshold: 1e66, suffix: 'UVi' },
-        { threshold: 1e63, suffix: 'Vi' },
-        { threshold: 1e60, suffix: 'NoD' },
-        { threshold: 1e57, suffix: 'OcD' },
-        { threshold: 1e54, suffix: 'SpD' },
-        { threshold: 1e51, suffix: 'SxD' },
-        { threshold: 1e48, suffix: 'QiD' },
-        { threshold: 1e45, suffix: 'QaD' },
-        { threshold: 1e42, suffix: 'TDe' },
-        { threshold: 1e39, suffix: 'DDe' },
-        { threshold: 1e36, suffix: 'UDe' },
-        { threshold: 1e33, suffix: 'De' },
-        { threshold: 1e30, suffix: 'No' },
-        { threshold: 1e27, suffix: 'Oc' },
-        { threshold: 1e24, suffix: 'Sp' },
-        { threshold: 1e21, suffix: 'Sx' },
-        { threshold: 1e18, suffix: 'Qi' },
-        { threshold: 1e15, suffix: 'Qa' },
-        { threshold: 1e12, suffix: 'T' },
-        { threshold: 1e9, suffix: 'B' },
-        { threshold: 1e6, suffix: 'M' },
-        { threshold: 1e3, suffix: 'K' }
+        // ============ BEYOND CENTILLION (Extended to 1e500+) ============
+        { threshold: 1e500, suffix: 'NoDec' },
+        { threshold: 1e497, suffix: 'OcDec' },
+        { threshold: 1e494, suffix: 'SpDec' },
+        { threshold: 1e491, suffix: 'SxDec' },
+        { threshold: 1e488, suffix: 'QiDec' },
+        { threshold: 1e485, suffix: 'QaDec' },
+        { threshold: 1e482, suffix: 'TDec' },
+        { threshold: 1e479, suffix: 'DDec' },
+        { threshold: 1e476, suffix: 'UDec' },
+        { threshold: 1e473, suffix: 'Dec' },
+        { threshold: 1e470, suffix: 'NoDeci' },
+        { threshold: 1e467, suffix: 'OcDeci' },
+        { threshold: 1e464, suffix: 'SpDeci' },
+        { threshold: 1e461, suffix: 'SxDeci' },
+        { threshold: 1e458, suffix: 'QiDeci' },
+        { threshold: 1e455, suffix: 'QaDeci' },
+        { threshold: 1e452, suffix: 'TDeci' },
+        { threshold: 1e449, suffix: 'DDeci' },
+        { threshold: 1e446, suffix: 'UDeci' },
+        { threshold: 1e443, suffix: 'Deci' },
+        { threshold: 1e440, suffix: 'NoUnd' },
+        { threshold: 1e437, suffix: 'OcUnd' },
+        { threshold: 1e434, suffix: 'SpUnd' },
+        { threshold: 1e431, suffix: 'SxUnd' },
+        { threshold: 1e428, suffix: 'QiUnd' },
+        { threshold: 1e425, suffix: 'QaUnd' },
+        { threshold: 1e422, suffix: 'TUnd' },
+        { threshold: 1e419, suffix: 'DUnd' },
+        { threshold: 1e416, suffix: 'UUnd' },
+        { threshold: 1e413, suffix: 'Und' },
+        { threshold: 1e410, suffix: 'NoDuod' },
+        { threshold: 1e407, suffix: 'OcDuod' },
+        { threshold: 1e404, suffix: 'SpDuod' },
+        { threshold: 1e401, suffix: 'SxDuod' },
+        { threshold: 1e398, suffix: 'QiDuod' },
+        { threshold: 1e395, suffix: 'QaDuod' },
+        { threshold: 1e392, suffix: 'TDuod' },
+        { threshold: 1e389, suffix: 'DDuod' },
+        { threshold: 1e386, suffix: 'UDuod' },
+        { threshold: 1e383, suffix: 'Duod' },
+        { threshold: 1e380, suffix: 'NoTred' },
+        { threshold: 1e377, suffix: 'OcTred' },
+        { threshold: 1e374, suffix: 'SpTred' },
+        { threshold: 1e371, suffix: 'SxTred' },
+        { threshold: 1e368, suffix: 'QiTred' },
+        { threshold: 1e365, suffix: 'QaTred' },
+        { threshold: 1e362, suffix: 'TTred' },
+        { threshold: 1e359, suffix: 'DTred' },
+        { threshold: 1e356, suffix: 'UTred' },
+        { threshold: 1e353, suffix: 'Tred' },
+        { threshold: 1e350, suffix: 'NoQuad' },
+        { threshold: 1e347, suffix: 'OcQuad' },
+        { threshold: 1e344, suffix: 'SpQuad' },
+        { threshold: 1e341, suffix: 'SxQuad' },
+        { threshold: 1e338, suffix: 'QiQuad' },
+        { threshold: 1e335, suffix: 'QaQuad' },
+        { threshold: 1e332, suffix: 'TQuad' },
+        { threshold: 1e329, suffix: 'DQuad' },
+        { threshold: 1e326, suffix: 'UQuad' },
+        { threshold: 1e323, suffix: 'Quad' },
+        { threshold: 1e320, suffix: 'NoQuin' },
+        { threshold: 1e317, suffix: 'OcQuin' },
+        { threshold: 1e314, suffix: 'SpQuin' },
+        { threshold: 1e311, suffix: 'SxQuin' },
+        // ============ CENTILLION LEVEL (Extended structure) ============
+        { threshold: 1e308, suffix: '100Uc' },
+        { threshold: 1e307, suffix: '10Uc' },
+        { threshold: 1e306, suffix: 'Uc' },
+        { threshold: 1e305, suffix: '100Dc' },
+        { threshold: 1e304, suffix: '10Dc' },
+        { threshold: 1e303, suffix: 'Dc' },
+        { threshold: 1e302, suffix: '100Tc' },
+        { threshold: 1e301, suffix: '10Tc' },
+        { threshold: 1e300, suffix: 'Tc' },
+        { threshold: 1e299, suffix: '100Qac' },
+        { threshold: 1e298, suffix: '10Qac' },
+        { threshold: 1e297, suffix: 'Qac' },
+        { threshold: 1e296, suffix: '100Qic' },
+        { threshold: 1e295, suffix: '10Qic' },
+        { threshold: 1e294, suffix: 'Qic' },
+        { threshold: 1e293, suffix: '100Sxc' },
+        { threshold: 1e292, suffix: '10Sxc' },
+        { threshold: 1e291, suffix: 'Sxc' },
+        { threshold: 1e290, suffix: '100Spc' },
+        { threshold: 1e289, suffix: '10Spc' },
+        { threshold: 1e288, suffix: 'Spc' },
+        { threshold: 1e287, suffix: '100Occ' },
+        { threshold: 1e286, suffix: '10Occ' },
+        { threshold: 1e285, suffix: 'Occ' },
+        { threshold: 1e284, suffix: '100Noc' },
+        { threshold: 1e283, suffix: '10Noc' },
+        { threshold: 1e282, suffix: 'Noc' },
+        { threshold: 1e281, suffix: '100Ce' },
+        { threshold: 1e280, suffix: '10Ce' },
+        { threshold: 1e279, suffix: 'Ce' },
+        { threshold: 1e278, suffix: '100UCe' },
+        { threshold: 1e277, suffix: '10UCe' },
+        { threshold: 1e276, suffix: 'UCe' },
+        { threshold: 1e275, suffix: '100NoN' },
+        { threshold: 1e274, suffix: '10NoN' },
+        { threshold: 1e273, suffix: 'NoN' },
+        // ============ NONILLION AND BELOW (Original structure) ============
+        { threshold: 1e270, suffix: 'OcN' },
+        { threshold: 1e267, suffix: 'SpN' },
+        { threshold: 1e264, suffix: 'SxN' },
+        { threshold: 1e261, suffix: 'QiNg' },
+        { threshold: 1e258, suffix: 'QNg' },
+        { threshold: 1e255, suffix: 'TNg' },
+        { threshold: 1e252, suffix: 'DNg' },
+        { threshold: 1e249, suffix: 'UNg' },
+        { threshold: 1e246, suffix: 'Ng' },
+        { threshold: 1e243, suffix: 'NoO' },
+        { threshold: 1e240, suffix: 'OcO' },
+        { threshold: 1e237, suffix: 'SpO' },
+        { threshold: 1e234, suffix: 'SxO' },
+        { threshold: 1e231, suffix: 'QiO' },
+        { threshold: 1e228, suffix: 'QOg' },
+        { threshold: 1e225, suffix: 'TOg' },
+        { threshold: 1e222, suffix: 'DOg' },
+        { threshold: 1e219, suffix: 'UOg' },
+        { threshold: 1e216, suffix: 'Og' },
+        { threshold: 1e213, suffix: 'NoSp' },
+        { threshold: 1e210, suffix: 'OcSp' },
+        { threshold: 1e207, suffix: 'SpSp' },
+        { threshold: 1e204, suffix: 'SxSp' },
+        { threshold: 1e201, suffix: 'QiSp' },
+        { threshold: 1e198, suffix: 'QSp' },
+        { threshold: 1e195, suffix: 'TSp' },
+        { threshold: 1e192, suffix: 'DSp' },
+        { threshold: 1e189, suffix: 'USp' },
+        { threshold: 1e186, suffix: 'Spt' },
+        { threshold: 1e183, suffix: 'NoS' },
+        { threshold: 1e180, suffix: 'OcS' },
+        { threshold: 1e177, suffix: 'SpS' },
+        { threshold: 1e174, suffix: 'SxS' },
+        { threshold: 1e171, suffix: 'QiS' },
+        { threshold: 1e168, suffix: 'QSg' },
+        { threshold: 1e165, suffix: 'TSg' },
+        { threshold: 1e162, suffix: 'DSg' },
+        { threshold: 1e159, suffix: 'USg' },
+        { threshold: 1e156, suffix: 'Sg' },
+        { threshold: 1e153, suffix: 'NoQi' },
+        { threshold: 1e150, suffix: 'OcQi' },
+        { threshold: 1e147, suffix: 'SpQi' },
+        { threshold: 1e144, suffix: 'SxQi' },
+        { threshold: 1e141, suffix: 'QiQi' },
+        { threshold: 1e138, suffix: 'QQi' },
+        { threshold: 1e135, suffix: 'TQi' },
+        { threshold: 1e132, suffix: 'DQi' },
+        { threshold: 1e129, suffix: 'UQi' },
+        { threshold: 1e126, suffix: 'Qui' },
+        { threshold: 1e123, suffix: 'NoQ' },
+        { threshold: 1e120, suffix: 'OcQ' },
+        { threshold: 1e117, suffix: 'SpQ' },
+        { threshold: 1e114, suffix: 'SxQ' },
+        { threshold: 1e111, suffix: 'QiQ' },
+        { threshold: 1e108, suffix: 'QQu' },
+        { threshold: 1e105, suffix: 'TQu' },
+        { threshold: 1e102, suffix: 'DQu' },
+        { threshold: 1e99, suffix: 'UQu' },
+        { threshold: 1e96, suffix: 'Qua' },
+        { threshold: 1e93, suffix: 'NoT' },
+        { threshold: 1e90, suffix: 'OcT' },
+        { threshold: 1e87, suffix: 'SpT' },
+        { threshold: 1e84, suffix: 'SxT' },
+        { threshold: 1e81, suffix: 'QiT' },
+        { threshold: 1e78, suffix: 'QaT' },
+        { threshold: 1e75, suffix: 'TTr' },
+        { threshold: 1e72, suffix: 'DTr' },
+        { threshold: 1e69, suffix: 'UTr' },
+        { threshold: 1e66, suffix: 'Tr' },
+        { threshold: 1e63, suffix: 'NoV' },
+        { threshold: 1e60, suffix: 'OcV' },
+        { threshold: 1e57, suffix: 'SpV' },
+        { threshold: 1e54, suffix: 'SxV' },
+        { threshold: 1e51, suffix: 'QiV' },
+        { threshold: 1e48, suffix: 'QaV' },
+        { threshold: 1e45, suffix: 'TVi' },
+        { threshold: 1e42, suffix: 'DVi' },
+        { threshold: 1e39, suffix: 'UVi' },
+        { threshold: 1e36, suffix: 'Vi' },
+        { threshold: 1e33, suffix: 'NoD' },
+        { threshold: 1e30, suffix: 'OcD' },
+        { threshold: 1e27, suffix: 'SpD' },
+        { threshold: 1e24, suffix: 'SxD' },
+        { threshold: 1e21, suffix: 'QiD' },
+        { threshold: 1e18, suffix: 'QaD' },
+        // ============ STANDARD ABBREVIATIONS (Billion, Trillion, etc.) ============
+        { threshold: 1e15, suffix: 'Q' },       // Quadrillion
+        { threshold: 1e12, suffix: 'T' },       // Trillion
+        { threshold: 1e9, suffix: 'B' },        // Billion
+        { threshold: 1e6, suffix: 'M' },        // Million
+        { threshold: 1e3, suffix: 'K' }         // Thousand
     ];
 
     // Initialize gameState early so rugpull.js can access it
@@ -2401,7 +2468,7 @@ function loadGame() {
 
         btn.innerHTML = `
             <div style="text-align:left;flex:1">
-                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="mult-${u.id}" style="color:#ff4400;margin-right:4px"></span><span id="lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="mult-${u.id}" style="color:#ff4400;margin-right:4px"></span>${u.name}</div>
                 <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="yield-${u.id}">+0 ₿/s - Current Speed</div>
                 <div style="font-size:0.9rem;color:#f7931a;font-weight:700;display:block;margin-top:3px" id="increase-${u.id}">+0 ₿/s per level</div>
                 ${powerDisplay}
@@ -2439,7 +2506,7 @@ function loadGame() {
             const costBtc = u.currentUsd / btcPrice;
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#00ff88;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="pow-lvl-txt-${u.id}">[Lvl ${u.level}]</span> ${u.name}</div>
+                    <div style="font-size:0.9rem;color:#00ff88;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px">${u.name}</div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="pow-current-${u.id}">+0W - Current Power</div>
                     <div style="font-size:1.1rem;color:#00ff88;font-family:monospace;font-weight:700;display:block" id="pow-power-${u.id}">+0W Produced per level</div>
                 </div>
@@ -2471,7 +2538,7 @@ function loadGame() {
 
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-mult-${u.id}" style="color:#627eea;margin-right:4px"></span><span id="eth-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-mult-${u.id}" style="color:#627eea;margin-right:4px"></span>${u.name}</div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="eth-yield-${u.id}">+0 Ξ/s - Current Speed</div>
                     <div style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-increase-${u.id}">+0 Ξ/s per level</div>
                     ${powerDisplay}
@@ -2517,7 +2584,7 @@ function loadGame() {
 
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-mult-${u.id}" style="color:#c2a633;margin-right:4px"></span><span id="doge-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-mult-${u.id}" style="color:#c2a633;margin-right:4px"></span>${u.name}</div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="doge-yield-${u.id}">+0 Ð/s - Current Speed</div>
                     <div style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-increase-${u.id}">+0 Ð/s per level</div>
                     ${powerDisplay}
@@ -4955,8 +5022,6 @@ function loadGame() {
         // Update power upgrades display
         powerUpgrades.forEach(u => {
             const costUsd = u.currentUsd;
-            const lvlEl = document.getElementById(`pow-lvl-txt-${u.id}`);
-            if (lvlEl) lvlEl.innerText = `[Lvl ${u.level}]`;
 
             const currentPowerEl = document.getElementById(`pow-current-${u.id}`);
             if (currentPowerEl) currentPowerEl.innerText = `+${formatPower(u.currentPower)} - Current Power`;
@@ -4988,7 +5053,15 @@ function loadGame() {
             }
 
             const btn = document.getElementById(`pow-${u.id}`);
-            if (btn) btn.disabled = (dollarBalance < costUsd);
+            if (btn) {
+                if (dollarBalance < costUsd) {
+                    btn.style.opacity = '0.2';
+                    btn.style.cursor = 'not-allowed';
+                } else {
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                }
+            }
         });
     }
 
@@ -5662,9 +5735,14 @@ function updateGlobalMultiplierButtons() {
         document.getElementById('btc-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(btcNextCost)}`;
         document.getElementById('btc-multiplier-level').innerHTML = `Multiplier: ${btcMultiplier}x`;
 
-        btcBtn.style.opacity = btcCanAfford ? '1' : '0.5';
-        btcBtn.style.cursor = btcCanAfford ? 'pointer' : 'not-allowed';
-        btcBtn.disabled = !btcCanAfford;
+        // Darken button if can't afford
+        if (!btcCanAfford) {
+            btcBtn.style.opacity = '0.2';
+            btcBtn.style.cursor = 'not-allowed';
+        } else {
+            btcBtn.style.opacity = '1';
+            btcBtn.style.cursor = 'pointer';
+        }
     }
 
     // Update ETH multiplier button
@@ -5677,9 +5755,14 @@ function updateGlobalMultiplierButtons() {
         document.getElementById('eth-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(ethNextCost)}`;
         document.getElementById('eth-multiplier-level').innerHTML = `Multiplier: ${ethMultiplier}x`;
 
-        ethBtn.style.opacity = ethCanAfford ? '1' : '0.5';
-        ethBtn.style.cursor = ethCanAfford ? 'pointer' : 'not-allowed';
-        ethBtn.disabled = !ethCanAfford;
+        // Darken button if can't afford
+        if (!ethCanAfford) {
+            ethBtn.style.opacity = '0.2';
+            ethBtn.style.cursor = 'not-allowed';
+        } else {
+            ethBtn.style.opacity = '1';
+            ethBtn.style.cursor = 'pointer';
+        }
     }
 
     // Update DOGE multiplier button
@@ -5692,9 +5775,14 @@ function updateGlobalMultiplierButtons() {
         document.getElementById('doge-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(dogeNextCost)}`;
         document.getElementById('doge-multiplier-level').innerHTML = `Multiplier: ${dogeMultiplier}x`;
 
-        dogeBtn.style.opacity = dogeCanAfford ? '1' : '0.5';
-        dogeBtn.style.cursor = dogeCanAfford ? 'pointer' : 'not-allowed';
-        dogeBtn.disabled = !dogeCanAfford;
+        // Darken button if can't afford
+        if (!dogeCanAfford) {
+            dogeBtn.style.opacity = '0.2';
+            dogeBtn.style.cursor = 'not-allowed';
+        } else {
+            dogeBtn.style.opacity = '1';
+            dogeBtn.style.cursor = 'pointer';
+        }
     }
 }
 
@@ -5909,32 +5997,10 @@ function updateGlobalMultiplierButtons() {
 
         document.getElementById('session-time').innerText = timeStr;
 
-        // Display session earnings (with abbreviations for large numbers)
+        // Display session earnings (with comprehensive abbreviations for large numbers)
         const sessionEarningEl = document.getElementById('session-earning');
         if (sessionEarningEl) {
-            if (sessionEarnings >= 1000000000000000000000000000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e30).toFixed(1) + 'N';
-            } else if (sessionEarnings >= 1000000000000000000000000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e27).toFixed(1) + 'O';
-            } else if (sessionEarnings >= 1000000000000000000000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e24).toFixed(1) + 'Sep';
-            } else if (sessionEarnings >= 1000000000000000000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e21).toFixed(1) + 'S';
-            } else if (sessionEarnings >= 1000000000000000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e18).toFixed(1) + 'Qa';
-            } else if (sessionEarnings >= 1000000000000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e15).toFixed(1) + 'Q';
-            } else if (sessionEarnings >= 1000000000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e12).toFixed(1) + 'T';
-            } else if (sessionEarnings >= 1000000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e9).toFixed(1) + 'B';
-            } else if (sessionEarnings >= 1000000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e6).toFixed(1) + 'M';
-            } else if (sessionEarnings >= 1000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e3).toFixed(1) + 'K';
-            } else {
-                sessionEarningEl.innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            }
+            sessionEarningEl.innerText = formatCurrencyAbbreviated(sessionEarnings, 1);
         }
 
         // Update lifetime earnings display (with abbreviations for large numbers)
@@ -6034,6 +6100,43 @@ function updateGlobalMultiplierButtons() {
             return (num / 1e3).toFixed(1) + 'K';
         }
         return num.toFixed(1);
+    }
+
+    // Format currency (USD) with abbreviations using master ABBREVIATIONS system
+    function formatCurrencyAbbreviated(num, decimals = 1) {
+        const abs = Math.abs(num);
+
+        for (let i = 0; i < ABBREVIATIONS.length; i++) {
+            if (abs >= ABBREVIATIONS[i].threshold) {
+                return '$' + (num / ABBREVIATIONS[i].threshold).toFixed(decimals) + ABBREVIATIONS[i].suffix;
+            }
+        }
+
+        // Numbers below 1000
+        if (abs < 1000) {
+            return '$' + num.toFixed(2);
+        }
+        return '$' + Math.floor(num).toLocaleString();
+    }
+
+    // Format crypto amount (BTC, ETH, DOGE) with abbreviations - keeps decimals below 1
+    function formatCryptoAmount(amount, decimals = 8) {
+        const abs = Math.abs(amount);
+
+        // Below 1: keep full decimals (up to 8 for crypto)
+        if (abs < 1) {
+            return amount.toFixed(decimals);
+        }
+
+        // Use master abbreviations for 1 and above
+        for (let i = 0; i < ABBREVIATIONS.length; i++) {
+            if (abs >= ABBREVIATIONS[i].threshold) {
+                return (amount / ABBREVIATIONS[i].threshold).toFixed(2) + ABBREVIATIONS[i].suffix;
+            }
+        }
+
+        // Fallback for numbers 1-999
+        return amount.toFixed(2);
     }
 
     // Format watts to power units: W, KW, MW, GW, TW, PW
@@ -6228,7 +6331,7 @@ function updateGlobalMultiplierButtons() {
 
         // Abbreviate on mobile always, or on desktop when over $100M
         if ((isMobileUI && cryptoPortfolioValue >= 1000) || (cryptoPortfolioValue > 100000000)) {
-            const abbrev = cryptoPortfolioValue / 1e9 >= 1 ? (cryptoPortfolioValue / 1e9).toFixed(3) + 'B' : cryptoPortfolioValue / 1e6 >= 1 ? (cryptoPortfolioValue / 1e6).toFixed(3) + 'M' : (cryptoPortfolioValue / 1e3).toFixed(3) + 'K';
+            const abbrev = abbreviateNumber(cryptoPortfolioValue, 3);
             document.getElementById('nw-val').innerText = "$" + abbrev;
         } else {
             document.getElementById('nw-val').innerText = "$" + cryptoPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2});
@@ -6236,9 +6339,9 @@ function updateGlobalMultiplierButtons() {
 
         // Update net worth breakdown (desktop only)
         if (document.getElementById('nw-breakdown')) {
-            const btcValue = (btcBalance * btcPrice).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            const ethValue = (ethBalance * ethPrice).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            const dogeValue = (dogeBalance * dogePrice).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const btcValue = formatCryptoAmount(btcBalance, 8);
+            const ethValue = formatCryptoAmount(ethBalance, 8);
+            const dogeValue = formatCryptoAmount(dogeBalance, 8);
             document.getElementById('nw-btc').innerText = btcValue;
             document.getElementById('nw-eth').innerText = ethValue;
             document.getElementById('nw-doge').innerText = dogeValue;
@@ -6304,17 +6407,7 @@ function updateGlobalMultiplierButtons() {
         }
 
         // Update hardware equity with smart abbreviations
-        let hardwareEquityDisplay = "$" + Math.floor(hardwareEquity).toLocaleString();
-        if (hardwareEquity >= 1000) {
-            if (hardwareEquity >= 1e9) {
-                hardwareEquityDisplay = "$" + (hardwareEquity / 1e9).toFixed(1) + 'B';
-            } else if (hardwareEquity >= 1e6) {
-                hardwareEquityDisplay = "$" + (hardwareEquity / 1e6).toFixed(1) + 'M';
-            } else {
-                hardwareEquityDisplay = "$" + (hardwareEquity / 1e3).toFixed(1) + 'K';
-            }
-        }
-        document.getElementById('asset-usd').innerText = hardwareEquityDisplay;
+        document.getElementById('asset-usd').innerText = formatCurrencyAbbreviated(hardwareEquity, 1);
 
         // Format hashrate with abbreviations (K, M, B, etc)
         const formatHashrate = (hashrate) => {
@@ -6736,13 +6829,6 @@ function updateGlobalMultiplierButtons() {
         }
     }
 
-    const lEl = document.getElementById(`lvl-txt-${u.id}`);
-    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
-
-    // Update multiplier display - show whenever a doubling has been purchased
-    const multEl = document.getElementById(`mult-${u.id}`);
-    if(multEl) multEl.innerText = (u.doubleMultiplier > 1) ? `[${u.doubleMultiplier}×]` : '';
-
     // Update doubling button cost display
     const doublingCostEl = document.getElementById(`doubling-cost-${u.id}`);
     if(doublingCostEl) {
@@ -6968,13 +7054,6 @@ ethUpgrades.forEach(u => {
         }
     }
 
-    const lEl = document.getElementById(`eth-lvl-txt-${u.id}`);
-    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
-
-    // Update multiplier display for ETH - show whenever a doubling has been purchased
-    const ethMultEl = document.getElementById(`eth-mult-${u.id}`);
-    if(ethMultEl) ethMultEl.innerText = (u.doubleMultiplier > 1) ? `[${u.doubleMultiplier}×]` : '';
-
     // Update ETH doubling button cost display
     const ethDoublingCostEl = document.getElementById(`eth-doubling-cost-${u.id}`);
     if(ethDoublingCostEl) {
@@ -7193,13 +7272,6 @@ dogeUpgrades.forEach(u => {
             bEl.title = '';
         }
     }
-
-    const lEl = document.getElementById(`doge-lvl-txt-${u.id}`);
-    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
-
-    // Update multiplier display for DOGE - show whenever a doubling has been purchased
-    const dogeMultEl = document.getElementById(`doge-mult-${u.id}`);
-    if(dogeMultEl) dogeMultEl.innerText = (u.doubleMultiplier > 1) ? `[${u.doubleMultiplier}×]` : '';
 
     // Update DOGE doubling button cost display
     const dogeDoublingCostEl = document.getElementById(`doge-doubling-cost-${u.id}`);
@@ -7742,16 +7814,7 @@ dogeUpgrades.forEach(u => {
                                         size: 11
                                     },
                                     callback: function(value) {
-                                        if (value >= 1000000000) {
-                                            return '$' + (value / 1000000000).toFixed(1) + 'B';
-                                        }
-                                        if (value >= 1000000) {
-                                            return '$' + (value / 1000000).toFixed(1) + 'M';
-                                        }
-                                        if (value >= 1000) {
-                                            return '$' + (value / 1000).toFixed(1) + 'k';
-                                        }
-                                        return '$' + value.toFixed(2);
+                                        return formatCurrencyAbbreviated(value, 1);
                                     }
                                 }
                             }
@@ -8377,7 +8440,13 @@ dogeUpgrades.forEach(u => {
                             display: true,
                             position: 'left',
                             beginAtZero: false,
-                            ticks: { color: '#999', font: { size: 10 } },
+                            ticks: {
+                                color: '#999',
+                                font: { size: 10 },
+                                callback: function(value) {
+                                    return formatCurrencyAbbreviated(value, 1);
+                                }
+                            },
                             grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
                             title: { display: true, text: 'USD Value per Second', color: '#999' }
                         }

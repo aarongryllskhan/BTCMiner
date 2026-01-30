@@ -150,7 +150,12 @@ Object.assign(achievementDefinitions, {
     session_100m: { id: 'session_100m', name: 'Speed Demon', description: 'Earn $100M in a single session', emoji: '🔥', category: 'session', threshold: 100000000, type: 'session_earnings' },
     session_1b: { id: 'session_1b', name: 'Blazing Fast', description: 'Earn $1B in a single session', emoji: '💫', category: 'session', threshold: 1000000000, type: 'session_earnings' },
     session_100b: { id: 'session_100b', name: 'Hyperfast', description: 'Earn $100B in a single session', emoji: '⚡', category: 'session', threshold: 100000000000, type: 'session_earnings' },
-    session_1t: { id: 'session_1t', name: 'Ludicrous Speed', description: 'Earn $1T in a single session', emoji: '🚀', category: 'session', threshold: 1000000000000, type: 'session_earnings' }
+    session_1t: { id: 'session_1t', name: 'Ludicrous Speed', description: 'Earn $1T in a single session', emoji: '🚀', category: 'session', threshold: 1000000000000, type: 'session_earnings' },
+
+    // ============ BREAKING SUPPLY CAPS ============
+    btc_hard_cap: { id: 'btc_hard_cap', name: 'Your Hash Power has broken the hard-capped supply for BTC!', description: 'Mine more than 21 million BTC (hard supply cap)', emoji: '⚒️', category: 'supply_cap', type: 'btc_supply', threshold: 21000000 },
+    eth_circulating: { id: 'eth_circulating', name: "You've somehow managed to mine more than the circulating supply?", description: 'Mine more than 120.7 million ETH (approx circulating supply)', emoji: '⚒️', category: 'supply_cap', type: 'eth_supply', threshold: 120700000 },
+    doge_circulating: { id: 'doge_circulating', name: "You've somehow managed to mine more than the circulating supply?", description: 'Mine more than 169 billion DOGE (approx circulating supply)', emoji: '⚒️', category: 'supply_cap', type: 'doge_supply', threshold: 169000000000 }
 });
 
 // Initialize achievements on game load
@@ -307,6 +312,17 @@ function checkAchievements() {
             unlocked = true;
         }
 
+        // ========== BREAKING SUPPLY CAPS ==========
+        else if (achievement.type === 'btc_supply' && btcBalance >= achievement.threshold) {
+            unlocked = true;
+        }
+        else if (achievement.type === 'eth_supply' && ethBalance >= achievement.threshold) {
+            unlocked = true;
+        }
+        else if (achievement.type === 'doge_supply' && dogeBalance >= achievement.threshold) {
+            unlocked = true;
+        }
+
         // Unlock achievement if condition met (only on first unlock)
         if (unlocked && !state.unlocked) {
             console.log('🏆 UNLOCKING ACHIEVEMENT:', id, 'notificationShown was:', state.notificationShown);
@@ -326,6 +342,130 @@ function checkAchievements() {
 // Track active notifications for positioning
 let activeNotifications = [];
 
+// Special modal for supply cap achievements
+function showSupplyCapModal(achievementId, achievement) {
+    // Create modal overlay
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'supply-cap-modal-overlay';
+    modalOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+
+    // Create modal content
+    const modal = document.createElement('div');
+    modal.className = 'supply-cap-modal';
+    modal.style.cssText = `
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(100, 200, 255, 0.1));
+        border: 3px solid #00ff88;
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        max-width: 600px;
+        color: #fff;
+        box-shadow: 0 0 40px rgba(0, 255, 136, 0.6), 0 0 80px rgba(100, 200, 255, 0.3);
+        animation: supplyCapPulse 0.5s ease-out;
+    `;
+
+    const achievementTitle = document.createElement('div');
+    achievementTitle.style.cssText = `
+        font-size: 2.5rem;
+        font-weight: 900;
+        margin-bottom: 20px;
+        color: #00ff88;
+        text-transform: uppercase;
+        text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+        font-family: monospace;
+    `;
+    achievementTitle.textContent = achievement.emoji;
+
+    const achievementName = document.createElement('div');
+    achievementName.style.cssText = `
+        font-size: 2rem;
+        font-weight: 900;
+        margin-bottom: 15px;
+        color: #00ff88;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-family: monospace;
+    `;
+    achievementName.textContent = achievement.name;
+
+    const achievementDesc = document.createElement('div');
+    achievementDesc.style.cssText = `
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+        color: #ccc;
+        font-family: monospace;
+    `;
+    achievementDesc.textContent = achievement.description;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'CLAIM ACHIEVEMENT';
+    closeBtn.style.cssText = `
+        background: linear-gradient(135deg, #00ff88, #00cc6a);
+        color: #000;
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 900;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: monospace;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+    `;
+    closeBtn.onmouseover = function() {
+        this.style.boxShadow = '0 0 40px rgba(0, 255, 136, 1)';
+        this.style.transform = 'scale(1.05)';
+    };
+    closeBtn.onmouseout = function() {
+        this.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.6)';
+        this.style.transform = 'scale(1)';
+    };
+    closeBtn.onclick = function() {
+        modalOverlay.remove();
+    };
+
+    modal.appendChild(achievementTitle);
+    modal.appendChild(achievementName);
+    modal.appendChild(achievementDesc);
+    modal.appendChild(closeBtn);
+    modalOverlay.appendChild(modal);
+    document.body.appendChild(modalOverlay);
+
+    // Add animation style if not already present
+    if (!document.getElementById('supply-cap-modal-style')) {
+        const style = document.createElement('style');
+        style.id = 'supply-cap-modal-style';
+        style.textContent = `
+            @keyframes supplyCapPulse {
+                0% {
+                    transform: scale(0.5);
+                    opacity: 0;
+                }
+                50% {
+                    transform: scale(1.05);
+                }
+                100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
 // Display achievement unlock notification
 function showAchievementNotification(achievementId) {
     const achievement = achievementDefinitions[achievementId];
@@ -334,6 +474,15 @@ function showAchievementNotification(achievementId) {
     // Check if we've already shown this notification (prevent duplicates)
     if (notificationsShownThisSession.has(achievementId)) {
         console.log('🏆 BLOCKED duplicate notification:', achievementId);
+        return;
+    }
+
+    // Special modal for supply cap achievements
+    const supplyCapAchievements = ['btc_hard_cap', 'eth_circulating', 'doge_circulating'];
+    if (supplyCapAchievements.includes(achievementId)) {
+        console.log('🏆 SHOWING SPECIAL MODAL for:', achievementId, achievement.name);
+        showSupplyCapModal(achievementId, achievement);
+        notificationsShownThisSession.add(achievementId);
         return;
     }
 
