@@ -444,19 +444,18 @@ function showRugpullOffer() {
     const requirement = getRugpullRequirement();
     const level = ascensionLevel + 1;  // Convert to 1-indexed
 
-    // Base reward: exponential scaling with 1.012x multiplier per level
-    // Target: ~3-5 upgrades per rugpull early game, ~28-30M tokens by R100
-    // Level 1: 7500, Level 2: 37500, Level 3: 150000, Level 4: 87500, Level 5: 88550, etc.
+    // Base reward: exponential scaling with 1.025x multiplier per level
+    // Target: ~3-5 upgrades per rugpull early game, ~23M tokens by R100
+    // Level 1: 7500, Level 2: 37500, Level 3: 60000, Level 4+: 60000 × 1.025^(level-3)
+    // This gives: R1: 7.5K, R2: 37.5K, R3: 60K, R4: 61.5K, R5: 63K, ... R100: ~23.5M
     let baseReward;
     if (level === 1) {
         baseReward = 7500;
     } else if (level === 2) {
         baseReward = 37500;
-    } else if (level === 3) {
-        baseReward = 150000;
     } else {
-        // Level 4+: 87500 × 1.012^(level-4) = 87500, 88550, 89619, 90707, 91814, ...
-        baseReward = Math.floor(87500 * Math.pow(1.012, level - 4));
+        // Level 3+: 60000 × 1.025^(level-3) = 60000, 61500, 63075, 64626, ...
+        baseReward = Math.floor(60000 * Math.pow(1.025, level - 3));
     }
 
     // Excess bonus: minimal bonus from grinding beyond requirement (~10% of base)
