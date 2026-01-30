@@ -2529,6 +2529,15 @@ window.closeMetaUpgradesModal = closeMetaUpgradesModal;
 // Export button click handler to implementation namespace
 window._rugpullImpl.handleRugpullButtonClick = handleRugpullButtonClick;
 
+// Export reset tracker function
+window.resetRugpullTracker = function() {
+    lifetimeEarningsThisRugpull = 0;
+    console.log('[RUGPULL] Tracker reset - lifetimeEarningsThisRugpull = 0');
+    if (typeof updateAscensionUI === 'function') {
+        updateAscensionUI();
+    }
+};
+
 // Debug: Confirm exports are available
 console.log('[RUGPULL] ✓✓✓ RUGPULL.JS LOADED ✓✓✓');
 console.log('[RUGPULL] Exports set to window:', {

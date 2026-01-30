@@ -1043,6 +1043,85 @@
     </div>
 </div>
 
+<!-- Reset Earnings Confirmation Modal -->
+<div id="reset-earnings-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 500px; text-align: center;">
+        <div class="modal-header" style="border-bottom: 2px solid #ff3344;">
+            <h2 style="color: #ff3344; margin: 0;">⚠️ RESET EARNINGS</h2>
+        </div>
+        <div class="modal-body" style="padding: 30px;">
+            <div style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.8;">
+                Reset lifetime and session earnings to $0?
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="reset-earnings-confirm-btn" onclick="confirmResetEarnings()" style="background: #ff3344; color: white; border: 2px solid #ff6666; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">RESET</button>
+                <button onclick="closeResetEarningsModal()" style="background: #666; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Earnings Success Modal -->
+<div id="reset-earnings-success-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 500px; text-align: center;">
+        <div class="modal-header" style="border-bottom: 2px solid #4CAF50;">
+            <h2 style="color: #4CAF50; margin: 0;">✓ EARNINGS RESET</h2>
+        </div>
+        <div class="modal-body" style="padding: 30px;">
+            <div style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.8;">
+                Lifetime and session earnings have been reset to $0.
+            </div>
+            <button onclick="closeResetEarningsSuccessModal()" style="background: #4CAF50; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Save Confirmation Modal -->
+<div id="reset-save-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 500px; text-align: center;">
+        <div class="modal-header" style="border-bottom: 2px solid #ff3344;">
+            <h2 style="color: #ff3344; margin: 0;">⚠️ RESET SAVE</h2>
+        </div>
+        <div class="modal-body" style="padding: 30px;">
+            <div style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.8;">
+                <div style="color: #ff6666; font-weight: bold; margin-bottom: 15px;">THIS ACTION RESETS EVERYTHING:</div>
+                <div style="text-align: left; color: #ccc; font-size: 0.95rem; margin-bottom: 20px;">
+                    ✗ All lifetime earnings<br>
+                    ✗ Session earnings<br>
+                    ✗ Rugpull progress tracker<br>
+                    ✗ All earnings milestones<br>
+                    ✗ All achievements<br>
+                    ✗ All crypto and miners<br>
+                    ✗ All upgrades<br>
+                    ✗ Entire game progress<br>
+                    <br>
+                    <span style="color: #999; font-size: 0.85rem;">Only meta-upgrades purchased with Corrupt Tokens will persist.</span>
+                </div>
+                <div style="color: #ffeb3b; font-weight: bold;">This cannot be undone. Are you sure?</div>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="reset-save-confirm-btn" onclick="confirmResetGame()" style="background: #ff3344; color: white; border: 2px solid #ff6666; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">RESET SAVE</button>
+                <button onclick="closeResetSaveModal()" style="background: #666; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Save Success Modal -->
+<div id="reset-save-success-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 500px; text-align: center;">
+        <div class="modal-header" style="border-bottom: 2px solid #4CAF50;">
+            <h2 style="color: #4CAF50; margin: 0;">✓ RESET COMPLETE</h2>
+        </div>
+        <div class="modal-body" style="padding: 30px;">
+            <div style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.8;">
+                Game reset! Starting fresh. Page will reload to clear cache.
+            </div>
+            <button onclick="reloadPageForReset()" style="background: #4CAF50; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">OK</button>
+        </div>
+    </div>
+</div>
+
 <!-- Achievements Modal -->
 <div id="achievements-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;">

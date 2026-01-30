@@ -1368,6 +1368,14 @@ function loadGame() {
      * Get the current game state for export (reuses saveGame structure)
      */
     function getExportableGameState() {
+        // Trim chart history to prevent localStorage quota issues - keep last 4,800 points per chart
+        const maxChartPoints = 4800;
+        const trimmedChartHistory = chartHistory.length > maxChartPoints ? chartHistory.slice(-maxChartPoints) : chartHistory;
+        const trimmedChartTimestamps = chartTimestamps.length > maxChartPoints ? chartTimestamps.slice(-maxChartPoints) : chartTimestamps;
+        const trimmedPowerChartHistory = powerChartHistory.length > maxChartPoints ? powerChartHistory.slice(-maxChartPoints) : powerChartHistory;
+        const trimmedPowerChartColors = powerChartColors.length > maxChartPoints ? powerChartColors.slice(-maxChartPoints) : powerChartColors;
+        const trimmedHashRateChartTimestamps = hashRateChartTimestamps.length > maxChartPoints ? hashRateChartTimestamps.slice(-maxChartPoints) : hashRateChartTimestamps;
+
         return {
             // Game version for compatibility checks
             version: '1.1.0',
@@ -1949,21 +1957,62 @@ function loadGame() {
     }
 
     function resetEarningsStats() {
-        if (confirm('Reset lifetime and session earnings to $0? This will not affect your crypto or upgrades.')) {
-            lifetimeEarnings = 0;
-            sessionEarnings = 0;
-            sessionStartTime = Date.now();
-            saveGame();
-            updateUI();
-            alert('Earnings stats have been reset!');
+        const modal = document.getElementById('reset-earnings-modal');
+        if (modal) {
+            modal.style.display = 'flex';
         }
     }
 
+    window.confirmResetEarnings = function() {
+        lifetimeEarnings = 0;
+        sessionEarnings = 0;
+        earningsThisRun = 0;
+        // Reset the persisted lifetime earnings display from rugpull.js
+        if (typeof window.rugpullState !== 'undefined') {
+            window.rugpullState.lifetimeEarningsDisplay = 0;
+        }
+        if (typeof window.resetRugpullTracker === 'function') {
+            window.resetRugpullTracker();
+        }
+        sessionStartTime = Date.now();
+        saveGame();
+        updateUI();
+        // Show success modal instead of alert
+        showResetEarningsSuccessModal();
+    };
+
+    window.closeResetEarningsModal = function() {
+        const modal = document.getElementById('reset-earnings-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
+
+    window.showResetEarningsSuccessModal = function() {
+        const modal = document.getElementById('reset-earnings-success-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    };
+
+    window.closeResetEarningsSuccessModal = function() {
+        const modal = document.getElementById('reset-earnings-success-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
+
     function resetGame() {
-        if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
-            localStorage.removeItem('satoshiTerminalSave');
-            localStorage.removeItem('instructionsDismissed');
-            localStorage.removeItem('achievements');
+        const modal = document.getElementById('reset-save-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    window.confirmResetGame = function() {
+        localStorage.removeItem('satoshiTerminalSave');
+        localStorage.removeItem('instructionsDismissed');
+        localStorage.removeItem('achievements');
             // Reset all variables to defaults
             btcBalance = 0;
             btcLifetime = 0;
@@ -2130,11 +2179,29 @@ function loadGame() {
                 });
             }
 
-            alert('Game reset! Starting fresh. Page will reload to clear cache.')
-            // Reload page to ensure clean state
-            window.location.reload(true);
+        closeResetSaveModal();
+        // Show success modal that will reload when user clicks OK
+        showResetSaveSuccessModal();
+    };
+
+    window.closeResetSaveModal = function() {
+        const modal = document.getElementById('reset-save-modal');
+        if (modal) {
+            modal.style.display = 'none';
         }
-    }
+    };
+
+    window.showResetSaveSuccessModal = function() {
+        const modal = document.getElementById('reset-save-success-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    };
+
+    window.reloadPageForReset = function() {
+        // Reload page to ensure clean state
+        window.location.reload(true);
+    };
 
     // Expose resetGame to window so HTML onclick can call it
     window.resetGame = resetGame;
