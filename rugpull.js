@@ -25,6 +25,15 @@ let ascensionStats = {
     totalGlobalBonus: 0              // Sum of all purchased bonuses
 };
 
+// Permanent milestone doubling progression (persists across rugpulls)
+// Stores which doublings player has purchased at each milestone level
+// Structure: { btcDoublings: {1: true, 5: false, ...}, ethDoublings: {...}, dogeDoublings: {...} }
+let permanentMilestoneDoublings = {
+    btcDoublings: {},     // {1: true, 5: true, 10: false, ...}
+    ethDoublings: {},     // {1: false, 5: false, ...}
+    dogeDoublings: {}     // {1: false, 5: false, ...}
+};
+
 // Meta-upgrades purchased by the player (persists across resets)
 let metaUpgrades = {
     // TIER 1 (Basic) - 20 tokens each
@@ -716,7 +725,8 @@ function executeRugpull(reward) {
         ascensionStats: JSON.parse(JSON.stringify(ascensionStats)),
         unlockedSystems: JSON.parse(JSON.stringify(unlockedSystems)),
         achievements: savedAchievements,
-        lifetimeEarningsDisplay: lifetimeEarningsDisplay  // Persist display earnings across rugpull
+        lifetimeEarningsDisplay: lifetimeEarningsDisplay,  // Persist display earnings across rugpull
+        permanentMilestoneDoublings: JSON.parse(JSON.stringify(permanentMilestoneDoublings))  // Persist milestone doublings across rugpull
     };
 
     // Clear localStorage but prepare to restore ascension data
@@ -832,7 +842,7 @@ function resetGameState() {
 
     dollarBalance = 0;
     hardwareEquity = 0;
-    lifetimeEarnings = 0;
+    // DO NOT reset lifetimeEarnings - it persists across rugpulls
 
     // Reset power system
     totalPowerAvailable = 0;
@@ -848,24 +858,21 @@ function resetGameState() {
         u.level = 0;
         u.currentUsd = u.baseUsd;
         u.currentYield = 0;
-        u.boostCost = u.baseUsd * 0.5;
-        u.boostLevel = 0;
+        // DO NOT reset milestone doublings or doubleMultiplier - they persist across rugpulls
     });
 
     ethUpgrades.forEach(u => {
         u.level = 0;
         u.currentUsd = u.baseUsd;
         u.currentYield = 0;
-        u.boostCost = u.baseUsd * 0.5;
-        u.boostLevel = 0;
+        // DO NOT reset milestone doublings or doubleMultiplier - they persist across rugpulls
     });
 
     dogeUpgrades.forEach(u => {
         u.level = 0;
         u.currentUsd = u.baseUsd;
         u.currentYield = 0;
-        u.boostCost = u.baseUsd * 0.5;
-        u.boostLevel = 0;
+        // DO NOT reset milestone doublings or doubleMultiplier - they persist across rugpulls
     });
 
     // Reset staking
@@ -1247,6 +1254,49 @@ function getOfflineCap() {
     }
 
     return BASE_OFFLINE_CAP + additionalSeconds;
+}
+
+/**
+ * Get the permanent doubling multiplier for a miner (persists across rugpulls)
+ * @param cryptoType - 'btc', 'eth', or 'doge'
+ * @returns multiplier (2^number of doublings purchased)
+ */
+function getPermanentDoubleMultiplier(cryptoType) {
+    const doublingsObj = cryptoType === 'btc' ? permanentMilestoneDoublings.btcDoublings :
+                         cryptoType === 'eth' ? permanentMilestoneDoublings.ethDoublings :
+                         cryptoType === 'doge' ? permanentMilestoneDoublings.dogeDoublings : {};
+
+    // Count how many doublings have been purchased
+    const doubleCount = Object.values(doublingsObj).filter(v => v === true).length;
+    return Math.pow(2, doubleCount);  // 2^count
+}
+
+/**
+ * Purchase a permanent milestone doubling
+ * @param cryptoType - 'btc', 'eth', or 'doge'
+ * @param level - the milestone level (1, 5, 10, 25, etc.)
+ */
+function purchasePermanentMilestoneDoubling(cryptoType, level) {
+    if (cryptoType === 'btc') {
+        permanentMilestoneDoublings.btcDoublings[level] = true;
+    } else if (cryptoType === 'eth') {
+        permanentMilestoneDoublings.ethDoublings[level] = true;
+    } else if (cryptoType === 'doge') {
+        permanentMilestoneDoublings.dogeDoublings[level] = true;
+    }
+}
+
+/**
+ * Check if a permanent milestone doubling has been purchased
+ * @param cryptoType - 'btc', 'eth', or 'doge'
+ * @param level - the milestone level
+ * @returns boolean
+ */
+function hasPermanentMilestoneDoubling(cryptoType, level) {
+    const doublingsObj = cryptoType === 'btc' ? permanentMilestoneDoublings.btcDoublings :
+                         cryptoType === 'eth' ? permanentMilestoneDoublings.ethDoublings :
+                         cryptoType === 'doge' ? permanentMilestoneDoublings.dogeDoublings : {};
+    return doublingsObj[level] || false;
 }
 
 /**
@@ -1790,7 +1840,8 @@ function getAscensionData() {
         ascensionStats,
         metaUpgrades,
         unlockedSystems,
-        upgradeToggleState
+        upgradeToggleState,
+        permanentMilestoneDoublings  // Persist milestone doublings across rugpulls
     };
 }
 
@@ -1831,6 +1882,11 @@ function loadAscensionData(data) {
     upgradeToggleState = data.upgradeToggleState || { auto_sell: true };
     window.upgradeToggleState = upgradeToggleState;  // Sync to window after loading
     window.metaUpgrades = metaUpgrades;  // Sync metaUpgrades to window after loading
+
+    // Load permanent milestone doublings (survives rugpulls)
+    if (data.permanentMilestoneDoublings) {
+        permanentMilestoneDoublings = data.permanentMilestoneDoublings;
+    }
 
     unlockedSystems = data.unlockedSystems || unlockedSystems;
     console.log('After load - rugpullCurrency:', rugpullCurrency, 'ascensionLevel:', ascensionLevel);
@@ -2449,7 +2505,8 @@ Object.defineProperty(window, 'lifetimeEarningsThisRugpull', {
 // Export function to trigger UI update for rugpull progress
 // Note: lifetimeEarningsThisRugpull is synced via updateCurrentRunEarnings from game.js every 100ms
 window.rugpullAddEarnings = function(amount) {
-    // Just trigger UI update - the actual value is synced via updateCurrentRunEarnings
+    // Track earnings towards next rugpull
+    lifetimeEarningsThisRugpull += amount;
     console.log('[RUGPULL] Earnings event:', { amount, currentEarnings: lifetimeEarningsThisRugpull });
     if (typeof updateAscensionUI === 'function') {
         updateAscensionUI();

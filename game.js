@@ -1,3 +1,17 @@
+    // Calculate cost for the next multiplier purchase (exponential scaling)
+    function getNextMultiplierCost(level) {
+        const baseCosts = [10000, 100000, 1000000, 1000000000]; // 10k, 100k, 1m, 1b
+        if (level < baseCosts.length) {
+            return baseCosts[level];
+        }
+        // After 1b, multiply by 1000x each time
+        let cost = baseCosts[baseCosts.length - 1]; // Start at 1b
+        for (let i = baseCosts.length; i <= level; i++) {
+            cost *= 1000;
+        }
+        return cost;
+    }
+
     // Abbreviate large numbers with K/M/B suffix and beyond
     function abbreviateNumber(num) {
         if (num >= 1e60) return (num / 1e60).toFixed(2) + 'Nmdc';
@@ -50,6 +64,12 @@
     const DOGE_MIN_PRICE = 0.05;
     const DOGE_MAX_PRICE = 2.00;
 
+    // Global 2x multiplier system (applies to ALL miners of each crypto)
+    let btcMultiplierLevel = 0;  // Number of times purchased
+    let ethMultiplierLevel = 0;
+    let dogeMultiplierLevel = 0;
+    const MULTIPLIER_COSTS = [10000, 100000, 1000000, 1000000000]; // 10k, 100k, 1m, 1b, etc - will scale exponentially
+
     let hardwareEquity = 0;
     let dollarBalance = 0; // USD balance from selling crypto
     let lastTickTime = Date.now();
@@ -65,6 +85,7 @@
     let sessionStartNetWorth = 0;
     let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
     let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
+    let earningsThisRun = 0; // Earnings since last rugpull - resets when rugpull happens (tracked by rugpull.js)
     // lifetimeEarningsThisRugpull is now managed by rugpull.js - do not declare it here
 
     // Master abbreviation system for all number formatting
@@ -218,6 +239,7 @@
     let lastUIUpdateTime = 0; // Throttle balance display updates to 150ms
     let lastChartDataCollectionTime = 0; // Track when chart data was last collected (1500ms interval)
     let lastPowerChartUpdateTime = 0; // Track when power chart was last updated (3000ms interval)
+    let lastShopReinitTime = 0; // Track when shops were last reinitialized (500ms interval)
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -650,6 +672,64 @@
         }
     }
 
+    // ========================================
+    // MILESTONE DOUBLING SYSTEM
+    // ========================================
+    // Levels at which miners can be doubled (+100% production)
+    // These replace the old +10% boost system
+    // ===== INFINITE MILESTONE DOUBLING SYSTEM =====
+    // Milestone levels follow this pattern:
+    //   - Levels 1-5: [1, 5]
+    //   - Levels 5-50: [10, 25, 50]
+    //   - Levels 50+: Every 50 levels (100, 150, 200, 250, 300, 350, ...)
+    // This continues infinitely as players progress to any level
+
+    function isMilestoneLevel(level) {
+        if (level === 5 || level === 10 || level === 25 || level === 50) {
+            return true; // Early milestones (starting at level 5)
+        }
+        if (level >= 100 && (level - 100) % 50 === 0) {
+            return true; // Every 50 levels after 100
+        }
+        return false;
+    }
+
+    function getNextMilestoneAfter(level) {
+        // Find the next milestone level after the given level
+        if (level < 5) return 5;
+        if (level < 10) return 10;
+        if (level < 25) return 25;
+        if (level < 50) return 50;
+        // For level 50+: find next milestone in 50-level increments
+        const nextBase = Math.ceil((level + 1) / 50) * 50;
+        return nextBase >= 100 ? nextBase : 100;
+    }
+
+    // Pre-generate common milestones for quick lookup (up to level 10000)
+    // Milestones start at level 5 (no doubling at level 1)
+    function generateMilestones(maxLevel = 10000) {
+        const milestones = [5, 10, 25, 50];
+        for (let level = 100; level <= maxLevel; level += 50) {
+            milestones.push(level);
+        }
+        return milestones;
+    }
+    const MILESTONE_LEVELS = generateMilestones(10000);
+
+    /**
+     * Calculate the cost of a milestone doubling upgrade for a miner
+     * Cookie Clicker style: Each miner tier has its own cost that scales independently
+     * Tier 1 (USB Miner): starts at $100
+     * Tier 2 (GTX 1660): starts at $5,000
+     * Tier 3 (RTX 5090): starts at $275,000
+     * etc. Each tier's cost is roughly 10x the miner's baseUsd
+     */
+    function calculateMilestoneDoublingCost(upgrade) {
+        // Cost is 20x the miner's baseUsd (like Cookie Clicker)
+        // This makes doubling upgrades cost roughly equivalent to buying the miner a few more times
+        return upgrade.baseUsd * 20;
+    }
+
     // Bitcoin mining upgrades
     const btcUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 100, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.000000250 },
@@ -668,7 +748,14 @@
         { id: 13, name: "Dimensional Mining Array", baseUsd: 14200000000000, baseYield: 370.93 },
         { id: 14, name: "Multiversal Hash Grid", baseUsd: 156000000000000, baseYield: 1298.26 },
         { id: 15, name: "Infinite Energy Extractor", baseUsd: 1720000000000000, baseYield: 4543.91 }
-    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
+    ].map(u => ({
+        ...u,
+        level: 0,
+        currentUsd: u.baseUsd,
+        currentYield: 0,
+        milestoneDoublings: MILESTONE_LEVELS.reduce((acc, level) => { acc[level] = false; return acc; }, {}),
+        doubleMultiplier: 1
+    }));
 
     // Ethereum mining upgrades - Balanced to match BTC/DOGE USD/sec earnings
     const ethUpgrades = [
@@ -688,7 +775,14 @@
         { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 14200000000000, baseYield: 9643.2 },
         { id: 14, name: "Interchain Bridge Network", baseUsd: 156000000000000, baseYield: 33751.2 },
         { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 1720000000000000, baseYield: 118130.4 }
-    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
+    ].map(u => ({
+        ...u,
+        level: 0,
+        currentUsd: u.baseUsd,
+        currentYield: 0,
+        milestoneDoublings: MILESTONE_LEVELS.reduce((acc, level) => { acc[level] = false; return acc; }, {}),
+        doubleMultiplier: 1
+    }));
 
     // Dogecoin mining upgrades - Balanced to match BTC/ETH USD/sec earnings
     // All three currencies earn the same USD/sec at each tier (DOGE yields are 400x higher to compensate for $0.25 price)
@@ -709,7 +803,14 @@
         { id: 13, name: "Jovian Satellite Network", baseUsd: 14200000000000, baseYield: 135113625 },
         { id: 14, name: "Solar System DOGE Grid", baseUsd: 156000000000000, baseYield: 472896875 },
         { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 1720000000000000, baseYield: 1655137500 }
-    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
+    ].map(u => ({
+        ...u,
+        level: 0,
+        currentUsd: u.baseUsd,
+        currentYield: 0,
+        milestoneDoublings: MILESTONE_LEVELS.reduce((acc, level) => { acc[level] = false; return acc; }, {}),
+        doubleMultiplier: 1
+    }));
 
     // Keep reference to btcUpgrades as upgrades for backward compatibility
     const upgrades = btcUpgrades;
@@ -751,6 +852,10 @@
             dogeClickValue,
             dogePerSec,
             dogePrice,
+            // Global multiplier levels
+            btcMultiplierLevel,
+            ethMultiplierLevel,
+            dogeMultiplierLevel,
             // General data
             dollarBalance,
             hardwareEquity,
@@ -780,24 +885,24 @@
                 level: u.level,
                 currentUsd: u.currentUsd,
                 currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
+                milestoneDoublings: u.milestoneDoublings,
+                doubleMultiplier: u.doubleMultiplier
             })),
             ethUpgrades: ethUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
                 currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
+                milestoneDoublings: u.milestoneDoublings,
+                doubleMultiplier: u.doubleMultiplier
             })),
             dogeUpgrades: dogeUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
                 currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
+                milestoneDoublings: u.milestoneDoublings,
+                doubleMultiplier: u.doubleMultiplier
             })),
             // Ascension/Rugpull data
             ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {},
@@ -902,6 +1007,11 @@ function loadGame() {
         dogeClickValue = state.dogeClickValue || 1.00000000;
         dogePrice = state.dogePrice || 0.25;
 
+        // Load global multiplier levels
+        btcMultiplierLevel = state.btcMultiplierLevel || 0;
+        ethMultiplierLevel = state.ethMultiplierLevel || 0;
+        dogeMultiplierLevel = state.dogeMultiplierLevel || 0;
+
         // Load general data
         dollarBalance = parseFloat(state.dollarBalance) || 0;
         hardwareEquity = parseFloat(state.hardwareEquity) || 0;
@@ -951,8 +1061,11 @@ function loadGame() {
                     upgradeToUpdate.level = savedU.level || 0;
                     upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
                     upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
+                    // Load milestone doubling data (new system) or fallback to old boost data (backward compat)
+                    if (savedU.milestoneDoublings) {
+                        upgradeToUpdate.milestoneDoublings = savedU.milestoneDoublings;
+                    }
+                    upgradeToUpdate.doubleMultiplier = savedU.doubleMultiplier || 1;
                 }
             });
         } else if (state.upgrades) {
@@ -968,8 +1081,9 @@ function loadGame() {
                     upgradeToUpdate.level = savedU.level || 0;
                     upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
                     upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
+                    // Initialize milestone system for old saves
+                    upgradeToUpdate.milestoneDoublings = MILESTONE_LEVELS.reduce((acc, level) => { acc[level] = false; return acc; }, {});
+                    upgradeToUpdate.doubleMultiplier = 1;
                 }
             });
         }
@@ -982,8 +1096,10 @@ function loadGame() {
                     upgradeToUpdate.level = savedU.level || 0;
                     upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
                     upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
+                    if (savedU.milestoneDoublings) {
+                        upgradeToUpdate.milestoneDoublings = savedU.milestoneDoublings;
+                    }
+                    upgradeToUpdate.doubleMultiplier = savedU.doubleMultiplier || 1;
                 }
             });
         }
@@ -996,8 +1112,10 @@ function loadGame() {
                     upgradeToUpdate.level = savedU.level || 0;
                     upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
                     upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
+                    if (savedU.milestoneDoublings) {
+                        upgradeToUpdate.milestoneDoublings = savedU.milestoneDoublings;
+                    }
+                    upgradeToUpdate.doubleMultiplier = savedU.doubleMultiplier || 1;
                 }
             });
         }
@@ -1069,6 +1187,9 @@ function loadGame() {
 
         // Calculate total power used
         calculateTotalPowerUsed();
+
+        // Restore permanent milestone doublings from Rugpull system (persists across resets)
+        restorePermanentMilestoneDoublings();
 
         // Recalculate totals for all cryptos (with ascension bonus if available)
         const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
@@ -1298,24 +1419,24 @@ function loadGame() {
                 level: u.level,
                 currentUsd: u.currentUsd,
                 currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
+                milestoneDoublings: u.milestoneDoublings,
+                doubleMultiplier: u.doubleMultiplier
             })),
             ethUpgrades: ethUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
                 currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
+                milestoneDoublings: u.milestoneDoublings,
+                doubleMultiplier: u.doubleMultiplier
             })),
             dogeUpgrades: dogeUpgrades.map(u => ({
                 id: u.id,
                 level: u.level,
                 currentUsd: u.currentUsd,
                 currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
+                milestoneDoublings: u.milestoneDoublings,
+                doubleMultiplier: u.doubleMultiplier
             })),
             // Ascension/Rugpull data
             ascensionData: (typeof getAscensionData === 'function') ? getAscensionData() : {},
@@ -1768,6 +1889,7 @@ function loadGame() {
      */
     function addEarnings(amount) {
         dollarBalance += amount;
+        earningsThisRun += amount;
 
         // Update rugpull earnings tracker in rugpull.js if available
         if (typeof window.rugpullAddEarnings === 'function') {
@@ -1867,6 +1989,7 @@ function loadGame() {
             sessionStartNetWorth = 0;
             sessionEarnings = 0;
             lifetimeEarnings = 0;
+            earningsThisRun = 0;  // Reset earnings since last rugpull
             // Reset chart history
             chartHistory = [];
             chartTimestamps = [];
@@ -1879,32 +2002,46 @@ function loadGame() {
                 u.currentUsd = u.baseUsd;
                 u.currentPower = 0;
             });
-            // Reset all upgrades
-            btcUpgrades.forEach(u => {
-                u.level = 0;
-                u.currentUsd = u.baseUsd;
-                u.currentYield = 0;
-                u.boostCost = u.baseCost || u.currentUsd;
-                u.boostLevel = 0;
-            });
-            ethUpgrades.forEach(u => {
-                u.level = 0;
-                u.currentUsd = u.baseUsd;
-                u.currentYield = 0;
-                u.boostCost = u.baseCost || u.currentUsd;
-                u.boostLevel = 0;
-            });
-            dogeUpgrades.forEach(u => {
-                u.level = 0;
-                u.currentUsd = u.baseUsd;
-                u.currentYield = 0;
-                u.boostCost = u.baseCost || u.currentUsd;
-                u.boostLevel = 0;
-            });
+            // Reset all upgrades (including milestone doublings for RESET SAVE)
+            try {
+                const newMilestoneDoublings = {};
+                MILESTONE_LEVELS.forEach(level => { newMilestoneDoublings[level] = false; });
+
+                btcUpgrades.forEach(u => {
+                    u.level = 0;
+                    u.currentUsd = u.baseUsd;
+                    u.currentYield = 0;
+                    u.milestoneDoublings = { ...newMilestoneDoublings };
+                    u.doubleMultiplier = 1;
+                    console.log(`Reset ${u.name}: doubleMultiplier = ${u.doubleMultiplier}`);
+                });
+                ethUpgrades.forEach(u => {
+                    u.level = 0;
+                    u.currentUsd = u.baseUsd;
+                    u.currentYield = 0;
+                    u.milestoneDoublings = { ...newMilestoneDoublings };
+                    u.doubleMultiplier = 1;
+                });
+                dogeUpgrades.forEach(u => {
+                    u.level = 0;
+                    u.currentUsd = u.baseUsd;
+                    u.currentYield = 0;
+                    u.milestoneDoublings = { ...newMilestoneDoublings };
+                    u.doubleMultiplier = 1;
+                });
+                console.log('✓ Upgrades reset successfully');
+                console.log('BTC USB Miner doubleMultiplier after reset:', btcUpgrades[1].doubleMultiplier);
+            } catch (e) {
+                console.error('Error resetting upgrades:', e);
+            }
             // Reset staked crypto amounts
             stakedBTC = 0;
             stakedETH = 0;
             stakedDOGE = 0;
+            // Reset global multipliers
+            btcMultiplierLevel = 0;
+            ethMultiplierLevel = 0;
+            dogeMultiplierLevel = 0;
             // Reset skill tree (if skill tree system exists)
             if (typeof resetSkillTree === 'function') {
                 resetSkillTree();
@@ -1915,6 +2052,11 @@ function loadGame() {
                 console.log('Calling resetAscensionData()...');
                 resetAscensionData();
                 console.log('After reset - rugpullCurrency:', typeof rugpullCurrency !== 'undefined' ? rugpullCurrency : 'undefined');
+            }
+
+            // Reset lifetime earnings display (rugpull.js variable)
+            if (typeof window.rugpullState !== 'undefined') {
+                window.rugpullState.lifetimeEarningsDisplay = 0;
             }
 
             // Reset hacking minigame data
@@ -1967,6 +2109,15 @@ function loadGame() {
 
             console.log('Calling saveGame() after reset...');
             saveGame();
+
+            // Reinitialize all shops to show fresh UI
+            initBtcShop();
+            initEthShop();
+            initDogeShop();
+            initPowerShop();
+
+            // Force immediate UI update by resetting throttle
+            lastUIUpdateTime = 0;
             updateUI();
             updateStakingUI(); // Update staking display
 
@@ -1984,6 +2135,9 @@ function loadGame() {
             window.location.reload(true);
         }
     }
+
+    // Expose resetGame to window so HTML onclick can call it
+    window.resetGame = resetGame;
 
     function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, corruptTokens, secondsOffline, wasCapped, cappedSeconds) {
         console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, corruptTokens, secondsOffline, wasCapped, cappedSeconds);
@@ -2168,8 +2322,11 @@ function loadGame() {
             const btn = document.createElement('button');
             btn.className = 'u-item';
             btn.id = `up-${u.id}`;
-        // All upgrades use the same purchase function
-        btn.onclick = () => buyLevelMultiple(i, buyQuantity);
+            if (u.isClickUpgrade) {
+                btn.classList.add('click-upgrade');
+            }
+
+            btn.onclick = () => buyLevelMultiple(i, buyQuantity);
 
         const powerReq = equipmentPowerReqs[u.id] || 0;
         const effectivePower = getEffectivePowerRequirement(powerReq);
@@ -2177,7 +2334,7 @@ function loadGame() {
 
         btn.innerHTML = `
             <div style="text-align:left;flex:1">
-                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="mult-${u.id}" style="color:#ff4400;margin-right:4px"></span><span id="lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
                 <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="yield-${u.id}">+0 ₿/s - Current Speed</div>
                 <div style="font-size:0.9rem;color:#f7931a;font-weight:700;display:block;margin-top:3px" id="increase-${u.id}">+0 ₿/s per level</div>
                 ${powerDisplay}
@@ -2186,30 +2343,19 @@ function loadGame() {
                 <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                 <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="afford-${u.id}">x0</span>
             </div>`;
+
+        // Add multiplier badge if any doublings are purchased (show whenever doubleMultiplier > 1)
+        if (!u.isClickUpgrade && u.doubleMultiplier > 1) {
+            // The multiplier will be displayed in the level text via the yield-${u.id} element update
+            // We mark this button with a data attribute for styling
+            btn.setAttribute('data-has-multiplier', 'true');
+            btn.setAttribute('data-multiplier', u.doubleMultiplier);
+        }
+
         container.appendChild(btn);
 
-        // Add boost button only for non-manual upgrades
-        if (!u.isClickUpgrade) {
-            const boostBtn = document.createElement('button');
-            boostBtn.id = `boost-${u.id}`;
-            boostBtn.style.background = '#ff9500';
-            boostBtn.style.border = 'none';
-            boostBtn.style.borderRadius = '0 0 6px 6px';
-            boostBtn.style.padding = '6px 10px';
-            boostBtn.style.fontSize = '0.7rem';
-            boostBtn.style.fontWeight = '700';
-            boostBtn.style.color = '#000';
-            boostBtn.style.cursor = 'pointer';
-            boostBtn.style.marginTop = '-1px';
-            boostBtn.style.width = '100%';
-            boostBtn.style.transition = '0.1s';
-            boostBtn.style.boxShadow = 'inset 0 -2px 4px rgba(0,0,0,0.4)';
-            boostBtn.onclick = () => buyBoost(i);
-            boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$0</span>`;
-            boostBtn.disabled = u.level === 0;
-            boostBtn.setAttribute('data-upgrade-name', u.name);
-            container.appendChild(boostBtn);
-        }
+        // Doubling buttons will be created dynamically by updateDoublingButtons()
+        // No pre-creation needed
         });
     }
 
@@ -2258,7 +2404,7 @@ function loadGame() {
 
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-mult-${u.id}" style="color:#627eea;margin-right:4px"></span><span id="eth-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="eth-yield-${u.id}">+0 Ξ/s - Current Speed</div>
                     <div style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-increase-${u.id}">+0 Ξ/s per level</div>
                     ${powerDisplay}
@@ -2267,29 +2413,20 @@ function loadGame() {
                     <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="eth-usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="eth-afford-${u.id}">x0</span>
                 </div>`;
+
+            // Add multiplier badge if any doublings are purchased AND at a milestone level
+            // Add multiplier badge if any doublings are purchased (show whenever doubleMultiplier > 1)
+            if (!u.isClickUpgrade && u.doubleMultiplier > 1) {
+                // The multiplier will be displayed in the level text via the eth-yield-${u.id} element update
+                // We mark this button with a data attribute for styling
+                btn.setAttribute('data-has-multiplier', 'true');
+                btn.setAttribute('data-multiplier', u.doubleMultiplier);
+            }
+
             container.appendChild(btn);
 
-            // Add boost button only for non-manual upgrades
-            if (!u.isClickUpgrade) {
-                const boostBtn = document.createElement('button');
-                boostBtn.id = `eth-boost-${u.id}`;
-                boostBtn.style.background = '#ff9500';
-                boostBtn.style.border = 'none';
-                boostBtn.style.borderRadius = '6px';
-                boostBtn.style.padding = '6px 10px';
-                boostBtn.style.fontSize = '0.7rem';
-                boostBtn.style.fontWeight = '700';
-                boostBtn.style.color = '#000';
-                boostBtn.style.cursor = 'pointer';
-                boostBtn.style.marginTop = '2px';
-                boostBtn.style.width = '100%';
-                boostBtn.style.transition = '0.1s';
-                boostBtn.onclick = () => buyEthBoost(i);
-                boostBtn.innerHTML = `+10% HASH RATE | <span id="eth-boost-cost-${u.id}">$0</span>`;
-                boostBtn.disabled = u.level === 0;
-                boostBtn.setAttribute('data-upgrade-name', u.name);
-                container.appendChild(boostBtn);
-            }
+            // Doubling buttons will be created dynamically by updateDoublingButtons()
+            // No pre-creation needed
         });
     }
 
@@ -2313,7 +2450,7 @@ function loadGame() {
 
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-mult-${u.id}" style="color:#c2a633;margin-right:4px"></span><span id="doge-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="doge-yield-${u.id}">+0 Ð/s - Current Speed</div>
                     <div style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-increase-${u.id}">+0 Ð/s per level</div>
                     ${powerDisplay}
@@ -2322,29 +2459,19 @@ function loadGame() {
                     <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="doge-usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="doge-afford-${u.id}">x0</span>
                 </div>`;
+
+            // Add multiplier badge if any doublings are purchased (show whenever doubleMultiplier > 1)
+            if (!u.isClickUpgrade && u.doubleMultiplier > 1) {
+                // The multiplier will be displayed in the level text via the doge-yield-${u.id} element update
+                // We mark this button with a data attribute for styling
+                btn.setAttribute('data-has-multiplier', 'true');
+                btn.setAttribute('data-multiplier', u.doubleMultiplier);
+            }
+
             container.appendChild(btn);
 
-            // Add boost button only for non-manual upgrades
-            if (!u.isClickUpgrade) {
-                const boostBtn = document.createElement('button');
-                boostBtn.id = `doge-boost-${u.id}`;
-                boostBtn.style.background = '#ff9500';
-                boostBtn.style.border = 'none';
-                boostBtn.style.borderRadius = '6px';
-                boostBtn.style.padding = '6px 10px';
-                boostBtn.style.fontSize = '0.7rem';
-                boostBtn.style.fontWeight = '700';
-                boostBtn.style.color = '#000';
-                boostBtn.style.cursor = 'pointer';
-                boostBtn.style.marginTop = '2px';
-                boostBtn.style.width = '100%';
-                boostBtn.style.transition = '0.1s';
-                boostBtn.onclick = () => buyDogeBoost(i);
-                boostBtn.innerHTML = `+10% HASH RATE | <span id="doge-boost-cost-${u.id}">$0</span>`;
-                boostBtn.disabled = u.level === 0;
-                boostBtn.setAttribute('data-upgrade-name', u.name);
-                container.appendChild(boostBtn);
-            }
+            // Doubling buttons will be created dynamically by updateDoublingButtons()
+            // No pre-creation needed
         });
     }
 
@@ -2414,6 +2541,249 @@ function loadGame() {
                 el.style.borderColor = '#666';
                 el.style.color = '#fff';
                 el.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.2)';
+            }
+        });
+    }
+
+    // REMOVED: updateDoublingButtons() - Replaced by global multiplier button system
+    function updateDoublingButtons() {
+        // This function is no longer used - per-miner milestone buttons have been replaced with 3 global multiplier buttons
+        return;
+        // OLD CODE BELOW (disabled):
+        // Update BTC doubling buttons
+        upgrades.forEach((u, i) => {
+            if (!u.isClickUpgrade) {
+                const allMilestones = [5, 10, 25, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+                for (let m = 550; m <= 5000; m += 50) {
+                    allMilestones.push(m);
+                }
+
+                // Find the first unpurchased milestone
+                let firstUnpurchasedMilestone = null;
+                for (let milestone of allMilestones) {
+                    const isLocalPurchased = u.milestoneDoublings[milestone];
+                    const isPermanentPurchased = (typeof hasPermanentMilestoneDoubling === 'function' && hasPermanentMilestoneDoubling('btc', milestone));
+                    if (!isLocalPurchased && !isPermanentPurchased) {
+                        firstUnpurchasedMilestone = milestone;
+                        break;
+                    }
+                }
+
+                // Only show button for the first unpurchased milestone (if we've reached it)
+                if (firstUnpurchasedMilestone && u.level >= firstUnpurchasedMilestone) {
+                    const milestone = firstUnpurchasedMilestone;
+                    let btn = document.getElementById(`doubling-${u.id}-${milestone}`);
+
+                    // Create button if it doesn't exist
+                    if (!btn) {
+                        btn = document.createElement('button');
+                        btn.id = `doubling-${u.id}-${milestone}`;
+                        btn.className = 'doubling-btn';
+                        btn.onclick = () => purchaseMilestoneDoubling(i, milestone);
+                        btn.style.border = 'none';
+                        btn.style.borderRadius = '0 0 6px 6px';
+                        btn.style.padding = '8px 10px';
+                        btn.style.fontSize = '0.75rem';
+                        btn.style.fontWeight = '700';
+                        btn.style.marginTop = '-1px';
+                        btn.style.width = '100%';
+                        btn.style.transition = '0.2s';
+
+                        // Insert after the main upgrade button
+                        const mainBtn = document.getElementById(`up-${u.id}`);
+                        if (mainBtn && mainBtn.parentNode) {
+                            const parent = mainBtn.parentNode;
+                            const nextElem = mainBtn.nextElementSibling;
+                            if (nextElem) {
+                                parent.insertBefore(btn, nextElem);
+                            } else {
+                                parent.appendChild(btn);
+                            }
+                        }
+                    }
+
+                    // Show the button
+                    btn.style.display = 'block';
+                    btn.style.pointerEvents = 'auto';
+
+                    // Update button state
+                    const doublingCost = calculateMilestoneDoublingCost(u);
+                    const canAfford = dollarBalance >= doublingCost;
+
+                    if (canAfford) {
+                        btn.style.background = '#ff4400';
+                        btn.innerHTML = `LEVEL ${milestone} | <span id="doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;
+                        btn.style.color = '#fff';
+                        btn.style.cursor = 'pointer';
+                        btn.style.opacity = '1';
+                        btn.style.boxShadow = 'inset 0 -2px 4px rgba(0,0,0,0.4), 0 0 10px rgba(255,68,0,0.6)';
+                    } else {
+                        btn.style.background = '#ff4400';
+                        btn.innerHTML = `LEVEL ${milestone} | <span id="doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;
+                        btn.style.color = '#fff';
+                        btn.style.cursor = 'not-allowed';
+                        btn.style.opacity = '0.6';
+                        btn.style.boxShadow = 'none';
+                    }
+                }
+            }
+        });
+
+        // Update ETH doubling buttons
+        ethUpgrades.forEach((u, i) => {
+            if (!u.isClickUpgrade) {
+                const allMilestones = [5, 10, 25, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+                for (let m = 550; m <= 5000; m += 50) {
+                    allMilestones.push(m);
+                }
+
+                // Find the first unpurchased milestone
+                let firstUnpurchasedMilestone = null;
+                for (let milestone of allMilestones) {
+                    const isLocalPurchased = u.milestoneDoublings[milestone];
+                    const isPermanentPurchased = (typeof hasPermanentMilestoneDoubling === 'function' && hasPermanentMilestoneDoubling('eth', milestone));
+                    if (!isLocalPurchased && !isPermanentPurchased) {
+                        firstUnpurchasedMilestone = milestone;
+                        break;
+                    }
+                }
+
+                // Only show button for the first unpurchased milestone (if we've reached it)
+                if (firstUnpurchasedMilestone && u.level >= firstUnpurchasedMilestone) {
+                    const milestone = firstUnpurchasedMilestone;
+                    let btn = document.getElementById(`eth-doubling-${u.id}-${milestone}`);
+
+                    // Create button if it doesn't exist
+                    if (!btn) {
+                        btn = document.createElement('button');
+                        btn.id = `eth-doubling-${u.id}-${milestone}`;
+                        btn.className = 'doubling-btn';
+                        btn.onclick = () => purchaseMilestoneDoublingEth(i, milestone);
+                        btn.style.border = 'none';
+                        btn.style.borderRadius = '0 0 6px 6px';
+                        btn.style.padding = '8px 10px';
+                        btn.style.fontSize = '0.75rem';
+                        btn.style.fontWeight = '700';
+                        btn.style.marginTop = '-1px';
+                        btn.style.width = '100%';
+                        btn.style.transition = '0.2s';
+
+                        // Insert after the main upgrade button
+                        const mainBtn = document.getElementById(`eth-up-${u.id}`);
+                        if (mainBtn && mainBtn.parentNode) {
+                            const parent = mainBtn.parentNode;
+                            const nextElem = mainBtn.nextElementSibling;
+                            if (nextElem) {
+                                parent.insertBefore(btn, nextElem);
+                            } else {
+                                parent.appendChild(btn);
+                            }
+                        }
+                    }
+
+                    // Show the button
+                    btn.style.display = 'block';
+                    btn.style.pointerEvents = 'auto';
+
+                    // Update button state
+                    const doublingCost = calculateMilestoneDoublingCost(u);
+                    const canAfford = dollarBalance >= doublingCost;
+
+                    if (canAfford) {
+                        btn.style.background = '#627eea';
+                        btn.innerHTML = `LEVEL ${milestone} | <span id="eth-doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;
+                        btn.style.color = '#fff';
+                        btn.style.cursor = 'pointer';
+                        btn.style.opacity = '1';
+                        btn.style.boxShadow = 'inset 0 -2px 4px rgba(0,0,0,0.4), 0 0 10px rgba(98,126,234,0.6)';
+                    } else {
+                        btn.style.background = '#627eea';
+                        btn.innerHTML = `LEVEL ${milestone} | <span id="eth-doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;
+                        btn.style.color = '#fff';
+                        btn.style.cursor = 'not-allowed';
+                        btn.style.opacity = '0.6';
+                        btn.style.boxShadow = 'none';
+                    }
+                }
+            }
+        });
+
+        // Update DOGE doubling buttons
+        dogeUpgrades.forEach((u, i) => {
+            if (!u.isClickUpgrade) {
+                const allMilestones = [5, 10, 25, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+                for (let m = 550; m <= 5000; m += 50) {
+                    allMilestones.push(m);
+                }
+
+                // Find the first unpurchased milestone
+                let firstUnpurchasedMilestone = null;
+                for (let milestone of allMilestones) {
+                    const isLocalPurchased = u.milestoneDoublings[milestone];
+                    const isPermanentPurchased = (typeof hasPermanentMilestoneDoubling === 'function' && hasPermanentMilestoneDoubling('doge', milestone));
+                    if (!isLocalPurchased && !isPermanentPurchased) {
+                        firstUnpurchasedMilestone = milestone;
+                        break;
+                    }
+                }
+
+                // Only show button for the first unpurchased milestone (if we've reached it)
+                if (firstUnpurchasedMilestone && u.level >= firstUnpurchasedMilestone) {
+                    const milestone = firstUnpurchasedMilestone;
+                    let btn = document.getElementById(`doge-doubling-${u.id}-${milestone}`);
+
+                    // Create button if it doesn't exist
+                    if (!btn) {
+                        btn = document.createElement('button');
+                        btn.id = `doge-doubling-${u.id}-${milestone}`;
+                        btn.className = 'doubling-btn';
+                        btn.onclick = () => purchaseMilestoneDoublingDoge(i, milestone);
+                        btn.style.border = 'none';
+                        btn.style.borderRadius = '0 0 6px 6px';
+                        btn.style.padding = '8px 10px';
+                        btn.style.fontSize = '0.75rem';
+                        btn.style.fontWeight = '700';
+                        btn.style.marginTop = '-1px';
+                        btn.style.width = '100%';
+                        btn.style.transition = '0.2s';
+
+                        // Insert after the main upgrade button
+                        const mainBtn = document.getElementById(`doge-up-${u.id}`);
+                        if (mainBtn && mainBtn.parentNode) {
+                            const parent = mainBtn.parentNode;
+                            const nextElem = mainBtn.nextElementSibling;
+                            if (nextElem) {
+                                parent.insertBefore(btn, nextElem);
+                            } else {
+                                parent.appendChild(btn);
+                            }
+                        }
+                    }
+
+                    // Show the button
+                    btn.style.display = 'block';
+                    btn.style.pointerEvents = 'auto';
+
+                    // Update button state
+                    const doublingCost = calculateMilestoneDoublingCost(u);
+                    const canAfford = dollarBalance >= doublingCost;
+
+                    if (canAfford) {
+                        btn.style.background = '#c2a633';
+                        btn.innerHTML = `LEVEL ${milestone} | <span id="doge-doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;
+                        btn.style.color = '#000';
+                        btn.style.cursor = 'pointer';
+                        btn.style.opacity = '1';
+                        btn.style.boxShadow = 'inset 0 -2px 4px rgba(0,0,0,0.4), 0 0 10px rgba(194,166,51,0.6)';
+                    } else {
+                        btn.style.background = '#c2a633';
+                        btn.innerHTML = `LEVEL ${milestone} | <span id="doge-doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;
+                        btn.style.color = '#000';
+                        btn.style.cursor = 'not-allowed';
+                        btn.style.opacity = '0.6';
+                        btn.style.boxShadow = 'none';
+                    }
+                }
             }
         });
     }
@@ -2630,6 +3000,8 @@ function loadGame() {
                 trackPowerStripPurchase();
             }
 
+            // Force immediate UI update by resetting the throttle timer
+            lastUIUpdateTime = 0;
             updateUI();
             saveGame();
             playUpgradeSound();
@@ -4949,8 +5321,8 @@ function buyLevel(i) {
             // Update the main orange button text to show new click value
             document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
-            // ALL OTHER MINERS: Standard 15% increase
-            u.currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
+            // ALL OTHER MINERS: Use milestone doubling multiplier
+            u.currentYield = calculateMinerYield(u);
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         }
 
@@ -4994,7 +5366,7 @@ function buyLevelMultiple(i, quantity) {
             btcClickValue *= 1.12;
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         } else {
-            u.currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
+            u.currentYield = calculateMinerYield(u);
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
         }
 
@@ -5013,105 +5385,261 @@ function buyLevelMultiple(i, quantity) {
             trackUSBMinerPurchase();
         }
 
+        // Force immediate UI update by resetting the throttle timer
+        lastUIUpdateTime = 0;
         updateUI();
         saveGame();
         playUpgradeSound();
     }
 }
 
-function buyBoost(i) {
-    const u = upgrades[i];
+// ========================================
+// MILESTONE DOUBLING SYSTEM FUNCTIONS
+// ========================================
 
-    // Check if upgrade level is 0 (not purchased yet)
-    if (u.level === 0) {
-        return; // Cannot boost if upgrade hasn't been purchased
+/**
+ * Restore permanent milestone doublings from Rugpull system (persists across resets)
+ * This must be called after upgrades are loaded
+ */
+function restorePermanentMilestoneDoublings() {
+    // Helper function to recalculate doubleMultiplier from milestoneDoublings
+    function recalculateMultiplier(upgrade) {
+        if (upgrade.id === 0 || upgrade.isClickUpgrade) return;
+
+        // Count how many doublings are purchased for this upgrade
+        let purchasedCount = 0;
+        if (upgrade.milestoneDoublings && typeof upgrade.milestoneDoublings === 'object') {
+            purchasedCount = Object.values(upgrade.milestoneDoublings).filter(v => v === true).length;
+        }
+
+        // doubleMultiplier = 2^(number of purchased doublings)
+        // Start at 1, then multiply by 2 for each purchased doubling
+        upgrade.doubleMultiplier = Math.pow(2, purchasedCount);
     }
 
-    const costUsd = u.boostCost;
+    // Restore BTC doublings
+    upgrades.forEach(u => {
+        recalculateMultiplier(u);
 
-    if (dollarBalance >= costUsd) {
-        dollarBalance -= costUsd;
-        hardwareEquity += u.boostCost;
-        u.boostLevel++;
+        // Apply permanent multiplier from Rugpull system if available
+        if (typeof getPermanentDoubleMultiplier === 'function') {
+            const btcMultiplier = getPermanentDoubleMultiplier('btc') || 1;
+            if (btcMultiplier > 1 && u.id !== 0 && !u.isClickUpgrade) {
+                u.doubleMultiplier *= btcMultiplier;
+            }
+        }
+    });
 
-        // Increase yield by 10% permanently
-        u.currentYield *= 1.10;
+    // Restore ETH doublings
+    ethUpgrades.forEach(u => {
+        recalculateMultiplier(u);
 
-        // Double the boost cost for next purchase
-        u.boostCost *= 2;
+        if (typeof getPermanentDoubleMultiplier === 'function') {
+            const ethMultiplier = getPermanentDoubleMultiplier('eth') || 1;
+            if (ethMultiplier > 1 && u.id !== 0 && !u.isClickUpgrade) {
+                u.doubleMultiplier *= ethMultiplier;
+            }
+        }
+    });
 
-        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        updateUI();
-        saveGame();
+    // Restore DOGE doublings
+    dogeUpgrades.forEach(u => {
+        recalculateMultiplier(u);
 
-        // Play upgrade sound
-        playUpgradeSound();
+        if (typeof getPermanentDoubleMultiplier === 'function') {
+            const dogeMultiplier = getPermanentDoubleMultiplier('doge') || 1;
+            if (dogeMultiplier > 1 && u.id !== 0 && !u.isClickUpgrade) {
+                u.doubleMultiplier *= dogeMultiplier;
+            }
+        }
+    });
+}
+
+/**
+ * Calculate miner yield including milestone doubling multiplier
+ */
+function calculateMinerYield(u) {
+    if (u.id === 0 || u.isClickUpgrade) {
+        return 0;  // Click upgrades don't use this formula
+    }
+    const baseYield = u.baseYield * u.level;
+    let multiplier = u.doubleMultiplier;
+
+    // Apply global multiplier based on crypto type
+    if (btcUpgrades.includes(u)) {
+        multiplier *= Math.pow(2, btcMultiplierLevel);
+    } else if (ethUpgrades.includes(u)) {
+        multiplier *= Math.pow(2, ethMultiplierLevel);
+    } else if (dogeUpgrades.includes(u)) {
+        multiplier *= Math.pow(2, dogeMultiplierLevel);
+    }
+
+    return baseYield * multiplier;
+}
+
+/**
+ * Purchase global 2x multiplier for BTC (applies to ALL BTC miners)
+ */
+function purchaseGlobalBTCMultiplier() {
+    const cost = getNextMultiplierCost(btcMultiplierLevel);
+
+    if (dollarBalance < cost) {
+        console.log(`[DEBUG] Cannot afford BTC multiplier. Cost: $${cost}, Balance: $${dollarBalance}`);
+        return;
+    }
+
+    dollarBalance -= cost;
+    hardwareEquity += cost;
+    btcMultiplierLevel++;
+
+    console.log(`[DEBUG] Purchased BTC multiplier ${btcMultiplierLevel}! Next cost: $${getNextMultiplierCost(btcMultiplierLevel)}`);
+
+    // Recalculate yields for all BTC miners
+    const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+    upgrades.forEach(u => {
+        if (!u.isClickUpgrade) {
+            u.currentYield = calculateMinerYield(u);
+        }
+    });
+    btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+
+    // Force UI update by resetting throttle timer
+    lastUIUpdateTime = 0;
+    initBtcShop();  // Reinitialize shop to show updated yields
+    updateUI();
+    saveGame();
+    playUpgradeSound();
+}
+
+/**
+ * Purchase global 2x multiplier for ETH (applies to ALL ETH miners)
+ */
+function purchaseGlobalETHMultiplier() {
+    const cost = getNextMultiplierCost(ethMultiplierLevel);
+
+    if (dollarBalance < cost) {
+        console.log(`[DEBUG] Cannot afford ETH multiplier. Cost: $${cost}, Balance: $${dollarBalance}`);
+        return;
+    }
+
+    dollarBalance -= cost;
+    hardwareEquity += cost;
+    ethMultiplierLevel++;
+
+    console.log(`[DEBUG] Purchased ETH multiplier ${ethMultiplierLevel}! Next cost: $${getNextMultiplierCost(ethMultiplierLevel)}`);
+
+    // Recalculate yields for all ETH miners
+    const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+    ethUpgrades.forEach(u => {
+        if (!u.isClickUpgrade) {
+            u.currentYield = calculateMinerYield(u);
+        }
+    });
+    ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+    window.ethPerSec = ethPerSec;
+
+    // Force UI update by resetting throttle timer
+    lastUIUpdateTime = 0;
+    initEthShop();  // Reinitialize shop to show updated yields
+    updateUI();
+    saveGame();
+    playUpgradeSound();
+}
+
+/**
+ * Purchase global 2x multiplier for DOGE (applies to ALL DOGE miners)
+ */
+function purchaseGlobalDogeMultiplier() {
+    const cost = getNextMultiplierCost(dogeMultiplierLevel);
+
+    if (dollarBalance < cost) {
+        console.log(`[DEBUG] Cannot afford DOGE multiplier. Cost: $${cost}, Balance: $${dollarBalance}`);
+        return;
+    }
+
+    dollarBalance -= cost;
+    hardwareEquity += cost;
+    dogeMultiplierLevel++;
+
+    console.log(`[DEBUG] Purchased DOGE multiplier ${dogeMultiplierLevel}! Next cost: $${getNextMultiplierCost(dogeMultiplierLevel)}`);
+
+    // Recalculate yields for all DOGE miners
+    const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
+    dogeUpgrades.forEach(u => {
+        if (!u.isClickUpgrade) {
+            u.currentYield = calculateMinerYield(u);
+        }
+    });
+    dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
+    window.dogePerSec = dogePerSec;
+
+    // Force UI update by resetting throttle timer
+    lastUIUpdateTime = 0;
+    initDogeShop();  // Reinitialize shop to show updated yields
+    updateUI();
+    saveGame();
+    playUpgradeSound();
+}
+
+/**
+ * Update the display of global multiplier buttons (called from updateUI)
+ */
+function updateGlobalMultiplierButtons() {
+    // Update BTC multiplier button
+    const btcBtn = document.getElementById('btc-global-multiplier-btn');
+    if (btcBtn) {
+        const btcNextCost = getNextMultiplierCost(btcMultiplierLevel);
+        const btcCanAfford = dollarBalance >= btcNextCost;
+        const btcMultiplier = Math.pow(2, btcMultiplierLevel);
+
+        document.getElementById('btc-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(btcNextCost)}`;
+        document.getElementById('btc-multiplier-level').innerHTML = `Multiplier: ${btcMultiplier}x`;
+
+        btcBtn.style.opacity = btcCanAfford ? '1' : '0.5';
+        btcBtn.style.cursor = btcCanAfford ? 'pointer' : 'not-allowed';
+        btcBtn.disabled = !btcCanAfford;
+    }
+
+    // Update ETH multiplier button
+    const ethBtn = document.getElementById('eth-global-multiplier-btn');
+    if (ethBtn) {
+        const ethNextCost = getNextMultiplierCost(ethMultiplierLevel);
+        const ethCanAfford = dollarBalance >= ethNextCost;
+        const ethMultiplier = Math.pow(2, ethMultiplierLevel);
+
+        document.getElementById('eth-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(ethNextCost)}`;
+        document.getElementById('eth-multiplier-level').innerHTML = `Multiplier: ${ethMultiplier}x`;
+
+        ethBtn.style.opacity = ethCanAfford ? '1' : '0.5';
+        ethBtn.style.cursor = ethCanAfford ? 'pointer' : 'not-allowed';
+        ethBtn.disabled = !ethCanAfford;
+    }
+
+    // Update DOGE multiplier button
+    const dogeBtn = document.getElementById('doge-global-multiplier-btn');
+    if (dogeBtn) {
+        const dogeNextCost = getNextMultiplierCost(dogeMultiplierLevel);
+        const dogeCanAfford = dollarBalance >= dogeNextCost;
+        const dogeMultiplier = Math.pow(2, dogeMultiplierLevel);
+
+        document.getElementById('doge-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(dogeNextCost)}`;
+        document.getElementById('doge-multiplier-level').innerHTML = `Multiplier: ${dogeMultiplier}x`;
+
+        dogeBtn.style.opacity = dogeCanAfford ? '1' : '0.5';
+        dogeBtn.style.cursor = dogeCanAfford ? 'pointer' : 'not-allowed';
+        dogeBtn.disabled = !dogeCanAfford;
     }
 }
 
-function buyEthBoost(i) {
-    const u = ethUpgrades[i];
+// REMOVED: purchaseMilestoneDoubling() - Replaced by global multiplier system
 
-    // Check if upgrade level is 0 (not purchased yet)
-    if (u.level === 0) {
-        return; // Cannot boost if upgrade hasn't been purchased
-    }
+// REMOVED: purchaseMilestoneDoublingEth() - Replaced by global multiplier system
 
-    const costUsd = u.boostCost;
+// REMOVED: purchaseMilestoneDoublingDoge() - Replaced by global multiplier system
 
-    if (dollarBalance >= costUsd) {
-        dollarBalance -= costUsd;
-        hardwareEquity += u.boostCost;
-        u.boostLevel++;
-
-        // Increase yield by 10% permanently
-        u.currentYield *= 1.10;
-
-        // Double the boost cost for next purchase
-        u.boostCost *= 2;
-
-        const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
-        window.ethPerSec = ethPerSec; // Make globally accessible for minigames
-        updateUI();
-        saveGame();
-
-        // Play upgrade sound
-        playUpgradeSound();
-    }
-}
-
-function buyDogeBoost(i) {
-    const u = dogeUpgrades[i];
-
-    // Check if upgrade level is 0 (not purchased yet)
-    if (u.level === 0) {
-        return; // Cannot boost if upgrade hasn't been purchased
-    }
-
-    const costUsd = u.boostCost;
-
-    if (dollarBalance >= costUsd) {
-        dollarBalance -= costUsd;
-        hardwareEquity += u.boostCost;
-        u.boostLevel++;
-
-        // Increase yield by 10% permanently
-        u.currentYield *= 1.10;
-
-        // Double the boost cost for next purchase
-        u.boostCost *= 2;
-
-        const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
-        window.dogePerSec = dogePerSec; // Make globally accessible for minigames
-        updateUI();
-        saveGame();
-
-        // Play upgrade sound
-        playUpgradeSound();
-    }
-}
+// OLD BOOST FUNCTIONS REMOVED - Replaced by milestone doubling system
+// buyBoost(), buyEthBoost(), buyDogeBoost() are no longer used
+// Use purchaseMilestoneDoubling(), purchaseMilestoneDoublingEth(), purchaseMilestoneDoublingDoge() instead
 
     // Ethereum buy functions
     function buyEthLevel(i, quantity) {
@@ -5146,7 +5674,7 @@ function buyDogeBoost(i) {
                 // Update the ETH button text to show new click value
                 document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
             } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
+                u.currentYield = calculateMinerYield(u);
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
             }
 
@@ -5158,6 +5686,8 @@ function buyDogeBoost(i) {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
             window.ethPerSec = ethPerSec; // Make globally accessible for minigames
+            // Force immediate UI update by resetting the throttle timer
+            lastUIUpdateTime = 0;
             updateUI();
             saveGame();
             playUpgradeSound();
@@ -5197,7 +5727,7 @@ function buyDogeBoost(i) {
                 // Update the DOGE button text to show new click value
                 document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
             } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
+                u.currentYield = calculateMinerYield(u);
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
             }
 
@@ -5209,6 +5739,8 @@ function buyDogeBoost(i) {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
             window.dogePerSec = dogePerSec; // Make globally accessible for minigames
+            // Force immediate UI update by resetting the throttle timer
+            lastUIUpdateTime = 0;
             updateUI();
             saveGame();
             playUpgradeSound();
@@ -5591,6 +6123,24 @@ function buyDogeBoost(i) {
         }
         lastUIUpdateTime = now;
 
+        // Update global multiplier buttons (cost and affordability)
+        try {
+            updateGlobalMultiplierButtons();
+        } catch (e) {
+            console.error('Error updating global multiplier buttons:', e);
+        }
+
+        // Update doubling button states every 100ms (don't recreate, just update visibility and clickability)
+        const timeSinceLastShopUpdate = now - lastShopReinitTime;
+        if (timeSinceLastShopUpdate >= 100) {
+            try {
+                updateDoublingButtons();
+                lastShopReinitTime = now;
+            } catch (e) {
+                console.error('Error updating doubling buttons:', e);
+            }
+        }
+
         // Update rugpull progress display and UI (calls rugpull.js function)
         if (typeof window.updateAscensionUI === 'function') {
             window.updateAscensionUI();
@@ -5917,12 +6467,13 @@ function buyDogeBoost(i) {
         if (u.isClickUpgrade) {
             yEl.innerText = `+10% MANUAL HASH RATE`;
         } else {
-            // Show the current speed WITH skill bonuses AND ascension bonus applied
+            // Show the current speed WITH skill bonuses AND ascension bonus AND doubling multiplier AND global multiplier applied
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus + ascensionBonus);
+            const baseSpeed = u.baseYield * u.level;
+            const globalMultiplier = Math.pow(2, btcMultiplierLevel);  // Apply global multiplier
+            const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus + ascensionBonus) * u.doubleMultiplier * globalMultiplier;
             yEl.innerText = `+${formatCryptoYield(currentSpeed)} ₿/s - Current Speed`;
         }
     }
@@ -5936,8 +6487,9 @@ function buyDogeBoost(i) {
             const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.15, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus + ascensionBonus);
+            const baseIncrease = u.baseYield;
+            const globalMultiplier = Math.pow(2, btcMultiplierLevel);  // Apply global multiplier
+            const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus + ascensionBonus) * u.doubleMultiplier * globalMultiplier;
             increaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} ₿/s per level`;
             increaseEl.style.display = 'block';
         }
@@ -6017,7 +6569,15 @@ function buyDogeBoost(i) {
         const availablePower = getTotalPowerAvailableWithBonus();
         const hasEnoughPower = powerNeeded <= availablePower || powerReq === 0;
         const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
-        bEl.disabled = shouldDisable;
+        // Don't set disabled attribute - it prevents click events. Use CSS opacity/cursor instead
+        // bEl.disabled = shouldDisable;
+        if (shouldDisable) {
+            bEl.style.opacity = '0.2';
+            bEl.style.cursor = 'not-allowed';
+        } else {
+            bEl.style.opacity = '1';
+            bEl.style.cursor = 'pointer';
+        }
         if (u.id === 1) console.log(`USB Miner: dollars=${dollarBalance}/${totalCost}, power=${totalPowerUsed}/${availablePower}, needed=${powerNeeded}, qty=${buyQuantity}, disabled=${shouldDisable}`);
 
         // Ensure button has relative positioning for overlay to work
@@ -6044,6 +6604,7 @@ function buyDogeBoost(i) {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
                 bEl.appendChild(overlay);
             } else {
@@ -6068,6 +6629,7 @@ function buyDogeBoost(i) {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
                 bEl.appendChild(overlay);
             } else {
@@ -6092,6 +6654,7 @@ function buyDogeBoost(i) {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE POWER';
                 bEl.appendChild(overlay);
             } else {
@@ -6109,33 +6672,27 @@ function buyDogeBoost(i) {
     const lEl = document.getElementById(`lvl-txt-${u.id}`);
     if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
 
-    // Update boost button
-    const boostCostBtc = u.boostCost / btcPrice;
-    const boostCostEl = document.getElementById(`boost-cost-${u.id}`);
-    if(boostCostEl) boostCostEl.innerText = `$${Math.floor(u.boostCost).toLocaleString()}`;
+    // Update multiplier display - show whenever a doubling has been purchased
+    const multEl = document.getElementById(`mult-${u.id}`);
+    if(multEl) multEl.innerText = (u.doubleMultiplier > 1) ? `[${u.doubleMultiplier}×]` : '';
 
-    // Format the current yield amount (after all boosts applied)
-    const currentYield = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
-    const boostAmtEl = document.getElementById(`boost-amt-${u.id}`);
-    if(boostAmtEl) {
-        if (currentYield >= 1) {
-            boostAmtEl.innerText = currentYield.toFixed(2);
-        } else if (currentYield >= 0.0001) {
-            boostAmtEl.innerText = (currentYield * 1000000).toFixed(0) + 'μ';
-        } else if (currentYield > 0) {
-            boostAmtEl.innerText = (currentYield * 1000000000).toFixed(0);
-        } else {
-            boostAmtEl.innerText = '0';
-        }
+    // Update doubling button cost display
+    const doublingCostEl = document.getElementById(`doubling-cost-${u.id}`);
+    if(doublingCostEl) {
+        const doublingCost = calculateMilestoneDoublingCost(u);
+        doublingCostEl.innerText = `$${Math.floor(doublingCost).toLocaleString()}`;
     }
 
-    const boostBtn = document.getElementById(`boost-${u.id}`);
-    if(boostBtn) {
-        boostBtn.disabled = (u.level === 0 || dollarBalance < u.boostCost);
-        if (u.level === 0) {
-            boostBtn.innerHTML = `Purchase ${u.name} first`;
+    // Update doubling button availability
+    const doublingBtn = document.getElementById(`doubling-${u.id}`);
+    if(doublingBtn) {
+        const doublingCost = calculateMilestoneDoublingCost(u);
+        // Don't set disabled attribute - it prevents click events. Use CSS instead
+        const canAfford = dollarBalance >= doublingCost;
+        if (!canAfford) {
+            doublingBtn.style.opacity = '0.6';
         } else {
-            boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$${Math.floor(u.boostCost).toLocaleString()}</span>`;
+            doublingBtn.style.opacity = '1';
         }
     }
 });
@@ -6148,12 +6705,13 @@ ethUpgrades.forEach(u => {
         if (u.isClickUpgrade) {
             yEl.innerText = `+10% MANUAL ETH RATE`;
         } else {
-            // Show the current speed WITH skill bonuses AND ascension bonus applied
+            // Show the current speed WITH skill bonuses AND ascension bonus AND doubling multiplier AND global multiplier applied
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus + ascensionBonus);
+            const baseSpeed = u.baseYield * u.level;
+            const globalMultiplier = Math.pow(2, ethMultiplierLevel);  // Apply global multiplier
+            const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus + ascensionBonus) * u.doubleMultiplier * globalMultiplier;
             yEl.innerText = `+${formatCryptoYield(currentSpeed)} Ξ/s - Current Speed`;
         }
     }
@@ -6167,8 +6725,9 @@ ethUpgrades.forEach(u => {
             const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.15, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus + ascensionBonus);
+            const baseIncrease = u.baseYield;
+            const globalMultiplier = Math.pow(2, ethMultiplierLevel);  // Apply global multiplier
+            const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus + ascensionBonus) * u.doubleMultiplier * globalMultiplier;
             ethIncreaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} Ξ/s per level`;
             ethIncreaseEl.style.display = 'block';
         }
@@ -6242,7 +6801,16 @@ ethUpgrades.forEach(u => {
         const powerNeeded = totalPowerUsed + (powerReq * buyQuantity);
         const ethAvailablePower = getTotalPowerAvailableWithBonus();
         const hasEnoughPower = powerNeeded <= ethAvailablePower || powerReq === 0;
-        bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
+        const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
+        // Don't set disabled attribute - it prevents click events. Use CSS opacity/cursor instead
+        // bEl.disabled = shouldDisable;
+        if (shouldDisable) {
+            bEl.style.opacity = '0.2';
+            bEl.style.cursor = 'not-allowed';
+        } else {
+            bEl.style.opacity = '1';
+            bEl.style.cursor = 'pointer';
+        }
 
         // Ensure button has relative positioning for overlay to work
         if (bEl.style.position !== 'absolute' && bEl.style.position !== 'fixed') {
@@ -6268,6 +6836,7 @@ ethUpgrades.forEach(u => {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
                 bEl.appendChild(overlay);
             } else {
@@ -6292,6 +6861,7 @@ ethUpgrades.forEach(u => {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
                 bEl.appendChild(overlay);
             } else {
@@ -6316,6 +6886,7 @@ ethUpgrades.forEach(u => {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE POWER';
                 bEl.appendChild(overlay);
             } else {
@@ -6333,15 +6904,22 @@ ethUpgrades.forEach(u => {
     const lEl = document.getElementById(`eth-lvl-txt-${u.id}`);
     if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
 
-    // Update ETH boost button
-    const ethBoostBtn = document.getElementById(`eth-boost-${u.id}`);
-    if(ethBoostBtn) {
-        ethBoostBtn.disabled = (u.level === 0 || dollarBalance < u.boostCost);
-        if (u.level === 0) {
-            ethBoostBtn.innerHTML = `Purchase ${u.name} first`;
-        } else {
-            ethBoostBtn.innerHTML = `+10% HASH RATE | <span id="eth-boost-cost-${u.id}">$${Math.floor(u.boostCost).toLocaleString()}</span>`;
-        }
+    // Update multiplier display for ETH - show whenever a doubling has been purchased
+    const ethMultEl = document.getElementById(`eth-mult-${u.id}`);
+    if(ethMultEl) ethMultEl.innerText = (u.doubleMultiplier > 1) ? `[${u.doubleMultiplier}×]` : '';
+
+    // Update ETH doubling button cost display
+    const ethDoublingCostEl = document.getElementById(`eth-doubling-cost-${u.id}`);
+    if(ethDoublingCostEl) {
+        const doublingCost = calculateMilestoneDoublingCost(u);
+        ethDoublingCostEl.innerText = `$${Math.floor(doublingCost).toLocaleString()}`;
+    }
+
+    // Update ETH doubling button availability
+    const ethDoublingBtn = document.getElementById(`eth-doubling-${u.id}`);
+    if(ethDoublingBtn) {
+        const doublingCost = calculateMilestoneDoublingCost(u);
+        ethDoublingBtn.disabled = (dollarBalance < doublingCost);
     }
 });
 
@@ -6353,12 +6931,13 @@ dogeUpgrades.forEach(u => {
         if (u.isClickUpgrade) {
             yEl.innerText = `+10% MANUAL DOGE RATE`;
         } else {
-            // Show the current speed WITH skill bonuses AND ascension bonus applied
+            // Show the current speed WITH skill bonuses AND ascension bonus AND doubling multiplier AND global multiplier applied
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.15, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus + ascensionBonus);
+            const baseSpeed = u.baseYield * u.level;
+            const globalMultiplier = Math.pow(2, dogeMultiplierLevel);  // Apply global multiplier
+            const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus + ascensionBonus) * u.doubleMultiplier * globalMultiplier;
             yEl.innerText = `+${formatCryptoYield(currentSpeed)} Ð/s - Current Speed`;
         }
     }
@@ -6372,8 +6951,9 @@ dogeUpgrades.forEach(u => {
             const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
             const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.15, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus + ascensionBonus);
+            const baseIncrease = u.baseYield;
+            const globalMultiplier = Math.pow(2, dogeMultiplierLevel);  // Apply global multiplier
+            const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus + ascensionBonus) * u.doubleMultiplier * globalMultiplier;
             dogeIncreaseEl.innerText = `+${formatCryptoYield(perLevelIncrease)} Ð/s per level`;
             dogeIncreaseEl.style.display = 'block';
         }
@@ -6447,7 +7027,16 @@ dogeUpgrades.forEach(u => {
         const powerNeeded = totalPowerUsed + (powerReq * buyQuantity);
         const dogeAvailablePower = getTotalPowerAvailableWithBonus();
         const hasEnoughPower = powerNeeded <= dogeAvailablePower || powerReq === 0;
-        bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
+        const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
+        // Don't set disabled attribute - it prevents click events. Use CSS opacity/cursor instead
+        // bEl.disabled = shouldDisable;
+        if (shouldDisable) {
+            bEl.style.opacity = '0.2';
+            bEl.style.cursor = 'not-allowed';
+        } else {
+            bEl.style.opacity = '1';
+            bEl.style.cursor = 'pointer';
+        }
 
         // Ensure button has relative positioning for overlay to work
         if (bEl.style.position !== 'absolute' && bEl.style.position !== 'fixed') {
@@ -6473,6 +7062,7 @@ dogeUpgrades.forEach(u => {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
                 bEl.appendChild(overlay);
             } else {
@@ -6497,6 +7087,7 @@ dogeUpgrades.forEach(u => {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE CASH';
                 bEl.appendChild(overlay);
             } else {
@@ -6521,6 +7112,7 @@ dogeUpgrades.forEach(u => {
                 overlay.style.fontSize = '1.1rem';
                 overlay.style.textAlign = 'center';
                 overlay.style.zIndex = '9999';
+                overlay.style.pointerEvents = 'none';
                 overlay.innerHTML = 'YOU NEED MORE POWER';
                 bEl.appendChild(overlay);
             } else {
@@ -6538,15 +7130,22 @@ dogeUpgrades.forEach(u => {
     const lEl = document.getElementById(`doge-lvl-txt-${u.id}`);
     if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
 
-    // Update DOGE boost button
-    const dogeBoostBtn = document.getElementById(`doge-boost-${u.id}`);
-    if(dogeBoostBtn) {
-        dogeBoostBtn.disabled = (u.level === 0 || dollarBalance < u.boostCost);
-        if (u.level === 0) {
-            dogeBoostBtn.innerHTML = `Purchase ${u.name} first`;
-        } else {
-            dogeBoostBtn.innerHTML = `+10% HASH RATE | <span id="doge-boost-cost-${u.id}">$${Math.floor(u.boostCost).toLocaleString()}</span>`;
-        }
+    // Update multiplier display for DOGE - show whenever a doubling has been purchased
+    const dogeMultEl = document.getElementById(`doge-mult-${u.id}`);
+    if(dogeMultEl) dogeMultEl.innerText = (u.doubleMultiplier > 1) ? `[${u.doubleMultiplier}×]` : '';
+
+    // Update DOGE doubling button cost display
+    const dogeDoublingCostEl = document.getElementById(`doge-doubling-cost-${u.id}`);
+    if(dogeDoublingCostEl) {
+        const doublingCost = calculateMilestoneDoublingCost(u);
+        dogeDoublingCostEl.innerText = `$${Math.floor(doublingCost).toLocaleString()}`;
+    }
+
+    // Update DOGE doubling button availability
+    const dogeDoublingBtn = document.getElementById(`doge-doubling-${u.id}`);
+    if(dogeDoublingBtn) {
+        const doublingCost = calculateMilestoneDoublingCost(u);
+        dogeDoublingBtn.disabled = (dollarBalance < doublingCost);
     }
     });
 
@@ -6636,14 +7235,13 @@ dogeUpgrades.forEach(u => {
         }
 
         // Update gameState with current values for rugpull.js
-        // lifetimeEarnings = current run earnings (resets on rugpull)
+        // lifetimeEarnings = lifetime total (never resets)
         window.gameState.lifetimeEarnings = lifetimeEarnings;
         window.gameState.dollarBalance = dollarBalance;
 
-        // Update currentRunEarnings for rugpull tracking (this is lifetimeEarnings since last rugpull)
-        if (typeof window.updateCurrentRunEarnings === 'function') {
-            window.updateCurrentRunEarnings(lifetimeEarnings);
-        }
+        // Note: rugpull earnings are tracked via addEarnings() → rugpullAddEarnings()
+        // We don't need to call updateCurrentRunEarnings here as it would overwrite
+        // the incremental updates from rugpullAddEarnings()
 
         updateUI();
         updateAutoClickerButtonState();
