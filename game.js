@@ -1,6 +1,6 @@
     // Calculate cost for the next multiplier purchase (exponential scaling)
     function getNextMultiplierCost(level) {
-        const baseCosts = [10000, 100000, 1000000, 1000000000]; // 10k, 100k, 1m, 1b
+        const baseCosts = [1500000, 15000000, 150000000, 1500000000]; // 1.5m, 15m, 150m, 1.5b
         if (level < baseCosts.length) {
             return baseCosts[level];
         }
