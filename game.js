@@ -2676,12 +2676,21 @@ function loadGame() {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active'));
 
+        // Also remove active class from power upgrade button
+        const powerBtn = document.getElementById('power-upgrade-btn');
+        if (powerBtn) powerBtn.classList.remove('active');
+
         const tabElement = document.getElementById(tab + '-tab');
         tabElement.classList.add('active');
 
         // Add active class to the button that was clicked
         if (event && event.target) {
             event.target.classList.add('active');
+        }
+
+        // Ensure power upgrade button is active when switching to power tab
+        if (tab === 'power' && powerBtn) {
+            powerBtn.classList.add('active');
         }
 
         // Update power chart if switching to power tab
@@ -5836,8 +5845,27 @@ function purchaseBTCManualHashRate() {
         }
     }
 
-    lastUIUpdateTime = 0;
-    updateUI();
+    // Only update the BTC manual hash rate button, not all buttons
+    const btcMHRBtn = document.getElementById('btc-manual-hash-rate-btn');
+    if (btcMHRBtn) {
+        const btcMHRCost = getManualHashRateCost(btcManualHashRateLevel);
+        const btcMHRCanAfford = dollarBalance >= btcMHRCost;
+        const btcMHRMultiplier = Math.pow(1.1, btcManualHashRateLevel);
+
+        document.getElementById('btc-mhr-cost').innerHTML = `$${formatNumberForDisplay(btcMHRCost)}`;
+        document.getElementById('btc-mhr-multi').innerHTML = `${btcMHRMultiplier.toFixed(1)}x`;
+
+        if (!btcMHRCanAfford) {
+            btcMHRBtn.style.opacity = '0.45';
+            btcMHRBtn.style.cursor = 'not-allowed';
+            btcMHRBtn.disabled = true;
+        } else {
+            btcMHRBtn.style.opacity = '1';
+            btcMHRBtn.style.cursor = 'pointer';
+            btcMHRBtn.disabled = false;
+        }
+    }
+
     saveGame();
     playUpgradeSound();
 }
@@ -5868,8 +5896,27 @@ function purchaseETHManualHashRate() {
         }
     }
 
-    lastUIUpdateTime = 0;
-    updateUI();
+    // Only update the ETH manual hash rate button, not all buttons
+    const ethMHRBtn = document.getElementById('eth-manual-hash-rate-btn');
+    if (ethMHRBtn) {
+        const ethMHRCost = getManualHashRateCost(ethManualHashRateLevel);
+        const ethMHRCanAfford = dollarBalance >= ethMHRCost;
+        const ethMHRMultiplier = Math.pow(1.1, ethManualHashRateLevel);
+
+        document.getElementById('eth-mhr-cost').innerHTML = `$${formatNumberForDisplay(ethMHRCost)}`;
+        document.getElementById('eth-mhr-multi').innerHTML = `${ethMHRMultiplier.toFixed(1)}x`;
+
+        if (!ethMHRCanAfford) {
+            ethMHRBtn.style.opacity = '0.45';
+            ethMHRBtn.style.cursor = 'not-allowed';
+            ethMHRBtn.disabled = true;
+        } else {
+            ethMHRBtn.style.opacity = '1';
+            ethMHRBtn.style.cursor = 'pointer';
+            ethMHRBtn.disabled = false;
+        }
+    }
+
     saveGame();
     playUpgradeSound();
 }
@@ -5900,8 +5947,27 @@ function purchaseDOGEManualHashRate() {
         }
     }
 
-    lastUIUpdateTime = 0;
-    updateUI();
+    // Only update the DOGE manual hash rate button, not all buttons
+    const dogeMHRBtn = document.getElementById('doge-manual-hash-rate-btn');
+    if (dogeMHRBtn) {
+        const dogeMHRCost = getManualHashRateCost(dogeManualHashRateLevel);
+        const dogeMHRCanAfford = dollarBalance >= dogeMHRCost;
+        const dogeMHRMultiplier = Math.pow(1.1, dogeManualHashRateLevel);
+
+        document.getElementById('doge-mhr-cost').innerHTML = `$${formatNumberForDisplay(dogeMHRCost)}`;
+        document.getElementById('doge-mhr-multi').innerHTML = `${dogeMHRMultiplier.toFixed(1)}x`;
+
+        if (!dogeMHRCanAfford) {
+            dogeMHRBtn.style.opacity = '0.45';
+            dogeMHRBtn.style.cursor = 'not-allowed';
+            dogeMHRBtn.disabled = true;
+        } else {
+            dogeMHRBtn.style.opacity = '1';
+            dogeMHRBtn.style.cursor = 'pointer';
+            dogeMHRBtn.disabled = false;
+        }
+    }
+
     saveGame();
     playUpgradeSound();
 }
@@ -5988,9 +6054,11 @@ function updateManualHashRateButtons() {
         if (!btcMHRCanAfford) {
             btcMHRBtn.style.opacity = '0.45';
             btcMHRBtn.style.cursor = 'not-allowed';
+            btcMHRBtn.disabled = true;
         } else {
             btcMHRBtn.style.opacity = '1';
             btcMHRBtn.style.cursor = 'pointer';
+            btcMHRBtn.disabled = false;
         }
     }
 
@@ -6007,9 +6075,11 @@ function updateManualHashRateButtons() {
         if (!ethMHRCanAfford) {
             ethMHRBtn.style.opacity = '0.45';
             ethMHRBtn.style.cursor = 'not-allowed';
+            ethMHRBtn.disabled = true;
         } else {
             ethMHRBtn.style.opacity = '1';
             ethMHRBtn.style.cursor = 'pointer';
+            ethMHRBtn.disabled = false;
         }
     }
 
@@ -6026,9 +6096,11 @@ function updateManualHashRateButtons() {
         if (!dogeMHRCanAfford) {
             dogeMHRBtn.style.opacity = '0.45';
             dogeMHRBtn.style.cursor = 'not-allowed';
+            dogeMHRBtn.disabled = true;
         } else {
             dogeMHRBtn.style.opacity = '1';
             dogeMHRBtn.style.cursor = 'pointer';
+            dogeMHRBtn.disabled = false;
         }
     }
 }
@@ -6789,12 +6861,20 @@ function updateManualHashRateButtons() {
         document.getElementById('eth-price').innerText = "$" + formatCryptoPrice(ethPrice);
         document.getElementById('doge-price').innerText = "$" + formatCryptoPrice(dogePrice);
 
-        // Update dollar balance
+        // Update dollar balance display
+        const dollarText = "$" + formatNumberForDisplay(dollarBalance);
         const dollarBalanceEl = document.getElementById('dollar-balance');
-        if (dollarBalanceEl) dollarBalanceEl.innerText = "$" + formatNumberForDisplay(dollarBalance);
-
-        const dollarBalanceMiniEl = document.getElementById('dollar-balance-mini');
-        if (dollarBalanceMiniEl) dollarBalanceMiniEl.innerText = "$" + formatNumberForDisplay(dollarBalance);
+        if (dollarBalanceEl) dollarBalanceEl.innerText = dollarText;
+        const dollarBalanceBtcEl = document.getElementById('dollar-balance-btc');
+        if (dollarBalanceBtcEl) dollarBalanceBtcEl.innerText = dollarText;
+        const dollarBalanceEthEl = document.getElementById('dollar-balance-eth');
+        if (dollarBalanceEthEl) dollarBalanceEthEl.innerText = dollarText;
+        const dollarBalanceDogeEl = document.getElementById('dollar-balance-doge');
+        if (dollarBalanceDogeEl) dollarBalanceDogeEl.innerText = dollarText;
+        const dollarBalancePowerEl = document.getElementById('dollar-balance-power');
+        if (dollarBalancePowerEl) dollarBalancePowerEl.innerText = dollarText;
+        const dollarBalanceExchangeEl = document.getElementById('dollar-balance-exchange');
+        if (dollarBalanceExchangeEl) dollarBalanceExchangeEl.innerText = dollarText;
 
         // Update market prices
         const marketBtcPrice = document.getElementById('market-btc-price');

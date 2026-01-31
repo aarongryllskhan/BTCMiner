@@ -497,37 +497,35 @@ function showRugpullOffer() {
 
     if (modal && modalText && confirmBtn) {
         modalText.innerHTML = `
-            <div style="color: #ffeb3b; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">🔓 HARD FORK DETECTED</div>
-            <div style="color: #fff; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.8;">
-                <div style="color: #ccc; margin-bottom: 15px;">Current Progress:</div>
-                <div style="margin-bottom: 10px;">
-                    • Lifetime Earnings: <span style="color: #4CAF50; font-weight: bold;">$${abbreviateNumber(earnings)}</span><br>
-                    • Current Cash: <span style="color: #4CAF50; font-weight: bold;">$${abbreviateNumber(cash)}</span><br>
-                    • Ascensions Completed: <span style="color: #4CAF50; font-weight: bold;">${ascensionLevel}</span>
+            <div style="color: #ffeb3b; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px;">🔓 HARD FORK DETECTED</div>
+            <div style="color: #fff; font-size: 0.85rem; line-height: 1.5;">
+                <div style="color: #ccc; margin-bottom: 8px; font-weight: bold;">Current Progress:</div>
+                <div style="margin-bottom: 8px;">
+                    • Lifetime Earnings: <span style="color: #4CAF50;">$${abbreviateNumber(earnings)}</span><br>
+                    • Current Cash: <span style="color: #4CAF50;">$${abbreviateNumber(cash)}</span><br>
+                    • Ascensions Completed: <span style="color: #4CAF50;">${ascensionLevel}</span>
                 </div>
-                <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
-                    <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 10px;">TOKEN CALCULATION:</div>
-                    <div style="margin-bottom: 15px; color: #ddd; font-size: 0.85rem;">
-                        • Base Tokens: <span style="color: #4CAF50;">${baseReward}</span> tokens<br>
-                        ${bonusTokens > 0 ? `• Bonus Tokens: <span style="color: #4CAF50;">+${bonusTokens}</span> tokens (minimal bonus from excess earnings)<br>` : ''}
-                        • <span style="color: #ffeb3b; font-weight: bold;">TOTAL: ${reward} Corrupt Tokens</span><br>
+                <div style="border-top: 1px solid #555; padding-top: 8px; margin-top: 8px;">
+                    <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 6px;">TOKEN CALCULATION:</div>
+                    <div style="margin-bottom: 8px; color: #ddd; font-size: 0.8rem;">
+                        • Base Tokens: <span style="color: #4CAF50;">${baseReward}</span><br>
+                        ${bonusTokens > 0 ? `• Bonus Tokens: <span style="color: #4CAF50;">+${bonusTokens}</span><br>` : ''}
+                        • TOTAL: <span style="color: #ffeb3b;">${reward}</span> Corrupt Tokens<br>
                     </div>
                 </div>
-                <div style="border-top: 1px solid #555; padding-top: 15px; margin-top: 15px;">
-                    <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 10px;">RUGPULL REWARDS:</div>
-                    <div style="margin-bottom: 10px;">
-                        • Earn <span style="color: #ffeb3b; font-weight: bold;">${reward} Corrupt Tokens</span><br>
-                        • Start with <span style="color: #ffeb3b; font-weight: bold;">$${starterCash}</span> cash<br>
-                        • +1% mining speed per rugpull <span style="color: #ffeb3b;">(+${(ascensionLevel * 1).toFixed(0)}% Total)</span><br>
-                        • +1% manual hash per rugpull <span style="color: #ffeb3b;">(+${(ascensionLevel * 1).toFixed(0)}% Total)</span><br>
+                <div style="border-top: 1px solid #555; padding-top: 8px; margin-top: 8px;">
+                    <div style="color: #ffeb3b; font-weight: bold; margin-bottom: 6px;">RUGPULL REWARDS:</div>
+                    <div style="margin-bottom: 6px; font-size: 0.8rem;">
+                        • Earn <span style="color: #ffeb3b;">${reward}</span> Corrupt Tokens<br>
+                        • Start with <span style="color: #ffeb3b;">$${starterCash}</span> cash<br>
+                        • +1% mining speed per rugpull (+${(ascensionLevel * 1).toFixed(0)}% Total)<br>
+                        • +1% manual hash per rugpull (+${(ascensionLevel * 1).toFixed(0)}% Total)<br>
                     </div>
-                    <div style="border-top: 1px solid #555; padding-top: 10px; margin-top: 10px; color: #ccc; font-size: 0.85rem;">
+                    <div style="border-top: 1px solid #555; padding-top: 6px; margin-top: 6px; color: #ccc; font-size: 0.75rem;">
                         This will:<br>
                         ✗ Reset all coins and miners<br>
                         ✗ Clear all upgrades<br>
-                        ✗ Reset production speed<br>
-                        ✓ Keep all meta-upgrades<br>
-                        ✓ Maintain permanent bonuses
+                        ✓ Keep all meta-upgrades
                     </div>
                 </div>
             </div>
