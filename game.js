@@ -330,6 +330,7 @@
     let lastChartDataCollectionTime = 0; // Track when chart data was last collected (1500ms interval)
     let lastPowerChartUpdateTime = 0; // Track when power chart was last updated (3000ms interval)
     let lastShopReinitTime = 0; // Track when shops were last reinitialized (500ms interval)
+    let lastStatsUpdateTime = 0; // Track when stat updates were last done (250ms interval)
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -2338,6 +2339,10 @@ function loadGame() {
         const modal = document.createElement('div');
         modal.className = 'offline-modal';
 
+        // Get current offline cap in seconds based on purchased upgrades
+        const currentOfflineCap = (typeof getOfflineCap === 'function') ? getOfflineCap() : 14400;
+        const currentOfflineCapHours = currentOfflineCap / 3600;
+
         const hours = Math.floor(secondsOffline / 3600);
         const minutes = Math.floor((secondsOffline % 3600) / 60);
         const seconds = Math.floor(secondsOffline % 60);
@@ -2373,7 +2378,7 @@ function loadGame() {
             earningsHtml += `<div class="earnings" style="color: #4caf50;">💰 ${cashDisplay}</div>`;
         }
         if (corruptTokens > 0) {
-            earningsHtml += `<div class="earnings" style="color: #ffeb3b;">🔴 ${Math.floor(corruptTokens)} Corrupt Tokens</div>`;
+            earningsHtml += `<div class="earnings" style="color: #ffeb3b; font-size: 1.2rem;">🔴 ${corruptTokens.toFixed(3)} Corrupt Tokens</div>`;
         }
 
         // If no earnings, show a message
@@ -2382,15 +2387,17 @@ function loadGame() {
                            <div style="color: #666; font-size: 0.9rem; margin-top: 10px;">Purchase miners to earn while offline!</div>`;
         }
 
-        // Add cap notice if time was capped
+        // Add cap notice - always show the current cap info (updates with upgrades)
         let capNotice = '';
         if (wasCapped) {
-            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 4 hours</div>`;
+            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at ${currentOfflineCapHours} hours</div>`;
+        } else {
+            capNotice = `<div style="color: #4caf50; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(76,175,80,0.1); border-radius: 4px; border: 1px solid rgba(76,175,80,0.3);">ℹ️ Current Offline Earnings Capped at ${currentOfflineCapHours} Hours</div>`;
         }
 
         modal.innerHTML = `
             <h2>⏰ Welcome Back!</h2>
-            <div class="earnings-label">Offline Earnings${wasCapped ? ' (4 hour max)' : ''}</div>
+            <div class="earnings-label">Offline Earnings${wasCapped ? ` (${currentOfflineCapHours} hour max)` : ''}</div>
             ${earningsHtml}
             <div class="time-offline">While you were away for ${timeStr}</div>
             ${capNotice}
@@ -5164,6 +5171,17 @@ function toggleAutoSellButton() {
 }
 
 function manualHash() {
+    // Pause coin animation during manual hash to reduce lag
+    if (typeof pauseCoinRain === 'function') {
+        pauseCoinRain();
+        // Resume after a short delay
+        setTimeout(() => {
+            if (typeof resumeCoinRain === 'function') {
+                resumeCoinRain();
+            }
+        }, 50);
+    }
+
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
 
@@ -5225,6 +5243,17 @@ function manualHash() {
 }
 
 function manualEthHash() {
+    // Pause coin animation during manual hash to reduce lag
+    if (typeof pauseCoinRain === 'function') {
+        pauseCoinRain();
+        // Resume after a short delay
+        setTimeout(() => {
+            if (typeof resumeCoinRain === 'function') {
+                resumeCoinRain();
+            }
+        }, 50);
+    }
+
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     // Apply ascension click multiplier (Cookie Clicker-style: +1% per ascension)
@@ -5283,6 +5312,17 @@ function manualEthHash() {
 }
 
 function manualDogeHash() {
+    // Pause coin animation during manual hash to reduce lag
+    if (typeof pauseCoinRain === 'function') {
+        pauseCoinRain();
+        // Resume after a short delay
+        setTimeout(() => {
+            if (typeof resumeCoinRain === 'function') {
+                resumeCoinRain();
+            }
+        }, 50);
+    }
+
     // Apply skill tree click bonus
     const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
     // Apply ascension click multiplier (Cookie Clicker-style: +1% per ascension)
@@ -7550,7 +7590,7 @@ dogeUpgrades.forEach(u => {
     }
     }
 
-    // Mining loop - runs every 100ms
+    // Mining loop - runs every 50ms
     setInterval(() => {
         const now = Date.now();
         const deltaTime = (now - lastTickTime) / 1000;
@@ -7619,6 +7659,13 @@ dogeUpgrades.forEach(u => {
             sessionEarnings += usdValue;
         }
 
+        // Generate corrupt tokens passively (online)
+        const tokenGenerationRate = (typeof getTokenGenerationRate === 'function') ? getTokenGenerationRate() : 0;
+        if (tokenGenerationRate > 0 && typeof rugpullCurrency !== 'undefined') {
+            const tokensGenerated = tokenGenerationRate * deltaTime;
+            rugpullCurrency += tokensGenerated;
+        }
+
         // Update gameState with current values for rugpull.js
         // lifetimeEarnings = lifetime total (never resets)
         window.gameState.lifetimeEarnings = lifetimeEarnings;
@@ -7629,14 +7676,29 @@ dogeUpgrades.forEach(u => {
         // the incremental updates from rugpullAddEarnings()
 
         updateUI();
-        updateAutoClickerButtonState();
-        updateWhackStats();
-        updateNetworkStats();
-        updateMinigamesTab();
 
-        // Update rugpull progress display to reflect current earnings
-        if (typeof window.updateAscensionUI === 'function') {
-            window.updateAscensionUI();
+        // Throttle stat updates to 250ms to reduce CPU load
+        if (now - lastStatsUpdateTime >= 250) {
+            updateAutoClickerButtonState();
+            updateWhackStats();
+            updateNetworkStats();
+            updateMinigamesTab();
+            lastStatsUpdateTime = now;
+        }
+
+        // Collect chart data every 500ms
+        if (now - lastChartDataCollectionTime >= 500) {
+            lastChartDataCollectionTime = now;
+            const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
+            chartHistory.push(netWorth);
+            btcChartHistory.push(btcBalance * btcPrice);
+            ethChartHistory.push(ethBalance * ethPrice);
+            dogeChartHistory.push(dogeBalance * dogePrice);
+            cashChartHistory.push(dollarBalance);
+            chartTimestamps.push({ time: now, value: netWorth, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
+            hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
+            ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
+            dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
         }
 
         // Check for rugpull milestone
@@ -7644,7 +7706,7 @@ dogeUpgrades.forEach(u => {
             window.checkRugpullMilestone();
         }
 
-    }, 100);
+    }, 50);
 
     // Initialize all shops after DOM is ready
     function initializeGame() {
@@ -8486,7 +8548,7 @@ dogeUpgrades.forEach(u => {
             if (updateCount % 20 === 0) {
                 console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length);
             }
-        }, 500);
+        }, 1000);
 
         // Add mouse tracking for marker hover detection
         const nwChartCanvas = document.getElementById('nwChart');

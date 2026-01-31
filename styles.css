@@ -1020,7 +1020,7 @@
         .stat-item span { font-size: 0.9rem; color: #777; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800; }
         
         .stat-val {
-            font-size: 0.7rem !important; /* Small price text */
+            font-size: 1.1rem !important; /* Larger price text */
             color: #ffffff;
             font-family: monospace;
             display: flex;
@@ -1100,6 +1100,67 @@
         .tab-content.active { display: flex; }
 
         .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 12px; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.1s; font-size: 0.85rem; margin-bottom: 8px; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.4); line-height: 1; }
+
+        /* Override for styled manual hash buttons - preserve inline styles */
+        #manual-hash-btc-btn,
+        #manual-hash-eth-btn,
+        #manual-hash-doge-btn {
+            background: inherit !important;
+            border: inherit !important;
+            box-shadow: inherit !important;
+            color: inherit !important;
+        }
+
+        /* Preserve manual hash button BTC styles - ALL STATES */
+        #manual-hash-btc-btn,
+        #manual-hash-btc-btn:active,
+        #manual-hash-btc-btn.active,
+        #manual-hash-btc-btn:focus,
+        #manual-hash-btc-btn:hover {
+            background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+            border: 3px solid #f7931a !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+        }
+
+        /* ONLY apply animation on .active class, NOT :active pseudo-class */
+        #manual-hash-btc-btn.active {
+            filter: brightness(0.85) !important;
+            transform: scale(0.94) translateY(3px) !important;
+        }
+
+        /* Preserve manual hash button ETH styles - ALL STATES */
+        #manual-hash-eth-btn,
+        #manual-hash-eth-btn:active,
+        #manual-hash-eth-btn.active,
+        #manual-hash-eth-btn:focus,
+        #manual-hash-eth-btn:hover {
+            background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
+            border: 3px solid #627eea !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+        }
+
+        /* ONLY apply animation on .active class, NOT :active pseudo-class */
+        #manual-hash-eth-btn.active {
+            filter: brightness(0.85) !important;
+            transform: scale(0.94) translateY(3px) !important;
+        }
+
+        /* Preserve manual hash button DOGE styles - ALL STATES */
+        #manual-hash-doge-btn,
+        #manual-hash-doge-btn:active,
+        #manual-hash-doge-btn.active,
+        #manual-hash-doge-btn:focus,
+        #manual-hash-doge-btn:hover {
+            background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
+            border: 3px solid #c2a633 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+        }
+
+        /* ONLY apply animation on .active class, NOT :active pseudo-class */
+        #manual-hash-doge-btn.active {
+            filter: brightness(0.85) !important;
+            transform: scale(0.94) translateY(3px) !important;
+        }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item {
             background: linear-gradient(135deg, #222 0%, #181818 100%);
@@ -1148,27 +1209,36 @@
             filter: brightness(1.1);
         }
 
-        .mine-btn:active {
-            transform: scale(0.96) translateY(2px);
-            box-shadow: 0 0 10px rgba(247, 147, 26, 0.3);
+        .mine-btn:active:not(#manual-hash-btc-btn):not(#manual-hash-eth-btn):not(#manual-hash-doge-btn) {
+            transform: scale(0.96) translateY(2px) !important;
+            filter: brightness(0.85) !important;
+            background: inherit !important;
+            border: inherit !important;
+            box-shadow: inherit !important;
         }
 
         .mine-btn {
-            transition: transform 0.03s ease-out, box-shadow 0.03s ease-out, filter 0.2s;
+            transition: transform 0.03s ease-out, filter 0.2s;
         }
 
         /* Active state class for manual touch feedback */
         .mine-btn.active {
-            transform: scale(0.94) translateY(3px);
-            box-shadow: 0 0 15px rgba(247, 147, 26, 0.5);
-            transition: transform 0.03s ease-in, box-shadow 0.03s ease-in;
+            transform: scale(0.94) translateY(3px) !important;
+            filter: brightness(0.85) !important;
+            background: inherit !important;
+            border: inherit !important;
+            box-shadow: inherit !important;
+            transition: transform 0.03s ease-in, filter 0.03s ease-in;
         }
 
         /* Mobile touch feedback */
         @media (hover: none) {
             .mine-btn:active {
-                transform: scale(0.94) translateY(3px);
-                box-shadow: 0 0 15px rgba(247, 147, 26, 0.5);
+                transform: scale(0.94) translateY(3px) !important;
+                filter: brightness(0.85) !important;
+                background: inherit !important;
+                border: inherit !important;
+                box-shadow: inherit !important;
             }
         }
 
@@ -1220,8 +1290,8 @@
         }
 
         /* Preserve emboss on other buttons with box-shadow */
-        button[style*="box-shadow"]:active,
-        button[style*="box-shadow"]:focus {
+        button[style*="box-shadow"]:active:not(#manual-hash-btc-btn):not(#manual-hash-eth-btn):not(#manual-hash-doge-btn),
+        button[style*="box-shadow"]:focus:not(#manual-hash-btc-btn):not(#manual-hash-eth-btn):not(#manual-hash-doge-btn) {
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
             outline: none;
         }
@@ -1302,7 +1372,7 @@ button:disabled:hover {
             max-width: 400px;
             text-align: center;
             box-shadow: 0 0 40px rgba(247, 147, 26, 0.3);
-            animation: slideUp 0.4s ease;
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .offline-modal h2 {
@@ -1360,9 +1430,15 @@ button:disabled:hover {
             animation: fadeIn 0.3s ease;
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes popIn {
+            from {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
         }
 
         @keyframes fadeIn {

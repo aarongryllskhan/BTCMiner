@@ -168,8 +168,8 @@
                             <div style="font-size: 0.45rem; color: #f7931a; font-weight: 800;">BTC</div>
                             <b class="stat-val" id="btc-price" style="color: #00ff88;">$100.0K</b>
                             <div style="display: flex; align-items: center; gap: 2px; height: 8px;">
-                                <span id="btc-indicator" style="font-size: 0.6rem; font-weight: bold;"></span>
-                                <span id="btc-change" style="font-size: 0.5rem; font-weight: bold;"></span>
+                                <span id="btc-indicator" style="font-size: 0.75rem; font-weight: bold;"></span>
+                                <span id="btc-change" style="font-size: 0.65rem; font-weight: bold;"></span>
                             </div>
                         </div>
                     </div>
@@ -180,8 +180,8 @@
                             <div style="font-size: 0.45rem; color: #627eea; font-weight: 800;">ETH</div>
                             <b class="stat-val" id="eth-price" style="color: #00ff88;">$3.5K</b>
                             <div style="display: flex; align-items: center; gap: 2px; height: 8px;">
-                                <span id="eth-indicator" style="font-size: 0.6rem; font-weight: bold;"></span>
-                                <span id="eth-change" style="font-size: 0.5rem; font-weight: bold;"></span>
+                                <span id="eth-indicator" style="font-size: 0.75rem; font-weight: bold;"></span>
+                                <span id="eth-change" style="font-size: 0.65rem; font-weight: bold;"></span>
                             </div>
                         </div>
                     </div>
@@ -192,8 +192,8 @@
                             <div style="font-size: 0.45rem; color: #c2a633; font-weight: 800;">DOGE</div>
                             <b class="stat-val" id="doge-price" style="color: #00ff88;">$0.25</b>
                             <div style="display: flex; align-items: center; gap: 2px; height: 8px;">
-                                <span id="doge-indicator" style="font-size: 0.6rem; font-weight: bold;"></span>
-                                <span id="doge-change" style="font-size: 0.5rem; font-weight: bold;"></span>
+                                <span id="doge-indicator" style="font-size: 0.75rem; font-weight: bold;"></span>
+                                <span id="doge-change" style="font-size: 0.65rem; font-weight: bold;"></span>
                             </div>
                         </div>
                     </div>
@@ -330,24 +330,24 @@
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
-            <button id="manual-hash-btc-btn" class="mine-btn" style="background: #f7931a; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <button id="manual-hash-btc-btn" class="mine-btn" style="background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important; border: 3px solid #f7931a !important; color: #000 !important; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 8px; cursor: pointer; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important; transition: all 0.1s ease;">
                 <div style="flex: 1; text-align: center;">
                     MANUAL BTC HASH<br>
-                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7; display: block; margin-top: 2px;">+0.00000250 ₿</span>
+                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+0.00000250 ₿</span>
                 </div>
                 <img src="bitcointoken.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="BTC">
             </button>
-            <button id="manual-hash-eth-btn" class="mine-btn" style="background: #627eea; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <button id="manual-hash-eth-btn" class="mine-btn" style="background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important; border: 3px solid #627eea !important; color: #fff !important; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 8px; cursor: pointer; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important; transition: all 0.1s ease;">
                 <div style="flex: 1; text-align: center;">
                     MANUAL ETH HASH<br>
-                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7; display: block; margin-top: 2px;">+0.00007143 Ξ</span>
+                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+0.00007143 Ξ</span>
                 </div>
                 <img src="ethcoin.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="ETH">
             </button>
-            <button id="manual-hash-doge-btn" class="mine-btn" style="background: #c2a633; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <button id="manual-hash-doge-btn" class="mine-btn" style="background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important; border: 3px solid #c2a633 !important; color: #000 !important; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 8px; cursor: pointer; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important; transition: all 0.1s ease;">
                 <div style="flex: 1; text-align: center;">
                     MANUAL DOGE HASH<br>
-                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7; display: block; margin-top: 2px;">+1.00000000 Ð</span>
+                    <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+1.00000000 Ð</span>
                 </div>
                 <img src="dogecoin.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="DOGE">
             </button>

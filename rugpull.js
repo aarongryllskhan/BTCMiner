@@ -1399,18 +1399,46 @@ function getTokenConversionRate() {
 }
 
 /**
- * Get token generation rate (tokens per second earned offline)
+ * Get token generation rate (tokens per second earned offline AND online)
  * Based on purchased token_generation upgrades
  */
 function getTokenGenerationRate() {
     let tokensPerSecond = 0;
 
-    // Check each token generation upgrade
-    if (metaUpgrades.token_generation_1?.purchased) tokensPerSecond += 1;
-    if (metaUpgrades.token_generation_2?.purchased) tokensPerSecond += 2;
-    if (metaUpgrades.token_generation_3?.purchased) tokensPerSecond += 5;
-    if (metaUpgrades.token_generation_4?.purchased) tokensPerSecond += 10;
-    if (metaUpgrades.token_generation_5?.purchased) tokensPerSecond += 20;
+    // TIER 1
+    if (metaUpgrades.token_generation_0?.purchased) tokensPerSecond += 0.005;
+
+    // TIER 2
+    if (metaUpgrades.token_generation_1_alt?.purchased) tokensPerSecond += 0.00575;
+
+    // TIER 3
+    if (metaUpgrades.token_generation_2_alt?.purchased) tokensPerSecond += 0.00661;
+
+    // TIER 4
+    if (metaUpgrades.token_generation_3_alt?.purchased) tokensPerSecond += 0.00760;
+
+    // TIER 5
+    if (metaUpgrades.token_generation_4_alt?.purchased) tokensPerSecond += 0.00874;
+
+    // TIER 6+
+    if (metaUpgrades.token_generation_t6?.purchased) tokensPerSecond += 0.01005;
+    if (metaUpgrades.token_generation_t7?.purchased) tokensPerSecond += 0.01156;
+    if (metaUpgrades.token_generation_t8?.purchased) tokensPerSecond += 0.01330;
+    if (metaUpgrades.token_generation_t9?.purchased) tokensPerSecond += 0.01531;
+    if (metaUpgrades.token_generation_t10?.purchased) tokensPerSecond += 0.01761;
+    if (metaUpgrades.token_generation_t11?.purchased) tokensPerSecond += 0.02025;
+    if (metaUpgrades.token_generation_t12?.purchased) tokensPerSecond += 0.02329;
+    if (metaUpgrades.token_generation_t13?.purchased) tokensPerSecond += 0.02678;
+    if (metaUpgrades.token_generation_t14?.purchased) tokensPerSecond += 0.03080;
+    if (metaUpgrades.token_generation_t15?.purchased) tokensPerSecond += 0.03542;
+    if (metaUpgrades.token_generation_t16?.purchased) tokensPerSecond += 0.04073;
+    if (metaUpgrades.token_generation_t17?.purchased) tokensPerSecond += 0.04684;
+    if (metaUpgrades.token_generation_t18?.purchased) tokensPerSecond += 0.05387;
+    if (metaUpgrades.token_generation_t19?.purchased) tokensPerSecond += 0.06196;
+    if (metaUpgrades.token_generation_t20?.purchased) tokensPerSecond += 0.07126;
+    if (metaUpgrades.token_generation_4?.purchased) tokensPerSecond += 0.02599;
+    if (metaUpgrades.token_generation_5?.purchased) tokensPerSecond += 0.02989;
+    if (metaUpgrades.token_generation_6?.purchased) tokensPerSecond += 0.03963;
 
     return tokensPerSecond;
 }
@@ -1421,20 +1449,20 @@ function getTokenGenerationRate() {
 function getUpgradeName(upgradeKey) {
     const names = {
         // TIER 1 (Basic) - 8 base upgrades
-        'power_capacity_1': '+0.5% Max Power Capacity',
+        'power_capacity_1': 'Earn 0.5% Max Power Capacity',
         'miner_efficiency_1': '-0.5% Miner Power Consumption',
-        'staking_apy_1': '+0.005% Staking APR',
-        'miner_hashrate_1': '+0.5% Miner Hash Rate (All Crypto)',
-        'click_hashrate_1': '+0.5% Manual Hash Rate',
+        'staking_apy_1': 'Earn 0.005% Staking APR',
+        'miner_hashrate_1': 'Earn 0.5% Miner Hash Rate (All Crypto)',
+        'click_hashrate_1': 'Earn 0.5% Manual Hash Rate',
         'offline_earnings_1': '+1 Hour Offline Earnings Cap (5h Total)',
         'earnings_boost_1': '+1% Crypto Sale & Stake Value',
         'minigame_reward_1': '+1% Minigame Rewards',
-        'token_generation_0': '+0.005 Corrupt Tokens/s Offline',
+        'token_generation_0': 'Earn 0.005 Corrupt Tokens/s Passively',
 
         // TIER 2 (Advanced) - 8 base + 1 unique (starter_miners_t1)
         'power_capacity_2': '+1% Max Power Capacity',
         'miner_efficiency_2': '-1% Miner Power Consumption',
-        'staking_apy_2': '+0.01% Staking APR',
+        'staking_apy_2': 'Earn 0.01% Staking APR',
         'miner_hashrate_2': '+1% Miner Hash Rate (All Crypto)',
         'click_hashrate_2': '+1% Manual Hash Rate',
         'offline_earnings_2': '+1 Hour Offline Earnings Cap (6h Total)',
@@ -1442,12 +1470,12 @@ function getUpgradeName(upgradeKey) {
         'minigame_reward_2': '+1.15% Minigame Rewards',
         'starter_miners_t1': 'Start All Future Rugpulls With LVL1 T1 Miner For All Cryptos!',
         'starter_power_p0': 'Start All Future Rugpulls With LVL1 Basic Power Strip',
-        'token_generation_1_alt': '+0.00575 Corrupt Tokens/s Offline',
+        'token_generation_1_alt': 'Earn 0.00575 Corrupt Tokens/s Passively',
 
         // TIER 3 (Expert) - 8 base + 2 unique (auto_sell, starter_miners_t2)
         'power_capacity_3': '+1.5% Max Power Capacity',
         'miner_efficiency_3': '-1.5% Miner Power Consumption',
-        'staking_apy_3': '+0.015% Staking APR',
+        'staking_apy_3': 'Earn 0.015% Staking APR',
         'miner_hashrate_3': '+1.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_3': '+1.5% Manual Hash Rate',
         'offline_earnings_3': '+1 Hour Offline Earnings Cap (7h Total)',
@@ -1456,12 +1484,12 @@ function getUpgradeName(upgradeKey) {
         'auto_sell': 'Auto-Sell Crypto to Cash (25% Fee)',
         'starter_miners_t2': 'Start All Future Rugpulls With LVL1 T2 Miner For All Cryptos!',
         'starter_power_p1': 'Start All Future Rugpulls With LVL1 Regulated PSU',
-        'token_generation_2_alt': '+0.00661 Corrupt Tokens/s Offline',
+        'token_generation_2_alt': 'Earn 0.00661 Corrupt Tokens/s Passively',
 
         // TIER 4 (Prestige) - 8 base + 1 unique (starter_miners_t3)
         'power_capacity_4': '+2% Max Power Capacity',
         'miner_efficiency_4': '-2% Miner Power Consumption',
-        'staking_apy_4': '+0.02% Staking APR',
+        'staking_apy_4': 'Earn 0.02% Staking APR',
         'miner_hashrate_4': '+2% Miner Hash Rate (All Crypto)',
         'click_hashrate_4': '+2% Manual Hash Rate',
         'offline_earnings_4': '+1 Hour Offline Earnings Cap (8h Total)',
@@ -1469,12 +1497,12 @@ function getUpgradeName(upgradeKey) {
         'minigame_reward_4': '+1.52% Minigame Rewards',
         'starter_miners_t3': 'Start All Future Rugpulls With LVL1 T3 Miner For All Cryptos!',
         'starter_power_p2': 'Start All Future Rugpulls With LVL1 High-Efficiency PSU',
-        'token_generation_3_alt': '+0.00760 Corrupt Tokens/s Offline',
+        'token_generation_3_alt': 'Earn 0.00760 Corrupt Tokens/s Passively',
 
         // TIER 5 (Infinite) - 8 base + 1 unique (starter_miners_t4)
         'power_capacity_5': '+2.5% Max Power Capacity',
         'miner_efficiency_5': '-2.5% Miner Power Consumption',
-        'staking_apy_5': '+0.025% Staking APR',
+        'staking_apy_5': 'Earn 0.025% Staking APR',
         'miner_hashrate_5': '+2.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_5': '+2.5% Manual Hash Rate',
         'offline_earnings_5': '+1 Hour Offline Earnings Cap (9h Total)',
@@ -1482,12 +1510,12 @@ function getUpgradeName(upgradeKey) {
         'minigame_reward_5': '+1.75% Minigame Rewards',
         'starter_miners_t4': 'Start All Future Rugpulls With LVL1 T4 Miner For All Cryptos!',
         'starter_power_p3': 'Start All Future Rugpulls With LVL1 Server-Grade PSU',
-        'token_generation_4_alt': '+0.00874 Corrupt Tokens/s Offline',
+        'token_generation_4_alt': 'Earn 0.00874 Corrupt Tokens/s Passively',
 
         // TIER 6 (Cosmic) - 8 base + 2 unique (starter_miners_t5, token_generation_t6)
         'power_capacity_6': '+3% Max Power Capacity',
         'miner_efficiency_6': '-3% Miner Power Consumption',
-        'staking_apy_6': '+0.03% Staking APR',
+        'staking_apy_6': 'Earn 0.03% Staking APR',
         'miner_hashrate_6': '+3% Miner Hash Rate (All Crypto)',
         'click_hashrate_6': '+3% Manual Hash Rate',
         'offline_earnings_6': '+1 Hour Offline Earnings Cap (10h Total)',
@@ -1495,26 +1523,26 @@ function getUpgradeName(upgradeKey) {
         'minigame_reward_6': '+2.01% Minigame Rewards',
         'starter_miners_t5': 'Start All Future Rugpulls With LVL1 T5 Miner For All Cryptos!',
         'starter_power_p4': 'Start All Future Rugpulls With LVL1 Mining Power Distribution Unit',
-        'token_generation_t6': '+0.01005 Corrupt Tokens/s Offline',
-        'token_generation_t7': '+0.01156 Corrupt Tokens/s Offline',
-        'token_generation_t8': '+0.01330 Corrupt Tokens/s Offline',
-        'token_generation_t9': '+0.01531 Corrupt Tokens/s Offline',
-        'token_generation_t10': '+0.01761 Corrupt Tokens/s Offline',
-        'token_generation_t11': '+0.02025 Corrupt Tokens/s Offline',
-        'token_generation_t12': '+0.02329 Corrupt Tokens/s Offline',
-        'token_generation_t13': '+0.02678 Corrupt Tokens/s Offline',
-        'token_generation_t14': '+0.03080 Corrupt Tokens/s Offline',
-        'token_generation_t15': '+0.03542 Corrupt Tokens/s Offline',
-        'token_generation_t16': '+0.04073 Corrupt Tokens/s Offline',
-        'token_generation_t17': '+0.04684 Corrupt Tokens/s Offline',
-        'token_generation_t18': '+0.05387 Corrupt Tokens/s Offline',
-        'token_generation_t19': '+0.06196 Corrupt Tokens/s Offline',
-        'token_generation_t20': '+0.07126 Corrupt Tokens/s Offline',
+        'token_generation_t6': 'Earn 0.01005 Corrupt Tokens/s Passively',
+        'token_generation_t7': 'Earn 0.01156 Corrupt Tokens/s Passively',
+        'token_generation_t8': 'Earn 0.01330 Corrupt Tokens/s Passively',
+        'token_generation_t9': 'Earn 0.01531 Corrupt Tokens/s Passively',
+        'token_generation_t10': 'Earn 0.01761 Corrupt Tokens/s Passively',
+        'token_generation_t11': 'Earn 0.02025 Corrupt Tokens/s Passively',
+        'token_generation_t12': 'Earn 0.02329 Corrupt Tokens/s Passively',
+        'token_generation_t13': 'Earn 0.02678 Corrupt Tokens/s Passively',
+        'token_generation_t14': 'Earn 0.03080 Corrupt Tokens/s Passively',
+        'token_generation_t15': 'Earn 0.03542 Corrupt Tokens/s Passively',
+        'token_generation_t16': 'Earn 0.04073 Corrupt Tokens/s Passively',
+        'token_generation_t17': 'Earn 0.04684 Corrupt Tokens/s Passively',
+        'token_generation_t18': 'Earn 0.05387 Corrupt Tokens/s Passively',
+        'token_generation_t19': 'Earn 0.06196 Corrupt Tokens/s Passively',
+        'token_generation_t20': 'Earn 0.07126 Corrupt Tokens/s Passively',
 
         // TIER 7 (Transcendent) - 8 base + 2 unique (starter_miners_t6, minigame_unlock)
         'power_capacity_7': '+3.5% Max Power Capacity',
         'miner_efficiency_7': '-3.5% Miner Power Consumption',
-        'staking_apy_7': '+0.035% Staking APR',
+        'staking_apy_7': 'Earn 0.035% Staking APR',
         'miner_hashrate_7': '+3.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_7': '+1.16% Manual Hash Rate',
         'offline_earnings_7': '+1 Hour Offline Earnings Cap (11h Total)',
@@ -1527,7 +1555,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 8 (Omnipotent) - 8 base + 2 unique (starter_miners_t7, cash_multiplier)
         'power_capacity_8': '+4% Max Power Capacity',
         'miner_efficiency_8': '-4% Miner Power Consumption',
-        'staking_apy_8': '+0.04% Staking APR',
+        'staking_apy_8': 'Earn 0.04% Staking APR',
         'miner_hashrate_8': '+4% Miner Hash Rate (All Crypto)',
         'click_hashrate_8': '+1.33% Manual Hash Rate',
         'offline_earnings_8': '+1 Hour Offline Earnings Cap (12h Total)',
@@ -1540,7 +1568,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 9 (Supreme) - 8 base + 2 unique (starter_miners_t8, crypto_efficiency_1)
         'power_capacity_9': '+4.5% Max Power Capacity',
         'miner_efficiency_9': '-4.5% Miner Power Consumption',
-        'staking_apy_9': '+0.045% Staking APR',
+        'staking_apy_9': 'Earn 0.045% Staking APR',
         'miner_hashrate_9': '+4.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_9': '+1.53% Manual Hash Rate',
         'offline_earnings_9': '+1 Hour Offline Earnings Cap (13h Total)',
@@ -1553,7 +1581,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 10 (Godlike) - 8 base + 2 unique (starter_miners_t9, token_generation_t10)
         'power_capacity_10': '+5% Max Power Capacity',
         'miner_efficiency_10': '-5% Miner Power Consumption',
-        'staking_apy_10': '+0.05% Staking APR',
+        'staking_apy_10': 'Earn 0.05% Staking APR',
         'miner_hashrate_10': '+5% Miner Hash Rate (All Crypto)',
         'click_hashrate_10': '+1.76% Manual Hash Rate',
         'offline_earnings_10': '+1 Hour Offline Earnings Cap (14h Total)',
@@ -1565,7 +1593,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 11 (Transcendence) - 8 base + 1 unique (starter_miners_t10)
         'power_capacity_11': '+5.5% Max Power Capacity',
         'miner_efficiency_11': '-5.5% Miner Power Consumption',
-        'staking_apy_11': '+0.055% Staking APR',
+        'staking_apy_11': 'Earn 0.055% Staking APR',
         'miner_hashrate_11': '+5.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_11': '+2.03% Manual Hash Rate',
         'offline_earnings_11': '+1 Hour Offline Earnings Cap (15h Total)',
@@ -1577,7 +1605,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 12 (Beyond) - 8 base + 2 unique (starter_miners_t11, crypto_efficiency_2)
         'power_capacity_12': '+6% Max Power Capacity',
         'miner_efficiency_12': '-6% Miner Power Consumption',
-        'staking_apy_12': '+0.06% Staking APR',
+        'staking_apy_12': 'Earn 0.06% Staking APR',
         'miner_hashrate_12': '+6% Miner Hash Rate (All Crypto)',
         'click_hashrate_12': '+2.34% Manual Hash Rate',
         'offline_earnings_12': '+1 Hour Offline Earnings Cap (16h Total)',
@@ -1590,7 +1618,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 13 (Godhood) - 8 base + 2 unique (starter_miners_t12, token_generation_t13)
         'power_capacity_13': '+6.5% Max Power Capacity',
         'miner_efficiency_13': '-6.5% Miner Power Consumption',
-        'staking_apy_13': '+0.065% Staking APR',
+        'staking_apy_13': 'Earn 0.065% Staking APR',
         'miner_hashrate_13': '+6.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_13': '+2.69% Manual Hash Rate',
         'offline_earnings_13': '+1 Hour Offline Earnings Cap (17h Total)',
@@ -1602,7 +1630,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 14 (Supreme Being) - 8 base + 1 unique (starter_miners_t13)
         'power_capacity_14': '+7% Max Power Capacity',
         'miner_efficiency_14': '-7% Miner Power Consumption',
-        'staking_apy_14': '+0.07% Staking APR',
+        'staking_apy_14': 'Earn 0.07% Staking APR',
         'miner_hashrate_14': '+7% Miner Hash Rate (All Crypto)',
         'click_hashrate_14': '+3.09% Manual Hash Rate',
         'offline_earnings_14': '+1 Hour Offline Earnings Cap (18h Total)',
@@ -1614,7 +1642,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 15 (Decillion) - 8 base + 2 unique (starter_miners_t14, crypto_efficiency_3)
         'power_capacity_15': '+7.5% Max Power Capacity',
         'miner_efficiency_15': '-7.5% Miner Power Consumption',
-        'staking_apy_15': '+0.75% Staking APR',
+        'staking_apy_15': 'Earn 0.75% Staking APR',
         'miner_hashrate_15': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_15': '+2.78% Manual Hash Rate',
         'offline_earnings_15': '+1 Hour Offline Earnings Cap (19h Total)',
@@ -1626,33 +1654,33 @@ function getUpgradeName(upgradeKey) {
         // TIER 16 (Undecillion) - 8 base + 2 unique (starter_miners_t15, token_generation_4)
         'power_capacity_16': '+7.5% Max Power Capacity',
         'miner_efficiency_16': '-7.5% Miner Power Consumption',
-        'staking_apy_16': '+0.80% Staking APR',
+        'staking_apy_16': 'Earn 0.80% Staking APR',
         'miner_hashrate_16': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_16': '+2.78% Manual Hash Rate',
         'offline_earnings_16': '+1 Hour Offline Earnings Cap (20h Total)',
         'earnings_boost_16': '+5.35% Crypto Sale & Stake Value',
         'minigame_reward_16': '+5.35% Minigame Rewards',
         'starter_miners_t15': 'Start All Future Rugpulls With LVL1 T15 Miner For All Cryptos!',
-        'token_generation_4': '+0.02599 Corrupt Tokens/s Offline',
+        'token_generation_4': 'Earn 0.02599 Corrupt Tokens/s Passively',
 
         // TIER 16 (Undecillion) - 8 base + 2 unique (starter_miners_t15, token_generation_4)
-        'token_generation_5': '+0.02989 Corrupt Tokens/s Offline',
+        'token_generation_5': 'Earn 0.02989 Corrupt Tokens/s Passively',
 
         // TIER 17 (Duodecillion) - 8 base + 1 unique (token_generation_6)
         'power_capacity_17': '+7.5% Max Power Capacity',
         'miner_efficiency_17': '-7.5% Miner Power Consumption',
-        'staking_apy_17': '+0.85% Staking APR',
+        'staking_apy_17': 'Earn 0.85% Staking APR',
         'miner_hashrate_17': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_17': '+2.78% Manual Hash Rate',
         'offline_earnings_17': '+1 Hour Offline Earnings Cap (21h Total)',
         'earnings_boost_17': '+5.35% Crypto Sale & Stake Value',
         'minigame_reward_17': '+5.35% Minigame Rewards',
-        'token_generation_6': '+0.03963 Corrupt Tokens/s Offline',
+        'token_generation_6': 'Earn 0.03963 Corrupt Tokens/s Passively',
 
         // TIER 18 (Tredecillion) - 8 base
         'power_capacity_18': '+7.5% Max Power Capacity',
         'miner_efficiency_18': '-7.5% Miner Power Consumption',
-        'staking_apy_18': '+0.90% Staking APR',
+        'staking_apy_18': 'Earn 0.90% Staking APR',
         'miner_hashrate_18': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_18': '+2.78% Manual Hash Rate',
         'offline_earnings_18': '+1 Hour Offline Earnings Cap (22h Total)',
@@ -1662,7 +1690,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 19 (Quattuordecillion) - 8 base
         'power_capacity_19': '+7.5% Max Power Capacity',
         'miner_efficiency_19': '-7.5% Miner Power Consumption',
-        'staking_apy_19': '+0.95% Staking APR',
+        'staking_apy_19': 'Earn 0.95% Staking APR',
         'miner_hashrate_19': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_19': '+2.78% Manual Hash Rate',
         'offline_earnings_19': '+1 Hour Offline Earnings Cap (23h Total)',
@@ -1823,7 +1851,7 @@ function updateMetaUpgradesUI() {
     bonusText += `</div>`;
 
     // Token Generation (full width)
-    bonusText += `<div style="margin-top: 12px;">🪙 <strong>Corrupt Tokens/s Offline:</strong> <span style="color: #ffeb3b;">+${tokenGenerationBonus.toFixed(5)}</span></div>`;
+    bonusText += `<div style="margin-top: 12px;">🪙 <strong>Corrupt Tokens/s Passively:</strong> <span style="color: #ffeb3b;">+${tokenGenerationBonus.toFixed(5)}</span></div>`;
 
     bonusText += `</div></div>`;
     bonusesDiv.innerHTML = bonusText;
@@ -2106,7 +2134,6 @@ function getRugpullRequirement() {
     const level = ascensionLevel + 1;  // Convert 0-indexed to 1-indexed
     // $1M × 10^(level-1) / 2 - half of the full 10x exponential scaling
     const requirement = (1000000 * Math.pow(10, level - 1)) / 2;
-    console.log('[RUGPULL] getRugpullRequirement:', { ascensionLevel, level, requirement });
     return requirement;
 }
 
@@ -2296,8 +2323,6 @@ function updateAscensionUI() {
 
         earningsLabel = formatLargeNumber(lifetimeEarningsThisRugpull);
 
-        console.log('[RUGPULL UI] Updating progress text:', { earningsLabel, requirementLabel, lifetimeEarningsThisRugpull });
-
         // Update mobile version
         if (progressTextMobile) {
             progressTextMobile.textContent = `${earningsLabel} / ${requirementLabel}`;
@@ -2314,20 +2339,15 @@ function updateAscensionUI() {
     const storeBtnMobile = document.getElementById('rugpull-store-btn-mobile-main');
     const storeBtnDesktop = document.getElementById('rugpull-store-btn-desktop');
     if (storeBtn || storeBtnDesktop || storeBtnMobile) {
-        console.log('[RUGPULL STORE BTN] rugpullCurrency:', rugpullCurrency, 'storeBtn found:', !!storeBtn);
         if (rugpullCurrency > 0) {
             if (storeBtn) storeBtn.style.display = 'inline-block';
             if (storeBtnMobile) storeBtnMobile.style.display = 'block';
             if (storeBtnDesktop) storeBtnDesktop.style.display = 'flex';
-            console.log('[RUGPULL STORE BTN] Showing store button');
         } else {
             if (storeBtn) storeBtn.style.display = 'none';
             if (storeBtnMobile) storeBtnMobile.style.display = 'none';
             if (storeBtnDesktop) storeBtnDesktop.style.display = 'none';
-            console.log('[RUGPULL STORE BTN] Hiding store button');
         }
-    } else {
-        console.log('[RUGPULL STORE BTN] Store button element not found');
     }
 }
 

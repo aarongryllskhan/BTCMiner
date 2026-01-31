@@ -13,7 +13,7 @@
             this.lastHashRate = 0;
             this.spawnRate = 0;
             this.spawnRates = { btc: 0, eth: 0, doge: 0, usd: 0 };
-            this.maxCoins = 30; // Lower limit to prevent lag from too many coins
+            this.maxCoins = 20; // Reduced to 20 to prevent lag and stuttering
             this.lastAnimationTime = 0;
             this.usdWarningLogged = false;
 
@@ -125,6 +125,18 @@
             this.isRunning = false;
         }
 
+        pauseAnimation() {
+            this.isRunning = false;
+        }
+
+        resumeAnimation() {
+            if (!this.isRunning) {
+                this.isRunning = true;
+                this.lastAnimationTime = Date.now();
+                this.animate();
+            }
+        }
+
         updateHashRate(btcUsdPerSec, ethUsdPerSec, dogeUsdPerSec) {
             const totalUsdPerSec = btcUsdPerSec + ethUsdPerSec + dogeUsdPerSec;
             this.lastHashRate = totalUsdPerSec;
@@ -153,16 +165,16 @@
                 coinType = this.coinTypes[Math.floor(Math.random() * this.coinTypes.length)];
             }
 
-            // Consistent sizes for all coins
+            // Consistent sizes for all coins - increased for visibility
             let size;
             if (coinType.name === 'usd') {
-                size = 75; // Smaller dollar bills
+                size = 30; // Dollar bills
             } else if (coinType.name === 'usd_stack') {
-                size = 85; // Smaller for dollar stacks
+                size = 35; // Dollar stacks
             } else if (coinType.name === 'usd_stack_2') {
-                size = 60; // Smaller for mega dollar stacks
+                size = 30; // Mega dollar stacks
             } else {
-                size = 18; // Smaller fixed size for BTC, ETH, and DOGE
+                size = 24; // Fixed size for BTC, ETH, and DOGE
             }
 
             // Increase randomization for click coins
@@ -170,9 +182,8 @@
             const vyVariation = consistentSize ? 2.5 : 1.5;
             const rotationSpeedVariation = consistentSize ? 0.2 : 0.1;
 
-            // USD coins should start brighter
-            const isUSD = coinType.name === 'usd' || coinType.name === 'usd_stack' || coinType.name === 'usd_stack_2';
-            const startOpacity = isUSD ? 1.0 : 0.7; // Full opacity for USD coins
+            // All coins should start at full opacity for visibility
+            const startOpacity = 1.0;
 
             const coin = {
                 x: Math.random() * this.canvas.width,
@@ -196,6 +207,7 @@
             for (let i = this.coins.length - 1; i >= 0; i--) {
                 const coin = this.coins[i];
 
+                // Apply velocity directly per frame
                 coin.x += coin.vx;
                 coin.y += coin.vy;
                 coin.rotation += coin.rotationSpeed;
@@ -274,110 +286,20 @@
         drawFallback(size, color) {
             const radius = size / 2;
 
-            // Convert hex to rgba for glow effect
-            let glowColor;
-            if (color.startsWith('#')) {
-                // Convert hex to rgba with 0.5 alpha
-                const hex = color.slice(1);
-                const r = parseInt(hex.substring(0, 2), 16);
-                const g = parseInt(hex.substring(2, 4), 16);
-                const b = parseInt(hex.substring(4, 6), 16);
-                glowColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
-            } else {
-                // Already in rgb format
-                glowColor = color.replace(')', ', 0.5)').replace('rgb', 'rgba');
-            }
-
-            // Special handling for USD coins - draw as rectangular bill or stack
+            // Special handling for USD coins - draw as rectangular bill (optimized)
             if (color === '#ffdd00') {
-                // Check if this is a coin type (to differentiate between usd, usd_stack, and usd_stack_2)
-                const currentCoin = this.coinTypes.find(c => c.color === color);
-                const isStack = currentCoin && (currentCoin.name === 'usd_stack' || currentCoin.name === 'usd_stack_2');
-                const isMegaStack = currentCoin && currentCoin.name === 'usd_stack_2';
-
                 const billWidth = size * 1.5;
                 const billHeight = size * 0.6;
 
-                // Draw outer glow (brighter)
-                this.ctx.fillStyle = 'rgba(26, 200, 50, 0.6)';
-                this.ctx.fillRect(-billWidth/2 - 3, -billHeight/2 - 3, billWidth + 6, billHeight + 6);
-
-                if (isStack) {
-                    // Draw multiple stacked bills for dollar stacks
-                    const numStacks = isMegaStack ? 4 : 3; // More bills for mega stacks
-                    for (let j = numStacks - 1; j >= 0; j--) {
-                        const offsetY = j * 3;
-                        const offsetX = j * 2;
-
-                        // Draw bill background (bright vibrant green - more opaque)
-                        this.ctx.fillStyle = 'rgba(34, 221, 68, 0.95)';
-                        this.ctx.fillRect(-billWidth/2 + offsetX, -billHeight/2 + offsetY, billWidth, billHeight);
-
-                        // Draw bright gold/yellow border (thicker for mega stacks)
-                        this.ctx.strokeStyle = '#ffff00';
-                        this.ctx.lineWidth = isMegaStack ? 4 : 3;
-                        this.ctx.strokeRect(-billWidth/2 + offsetX, -billHeight/2 + offsetY, billWidth, billHeight);
-                    }
-
-                    // Draw dollar sign in the center
-                    this.ctx.fillStyle = '#ffff00';
-                    this.ctx.font = `bold ${Math.floor(size * (isMegaStack ? 0.9 : 0.85))}px Arial`;
-                    this.ctx.textAlign = 'center';
-                    this.ctx.textBaseline = 'middle';
-                    this.ctx.fillText('$', 0, 0);
-
-                    // Add bright highlight details for stack
-                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                    this.ctx.fillRect(-billWidth/2 + 2, -billHeight/2 + 2, billWidth/3, billHeight - 4);
-                } else {
-                    // Single bill
-                    // Draw bill background (bright vibrant green)
-                    this.ctx.fillStyle = '#22dd44';
-                    this.ctx.fillRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
-
-                    // Draw bright gold/yellow border
-                    this.ctx.strokeStyle = '#ffff00';
-                    this.ctx.lineWidth = 3;
-                    this.ctx.strokeRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
-
-                    // Draw dollar sign in the center (bright yellow)
-                    this.ctx.fillStyle = '#ffff00';
-                    this.ctx.font = `bold ${Math.floor(size * 0.75)}px Arial`;
-                    this.ctx.textAlign = 'center';
-                    this.ctx.textBaseline = 'middle';
-                    this.ctx.fillText('$', 0, 0);
-
-                    // Add bright highlight details
-                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                    this.ctx.fillRect(-billWidth/2 + 2, -billHeight/2 + 2, billWidth/3, billHeight - 4);
-
-                    // Add extra shine
-                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    this.ctx.fillRect(-billWidth/2 + billWidth/2.5, -billHeight/2 + 1, billWidth/5, billHeight - 2);
-                }
+                // Draw simple green rectangle for bill
+                this.ctx.fillStyle = '#22dd44';
+                this.ctx.fillRect(-billWidth/2, -billHeight/2, billWidth, billHeight);
             } else {
-                // Draw as circles for other coins (BTC, ETH, DOGE)
-                // Draw outer glow (bright)
-                this.ctx.fillStyle = glowColor;
-                this.ctx.beginPath();
-                this.ctx.arc(0, 0, radius * 1.4, 0, Math.PI * 2);
-                this.ctx.fill();
-
-                // Draw solid circle (bright)
+                // Draw as simple circles for other coins (BTC, ETH, DOGE) - optimized for performance
+                // Draw solid circle only
                 this.ctx.fillStyle = color;
                 this.ctx.beginPath();
                 this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                this.ctx.fill();
-
-                // Draw bright border
-                this.ctx.strokeStyle = 'rgba(255,255,255,1)';
-                this.ctx.lineWidth = 2.5;
-                this.ctx.stroke();
-
-                // Draw inner highlight (bright)
-                this.ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                this.ctx.beginPath();
-                this.ctx.arc(-radius * 0.3, -radius * 0.3, radius * 0.35, 0, Math.PI * 2);
                 this.ctx.fill();
             }
         }
@@ -386,7 +308,7 @@
             if (!this.isRunning) return;
 
             const now = Date.now();
-            const deltaTime = Math.min(now - this.lastAnimationTime, 50);
+            const deltaTime = Math.max(1, now - this.lastAnimationTime);
             this.lastAnimationTime = now;
 
             // Spawn coins based on individual crypto type spawn rates
@@ -407,13 +329,6 @@
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.updateCoins(deltaTime);
             this.drawCoins();
-
-            // Debug text disabled - less intrusive
-            // if (this.coins.length > 0 || this.spawnRate > 0) {
-            //     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            //     this.ctx.font = '10px monospace';
-            //     this.ctx.fillText(`Coins: ${this.coins.length}`, 10, 15);
-            // }
 
             requestAnimationFrame(() => this.animate());
         }
@@ -468,6 +383,21 @@
     window.initializeCoinRain = initializeCoinRain;
     window.updateCoinRain = updateCoinRain;
     window.spawnExplosionCoins = spawnExplosionCoins;
+
+    function pauseCoinRain() {
+        if (window.coinRainSystem) {
+            window.coinRainSystem.pauseAnimation();
+        }
+    }
+
+    function resumeCoinRain() {
+        if (window.coinRainSystem) {
+            window.coinRainSystem.resumeAnimation();
+        }
+    }
+
+    window.pauseCoinRain = pauseCoinRain;
+    window.resumeCoinRain = resumeCoinRain;
 
     // Auto-initialize when DOM is ready
     function tryInitialize() {
