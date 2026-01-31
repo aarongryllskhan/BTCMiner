@@ -353,6 +353,31 @@
             </button>
             <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 8px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-size: 0.75rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
 
+            <!-- Manual Hash Rate Upgrades Section -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px;">
+                <button id="btc-manual-hash-rate-btn" onclick="purchaseBTCManualHashRate()" style="background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%); border: 3px solid #f7931a; color: #000; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 0.75rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transition: all 0.1s ease; min-width: 0;">
+                    <span style="text-align: left; line-height: 1.2; white-space: nowrap;">
+                        <div style="font-size: 0.7rem; font-weight: 700;">+10% HASH</div>
+                        <div style="font-size: 0.6rem; font-weight: 600;">Cost: <span id="btc-mhr-cost" style="display: inline-block; min-width: 35px; text-align: right;">$10K</span></div>
+                    </span>
+                    <span id="btc-mhr-multi" style="font-size: 0.65rem; font-weight: 900; flex-shrink: 0; display: inline-block; min-width: 20px; text-align: right;">1x</span>
+                </button>
+                <button id="eth-manual-hash-rate-btn" onclick="purchaseETHManualHashRate()" style="background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%); border: 3px solid #627eea; color: #fff; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 0.75rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transition: all 0.1s ease; min-width: 0;">
+                    <span style="text-align: left; line-height: 1.2; white-space: nowrap;">
+                        <div style="font-size: 0.7rem; font-weight: 700;">+10% HASH</div>
+                        <div style="font-size: 0.6rem; font-weight: 600;">Cost: <span id="eth-mhr-cost" style="display: inline-block; min-width: 35px; text-align: right;">$10K</span></div>
+                    </span>
+                    <span id="eth-mhr-multi" style="font-size: 0.65rem; font-weight: 900; flex-shrink: 0; display: inline-block; min-width: 20px; text-align: right;">1x</span>
+                </button>
+                <button id="doge-manual-hash-rate-btn" onclick="purchaseDOGEManualHashRate()" style="background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%); border: 3px solid #c2a633; color: #000; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 0.75rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transition: all 0.1s ease; min-width: 0;">
+                    <span style="text-align: left; line-height: 1.2; white-space: nowrap;">
+                        <div style="font-size: 0.7rem; font-weight: 700;">+10% HASH</div>
+                        <div style="font-size: 0.6rem; font-weight: 600;">Cost: <span id="doge-mhr-cost" style="display: inline-block; min-width: 35px; text-align: right;">$10K</span></div>
+                    </span>
+                    <span id="doge-mhr-multi" style="font-size: 0.65rem; font-weight: 900; flex-shrink: 0; display: inline-block; min-width: 20px; text-align: right;">1x</span>
+                </button>
+            </div>
+
             <!-- Desktop RUGPULL Section - Side by side (shown on non-mobile) -->
             <div id="desktop-rugpull-section" style="display: none; gap: 8px; margin-bottom: 12px; flex-direction: row; align-items: stretch;">
                 <!-- RUGPULL Button -->
