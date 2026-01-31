@@ -28,7 +28,9 @@ function saveTutorialState() {
         currentStep: tutorialData.currentStep,
         cryptoSoldOnce: tutorialData.cryptoSoldOnce,
         powerUpgradeClicked: tutorialData.powerUpgradeClicked,
-        btcTabClicked: tutorialData.btcTabClicked
+        btcTabClicked: tutorialData.btcTabClicked,
+        ethTabClicked: tutorialData.ethTabClicked,
+        dogeTabClicked: tutorialData.dogeTabClicked
     };
     localStorage.setItem('tutorialState', JSON.stringify(state));
     console.log('🎓 Tutorial state saved:', state);
@@ -45,6 +47,8 @@ function loadTutorialState() {
             tutorialData.cryptoSoldOnce = state.cryptoSoldOnce || false;
             tutorialData.powerUpgradeClicked = state.powerUpgradeClicked || false;
             tutorialData.btcTabClicked = state.btcTabClicked || false;
+            tutorialData.ethTabClicked = state.ethTabClicked || false;
+            tutorialData.dogeTabClicked = state.dogeTabClicked || false;
             console.log('🎓 Tutorial state loaded:', state);
             return true;
         } catch (e) {
@@ -59,6 +63,9 @@ let tutorialData = {
     completed: false,
     currentStep: 0,
     cryptoSoldOnce: false,
+    btcTabClicked: false,
+    ethTabClicked: false,
+    dogeTabClicked: false,
     steps: [
         {
             id: 'manual_hash',
@@ -221,9 +228,206 @@ let tutorialData = {
             }
         },
         {
+            id: 'buy_eth_miner',
+            title: 'Mine Ethereum',
+            description: 'Now let\'s diversify! Click the ETH tab to see Ethereum mining equipment.',
+            targets: ['eth-tab-btn'],
+            trigger: 'manual',
+            nextCondition: () => typeof tutorialData !== 'undefined' && tutorialData.ethTabClicked,
+            highlightClass: 'tutorial-highlight-urgent',
+            autoAdvance: true,
+            hideGotItButton: true
+        },
+        {
+            id: 'buy_gpu_rig',
+            title: 'Buy Single GPU Rig',
+            description: 'In the ETH tab, purchase a "Single GPU Rig" to start mining Ethereum. You can\'t proceed without buying one!',
+            targets: ['eth-shop'],
+            trigger: 'manual',
+            nextCondition: () => typeof ethUpgrades !== 'undefined' && ethUpgrades[1] && ethUpgrades[1].level > 0,
+            highlightClass: 'tutorial-highlight-urgent',
+            autoAdvance: true,
+            hideGotItButton: true,
+            customHighlight: () => {
+                setTimeout(() => {
+                    const gpuRigBtn = document.getElementById('up-1-eth') || document.getElementById('ue-1');
+                    if (gpuRigBtn) {
+                        gpuRigBtn.style.cssText = `
+                            border: 3px dashed #FFD700 !important;
+                            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+                            position: relative !important;
+                            z-index: 9991 !important;
+                            outline: 2px solid #FFD700 !important;
+                            outline-offset: 2px !important;
+                        `;
+                        console.log('🎓 Single GPU Rig highlighted successfully');
+                    } else {
+                        console.log('🎓 Could not find GPU Rig button - trying text search fallback');
+                        let found = false;
+                        document.querySelectorAll('button.u-item').forEach(el => {
+                            if (el.textContent.includes('Single GPU Rig')) {
+                                el.style.cssText = `
+                                    border: 3px dashed #FFD700 !important;
+                                    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+                                    position: relative !important;
+                                    z-index: 9991 !important;
+                                    outline: 2px solid #FFD700 !important;
+                                    outline-offset: 2px !important;
+                                `;
+                                console.log('🎓 Single GPU Rig found and highlighted via text search');
+                                found = true;
+                            }
+                        });
+                        if (!found) {
+                            console.log('🎓 Single GPU Rig button not found - ETH shop may not be rendered yet');
+                        }
+                    }
+                }, 300);
+            }
+        },
+        {
+            id: 'buy_doge_miner',
+            title: 'Mine Dogecoin',
+            description: 'Let\'s complete the trifecta! Click the DOGE tab to see Dogecoin mining equipment.',
+            targets: ['doge-tab-btn'],
+            trigger: 'manual',
+            nextCondition: () => typeof tutorialData !== 'undefined' && tutorialData.dogeTabClicked,
+            highlightClass: 'tutorial-highlight-urgent',
+            autoAdvance: true,
+            hideGotItButton: true
+        },
+        {
+            id: 'buy_scrypt_miner',
+            title: 'Buy Basic Scrypt Miner',
+            description: 'In the DOGE tab, purchase a "Basic Scrypt Miner" to start mining Dogecoin. You can\'t proceed without buying one!',
+            targets: ['doge-shop'],
+            trigger: 'manual',
+            nextCondition: () => typeof dogeUpgrades !== 'undefined' && dogeUpgrades[1] && dogeUpgrades[1].level > 0,
+            highlightClass: 'tutorial-highlight-urgent',
+            autoAdvance: true,
+            hideGotItButton: true,
+            customHighlight: () => {
+                setTimeout(() => {
+                    const scryptBtn = document.getElementById('up-1-doge') || document.getElementById('ud-1');
+                    if (scryptBtn) {
+                        scryptBtn.style.cssText = `
+                            border: 3px dashed #FFD700 !important;
+                            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+                            position: relative !important;
+                            z-index: 9991 !important;
+                            outline: 2px solid #FFD700 !important;
+                            outline-offset: 2px !important;
+                        `;
+                        console.log('🎓 Basic Scrypt Miner highlighted successfully');
+                    } else {
+                        console.log('🎓 Could not find Scrypt Miner button - trying text search fallback');
+                        let found = false;
+                        document.querySelectorAll('button.u-item').forEach(el => {
+                            if (el.textContent.includes('Basic Scrypt Miner')) {
+                                el.style.cssText = `
+                                    border: 3px dashed #FFD700 !important;
+                                    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.2) !important;
+                                    position: relative !important;
+                                    z-index: 9991 !important;
+                                    outline: 2px solid #FFD700 !important;
+                                    outline-offset: 2px !important;
+                                `;
+                                console.log('🎓 Basic Scrypt Miner found and highlighted via text search');
+                                found = true;
+                            }
+                        });
+                        if (!found) {
+                            console.log('🎓 Basic Scrypt Miner button not found - DOGE shop may not be rendered yet');
+                        }
+                    }
+                }, 300);
+            }
+        },
+        {
+            id: 'hashrate_display',
+            title: 'Monitor Your Hashrate',
+            description: 'These bars display your current HASHRATE in $/sec for each cryptocurrency. This shows how much value you\'re earning per second from your miners!',
+            targets: ['hashrate-btc', 'hashrate-eth', 'hashrate-doge'],
+            trigger: 'manual',
+            nextCondition: () => true,
+            highlightClass: 'tutorial-highlight',
+            customHighlight: () => {
+                // Scroll to show the hashrate bars on mobile
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        const hashrateBtc = document.getElementById('hashrate-btc');
+                        if (hashrateBtc) {
+                            hashrateBtc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 300);
+                }
+            }
+        },
+        {
+            id: 'crypto_distribution',
+            title: 'Cryptocurrency Distribution',
+            description: 'These colored bars show your current distribution of BTC, ETH, and DOGE. As you mine more cryptocurrencies, the proportions will shift based on which miners you own!',
+            targets: ['crypto-dist-btc', 'crypto-dist-eth', 'crypto-dist-doge'],
+            trigger: 'manual',
+            nextCondition: () => true,
+            highlightClass: 'tutorial-highlight',
+            customHighlight: () => {
+                // Scroll to show the crypto distribution bars on mobile
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        const cryptoDistBtc = document.getElementById('crypto-dist-btc');
+                        if (cryptoDistBtc) {
+                            cryptoDistBtc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 300);
+                }
+            }
+        },
+        {
+            id: 'portfolio_chart',
+            title: 'Track Your Portfolio',
+            description: 'This chart displays your total net worth over time, including your cash balance and all cryptocurrency holdings. Watch it grow as you expand your mining operation!',
+            targets: ['portfolio-chart-container'],
+            trigger: 'manual',
+            nextCondition: () => true,
+            highlightClass: 'tutorial-highlight',
+            customHighlight: () => {
+                // Scroll to show the portfolio chart on mobile
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        const chartContainer = document.getElementById('portfolio-chart-container');
+                        if (chartContainer) {
+                            chartContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 300);
+                }
+            }
+        },
+        {
+            id: 'explore_minigames',
+            title: 'Discover Minigames',
+            description: 'Click the MINIGAMES tab to unlock fun side activities! Earn extra rewards by playing Packet Interceptor, Network Destruction, and more to boost your earnings.',
+            targets: ['minigames-tab-btn'],
+            trigger: 'manual',
+            nextCondition: () => true,
+            highlightClass: 'tutorial-highlight',
+            autoAdvance: true,
+            customHighlight: () => {
+                // Scroll to show the minigames tab on mobile
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        const minigamesBtn = document.getElementById('minigames-tab-btn');
+                        if (minigamesBtn) {
+                            minigamesBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 300);
+                }
+            }
+        },
+        {
             id: 'tutorial_complete',
             title: 'You\'re Ready!',
-            description: 'Excellent! You\'ve learned the core mechanics. Keep buying miners and upgrading power to grow your empire. Good luck!',
+            description: 'Excellent! You\'ve learned the core mechanics. As you progress, visit the RUGPULL tab to sacrifice your progress and earn Corrupt Tokens—powerful upgrades that boost your earnings and apply to future playthroughs! Keep buying miners and upgrading power to grow your empire. Good luck!',
             targets: [],
             trigger: 'manual',
             nextCondition: () => true,
@@ -374,7 +578,7 @@ function showTutorialStep() {
 
     // For steps that auto-advance (Step 3, Step 4, Step 5, and Step 6), don't show Got It button
     const isStep5 = step.id === 'btc_tab';
-    const shouldHideButton = isStep3 || isStep4 || isStep5 || isStep6;
+    const shouldHideButton = isStep3 || isStep4 || isStep5 || isStep6 || step.hideGotItButton;
 
     card.innerHTML = `
         <div style="font-size: 2rem; margin-bottom: 15px;">👋</div>
@@ -715,11 +919,53 @@ function trackBTCTabClick() {
     }
 }
 
+// Track ETH tab click
+function trackETHTabClick() {
+    tutorialData.ethTabClicked = true;
+    saveTutorialState();
+
+    // If we're on Step 7 (buy_eth_miner), advance to next step
+    if (!tutorialData.completed && tutorialData.currentStep === 6 && tutorialData.steps[6].id === 'buy_eth_miner') {
+        console.log('🎓 ETH tab clicked! Advancing tutorial.');
+        nextTutorialStep();
+    }
+}
+
+// Track DOGE tab click
+function trackDOGETabClick() {
+    tutorialData.dogeTabClicked = true;
+    saveTutorialState();
+
+    // If we're on Step 9 (buy_doge_miner), advance to next step
+    if (!tutorialData.completed && tutorialData.currentStep === 8 && tutorialData.steps[8].id === 'buy_doge_miner') {
+        console.log('🎓 DOGE tab clicked! Advancing tutorial.');
+        nextTutorialStep();
+    }
+}
+
 // Track USB Miner purchase
 function trackUSBMinerPurchase() {
     // If we're on Step 6 (buy_usb_miner), advance to next step
     if (!tutorialData.completed && tutorialData.currentStep === 5 && tutorialData.steps[5].id === 'buy_usb_miner') {
         console.log('🎓 USB Miner purchased! Advancing tutorial.');
+        nextTutorialStep();
+    }
+}
+
+// Track GPU Rig purchase
+function trackGPURigPurchase() {
+    // If we're on Step 8 (buy_gpu_rig), advance to next step
+    if (!tutorialData.completed && tutorialData.currentStep === 7 && tutorialData.steps[7].id === 'buy_gpu_rig') {
+        console.log('🎓 Single GPU Rig purchased! Advancing tutorial.');
+        nextTutorialStep();
+    }
+}
+
+// Track Scrypt Miner purchase
+function trackScryptMinerPurchase() {
+    // If we're on Step 10 (buy_scrypt_miner), advance to next step
+    if (!tutorialData.completed && tutorialData.currentStep === 9 && tutorialData.steps[9].id === 'buy_scrypt_miner') {
+        console.log('🎓 Basic Scrypt Miner purchased! Advancing tutorial.');
         nextTutorialStep();
     }
 }

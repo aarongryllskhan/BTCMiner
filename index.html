@@ -144,9 +144,9 @@
     </div>
 
     <div id="main-layout">
-        <div class="panel">
+        <div class="panel" id="left-panel">
             <!-- Top Horizontal Button Row -->
-            <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; padding: 4px 24px; background: #1a1a1a; pointer-events: auto; width: 100vw; box-sizing: border-box; margin: 0 0 0 calc(-50vw + 50%); position: sticky; top: 0; z-index: 1000;" id="utility-buttons-container">
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; padding: 4px 24px; background: #1a1a1a; pointer-events: auto; width: 100vw; box-sizing: border-box; margin: 0 0 0 calc(-50vw + 50%); z-index: 1000;" id="utility-buttons-container">
                 <button id="mute-btn" class="btn-secondary btn-utility" onclick="toggleMute()">SOUND ON</button>
                 <button id="vfx-btn" class="btn-secondary btn-utility" onclick="toggleVFX()">VFX ON</button>
                 <button class="btn-secondary btn-utility" onclick="toggleFullscreen()">⛶ FULLSCREEN</button>
@@ -157,7 +157,7 @@
             </div>
 
             <!-- Three-Column Layout -->
-            <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px;">
+            <div style="display: flex; gap: 10px; align-items: stretch; margin-bottom: 12px; min-height: 0;">
                 <!-- Left Sidebar: Crypto Prices with Images -->
                 <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; min-width: 0;">
                     <span style="font-size: 0.55rem; color: #666; text-transform: uppercase; display: block; letter-spacing: 1px; font-weight: 800; padding-left: 4px;">PRICES</span>
@@ -200,49 +200,51 @@
                 </div>
 
                 <!-- Center Content -->
-                <div style="flex: 1; text-align: center;">
-                    <!-- Money Counter - Big and Prominent -->
-                    <div style="text-align: center; margin-bottom: 4px; order: -1;">
-                        <div style="font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: 700; margin-bottom: 0px; letter-spacing: 0.5px; line-height: 1;">Total Crypto Holdings</div>
-                        <div class="nw-amount" id="nw-val" style="margin-bottom: 0; margin-top: 0; line-height: 1.1;">$0.00</div>
-                        <!-- Hidden div with actual span IDs for JavaScript to update -->
-                        <div style="display: none;" id="nw-breakdown">
-                            <span id="nw-btc">0.00</span>
-                            <span id="nw-eth">0.00</span>
-                            <span id="nw-doge">0.00</span>
-                        </div>
-                    </div>
-
-                    <!-- Crypto Holdings Section -->
-                    <div>
-                        <!-- Crypto Portfolio Bars - Side by side with amounts above -->
-                        <div style="width: 100%; display: flex; justify-content: center; gap: clamp(16px, 5vw, 48px); padding: 0 clamp(4px, 2vw, 8px); box-sizing: border-box; flex-wrap: nowrap;">
-                            <div style="flex: 0 0 clamp(80px, 20vw, 120px); display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                                <div style="height: auto; min-height: 22px; color: #f7931a; font-size: clamp(0.75rem, 1.8vw, 0.95rem); font-weight: bold; font-family: monospace; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">₿ <span class="btc-amount"></span></div>
-                                <div style="position: relative; width: 100%; height: 28px; background: rgba(247, 147, 26, 0.25); border: 1px solid rgba(247, 147, 26, 0.6); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                    <div id="btc-bar" style="position: absolute; left: 0; top: 0; height: 100%; background: #f7931a; width: 0%; transition: width 0.3s ease; z-index: 1;"></div>
-                                    <span id="btc-bar-percent" style="position: relative; z-index: 2; color: #ffffff; font-size: clamp(0.9rem, 2.2vw, 1.05rem); font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,1); display: none;"></span>
-                                </div>
-                            </div>
-                            <div style="flex: 0 0 clamp(80px, 20vw, 120px); display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                                <div style="height: auto; min-height: 22px; color: #627eea; font-size: clamp(0.75rem, 1.8vw, 0.95rem); font-weight: bold; font-family: monospace; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ξ <span class="eth-amount"></span></div>
-                                <div style="position: relative; width: 100%; height: 28px; background: rgba(98, 126, 234, 0.25); border: 1px solid rgba(98, 126, 234, 0.6); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                    <div id="eth-bar" style="position: absolute; left: 0; top: 0; height: 100%; background: #627eea; width: 0%; transition: width 0.3s ease; z-index: 1;"></div>
-                                    <span id="eth-bar-percent" style="position: relative; z-index: 2; color: #ffffff; font-size: clamp(0.9rem, 2.2vw, 1.05rem); font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,1); display: none;"></span>
-                                </div>
-                            </div>
-                            <div style="flex: 0 0 clamp(80px, 20vw, 120px); display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                                <div style="height: auto; min-height: 22px; color: #c2a633; font-size: clamp(0.75rem, 1.8vw, 0.95rem); font-weight: bold; font-family: monospace; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ð <span class="doge-amount"></span></div>
-                                <div style="position: relative; width: 100%; height: 28px; background: rgba(194, 166, 51, 0.25); border: 1px solid rgba(194, 166, 51, 0.6); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                    <div id="doge-bar" style="position: absolute; left: 0; top: 0; height: 100%; background: #c2a633; width: 0%; transition: width 0.3s ease; z-index: 1;"></div>
-                                    <span id="doge-bar-percent" style="position: relative; z-index: 2; color: #ffffff; font-size: clamp(0.9rem, 2.2vw, 1.05rem); font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,1); display: none;"></span>
-                                </div>
+                <div style="flex: 1; text-align: center; display: flex; flex-direction: column;">
+                    <!-- Sticky Wrapper for Holdings and Hashrate -->
+                    <div id="sticky-header" style="position: sticky; top: 0; background: #1a1a1a; z-index: 10000; border-bottom: 1px solid #333; padding: 4px 0; box-sizing: border-box;">
+                        <!-- Money Counter - Big and Prominent -->
+                        <div style="text-align: center; margin-bottom: 4px; order: -1; padding: 4px 0;">
+                            <div style="font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: 700; margin-bottom: 0px; letter-spacing: 0.5px; line-height: 1;">Total Crypto Holdings</div>
+                            <div class="nw-amount" id="nw-val" style="margin-bottom: 0; margin-top: 0; line-height: 1.1;">$0.00</div>
+                            <!-- Hidden div with actual span IDs for JavaScript to update -->
+                            <div style="display: none;" id="nw-breakdown">
+                                <span id="nw-btc">0.00</span>
+                                <span id="nw-eth">0.00</span>
+                                <span id="nw-doge">0.00</span>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Hashrate Boxes and Bars - Desktop style for mobile -->
-                    <div style="width: 100%; display: flex; justify-content: center; gap: 8px; padding: 0; box-sizing: border-box; flex-wrap: nowrap; margin: 4px 0 0 0;">
+                        <!-- Crypto Holdings Section -->
+                        <div>
+                            <!-- Crypto Portfolio Bars - Side by side with amounts above -->
+                            <div style="width: 100%; display: flex; justify-content: center; gap: clamp(16px, 5vw, 48px); padding: 0 clamp(4px, 2vw, 8px); box-sizing: border-box; flex-wrap: nowrap;">
+                                <div style="flex: 0 0 clamp(80px, 20vw, 120px); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                    <div style="height: auto; min-height: 22px; color: #f7931a; font-size: clamp(0.75rem, 1.8vw, 0.95rem); font-weight: bold; font-family: monospace; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">₿ <span class="btc-amount"></span></div>
+                                    <div style="position: relative; width: 100%; height: 28px; background: rgba(247, 147, 26, 0.25); border: 1px solid rgba(247, 147, 26, 0.6); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                        <div id="btc-bar" style="position: absolute; left: 0; top: 0; height: 100%; background: #f7931a; width: 0%; transition: width 0.3s ease; z-index: 1;"></div>
+                                        <span id="btc-bar-percent" style="position: relative; z-index: 2; color: #ffffff; font-size: clamp(0.9rem, 2.2vw, 1.05rem); font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,1); display: none;"></span>
+                                    </div>
+                                </div>
+                                <div style="flex: 0 0 clamp(80px, 20vw, 120px); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                    <div style="height: auto; min-height: 22px; color: #627eea; font-size: clamp(0.75rem, 1.8vw, 0.95rem); font-weight: bold; font-family: monospace; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ξ <span class="eth-amount"></span></div>
+                                    <div style="position: relative; width: 100%; height: 28px; background: rgba(98, 126, 234, 0.25); border: 1px solid rgba(98, 126, 234, 0.6); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                        <div id="eth-bar" style="position: absolute; left: 0; top: 0; height: 100%; background: #627eea; width: 0%; transition: width 0.3s ease; z-index: 1;"></div>
+                                        <span id="eth-bar-percent" style="position: relative; z-index: 2; color: #ffffff; font-size: clamp(0.9rem, 2.2vw, 1.05rem); font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,1); display: none;"></span>
+                                    </div>
+                                </div>
+                                <div style="flex: 0 0 clamp(80px, 20vw, 120px); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                    <div style="height: auto; min-height: 22px; color: #c2a633; font-size: clamp(0.75rem, 1.8vw, 0.95rem); font-weight: bold; font-family: monospace; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ð <span class="doge-amount"></span></div>
+                                    <div style="position: relative; width: 100%; height: 28px; background: rgba(194, 166, 51, 0.25); border: 1px solid rgba(194, 166, 51, 0.6); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                        <div id="doge-bar" style="position: absolute; left: 0; top: 0; height: 100%; background: #c2a633; width: 0%; transition: width 0.3s ease; z-index: 1;"></div>
+                                        <span id="doge-bar-percent" style="position: relative; z-index: 2; color: #ffffff; font-size: clamp(0.9rem, 2.2vw, 1.05rem); font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,1); display: none;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hashrate Boxes and Bars - Desktop style for mobile -->
+                        <div style="width: 100%; display: flex; justify-content: center; gap: 8px; padding: 0; box-sizing: border-box; flex-wrap: nowrap; margin: 4px 0 0 0;">
                         <div style="flex: 1; min-width: 60px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
                             <div style="height: auto; min-height: 22px; color: #f7931a; font-size: clamp(0.75rem, 1.8vw, 0.95rem); font-weight: bold; font-family: monospace; line-height: 1.3; word-break: break-word;"><span style="text-transform: uppercase; font-size: 0.7rem; display: block; color: #888;">BTC</span><b style="color: #f7931a;" id="yield-btc">0.00000000/s</b></div>
                             <div style="position: relative; width: 100%; height: 28px; background: rgba(247, 147, 26, 0.25); border: 1px solid rgba(247, 147, 26, 0.6); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
@@ -265,19 +267,20 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
 
                 <!-- Right Sidebar: Time, Earning, Lifetime -->
                 <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; min-width: 0;">
-                    <div class="stat-box stat-box-session" style="padding: clamp(4px, 1vw, 8px); background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: auto; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
+                    <div class="stat-box stat-box-session" style="padding: clamp(4px, 1vw, 8px); background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: auto; flex: 0 1 auto; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
                         <span style="font-size: clamp(0.45rem, 0.9vw, 0.65rem); color: #888; text-transform: uppercase; display: block; margin-bottom: clamp(1px, 0.3vw, 2px); font-weight: 800; line-height: 1.2; word-break: break-word;"><span class="long-label">TIME THIS SESSION</span><span class="short-label" style="display: none;">SESSION<br>TIME</span></span>
                         <b style="font-size: clamp(0.6rem, 1.2vw, 0.85rem); color: #ffffff; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-time">0m 0s</b>
                     </div>
-                    <div class="stat-box stat-box-session-earnings" style="padding: clamp(4px, 1vw, 8px); background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: auto; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
+                    <div class="stat-box stat-box-session-earnings" style="padding: clamp(4px, 1vw, 8px); background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: auto; flex: 0 1 auto; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
                         <span style="font-size: clamp(0.45rem, 0.9vw, 0.65rem); color: #888; text-transform: uppercase; display: block; margin-bottom: clamp(1px, 0.3vw, 2px); font-weight: 800; line-height: 1.2; word-break: break-word;"><span class="long-label">EARNING THIS SESSION</span><span class="short-label" style="display: none;">SESSION<br>EARNINGS</span></span>
                         <b style="font-size: clamp(0.6rem, 1.2vw, 0.85rem); color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="session-earning">$0.00</b>
                     </div>
-                    <div class="stat-box stat-box-earnings" style="padding: clamp(4px, 1vw, 8px); background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: auto; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
+                    <div class="stat-box stat-box-earnings" style="padding: clamp(4px, 1vw, 8px); background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid #222; min-width: auto; flex: 0 1 auto; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
                         <span style="font-size: clamp(0.45rem, 0.9vw, 0.65rem); color: #888; text-transform: uppercase; display: block; margin-bottom: clamp(1px, 0.3vw, 2px); font-weight: 800; line-height: 1.2; word-break: break-word;"><span class="long-label">LIFETIME EARNINGS</span><span class="short-label" style="display: none;">LIFETIME<br>EARNINGS</span></span>
                         <b style="font-size: clamp(0.6rem, 1.2vw, 0.85rem); color: #00ff88; font-family: monospace; font-weight: 900; word-break: break-word;" id="lifetime-earning">$0.00</b>
                     </div>
@@ -2052,6 +2055,32 @@ function handleRugpullButtonClick() {
 </footer>
 
 <script>
+// Sticky header handling for holdings/hashrate section
+(function() {
+    const stickyHeader = document.getElementById('sticky-header');
+    const panel = document.getElementById('left-panel');
+
+    if (stickyHeader && panel) {
+        panel.addEventListener('scroll', function() {
+            const panelRect = panel.getBoundingClientRect();
+            const headerTop = stickyHeader.offsetTop;
+
+            // If header has scrolled past the top of the panel
+            if (panel.scrollTop > headerTop) {
+                stickyHeader.style.position = 'fixed';
+                stickyHeader.style.top = '0';
+                stickyHeader.style.left = panelRect.left + 'px';
+                stickyHeader.style.width = panelRect.width + 'px';
+            } else {
+                stickyHeader.style.position = 'sticky';
+                stickyHeader.style.top = '0';
+                stickyHeader.style.left = 'auto';
+                stickyHeader.style.width = 'auto';
+            }
+        });
+    }
+})();
+
 // Remove focus glow on buttons after click on mobile
 document.addEventListener('click', function(e) {
     const btn = e.target.closest('.u-item, .tab-btn, .mine-btn, #autoclicker-btn, #power-upgrade-btn, #crypto-exchange-btn, #minigames-tab-btn, #hacking-tab-btn, #whack-tab-btn');

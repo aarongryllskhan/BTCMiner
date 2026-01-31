@@ -168,11 +168,11 @@
             // Consistent sizes for all coins - increased for visibility
             let size;
             if (coinType.name === 'usd') {
-                size = 30; // Dollar bills
+                size = 90; // Dollar bills
             } else if (coinType.name === 'usd_stack') {
-                size = 35; // Dollar stacks
+                size = 90; // Dollar stacks
             } else if (coinType.name === 'usd_stack_2') {
-                size = 30; // Mega dollar stacks
+                size = 90; // Mega dollar stacks
             } else {
                 size = 24; // Fixed size for BTC, ETH, and DOGE
             }
@@ -185,9 +185,13 @@
             // All coins should start at full opacity for visibility
             const startOpacity = 1.0;
 
+            const isMobile = window.innerWidth <= 768;
+            // On desktop, limit coins to left panel (chart side) - approximately 45% of screen width
+            const maxSpawnX = isMobile ? this.canvas.width : this.canvas.width * 0.45;
+
             const coin = {
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * -100 - 50, // Stagger spawn heights from -50 to -150
+                x: Math.random() * maxSpawnX,
+                y: Math.random() * -100 - 80, // Spawn off-screen at top: -80 to -180 pixels
                 vx: (Math.random() - 0.5) * vxVariation, // More horizontal variation for click coins
                 vy: 0.5 + Math.random() * vyVariation, // More variable fall speed for click coins
                 rotation: Math.random() * Math.PI * 2,
@@ -196,7 +200,7 @@
                 opacity: startOpacity, // Full opacity for USD, 0.7 for others
                 type: coinType.name,
                 lifetime: 0,
-                maxLifetime: 1000, // 1 second lifetime
+                maxLifetime: isMobile ? 350 : 1000, // 350ms on mobile, 1s on desktop
                 isClickCoin: consistentSize // Mark as click coin if consistent size
             };
 
