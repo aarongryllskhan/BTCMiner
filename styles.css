@@ -1523,6 +1523,31 @@
         .tab-content { display: none; flex-direction: column; min-height: 0; flex: 1; }
         .tab-content.active { display: flex; }
 
+        /* Sell and Stake button hover effects */
+        button[onclick*="quickSellBTC"]:hover,
+        button[onclick*="quickSellETH"]:hover,
+        button[onclick*="quickSellDOGE"]:hover {
+            filter: brightness(1.2) !important;
+            transform: scale(1.05) !important;
+        }
+
+        button[onclick*="quickStake"]:hover {
+            filter: brightness(1.2) !important;
+            transform: scale(1.05) !important;
+        }
+
+        button[onclick*="sellAllBTC"]:hover,
+        button[onclick*="sellAllETH"]:hover,
+        button[onclick*="sellAllDOGE"]:hover,
+        button[onclick*="stakeAllBTC"]:hover,
+        button[onclick*="stakeAllETH"]:hover,
+        button[onclick*="stakeAllDOGE"]:hover {
+            background-color: #444 !important;
+            border-color: currentColor !important;
+            filter: brightness(1.15) !important;
+            transform: scale(1.03) !important;
+        }
+
         /* Manual hash buttons - use new btn-primary system */
         .mine-btn {
             width: 100%;
