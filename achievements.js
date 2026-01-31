@@ -518,8 +518,8 @@ function showAchievementNotification(achievementId) {
 // Update positions of all active notifications
 function updateNotificationPositions() {
     activeNotifications.forEach((notification, index) => {
-        const offset = index * 130; // 130px spacing between notifications
-        notification.style.top = (20 + offset) + 'px';
+        const offset = index * 90; // 90px spacing between notifications
+        notification.style.bottom = (15 + offset) + 'px';
     });
 }
 

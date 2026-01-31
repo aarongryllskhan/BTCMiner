@@ -300,8 +300,21 @@ function ensureMetaUpgradesInitialized() {
                 .map(key => {
                     const tier = parseInt(key.match(/\d+$/)[0]);
                     const type = key.replace(/_\d+$/, '');
-                    const baseCost = 10;  // All upgrades now use same base cost
-                    const cost = baseCost * Math.pow(tier, 3);
+                    let cost;
+
+                    // New rugpull progression: 1M, 50M, 100M, 1B, 1T, 1Q, 1^500
+                    if (tier === 1) cost = 1_000_000;           // 1M
+                    else if (tier === 2) cost = 50_000_000;     // 50M
+                    else if (tier === 3) cost = 100_000_000;    // 100M
+                    else if (tier === 4) cost = 1_000_000_000;  // 1B
+                    else if (tier === 5) cost = 1_000_000_000_000; // 1T
+                    else if (tier === 6) cost = 1_000_000_000_000_000; // 1 Quadrillion
+                    else {
+                        // For tier 7+: exponential growth toward 10^500
+                        // Use 10^(5 + (tier-6)*50) to reach 10^500 at tier 11
+                        cost = Math.pow(10, 5 + (tier - 6) * 50);
+                    }
+
                     return [key, { purchased: false, cost }];
                 })
         )

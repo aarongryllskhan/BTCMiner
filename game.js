@@ -7854,7 +7854,10 @@ dogeUpgrades.forEach(u => {
                                 align: 'center',
                                 labels: {
                                     color: '#999',
-                                    font: { size: 10 }
+                                    font: { size: window.innerWidth <= 480 ? 6 : 8 },
+                                    boxWidth: 14,
+                                    boxHeight: 10,
+                                    padding: 6
                                 }
                             },
                             tooltip: {
