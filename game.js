@@ -8175,7 +8175,7 @@ dogeUpgrades.forEach(u => {
                                 align: 'center',
                                 labels: {
                                     color: '#999',
-                                    font: { size: window.innerWidth <= 480 ? 6 : 12 },
+                                    font: { size: window.innerWidth <= 448 ? 6 : (window.innerWidth <= 932 ? 8 : 12) },
                                     boxWidth: 18,
                                     boxHeight: 13,
                                     padding: 6
@@ -8338,12 +8338,33 @@ dogeUpgrades.forEach(u => {
             }
         }, 100); // Small initial delay to ensure DOM is fully rendered
 
+        // Initialize rugpull sections visibility based on screen size
+        const initializeRugpullVisibility = () => {
+            const isDesktop = window.innerWidth > 1200;
+            const desktopRugpull = document.getElementById('desktop-rugpull-section');
+            const mobileRugpull = document.getElementById('mobile-rugpull-section');
+            if (desktopRugpull && mobileRugpull) {
+                desktopRugpull.style.display = isDesktop ? 'flex' : 'none';
+                mobileRugpull.style.display = isDesktop ? 'none' : 'flex';
+            }
+        };
+        initializeRugpullVisibility();
+
         // Handle window resize/orientation change on mobile
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 const isDesktop = window.innerWidth > 1200;
+
+                // Show/hide rugpull sections based on screen size
+                const desktopRugpull = document.getElementById('desktop-rugpull-section');
+                const mobileRugpull = document.getElementById('mobile-rugpull-section');
+                if (desktopRugpull && mobileRugpull) {
+                    desktopRugpull.style.display = isDesktop ? 'flex' : 'none';
+                    mobileRugpull.style.display = isDesktop ? 'none' : 'flex';
+                }
+
                 if (nwChart) {
                     console.log('Window resized, re-rendering net worth chart...');
                     nwChart.resize();
@@ -9037,7 +9058,7 @@ dogeUpgrades.forEach(u => {
                             display: true,
                             labels: {
                                 color: '#999',
-                                font: { size: 10 }
+                                font: { size: window.innerWidth <= 448 ? 6 : (window.innerWidth <= 932 ? 8 : 12) }
                             }
                         },
                         tooltip: {

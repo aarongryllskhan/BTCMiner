@@ -30,15 +30,6 @@
         .short-label { display: none !important; }
         .long-label { display: inline !important; }
 
-        @media (max-width: 1299px) {
-            .short-label { display: inline !important; }
-            .long-label { display: none !important; }
-        }
-
-        @media (min-width: 1300px) {
-            body { padding: 20px 20px 0 20px; }
-        }
-
         /* Grey background to match panels */
         body::before {
             content: '';
@@ -52,7 +43,6 @@
             z-index: 0;
             will-change: auto;
         }
-
 
         body > * {
             position: relative;
@@ -90,12 +80,7 @@
         /* Coin Rain Animation */
         #coin-rain-canvas { image-rendering: crisp-edges; image-rendering: pixelated; }
 
-
         #main-layout { display: grid; grid-template-columns: 1.86fr 1fr; gap: 0; height: 100vh; width: 100%; margin: 0; padding: 0; }
-
-        @media (min-width: 1300px) {
-            #main-layout { height: calc(100vh - 40px); gap: 0; }
-        }
 
         /* Left panel - Mining section */
         #main-layout > div:first-child {
@@ -108,6 +93,36 @@
         #main-layout > div:last-child {
             position: relative;
             background-color: transparent;
+        }
+
+        /* Desktop: Constrain buttons to left panel width */
+        @media (min-width: 933px) {
+            .panel:first-child > div:first-of-type > div:last-child {
+                display: flex !important;
+            }
+            #utility-buttons-container {
+                display: flex !important;
+                width: auto !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 4px 0 !important;
+                justify-content: center !important;
+            }
+
+            /* Desktop: make hardware equity box larger */
+            .stat-box-hardware {
+                padding: 2px 2px !important;
+                width: auto !important;
+                height: auto !important;
+            }
+
+            /* Hardware Equity box in chart wrapper - default size on desktop */
+            div[style*="position: absolute"][style*="right: 10px"] {
+                width: auto !important;
+                height: auto !important;
+                padding: 8px 12px !important;
+                flex-direction: column !important;
+            }
         }
 
         .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; width: 100%; box-sizing: border-box; }
@@ -212,6 +227,7 @@
         .panel:first-child > div:first-of-type > div:last-child {
             flex-shrink: 1 !important;
             flex-wrap: wrap !important;
+            justify-content: center !important;
         }
 
         .panel:first-child > div:first-of-type > div:last-child > button {
@@ -222,16 +238,37 @@
             padding: 3px 5px !important;
         }
 
-        /* Ultra small mobile - below 465px */
-        @media (max-width: 464px) {
+        /* Small phones: 360px - 448px (Galaxy S24, iPhone 15, Galaxy S24 Ultra) */
+        @media (max-width: 448px) {
+            .stat-box-hardware {
+                position: absolute !important;
+                top: 1px !important;
+                right: 1px !important;
+                padding: 1px 1px !important;
+                background: rgba(76, 175, 80, 0.15) !important;
+                border: 1px solid #4CAF50 !important;
+                border-radius: 4px !important;
+                z-index: 10 !important;
+                pointer-events: none !important;
+                max-width: 45px !important;
+                max-height: 20px !important;
+                font-size: 0.28rem !important;
+            }
+            .stat-box-hardware span {
+                font-size: 0.26rem !important;
+            }
+            .stat-box-hardware b {
+                font-size: 0.37rem !important;
+            }
+
             #btc-global-multiplier-btn,
             #eth-global-multiplier-btn,
             #doge-global-multiplier-btn {
-                padding: 6px 8px !important;
-                font-size: 0.6rem !important;
-                margin-bottom: 4px !important;
+                padding: 4px 6px !important;
+                font-size: 0.55rem !important;
+                margin-bottom: 3px !important;
                 flex-direction: row !important;
-                gap: 3px !important;
+                gap: 2px !important;
                 align-items: center !important;
                 justify-content: space-between !important;
                 overflow: visible !important;
@@ -239,26 +276,22 @@
             #btc-global-multiplier-btn span:first-child,
             #eth-global-multiplier-btn span:first-child,
             #doge-global-multiplier-btn span:first-child {
-                font-size: 0.55rem !important;
+                font-size: 0.5rem !important;
                 flex: 0 1 auto !important;
                 white-space: nowrap !important;
                 min-width: 0 !important;
             }
             #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
-                font-size: 0.5rem !important;
+                font-size: 0.45rem !important;
                 flex-shrink: 0 !important;
                 min-width: 0 !important;
             }
             #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
-                font-size: 0.45rem !important;
+                font-size: 0.4rem !important;
                 flex-shrink: 0 !important;
-                min-width: 60px !important;
+                min-width: 55px !important;
                 text-align: right !important;
             }
-        }
-
-        /* Very small mobile - ultra compact buttons */
-        @media (max-width: 480px) {
             .panel:first-child > div:first-of-type > div:last-child > button {
                 font-size: 0.4rem !important;
                 padding: 2px 4px !important;
@@ -266,8 +299,20 @@
             }
         }
 
-        /* Small mobile: 481px to 608px - Reduce permanent hash rate button size */
-        @media (min-width: 481px) and (max-width: 608px) {
+        /* Larger phones: 449px - 932px (iPhone 15 Pro, Pixel 8, iPhone 15 Pro Max, Pixel 8 Pro) */
+        @media (min-width: 449px) and (max-width: 932px) {
+            .stat-box-hardware {
+                max-width: 75px !important;
+                padding: 4px 5px !important;
+                font-size: 0.38rem !important;
+            }
+            .stat-box-hardware span {
+                font-size: 0.35rem !important;
+            }
+            .stat-box-hardware b {
+                font-size: 0.47rem !important;
+            }
+
             #btc-global-multiplier-btn,
             #eth-global-multiplier-btn,
             #doge-global-multiplier-btn {
@@ -289,18 +334,6 @@
         }
 
         /* Tablet/Mid-size screens: 481px to 1179px - Reduce hardware equity size */
-        @media (min-width: 481px) and (max-width: 1179px) {
-            #hardware-equity-box {
-                padding: 4px 6px !important;
-            }
-            #hardware-equity-box span {
-                font-size: 0.45rem !important;
-                margin-bottom: 0px !important;
-            }
-            #asset-usd {
-                font-size: 0.65rem !important;
-            }
-        }
 
         /* Remove background from ascension/rugpull display on all resolutions */
         div[style*="background: rgba(0,0,0,0.1)"][style*="border: 1px solid rgba"][style*="padding: 12px 6px"],
@@ -310,406 +343,8 @@
             border: none !important;
         }
 
-        /* Mobile and tablet utility buttons header (below 1300px) */
-        @media (max-width: 1299px) {
-            /* Make hardware equity box small on tablet/mobile */
-            div[style*="Hardware Equity"] {
-                padding: 4px 6px !important;
-            }
-
-            div[style*="Hardware Equity"] span {
-                font-size: 0.4rem !important;
-                margin-bottom: 1px !important;
-            }
-
-            div[style*="Hardware Equity"] b {
-                font-size: 0.6rem !important;
-            }
-
-            #utility-buttons-container {
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 4px !important;
-                background: #1a1a1a !important;
-                box-sizing: border-box !important;
-                display: flex !important;
-                gap: 4px !important;
-                align-items: center !important;
-                justify-content: center !important;
-                order: -1 !important;
-                position: relative !important;
-                flex-wrap: nowrap !important;
-            }
-
-            #utility-buttons-container button {
-                flex: 1 1 auto !important;
-                min-width: 0 !important;
-                font-size: clamp(0.4rem, 2vw, 0.65rem) !important;
-                padding: clamp(3px, 1vh, 6px) clamp(4px, 1.5vw, 8px) !important;
-                white-space: nowrap !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-            }
-
-            .panel:first-child {
-                padding-top: 8px !important;
-            }
-        }
-
-        /* Desktop refinement */
-        @media (min-width: 1300px) {
-            /* Move utility buttons back to original position on desktop */
-            #utility-buttons-container {
-                position: relative !important;
-                top: auto !important;
-                left: auto !important;
-                right: auto !important;
-                z-index: 100 !important;
-                padding: 4px !important;
-                background: #1a1a1a !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-                margin: 0 0 8px -24px !important;
-                padding-left: 24px !important;
-                padding-right: 24px !important;
-                display: flex !important;
-            }
-
-            .panel:first-child {
-                padding-top: 0 !important;
-            }
-
-            /* Reduce manual hash buttons vertical padding on desktop */
-            .mine-btn {
-                padding: 4px 8px !important;
-                margin-bottom: 4px !important;
-                height: 64px !important;
-            }
-
-            /* Reduce manual hash rate button rows height by 20% on desktop */
-            .panel:first-child > div:first-of-type > div > div[style*="height: 80px"] {
-                height: 64px !important;
-            }
-
-            /* Reduce manual hash buttons img size on desktop */
-            .mine-btn img {
-                width: 45px !important;
-                height: 45px !important;
-                flex: 0 0 45px !important;
-            }
-
-            .panel:first-child {
-                max-width: 100%;
-            }
-
-            /* Center buttons at the top */
-            .desktop-button-layout {
-                z-index: 1000 !important;
-                pointer-events: auto !important;
-                position: fixed !important;
-                top: 20px !important;
-                left: 50% !important;
-                transform: translateX(-50%) !important;
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: center !important;
-                gap: 6px !important;
-                padding: 0 !important;
-                background: transparent !important;
-                margin: 0 !important;
-                flex-wrap: wrap !important;
-                width: 80% !important;
-                max-width: 1200px !important;
-            }
-
-            .desktop-button-layout > div {
-                pointer-events: auto !important;
-                display: flex !important;
-                flex-direction: row !important;
-                justify-content: center !important;
-                align-items: center !important;
-                gap: 6px !important;
-                flex-wrap: wrap !important;
-                width: auto !important;
-            }
-
-            .desktop-button-layout button {
-                pointer-events: auto !important;
-            }
-
-            .panel:first-child > div:first-of-type > div:last-child > button {
-                white-space: nowrap !important;
-                min-width: auto;
-                font-size: 0.55rem !important;
-                padding: 6px 10px !important;
-            }
-
-            /* Show desktop RUGPULL section in normal flow */
-            #desktop-rugpull-section {
-                display: flex !important;
-            }
-
-            #rugpull-store-btn-desktop {
-                display: flex !important;
-            }
-
-            /* Hide overlay RUGPULL button on desktop */
-            .desktop-button-layout > div:first-child {
-                display: none !important;
-            }
-
-            /* Hide mobile RUGPULL section on desktop */
-            #mobile-rugpull-section {
-                display: none !important;
-            }
-        }
-
-        @media (max-width: 1180px) {
-            body { padding: 0; margin: 0; height: 100vh; overflow-y: scroll; width: 100%; box-sizing: border-box; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        }
-
-        /* Apply 768px mobile layout at 1180px and below */
-        @media (max-width: 1180px) {
-            body::-webkit-scrollbar { display: none; }
-            #main-layout { grid-template-columns: 1fr; gap: 0; display: flex; flex-direction: column; height: auto; margin: 0; padding: 0; width: 100%; box-sizing: border-box; }
-            .panel { padding: 0; margin: 0; display: flex; flex-direction: column; padding-top: 50px !important; width: 100%; box-sizing: border-box; }
-            .panel:first-child { overflow: visible; flex: 0 0 auto; width: 100%; }
-            .panel:last-child { overflow: visible; flex: 0 0 auto; padding-top: 0 !important; width: 100%; }
-            .stat-box { min-width: 0 !important; overflow: visible !important; flex: 0 1 auto !important; }
-            .stat-box b { word-break: break-word; }
-
-            /* Constrain upgrade lists to show ~6 items with internal scrolling on mobile */
-            .upgrade-list { max-height: 600px !important; overflow-y: auto !important; flex: 0 0 600px !important; }
-
-            /* Mobile portfolio section - give it proper spacing */
-            .nw-label { display: block; margin-bottom: 4px !important; margin-top: 0 !important; padding-top: 0; order: -1; position: relative; z-index: 10; font-size: 1.8rem !important; }
-            .nw-amount { margin-bottom: 8px !important; text-align: center !important; }
-
-            /* Pie chart sizing */
-            #cryptoPieChart { width: 90px !important; height: 90px !important; }
-
-            /* Ensure portfolio layout is horizontal on mobile */
-            div[style*="gap: 10px"][style*="flex-start"][style*="space-between"] { display: flex !important; flex-direction: row !important; align-items: flex-start !important; justify-content: space-between !important; }
-
-            /* Reduce net worth chart height by 30% on mobile */
-            #nw-chart-container { flex: 0 0 175px !important; height: 175px !important; min-height: 175px !important; }
-
-            /* Reduce hashrate chart height by 35% initially, then further 7.5% */
-            #hr-chart-container { flex: 0 0 150.3px !important; height: 150.3px !important; min-height: 150.3px !important; }
-
-            /* On mobile, position buttons container as row above content */
-            .desktop-button-layout { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: center !important; z-index: 100 !important; padding: 6px !important; margin: 0 !important; background: transparent !important; pointer-events: auto !important; }
-
-            /* Show utility buttons horizontally at the top */
-            .desktop-button-layout > div:last-child { order: -1 !important; margin: 0 !important; display: flex !important; flex-direction: row !important; gap: 2px !important; flex-wrap: wrap !important; width: 100% !important; align-items: stretch !important; justify-content: center !important; }
-            .desktop-button-layout > div:last-child > button { padding: 3px 6px !important; font-size: 0.45rem !important; height: 26px !important; flex: 1 1 auto !important; white-space: nowrap !important; min-width: 45px !important; }
-
-            /* Position RUGPULL button centered below the utility buttons */
-            .desktop-button-layout > div:first-child { position: static !important; left: auto !important; top: auto !important; transform: none !important; width: auto !important; margin: 0 !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
-
-            /* Hide desktop version of RUGPULL STORE on mobile */
-            #rugpull-store-btn {
-                display: none !important;
-            }
-
-            /* Show mobile version of RUGPULL STORE on mobile, positioned below RUGPULL button */
-            #rugpull-store-btn-mobile {
-                display: block !important;
-                font-size: 0.5rem !important;
-                padding: 4px 8px !important;
-            }
-
-            #hashrate-display { flex-wrap: wrap !important; justify-content: flex-start !important; gap: 4px !important; }
-            #hashrate-display .stat-box { padding: 4px 6px !important; }
-            #hashrate-display span { font-size: 0.55rem !important; line-height: 1.1 !important; margin-bottom: 1px !important; }
-            #hashrate-display b { font-size: 0.75rem !important; line-height: 1.1 !important; }
-
-            /* Crypto prices - 3 column grid like 600px layout */
-            #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
-            #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 8px !important; background: transparent !important; border-radius: 4px !important; border: none !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
-            #crypto-prices-flex > div:nth-child(2) { background: transparent !important; border: none !important; }
-            #crypto-prices-flex .stat-val { font-size: 0.7rem !important; }
-            #crypto-prices-flex span { font-size: 0.6rem !important; }
-            #crypto-prices-flex > div > div { width: 100% !important; }
-            /* Make ALL manual hash buttons smaller on mobile */
-            .mine-btn { padding: 6px 8px !important; font-size: 1rem !important; margin-bottom: 0 !important; }
-
-            /* Keep hashrate boxes styled correctly on mobile */
-            .stat-box-btc, .stat-box-eth, .stat-box-doge {
-                padding: 9px 15px !important;
-                margin-bottom: 0 !important;
-                flex: 1 1 33.333% !important;
-                min-width: 0 !important;
-                overflow: visible !important;
-            }
-            .stat-box-btc span, .stat-box-eth span, .stat-box-doge span {
-                font-size: clamp(0.6rem, 1.5vw, 0.75rem) !important;
-                margin-bottom: 3px !important;
-                font-weight: 800 !important;
-                white-space: nowrap !important;
-            }
-            .stat-box-btc b, .stat-box-eth b, .stat-box-doge b {
-                font-size: clamp(0.8rem, 2vw, 1.1rem) !important;
-                white-space: nowrap !important;
-                min-width: 0 !important;
-            }
-
-            /* Keep crypto holdings section identical to desktop on mobile */
-            div[style*="background: rgba(0,0,0,0.1)"][style*="border: 1px solid rgba"][style*="padding: 12px 6px"] { padding: 12px 6px !important; margin: 0 !important; }
-            div[style*="gap: 8px"][style*="flex-wrap: nowrap"][style*="justify-content: center"] > div { min-width: 60px !important; }
-
-            /* Pin achievement button to the bottom on mobile */
-            #achievements-btn {
-                margin-top: auto !important;
-                order: 999 !important;
-            }
-        }
-
-        @media (min-width: 770px) and (max-width: 1180px) {
-            /* Show desktop RUGPULL section in normal flow on tablets */
-            #desktop-rugpull-section {
-                display: flex !important;
-            }
-
-            #rugpull-store-btn-desktop {
-                display: flex !important;
-            }
-
-            /* Hide overlay RUGPULL button on tablets */
-            .desktop-button-layout > div:first-child {
-                display: none !important;
-            }
-
-            /* Hide mobile RUGPULL section on tablets */
-            #mobile-rugpull-section {
-                display: none !important;
-            }
-        }
-
-        /* Mobile landscape orientation - swap to desktop layout */
-        @media (max-width: 1180px) and (orientation: landscape) {
-            body { padding: 20px 20px 0 20px !important; overflow: visible !important; overflow-y: auto !important; }
-            body::-webkit-scrollbar { display: auto !important; }
-
-            #main-layout {
-                display: grid !important;
-                grid-template-columns: 1.86fr 1fr !important;
-                gap: 0 !important;
-                height: auto !important;
-                flex-direction: unset !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                width: auto !important;
-            }
-
-            #main-layout > div:first-child {
-                border-right: 1px solid #333 !important;
-                border-bottom: none !important;
-                flex: unset !important;
-                overflow: visible !important;
-                padding-top: 12px !important;
-                padding: 12px !important;
-                width: auto !important;
-            }
-
-            #main-layout > div:last-child {
-                flex: unset !important;
-                order: unset !important;
-                display: flex !important;
-                flex-direction: column !important;
-                width: auto !important;
-                padding: 12px !important;
-                padding-top: 12px !important;
-            }
-
-            .panel {
-                padding: 12px !important;
-                margin: 0 !important;
-                padding-top: 0 !important;
-                flex: unset !important;
-                overflow: visible !important;
-            }
-
-            .panel:first-child {
-                padding-top: 12px !important;
-            }
-
-            /* On landscape, position buttons as desktop layout */
-            .desktop-button-layout {
-                position: static !important;
-                display: flex !important;
-                flex-direction: row !important;
-                gap: 6px !important;
-                width: auto !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                background: transparent !important;
-                flex-wrap: wrap !important;
-                top: unset !important;
-                left: unset !important;
-                right: unset !important;
-                z-index: auto !important;
-            }
-
-            .desktop-button-layout > div {
-                display: flex !important;
-                flex-direction: row !important;
-                gap: 6px !important;
-            }
-
-            .desktop-button-layout > div:first-child {
-                display: none !important;
-            }
-
-            /* Show desktop RUGPULL section */
-            #desktop-rugpull-section {
-                display: flex !important;
-            }
-
-            #rugpull-store-btn-desktop {
-                display: flex !important;
-            }
-
-            /* Hide mobile RUGPULL section */
-            #mobile-rugpull-section {
-                display: none !important;
-            }
-
-            /* Restore normal hashrate display */
-            #hashrate-display {
-                flex-wrap: wrap !important;
-                gap: 6px !important;
-                margin-bottom: 0 !important;
-                order: unset !important;
-                display: flex !important;
-                justify-content: flex-start !important;
-            }
-
-            #hashrate-display .stat-box {
-                padding: 8px 6px !important;
-                margin-bottom: 0 !important;
-            }
-
-            /* Restore crypto prices flex layout */
-            #crypto-prices-flex {
-                display: flex !important;
-                grid-template-columns: unset !important;
-                gap: 6px !important;
-                overflow: visible !important;
-                margin: 12px 0 !important;
-                width: 100% !important;
-                flex-wrap: wrap !important;
-            }
-
-            #crypto-prices-flex > div {
-                flex: 1 1 auto !important;
-                min-width: 120px !important;
-                max-width: none !important;
-            }
-        }
-
-        @media (max-width: 600px) {
+        /* Phones and tablets: 360px - 932px (all phones up to largest iPhone/Pixel) */
+        @media (max-width: 932px) {
             body { padding: 0; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { grid-template-columns: 1fr !important; gap: 0; display: flex !important; flex-direction: column !important; height: auto; margin: 0; padding: 0; width: 100%; box-sizing: border-box; }
             .panel { padding: 12px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; border: none; background: transparent; }
@@ -792,7 +427,7 @@
             #hashrate-display .stat-box span { font-size: 0.55rem !important; }
             #hashrate-display .stat-box b { font-size: 0.8rem !important; }
 
-            .chart-wrapper { min-height: 250px !important; height: 250px !important; flex: 0 0 250px !important; padding: 0; margin: 6px 0; overflow: hidden; position: relative; }
+            .chart-wrapper { min-height: 140px !important; height: 140px !important; flex: 0 0 140px !important; padding: 0; margin: 6px 0; overflow: hidden; position: relative; }
 
             /* Keep crypto prices in a 3-column row on mobile */
             #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 12px 0 !important; width: 100% !important; max-width: 100% !important; align-items: center !important; padding: 0 10px 10px 10px !important; box-sizing: border-box !important; }
@@ -817,6 +452,15 @@
                 order: 7 !important;
                 grid-column: 10 / 13 !important;
                 grid-row: 1 !important;
+                max-width: 40px !important;
+                padding: 2px 2px !important;
+                font-size: 0.18rem !important;
+            }
+            .stat-box-hardware span {
+                font-size: 0.16rem !important;
+            }
+            .stat-box-hardware b {
+                font-size: 0.24rem !important;
             }
             /* BTC, ETH, DOGE in second row - each gets 4 columns (4+4+4=12) */
             .stat-box-btc {
@@ -953,7 +597,8 @@
             .tab-btn { padding: 10px 8px !important; font-size: 0.75rem !important; }
         }
 
-        @media (max-width: 480px) {
+        /* Extra optimizations for smallest phones: 360px - 448px (Galaxy S24, iPhone 15, Galaxy S24 Ultra) */
+        @media (max-width: 448px) {
             body { padding: 5px 5px 13px 5px; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; }
             .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; padding-bottom: 35px !important; }
@@ -964,14 +609,28 @@
             div[style*="order: -1"] { margin-bottom: 0 !important; }
             .nw-amount { font-size: clamp(3.75rem, 11.25vw, 4.5rem); margin: 0 0 0 0; }
             .stat-val { font-size: 0.7rem !important; }
-            .chart-wrapper { min-height: 200px !important; height: 200px !important; flex: 0 0 200px !important; margin-top: 2px; padding: 2px; overflow: hidden; position: relative; }
-            #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 200px !important; }
+            .chart-wrapper { min-height: 130px !important; height: 130px !important; flex: 0 0 130px !important; margin-top: 2px; padding: 2px; overflow: hidden; position: relative; }
+            #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 130px !important; }
             /* Keep crypto prices in 3-column row on small phones */
             #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 4px !important; overflow: visible !important; margin-bottom: 6px !important; width: 100% !important; max-width: 100% !important; }
             #crypto-prices-flex > div { background: transparent !important; border: none !important; padding: 0 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; gap: 2px !important; }
             #crypto-prices-flex .stat-val { font-size: 0.7rem !important; }
             #crypto-prices-flex span { font-size: 0.5rem !important; }
             #crypto-prices-flex > div > div { width: 100% !important; }
+
+            /* Hardware Equity box - same size as 449+ */
+            div[style*="position: absolute"][style*="right: 10px"] {
+                width: 86px !important;
+                height: 48px !important;
+                padding: 2px 3px !important;
+                top: 1px !important;
+                right: 1px !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+            }
 
             /* Mobile manual hash rate buttons - shrink font and padding */
             #btc-manual-hash-rate-btn,
@@ -1091,8 +750,7 @@
             .tab-btn { padding: 8px 6px !important; font-size: 0.7rem !important; }
         }
 
-            .u-item { padding: 10px; margin-bottom: 8px; }
-        }
+        .u-item { padding: 10px; margin-bottom: 8px; }
         
         .nw-label { font-size: 1.5rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; margin-top: 0 !important; padding-top: 0 !important; margin-bottom: 8px; }
         .nw-amount {
@@ -1539,7 +1197,7 @@
 
         .chart-wrapper {
             flex: 1;
-            min-height: 120px;
+            min-height: 100px;
             background: rgba(0,0,0,0.3);
             border-radius: 8px;
             border: 1px solid #1a1a1a;
@@ -1723,7 +1381,6 @@
             /* Let the button's crypto color show through with opacity */
         }
 
-
         /* Manual hash button hover inherits from .btn-primary:hover */
         .mine-btn:hover {
             cursor: pointer;
@@ -1810,7 +1467,6 @@ button:disabled:hover {
         #hashrate-display .stat-box {
             box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4) !important;
         }
-
 
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 5px; }
@@ -2069,42 +1725,6 @@ button:disabled:hover {
             border-left-width: 1px;
         }
 
-        @media (max-width: 1180px) {
-            #news-ticker-overlay {
-                max-height: 60px;
-            }
-
-            #news-ticker-content {
-                max-height: 60px;
-                gap: 2px;
-                padding: 2px 4px;
-            }
-
-            #news-ticker-overlay .news-item {
-                padding: 2px 4px;
-                font-size: 0.6rem;
-                gap: 2px;
-            }
-
-            #news-ticker-overlay .news-item-emoji {
-                font-size: 0.7rem;
-                min-width: 12px;
-            }
-
-            #news-ticker-overlay .news-item-title {
-                font-size: 0.55rem;
-            }
-
-            #news-ticker-overlay .news-item-text {
-                font-size: 0.6rem;
-            }
-
-            #news-ticker-overlay .news-item-price {
-                font-size: 0.55rem;
-                padding: 0px 2px;
-            }
-        }
-
         /* Skill Tree Modal Styles */
         .modal-overlay {
             position: fixed;
@@ -2132,44 +1752,8 @@ button:disabled:hover {
         }
 
         /* Ensure crypto button colors persist on all screen sizes */
-        @media (max-width: 1180px) {
-            #btc-global-multiplier-btn {
-                background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
-                border-color: #f7931a !important;
-            }
-            #eth-global-multiplier-btn {
-                background: linear-gradient(135deg, #627eea 0%, #7c8ff5 100%) !important;
-                border-color: #627eea !important;
-            }
-            #doge-global-multiplier-btn {
-                background: linear-gradient(135deg, #c2a633 0%, #d4b747 100%) !important;
-                border-color: #c2a633 !important;
-            }
-        }
 
         /* Desktop: Scale down permanent multiplier buttons to fit more miners in view */
-        @media (min-width: 1181px) {
-            #btc-global-multiplier-btn,
-            #eth-global-multiplier-btn,
-            #doge-global-multiplier-btn {
-                padding: 6px 10px !important;
-                font-size: 0.75rem !important;
-                margin-bottom: 6px !important;
-            }
-            #btc-global-multiplier-btn span,
-            #eth-global-multiplier-btn span,
-            #doge-global-multiplier-btn span {
-                font-size: 0.75rem !important;
-                margin-top: 1px !important;
-                letter-spacing: 0.5px !important;
-            }
-            #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
-                font-size: 0.7rem !important;
-            }
-            #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
-                font-size: 0.65rem !important;
-            }
-        }
 
         /* Mobile: Ensure embossing is visible on buttons */
         @media (hover: none) {
@@ -2194,27 +1778,9 @@ button:disabled:hover {
         }
 
         /* Mobile: reduce modal size and padding */
-        @media (max-width: 1180px) {
-            .modal-content {
-                max-width: 95vw !important;
-                max-height: 90vh !important;
-                width: calc(100vw - 20px) !important;
-                border-radius: 8px;
-                border-width: 1px;
-                margin: 0 !important;
-            }
-            .modal-header {
-                padding: 12px 15px !important;
-            }
-            .modal-body {
-                padding: 12px 15px !important;
-            }
-            .modal-header h2 {
-                font-size: 1.2rem !important;
-            }
-        }
 
-        @media (max-width: 480px) {
+        /* Small phones: 360px - 448px - Modal optimizations */
+        @media (max-width: 448px) {
             .modal-content {
                 max-width: 100vw !important;
                 max-height: 95vh !important;
@@ -2242,23 +1808,6 @@ button:disabled:hover {
         .conversion-modal {
             max-width: 90vw;
             width: 100%;
-        }
-
-        @media (min-width: 1200px) {
-            .skill-tree-modal {
-                max-width: 80vw;
-                width: 100%;
-            }
-
-            .conversion-modal {
-                max-width: 75vw;
-                width: 100%;
-            }
-
-            .export-import-modal {
-                max-width: 75vw;
-                width: 100%;
-            }
         }
 
         .modal-header {
@@ -2459,27 +2008,6 @@ button:disabled:hover {
         }
 
         /* Mobile Responsive */
-        @media (max-width: 1180px) {
-            .skill-tree-modal, .conversion-modal {
-                width: 95%;
-            }
-
-            .modal-header h2 {
-                font-size: 1.3rem;
-            }
-
-            .skill-node {
-                padding: 12px;
-            }
-
-            .skill-name {
-                font-size: 1rem;
-            }
-
-            .skill-description {
-                font-size: 0.8rem;
-            }
-        }
 
         /* Export/Import Modal Styles */
         .export-import-modal {
@@ -2522,8 +2050,9 @@ button:disabled:hover {
         /* Achievement notification popup */
         .achievement-notification {
             position: fixed;
-            right: 15px;
+            left: 50%;
             top: 15px;
+            transform: translateX(-50%);
             background: rgba(26, 26, 26, 0.95);
             border: 2px solid #FFD700;
             border-radius: 8px;
@@ -2533,17 +2062,15 @@ button:disabled:hover {
             max-width: 280px;
             box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
             z-index: 1000;
-            animation: slideIn 0.3s ease, slideOut 3s ease 3.3s forwards;
+            animation: slideInTop 0.3s ease, slideOutTop 3s ease 3.3s forwards;
             pointer-events: none;
             transition: top 0.3s ease;
         }
 
-        /* Mobile: shrink achievement notification */
-        @media (max-width: 768px) {
+        /* Phones and tablets up to 932px: pop from top center with stacking */
+        @media (max-width: 932px) {
             .achievement-notification {
                 max-width: 220px;
-                right: 10px;
-                top: 10px;
                 padding: 10px 12px;
                 border-width: 2px;
             }
@@ -2559,6 +2086,32 @@ button:disabled:hover {
 
             .achievement-notification-desc {
                 font-size: 0.65rem;
+            }
+        }
+
+        @keyframes slideInTop {
+            from {
+                transform: translateX(-50%) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutTop {
+            0% {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            90% {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-50%) translateY(-20px);
+                opacity: 0;
             }
         }
 
@@ -2644,36 +2197,8 @@ button:disabled:hover {
         }
 
         /* Mobile: tighter constraints */
-        @media (max-width: 1180px) {
-            #achievements-modal .modal-content {
-                max-width: 95vw;
-                max-height: 85vh;
-                width: calc(100vw - 20px);
-                padding: 0 !important;
-            }
-
-            .modal-header {
-                padding: 12px 15px !important;
-            }
-
-            .modal-body {
-                padding: 12px 15px !important;
-            }
-
-            .modal-header h2 {
-                font-size: 1.3rem !important;
-            }
-        }
 
         /* Desktop modal - constrained width */
-        @media (min-width: 1200px) {
-            #achievements-modal .modal-content {
-                max-width: 85vw;
-                max-height: 90vh;
-                width: 100%;
-                overflow-y: auto;
-            }
-        }
 
         /* Achievement items grid - responsive */
         #achievements-container {
@@ -2683,43 +2208,10 @@ button:disabled:hover {
         }
 
         /* Mobile: smaller gap and more compact */
-        @media (max-width: 1180px) {
-            #achievements-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-
-            .achievement-item {
-                padding: 6px !important;
-            }
-
-            .achievement-emoji {
-                font-size: 1.2rem !important;
-            }
-
-            .achievement-name {
-                font-size: 0.7rem !important;
-            }
-
-            .achievement-desc {
-                font-size: 0.6rem !important;
-            }
-        }
 
         /* Tablet: 4 columns */
-        @media (min-width: 768px) and (max-width: 1199px) {
-            #achievements-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
 
         /* Desktop: 6 columns (reasonable, fits within viewport) */
-        @media (min-width: 1200px) {
-            #achievements-container {
-                grid-template-columns: repeat(6, 1fr);
-                gap: 12px;
-            }
-        }
 
         .achievement-category-header {
             grid-column: 1 / -1;
@@ -2876,54 +2368,6 @@ button:disabled:hover {
         }
 
         /* Mobile Responsive for Hacking */
-        @media (max-width: 1180px) {
-            #hacking-modal > div {
-                padding: 15px;
-                width: 95%;
-            }
-
-            #hacking-code-container {
-                font-size: 0.55rem;
-                padding: 8px;
-                max-height: 50vh;
-                line-height: 1.3;
-                overflow-x: hidden;
-                word-wrap: break-word;
-                white-space: pre-wrap;
-            }
-
-            .hacking-code-line {
-                padding: 2px 4px;
-                font-size: 0.55rem;
-                word-wrap: break-word;
-                white-space: pre-wrap;
-                overflow-wrap: break-word;
-            }
-
-            #hacking-notification {
-                left: 10px;
-                right: 10px;
-                bottom: 10px;
-                max-width: none;
-                padding: 12px;
-                font-size: 0.85rem;
-            }
-
-            #hacking-notification > div:first-child {
-                font-size: 0.9rem;
-                margin-bottom: 6px;
-            }
-
-            #hacking-notification > div:nth-child(2) {
-                font-size: 0.75rem;
-                margin-bottom: 10px;
-            }
-
-            #hacking-notification button {
-                padding: 8px 12px !important;
-                font-size: 0.75rem !important;
-            }
-        }
 
         /* Footer Styles */
         footer {
@@ -2952,15 +2396,9 @@ button:disabled:hover {
         }
 
         /* Mobile footer adjustments */
-        @media (max-width: 1180px) {
-            footer {
-                font-size: 9.6px !important;
-                padding: 1.6px 4.8px !important;
-                line-height: 1.15 !important;
-            }
-        }
 
-        @media (max-width: 480px) {
+        /* Small phones: 360px - 448px - Footer and cookie banner optimization */
+        @media (max-width: 448px) {
             footer {
                 font-size: 8px !important;
                 padding: 1.6px 3.2px !important;
@@ -3007,89 +2445,7 @@ button:disabled:hover {
             #cookie-consent-banner > div > div:last-child button {
                 width: 100% !important;
             }
-        }
 
-        @media (max-width: 1180px) {
-            /* Cookie banner tablet optimization */
-            #cookie-consent-banner > div > div:last-child {
-                flex-direction: column !important;
-            }
-
-            #cookie-consent-banner > div > div:last-child button {
-                width: 100% !important;
-            }
-
-            /* Disable horizontal scrolling on mobile for minigame modals */
-            #hacking-modal,
-            #whack-modal,
-            #whack-results-modal,
-            #network-modal {
-                overflow-x: hidden !important;
-                overflow-y: auto !important;
-            }
-
-            #hacking-modal > div,
-            #whack-modal > div,
-            #network-modal > div {
-                overflow-x: hidden !important;
-                max-width: 100vw !important;
-                width: 100vw !important;
-                box-sizing: border-box;
-            }
-
-            /* Prevent background scrolling when minigame modals are open */
-            body.minigame-modal-open {
-                overflow: hidden !important;
-            }
-
-            /* Ensure minigame modals don't expand the viewport */
-            #hacking-modal,
-            #whack-modal,
-            #network-modal {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                max-width: 100vw !important;
-                max-height: 100vh !important;
-                overflow: hidden !important;
-            }
-
-            /* Hide desktop RUGPULL button from header on mobile */
-            .desktop-button-layout > div:first-child {
-                display: none !important;
-            }
-
-            /* Mobile RUGPULL section styling - side by side */
-            #mobile-rugpull-section {
-                display: flex !important;
-                flex-direction: row !important;
-                gap: 8px !important;
-                margin-bottom: 6px !important;
-                margin-top: 0 !important;
-                align-items: stretch !important;
-            }
-
-            #rugpull-btn-mobile {
-                flex: 1 !important;
-                min-width: 0 !important;
-            }
-
-            #rugpull-store-btn-mobile-main {
-                display: block !important;
-                flex: 1 !important;
-                min-width: 0 !important;
-            }
-        }
-
-        /* Large desktop: reduce title to prevent button overlap */
-        @media (min-width: 1200px) {
-            .nw-label { font-size: 1.2rem !important; }
-        }
-
-        /* Very small screens: bigger title and move up */
-        @media (max-width: 414px) {
             .nw-label {
                 font-size: 1.8rem !important;
                 margin-top: -4px !important;
@@ -3097,8 +2453,8 @@ button:disabled:hover {
             }
         }
 
-        /* Screens below 571px: center text and make smaller so it fits in 1 row */
-        @media (max-width: 570px) {
+        /* Larger phones: 449px - 932px - Label centering */
+        @media (min-width: 449px) and (max-width: 932px) {
             .nw-label {
                 font-size: 1.1rem !important;
                 text-align: center !important;
@@ -3106,6 +2462,20 @@ button:disabled:hover {
                 margin-top: 0 !important;
             }
             .panel { padding-top: 65px !important; }
+
+            /* Hardware Equity box - 86x48 on 449+ */
+            div[style*="position: absolute"][style*="right: 10px"] {
+                width: 86px !important;
+                height: 48px !important;
+                padding: 2px 3px !important;
+                top: 1px !important;
+                right: 1px !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+            }
         }
 
         /* Desktop-only display for net worth breakdown */
@@ -3113,20 +2483,34 @@ button:disabled:hover {
             display: none !important;
         }
 
-        @media (min-width: 1300px) {
-            .desktop-only {
-                display: block !important;
-            }
-        }
-
         /* Show hardware equity on desktop and mobile */
         .stat-box-hardware {
             display: block !important;
+            position: absolute !important;
+            top: 1px !important;
+            right: 1px !important;
+            padding: 1px 1px !important;
+            background: rgba(76, 175, 80, 0.15) !important;
+            border: 1px solid #4CAF50 !important;
+            border-radius: 4px !important;
+            z-index: 10 !important;
+            pointer-events: none !important;
+            width: 86px !important;
+            height: 32px !important;
+            font-size: 0.28rem !important;
+        }
+
+        /* Hardware Equity box in chart wrapper (inline styles in HTML) - Desktop only */
+        div[style*="position: absolute"][style*="right: 10px"] {
+            width: auto !important;
+            height: auto !important;
+            padding: 8px 12px !important;
         }
 
         /* ===== MOBILE LAYOUT OPTIMIZATION FOR REFERENCE PHOTO ===== */
 
-        @media (max-width: 768px) {
+        /* Phones and tablets up to 932px */
+        @media (max-width: 932px) {
             /* Switch to single column layout on mobile */
             #main-layout {
                 display: flex !important;
@@ -3406,7 +2790,7 @@ button:disabled:hover {
 
             .chart-wrapper {
                 flex: 1 !important;
-                min-height: 130px !important;
+                min-height: 140px !important;
                 overflow: visible !important;
             }
 
@@ -3495,18 +2879,8 @@ button:disabled:hover {
             }
         }
 
-        @media (max-width: 1299px) {
-            /* Mobile and tablet - remove background from ascension/rugpull display */
-            div[style*="background: rgba(0,0,0,0.1)"][style*="border: 1px solid rgba"][style*="padding: 12px 6px"],
-            div[style*="background: rgba(0,0,0,0.2)"][style*="border: 1px solid"],
-            div[style*="RUGPULL"][style*="rgba"] {
-                background: transparent !important;
-                border: none !important;
-            }
-        }
-
-        @media (max-width: 651px) {
-            /* Below 651px - keep achievements button on same row */
+        /* Larger phones: 449px - 932px - Utility buttons optimization */
+        @media (min-width: 449px) and (max-width: 932px) {
             #utility-buttons-container button {
                 font-size: clamp(0.35rem, 1.5vw, 0.65rem) !important;
                 padding: clamp(2px, 0.8vh, 6px) clamp(3px, 1vw, 8px) !important;
@@ -3522,56 +2896,8 @@ button:disabled:hover {
             }
         }
 
-        @media (max-width: 630px) and (min-width: 529px) {
-            /* Between 630px and 529px - scale down more to prevent wrapping */
-            #utility-buttons-container button {
-                font-size: clamp(0.3rem, 1.3vw, 0.65rem) !important;
-                padding: clamp(1px, 0.7vh, 5px) clamp(2px, 0.9vw, 8px) !important;
-            }
-        }
-
-        @media (max-width: 528px) {
-            /* Extra small screens - keep all buttons on one row */
-            #utility-buttons-container {
-                gap: 2px !important;
-                padding: 4px !important;
-            }
-        }
-
-        @media (max-width: 481px) {
-            /* Below 481px - further scale down buttons and chart legend */
-            #utility-buttons-container {
-                flex-wrap: nowrap !important;
-                gap: 1px !important;
-            }
-
-            #utility-buttons-container button {
-                font-size: clamp(0.25rem, 1vw, 0.65rem) !important;
-                padding: clamp(1px, 0.5vh, 4px) clamp(2px, 0.6vw, 6px) !important;
-                flex: 1 1 auto !important;
-                min-width: 0 !important;
-            }
-
-            /* Shrink chart legend items */
-            #nwChart {
-                max-height: 200px !important;
-            }
-
-            /* Scale down legend boxes and text */
-            canvas ~ div span,
-            .portfolio-title {
-                font-size: 0.5rem !important;
-            }
-
-            /* Reduce legend box sizes */
-            div[style*="background: rgba"][style*="border: 1px solid"] {
-                padding: 2px 4px !important;
-                gap: 2px !important;
-            }
-        }
-
-        @media (max-width: 480px) {
-            /* Extra small screens optimization */
+        /* Small phones: 360px - 448px - Extra optimization */
+        @media (max-width: 448px) {
             .panel {
                 padding: 8px !important;
             }
@@ -3670,5 +2996,4 @@ button:disabled:hover {
                 flex: 0 0 400px !important;
             }
         }
-
 

@@ -1841,7 +1841,7 @@ function updateMetaUpgradesUI() {
 
     // Row 4
     bonusText += `<div>💰 <strong>Staking APR:</strong> <span style="color: #ffeb3b;">+${stakingAPRBonus.toFixed(2)}%</span></div>`;
-    bonusText += `<div>🌙 <strong>Offline Earnings Cap (Total):</strong> <span style="color: #ffeb3b;">${offlineEarningsBonus + 6}h</span></div>`;
+    bonusText += `<div>🌙 <strong>Offline Earnings Cap (Total):</strong> <span style="color: #ffeb3b;">${offlineEarningsBonus + 4}h</span></div>`;
 
     // Row 5
     bonusText += `<div>💵 <strong>Crypto Sale Value:</strong> <span style="color: #ffeb3b;">+${allEarningsBonus.toFixed(1)}%</span></div>`;

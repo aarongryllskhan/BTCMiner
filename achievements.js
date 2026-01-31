@@ -8,6 +8,10 @@ let achievementsData = {
 // Track which achievements we've shown notifications for this session
 let notificationsShownThisSession = new Set();
 
+// Queue for achievement notifications (to display one at a time)
+let notificationQueue = [];
+let isDisplayingNotification = false;
+
 // Miner names for all cryptos
 const minerNames = {
     btc: ['Manual Hash Rate', 'USB Miner', 'GTX 1660 Super', 'RTX 5090 Rig', 'ASIC Mining Unit', 'Liquid ASIC Rig', 'Mobile Mining Container', 'Geothermal Mining Farm', 'Data Center Facility', 'Orbital Data Relay', 'Quantum Computer', 'Advanced Quantum Rig', 'Superintelligent AI Network', 'Dimensional Mining Array', 'Multiversal Hash Grid', 'Infinite Energy Extractor'],
@@ -509,6 +513,36 @@ function showAchievementNotification(achievementId) {
     }
 
     console.log('🏆 SHOWING notification:', achievementId, achievement.name);
+
+    // Mark as shown BEFORE adding to queue to prevent duplicate calls
+    notificationsShownThisSession.add(achievementId);
+
+    // Add to notification queue
+    notificationQueue.push({
+        id: achievementId,
+        achievement: achievement
+    });
+
+    // Process the queue
+    processNotificationQueue();
+}
+
+// Process the notification queue - display one notification at a time
+function processNotificationQueue() {
+    // If already displaying, wait
+    if (isDisplayingNotification) return;
+
+    // If queue is empty, we're done
+    if (notificationQueue.length === 0) return;
+
+    // Mark as displaying
+    isDisplayingNotification = true;
+
+    // Get the next notification from queue
+    const queueItem = notificationQueue.shift();
+    const achievement = queueItem.achievement;
+
+    // Create notification element
     const notification = document.createElement('div');
     notification.className = 'achievement-notification';
     notification.innerHTML = `
@@ -521,27 +555,30 @@ function showAchievementNotification(achievementId) {
         </div>
     `;
 
-    // Mark as shown BEFORE adding to DOM to prevent duplicate calls
-    notificationsShownThisSession.add(achievementId);
-
+    // Add to DOM
     document.body.appendChild(notification);
     activeNotifications.push(notification);
 
-    // Update positions of all active notifications
-    updateNotificationPositions();
-
+    // Display for 2 seconds, then remove and process next in queue
     setTimeout(() => {
         notification.remove();
         activeNotifications = activeNotifications.filter(n => n !== notification);
-        updateNotificationPositions();
-    }, 5000);
+
+        // Mark as no longer displaying
+        isDisplayingNotification = false;
+
+        // Process next notification in queue
+        processNotificationQueue();
+    }, 2000);
 }
 
 // Update positions of all active notifications
 function updateNotificationPositions() {
-    activeNotifications.forEach((notification, index) => {
-        const offset = index * 110; // 110px spacing between notifications
-        notification.style.top = (15 + offset) + 'px';
+    // All notifications stay at the same position (stacked on top of each other)
+    const startTop = window.innerWidth <= 932 ? 60 : 15;
+
+    activeNotifications.forEach((notification) => {
+        notification.style.top = startTop + 'px';
     });
 }
 
