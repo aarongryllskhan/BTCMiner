@@ -1005,6 +1005,45 @@ function unlockSystems() {
 }
 
 /**
+ * Check if a tier is unlocked (all upgrades in previous tier must be purchased)
+ */
+function isTierUnlocked(tierNumber) {
+    if (tierNumber === 1) return true;  // Tier 1 is always unlocked
+
+    const previousTierNumber = tierNumber - 1;
+    const tiers = [
+        { name: 'Tier 1', upgrades: ['power_capacity_1', 'miner_efficiency_1', 'staking_apy_1', 'miner_hashrate_1', 'click_hashrate_1', 'offline_earnings_1', 'earnings_boost_1', 'minigame_reward_1', 'token_generation_0'] },
+        { name: 'Tier 2', upgrades: ['power_capacity_2', 'miner_efficiency_2', 'staking_apy_2', 'miner_hashrate_2', 'click_hashrate_2', 'offline_earnings_2', 'earnings_boost_2', 'minigame_reward_2', 'starter_miners_t1', 'starter_power_p0', 'token_generation_1_alt'] },
+        { name: 'Tier 3', upgrades: ['power_capacity_3', 'miner_efficiency_3', 'staking_apy_3', 'miner_hashrate_3', 'click_hashrate_3', 'offline_earnings_3', 'earnings_boost_3', 'minigame_reward_3', 'auto_sell', 'starter_miners_t2', 'starter_power_p1', 'token_generation_2_alt'] },
+        { name: 'Tier 4', upgrades: ['power_capacity_4', 'miner_efficiency_4', 'staking_apy_4', 'miner_hashrate_4', 'click_hashrate_4', 'offline_earnings_4', 'earnings_boost_4', 'minigame_reward_4', 'starter_miners_t3', 'starter_power_p2', 'token_generation_3_alt'] },
+        { name: 'Tier 5', upgrades: ['power_capacity_5', 'miner_efficiency_5', 'staking_apy_5', 'miner_hashrate_5', 'click_hashrate_5', 'offline_earnings_5', 'earnings_boost_5', 'minigame_reward_5', 'starter_miners_t4', 'starter_power_p3', 'token_generation_4_alt'] },
+        { name: 'Tier 6', upgrades: ['power_capacity_6', 'miner_efficiency_6', 'staking_apy_6', 'miner_hashrate_6', 'click_hashrate_6', 'offline_earnings_6', 'earnings_boost_6', 'minigame_reward_6', 'starter_miners_t5', 'starter_power_p4', 'token_generation_1'] },
+        { name: 'Tier 7', upgrades: ['power_capacity_7', 'miner_efficiency_7', 'staking_apy_7', 'miner_hashrate_7', 'click_hashrate_7', 'offline_earnings_7', 'earnings_boost_7', 'minigame_reward_7', 'starter_miners_t6', 'starter_power_p5', 'minigame_unlock', 'token_generation_t7'] },
+        { name: 'Tier 8', upgrades: ['power_capacity_8', 'miner_efficiency_8', 'staking_apy_8', 'miner_hashrate_8', 'click_hashrate_8', 'offline_earnings_8', 'earnings_boost_8', 'minigame_reward_8', 'starter_miners_t7', 'starter_power_p6', 'cash_multiplier', 'token_generation_t8'] },
+        { name: 'Tier 9', upgrades: ['power_capacity_9', 'miner_efficiency_9', 'staking_apy_9', 'miner_hashrate_9', 'click_hashrate_9', 'offline_earnings_9', 'earnings_boost_9', 'minigame_reward_9', 'starter_miners_t8', 'starter_power_p7', 'token_generation_t9'] },
+        { name: 'Tier 10', upgrades: ['power_capacity_10', 'miner_efficiency_10', 'staking_apy_10', 'miner_hashrate_10', 'click_hashrate_10', 'offline_earnings_10', 'earnings_boost_10', 'minigame_reward_10', 'starter_miners_t9', 'starter_power_p8', 'token_generation_t10'] },
+        { name: 'Tier 11', upgrades: ['power_capacity_11', 'miner_efficiency_11', 'staking_apy_11', 'miner_hashrate_11', 'click_hashrate_11', 'offline_earnings_11', 'earnings_boost_11', 'minigame_reward_11', 'starter_miners_t10', 'starter_power_p9', 'token_generation_t11'] },
+        { name: 'Tier 12', upgrades: ['power_capacity_12', 'miner_efficiency_12', 'staking_apy_12', 'miner_hashrate_12', 'click_hashrate_12', 'offline_earnings_12', 'earnings_boost_12', 'minigame_reward_12', 'starter_miners_t11', 'starter_power_p10', 'token_generation_t12'] },
+        { name: 'Tier 13', upgrades: ['power_capacity_13', 'miner_efficiency_13', 'staking_apy_13', 'miner_hashrate_13', 'click_hashrate_13', 'offline_earnings_13', 'earnings_boost_13', 'minigame_reward_13', 'starter_miners_t12', 'starter_power_p11', 'token_generation_t13'] },
+        { name: 'Tier 14', upgrades: ['power_capacity_14', 'miner_efficiency_14', 'staking_apy_14', 'miner_hashrate_14', 'click_hashrate_14', 'offline_earnings_14', 'earnings_boost_14', 'minigame_reward_14', 'starter_miners_t13', 'starter_power_p12', 'token_generation_t14'] },
+        { name: 'Tier 15', upgrades: ['power_capacity_15', 'miner_efficiency_15', 'staking_apy_15', 'miner_hashrate_15', 'click_hashrate_15', 'offline_earnings_15', 'earnings_boost_15', 'minigame_reward_15', 'starter_miners_t14', 'token_generation_t15'] },
+        { name: 'Tier 16', upgrades: ['power_capacity_16', 'miner_efficiency_16', 'staking_apy_16', 'miner_hashrate_16', 'click_hashrate_16', 'offline_earnings_16', 'earnings_boost_16', 'minigame_reward_16', 'starter_miners_t15', 'token_generation_t16'] },
+        { name: 'Tier 17', upgrades: ['power_capacity_17', 'miner_efficiency_17', 'staking_apy_17', 'miner_hashrate_17', 'click_hashrate_17', 'offline_earnings_17', 'earnings_boost_17', 'minigame_reward_17', 'token_generation_t17'] },
+        { name: 'Tier 18', upgrades: ['power_capacity_18', 'miner_efficiency_18', 'staking_apy_18', 'miner_hashrate_18', 'click_hashrate_18', 'offline_earnings_18', 'earnings_boost_18', 'minigame_reward_18', 'token_generation_t18'] },
+        { name: 'Tier 19', upgrades: ['power_capacity_19', 'miner_efficiency_19', 'staking_apy_19', 'miner_hashrate_19', 'click_hashrate_19', 'offline_earnings_19', 'earnings_boost_19', 'minigame_reward_19', 'token_generation_t19'] },
+        { name: 'Tier 20', upgrades: ['power_capacity_20', 'miner_efficiency_20', 'staking_apy_20', 'miner_hashrate_20', 'click_hashrate_20', 'offline_earnings_20', 'earnings_boost_20', 'minigame_reward_20', 'token_generation_t20'] }
+    ];
+
+    const previousTier = tiers[previousTierNumber - 1];
+    if (!previousTier) return false;
+
+    // Check if all upgrades in previous tier are purchased
+    return previousTier.upgrades.every(upgradeKey => {
+        return metaUpgrades[upgradeKey] && metaUpgrades[upgradeKey].purchased;
+    });
+}
+
+/**
  * Purchase a meta-upgrade with Corrupt Tokens
  */
 function purchaseMetaUpgrade(upgradeKey) {
@@ -1016,6 +1055,43 @@ function purchaseMetaUpgrade(upgradeKey) {
     const upgrade = metaUpgrades[upgradeKey];
     if (upgrade.purchased) {
         showGenericMessageModal('Already Purchased', `<div style="color: #ff9800;">You already own this upgrade!</div>`);
+        return;
+    }
+
+    // Find which tier this upgrade belongs to
+    const tiers = [
+        { name: 'Tier 1', upgrades: ['power_capacity_1', 'miner_efficiency_1', 'staking_apy_1', 'miner_hashrate_1', 'click_hashrate_1', 'offline_earnings_1', 'earnings_boost_1', 'minigame_reward_1', 'token_generation_0'] },
+        { name: 'Tier 2', upgrades: ['power_capacity_2', 'miner_efficiency_2', 'staking_apy_2', 'miner_hashrate_2', 'click_hashrate_2', 'offline_earnings_2', 'earnings_boost_2', 'minigame_reward_2', 'starter_miners_t1', 'starter_power_p0', 'token_generation_1_alt'] },
+        { name: 'Tier 3', upgrades: ['power_capacity_3', 'miner_efficiency_3', 'staking_apy_3', 'miner_hashrate_3', 'click_hashrate_3', 'offline_earnings_3', 'earnings_boost_3', 'minigame_reward_3', 'auto_sell', 'starter_miners_t2', 'starter_power_p1', 'token_generation_2_alt'] },
+        { name: 'Tier 4', upgrades: ['power_capacity_4', 'miner_efficiency_4', 'staking_apy_4', 'miner_hashrate_4', 'click_hashrate_4', 'offline_earnings_4', 'earnings_boost_4', 'minigame_reward_4', 'starter_miners_t3', 'starter_power_p2', 'token_generation_3_alt'] },
+        { name: 'Tier 5', upgrades: ['power_capacity_5', 'miner_efficiency_5', 'staking_apy_5', 'miner_hashrate_5', 'click_hashrate_5', 'offline_earnings_5', 'earnings_boost_5', 'minigame_reward_5', 'starter_miners_t4', 'starter_power_p3', 'token_generation_4_alt'] },
+        { name: 'Tier 6', upgrades: ['power_capacity_6', 'miner_efficiency_6', 'staking_apy_6', 'miner_hashrate_6', 'click_hashrate_6', 'offline_earnings_6', 'earnings_boost_6', 'minigame_reward_6', 'starter_miners_t5', 'starter_power_p4', 'token_generation_1'] },
+        { name: 'Tier 7', upgrades: ['power_capacity_7', 'miner_efficiency_7', 'staking_apy_7', 'miner_hashrate_7', 'click_hashrate_7', 'offline_earnings_7', 'earnings_boost_7', 'minigame_reward_7', 'starter_miners_t6', 'starter_power_p5', 'minigame_unlock', 'token_generation_t7'] },
+        { name: 'Tier 8', upgrades: ['power_capacity_8', 'miner_efficiency_8', 'staking_apy_8', 'miner_hashrate_8', 'click_hashrate_8', 'offline_earnings_8', 'earnings_boost_8', 'minigame_reward_8', 'starter_miners_t7', 'starter_power_p6', 'cash_multiplier', 'token_generation_t8'] },
+        { name: 'Tier 9', upgrades: ['power_capacity_9', 'miner_efficiency_9', 'staking_apy_9', 'miner_hashrate_9', 'click_hashrate_9', 'offline_earnings_9', 'earnings_boost_9', 'minigame_reward_9', 'starter_miners_t8', 'starter_power_p7', 'token_generation_t9'] },
+        { name: 'Tier 10', upgrades: ['power_capacity_10', 'miner_efficiency_10', 'staking_apy_10', 'miner_hashrate_10', 'click_hashrate_10', 'offline_earnings_10', 'earnings_boost_10', 'minigame_reward_10', 'starter_miners_t9', 'starter_power_p8', 'token_generation_t10'] },
+        { name: 'Tier 11', upgrades: ['power_capacity_11', 'miner_efficiency_11', 'staking_apy_11', 'miner_hashrate_11', 'click_hashrate_11', 'offline_earnings_11', 'earnings_boost_11', 'minigame_reward_11', 'starter_miners_t10', 'starter_power_p9', 'token_generation_t11'] },
+        { name: 'Tier 12', upgrades: ['power_capacity_12', 'miner_efficiency_12', 'staking_apy_12', 'miner_hashrate_12', 'click_hashrate_12', 'offline_earnings_12', 'earnings_boost_12', 'minigame_reward_12', 'starter_miners_t11', 'starter_power_p10', 'token_generation_t12'] },
+        { name: 'Tier 13', upgrades: ['power_capacity_13', 'miner_efficiency_13', 'staking_apy_13', 'miner_hashrate_13', 'click_hashrate_13', 'offline_earnings_13', 'earnings_boost_13', 'minigame_reward_13', 'starter_miners_t12', 'starter_power_p11', 'token_generation_t13'] },
+        { name: 'Tier 14', upgrades: ['power_capacity_14', 'miner_efficiency_14', 'staking_apy_14', 'miner_hashrate_14', 'click_hashrate_14', 'offline_earnings_14', 'earnings_boost_14', 'minigame_reward_14', 'starter_miners_t13', 'starter_power_p12', 'token_generation_t14'] },
+        { name: 'Tier 15', upgrades: ['power_capacity_15', 'miner_efficiency_15', 'staking_apy_15', 'miner_hashrate_15', 'click_hashrate_15', 'offline_earnings_15', 'earnings_boost_15', 'minigame_reward_15', 'starter_miners_t14', 'token_generation_t15'] },
+        { name: 'Tier 16', upgrades: ['power_capacity_16', 'miner_efficiency_16', 'staking_apy_16', 'miner_hashrate_16', 'click_hashrate_16', 'offline_earnings_16', 'earnings_boost_16', 'minigame_reward_16', 'starter_miners_t15', 'token_generation_t16'] },
+        { name: 'Tier 17', upgrades: ['power_capacity_17', 'miner_efficiency_17', 'staking_apy_17', 'miner_hashrate_17', 'click_hashrate_17', 'offline_earnings_17', 'earnings_boost_17', 'minigame_reward_17', 'token_generation_t17'] },
+        { name: 'Tier 18', upgrades: ['power_capacity_18', 'miner_efficiency_18', 'staking_apy_18', 'miner_hashrate_18', 'click_hashrate_18', 'offline_earnings_18', 'earnings_boost_18', 'minigame_reward_18', 'token_generation_t18'] },
+        { name: 'Tier 19', upgrades: ['power_capacity_19', 'miner_efficiency_19', 'staking_apy_19', 'miner_hashrate_19', 'click_hashrate_19', 'offline_earnings_19', 'earnings_boost_19', 'minigame_reward_19', 'token_generation_t19'] },
+        { name: 'Tier 20', upgrades: ['power_capacity_20', 'miner_efficiency_20', 'staking_apy_20', 'miner_hashrate_20', 'click_hashrate_20', 'offline_earnings_20', 'earnings_boost_20', 'minigame_reward_20', 'token_generation_t20'] }
+    ];
+
+    let tierNumber = 1;
+    for (let i = 0; i < tiers.length; i++) {
+        if (tiers[i].upgrades.includes(upgradeKey)) {
+            tierNumber = i + 1;
+            break;
+        }
+    }
+
+    if (!isTierUnlocked(tierNumber)) {
+        showGenericMessageModal('Tier Locked', `<div style="color: #ff9800;">You must purchase all upgrades in Tier ${tierNumber - 1} first!</div>`);
         return;
     }
 
@@ -1779,15 +1855,24 @@ function updateMetaUpgradesUI() {
 
     // All tiers are now static and defined above
 
-    tiers.forEach(tier => {
+    tiers.forEach((tier, tierIndex) => {
         if (tier.upgrades.length === 0) return;
+
+        const tierNumber = tierIndex + 1;  // Tier numbers start at 1
+        const isCurrentTierLocked = !isTierUnlocked(tierNumber);
 
         const tierDiv = document.createElement('div');
         tierDiv.style.marginBottom = '20px';
 
         const tierTitle = document.createElement('h4');
-        tierTitle.textContent = tier.name;
-        tierTitle.style.color = '#00ff88';
+        let titleText = tier.name;
+        if (tierNumber === 1) {
+            titleText += ' (Always Available)';
+        } else {
+            titleText += ` (Unlocks after clearing Tier ${tierNumber - 1})`;
+        }
+        tierTitle.textContent = titleText;
+        tierTitle.style.color = isCurrentTierLocked ? '#888888' : '#00ff88';
         tierTitle.style.marginBottom = '10px';
         tierDiv.appendChild(tierTitle);
 
@@ -1798,6 +1883,8 @@ function updateMetaUpgradesUI() {
             }
 
             const upgrade = metaUpgrades[upgradeKey];
+            const isLocked = isCurrentTierLocked;
+
             const btn = document.createElement('button');
             btn.className = 'meta-upgrade-btn';
             btn.style.display = 'block';
@@ -1806,14 +1893,18 @@ function updateMetaUpgradesUI() {
             btn.style.marginBottom = '8px';
             btn.style.border = '2px solid #ff00ff';
             btn.style.borderRadius = '6px';
-            btn.style.background = upgrade.purchased ? '#333333' : '#1a1a2e';
-            btn.style.color = upgrade.purchased ? '#888888' : '#ffffff';
-            btn.style.cursor = upgrade.purchased ? 'default' : 'pointer';
+            btn.style.background = upgrade.purchased ? '#333333' : (isLocked ? '#1a1a1a' : '#1a1a2e');
+            btn.style.color = upgrade.purchased ? '#888888' : (isLocked ? '#555555' : '#ffffff');
+            btn.style.cursor = upgrade.purchased ? 'default' : (isLocked ? 'not-allowed' : 'pointer');
             btn.style.fontWeight = 'bold';
+            btn.style.opacity = isLocked ? '0.5' : '1';
 
             const name = getUpgradeName(upgradeKey);
             const costDisplay = formatTokenCost(upgrade.cost);
-            const status = upgrade.purchased ? '✓ OWNED' : `💎 ${costDisplay}`;
+            let status = upgrade.purchased ? '✓ OWNED' : `💎 ${costDisplay}`;
+            if (isLocked) {
+                status = '🔒 LOCKED';
+            }
 
             // Add toggle indicator for auto_sell
             let toggleStatus = '';
@@ -1824,16 +1915,18 @@ function updateMetaUpgradesUI() {
 
             btn.innerHTML = `${name}${toggleStatus}<br><small>${status}</small>`;
 
-            if (!upgrade.purchased) {
+            if (upgrade.purchased) {
+                if (upgradeKey === 'auto_sell') {
+                    // Add toggle functionality for auto-sell
+                    btn.style.cursor = 'pointer';
+                    btn.onclick = () => toggleAutoSell();
+                    btn.onmouseover = () => btn.style.background = '#3a3a5e';
+                    btn.onmouseout = () => btn.style.background = '#333333';
+                }
+            } else if (!isLocked) {
                 btn.onclick = () => purchaseMetaUpgrade(upgradeKey);
                 btn.onmouseover = () => btn.style.background = '#2a2a4e';
                 btn.onmouseout = () => btn.style.background = '#1a1a2e';
-            } else if (upgradeKey === 'auto_sell') {
-                // Add toggle functionality for auto-sell
-                btn.style.cursor = 'pointer';
-                btn.onclick = () => toggleAutoSell();
-                btn.onmouseover = () => btn.style.background = '#3a3a5e';
-                btn.onmouseout = () => btn.style.background = '#333333';
             }
 
             tierDiv.appendChild(btn);

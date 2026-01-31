@@ -326,8 +326,6 @@
                     <canvas id="hashRateChart" width="800" height="200" style="width: 100% !important; height: 100% !important; display: block !important;"></canvas>
                 </div>
             </div>
-            <!-- Chart Date Tracker - Fixed to footer -->
-            <div id="chart-date-tracker" style="text-align: center; padding: 2px 0; color: #f7931a; font-size: 0.85rem; font-weight: 600; min-height: 16px; display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); z-index: 40; border-top: 1px solid #333;"></div>
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
@@ -433,7 +431,7 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="btc-global-multiplier-btn" class="u-item" onclick="purchaseGlobalBTCMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%); border: 3px solid #000; border-color: #f7931a; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                <button id="btc-global-multiplier-btn" class="u-item crypto-btn crypto-btn-btc" onclick="purchaseGlobalBTCMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%); border: 3px solid #f7931a; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
                     <span style="display: block; color: #000; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif;">PERMANENT +100% BTC HASH RATE</span>
                     <span id="btc-multiplier-cost" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
                     <span id="btc-multiplier-level" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
@@ -454,7 +452,7 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="eth-global-multiplier-btn" class="u-item" onclick="purchaseGlobalETHMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #627eea 0%, #7c8ff5 100%); border: 3px solid #000; border-color: #627eea; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                <button id="eth-global-multiplier-btn" class="u-item crypto-btn crypto-btn-eth" onclick="purchaseGlobalETHMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #627eea 0%, #7c8ff5 100%); border: 3px solid #627eea; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
                     <span style="display: block; color: #000; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif;">PERMANENT +100% ETH HASH RATE</span>
                     <span id="eth-multiplier-cost" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
                     <span id="eth-multiplier-level" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
@@ -475,7 +473,7 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="doge-global-multiplier-btn" class="u-item" onclick="purchaseGlobalDogeMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #c2a633 0%, #d4b747 100%); border: 3px solid #000; border-color: #c2a633; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                <button id="doge-global-multiplier-btn" class="u-item crypto-btn crypto-btn-doge" onclick="purchaseGlobalDogeMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #c2a633 0%, #d4b747 100%); border: 3px solid #c2a633; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
                     <span style="display: block; color: #000; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif;">PERMANENT +100% DOGE HASH RATE</span>
                     <span id="doge-multiplier-cost" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
                     <span id="doge-multiplier-level" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>

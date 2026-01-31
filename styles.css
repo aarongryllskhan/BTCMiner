@@ -222,12 +222,83 @@
             padding: 3px 5px !important;
         }
 
+        /* Ultra small mobile - below 465px */
+        @media (max-width: 464px) {
+            #btc-global-multiplier-btn,
+            #eth-global-multiplier-btn,
+            #doge-global-multiplier-btn {
+                padding: 6px 8px !important;
+                font-size: 0.6rem !important;
+                margin-bottom: 4px !important;
+                flex-direction: row !important;
+                gap: 3px !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                overflow: visible !important;
+            }
+            #btc-global-multiplier-btn span:first-child,
+            #eth-global-multiplier-btn span:first-child,
+            #doge-global-multiplier-btn span:first-child {
+                font-size: 0.55rem !important;
+                flex: 0 1 auto !important;
+                white-space: nowrap !important;
+                min-width: 0 !important;
+            }
+            #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
+                font-size: 0.5rem !important;
+                flex-shrink: 0 !important;
+                min-width: 0 !important;
+            }
+            #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
+                font-size: 0.45rem !important;
+                flex-shrink: 0 !important;
+                min-width: 60px !important;
+                text-align: right !important;
+            }
+        }
+
         /* Very small mobile - ultra compact buttons */
         @media (max-width: 480px) {
             .panel:first-child > div:first-of-type > div:last-child > button {
                 font-size: 0.4rem !important;
                 padding: 2px 4px !important;
                 min-width: 35px;
+            }
+        }
+
+        /* Small mobile: 481px to 608px - Reduce permanent hash rate button size */
+        @media (min-width: 481px) and (max-width: 608px) {
+            #btc-global-multiplier-btn,
+            #eth-global-multiplier-btn,
+            #doge-global-multiplier-btn {
+                padding: 8px 10px !important;
+                font-size: 0.75rem !important;
+                margin-bottom: 6px !important;
+            }
+            #btc-global-multiplier-btn span,
+            #eth-global-multiplier-btn span,
+            #doge-global-multiplier-btn span {
+                font-size: 0.75rem !important;
+            }
+            #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
+                font-size: 0.75rem !important;
+            }
+            #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
+                font-size: 0.65rem !important;
+            }
+        }
+
+        /* Tablet/Mid-size screens: 481px to 1179px - Reduce hardware equity size */
+        @media (min-width: 481px) and (max-width: 1179px) {
+            #hardware-equity-box {
+                padding: 4px 6px !important;
+            }
+            #hardware-equity-box span {
+                font-size: 0.45rem !important;
+                margin-bottom: 0px !important;
+            }
+            #asset-usd {
+                font-size: 0.65rem !important;
             }
         }
 
@@ -1004,11 +1075,11 @@
         .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 12px; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.1s; font-size: 0.85rem; margin-bottom: 8px; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.4); line-height: 1; }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item {
-            background: #181818;
-            border: 1px solid #181818;
-            border-radius: 0;
+            background: linear-gradient(135deg, #222 0%, #181818 100%);
+            border: 2px solid #333;
+            border-radius: 6px;
             padding: 15px;
-            margin-bottom: 0;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -1016,15 +1087,25 @@
             width: 100%;
             color: #fff;
             font-weight: bold;
-            transition: all 0.2s ease;
-            box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
             position: relative;
         }
 
         @media (hover: hover) {
             .u-item:hover:not(:disabled) {
                 border-color: var(--btc) !important;
-                transition: box-shadow 0.2s ease;
+                background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+                box-shadow: 0 8px 20px rgba(247, 147, 26, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+                transform: translateY(-2px);
+                transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+        }
+
+        @media (hover: hover) {
+            .u-item:active:not(:disabled) {
+                transform: translateY(0px) scale(0.98);
+                box-shadow: 0 2px 8px rgba(247, 147, 26, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
             }
         }
 
@@ -1067,6 +1148,31 @@
         .u-item:disabled {
             opacity: 0.2;
             cursor: not-allowed;
+        }
+
+        /* Crypto button styling for disabled states - dimmed but colorful */
+        .crypto-btn:disabled {
+            opacity: 0.45;
+        }
+
+        .crypto-btn-btc:disabled {
+            background: linear-gradient(135deg, rgba(247, 147, 26, 0.4) 0%, rgba(255, 149, 0, 0.4) 100%) !important;
+            border-color: rgba(247, 147, 26, 0.5) !important;
+        }
+
+        .crypto-btn-eth:disabled {
+            background: linear-gradient(135deg, rgba(98, 126, 234, 0.4) 0%, rgba(124, 143, 245, 0.4) 100%) !important;
+            border-color: rgba(98, 126, 234, 0.5) !important;
+        }
+
+        .crypto-btn-doge:disabled {
+            background: linear-gradient(135deg, rgba(194, 166, 51, 0.4) 0%, rgba(212, 183, 71, 0.4) 100%) !important;
+            border-color: rgba(194, 166, 51, 0.5) !important;
+        }
+
+        /* Ensure text stays visible in disabled crypto buttons */
+        .crypto-btn:disabled span {
+            opacity: 1;
         }
 
         /* Preserve emboss on permanent multiplier buttons - always maintain emboss */
@@ -1431,6 +1537,22 @@ button:disabled:hover {
         #reset-earnings-success-modal,
         #reset-save-success-modal {
             z-index: 3000 !important;
+        }
+
+        /* Ensure crypto button colors persist on all screen sizes */
+        @media (max-width: 1180px) {
+            #btc-global-multiplier-btn {
+                background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+                border-color: #f7931a !important;
+            }
+            #eth-global-multiplier-btn {
+                background: linear-gradient(135deg, #627eea 0%, #7c8ff5 100%) !important;
+                border-color: #627eea !important;
+            }
+            #doge-global-multiplier-btn {
+                background: linear-gradient(135deg, #c2a633 0%, #d4b747 100%) !important;
+                border-color: #c2a633 !important;
+            }
         }
 
         /* Desktop: Scale down permanent multiplier buttons to fit more miners in view */
@@ -2833,5 +2955,36 @@ button:disabled:hover {
                 font-size: 0.35rem !important;
                 margin-bottom: 0px !important;
             }
+
+            /* Make upgrade buttons bigger and more exciting on mobile */
+            .u-item {
+                padding: 12px 14px !important;
+                margin-bottom: 8px !important;
+                min-height: auto !important;
+                height: auto !important;
+                border-radius: 8px !important;
+                border: 2px solid #444 !important;
+                background: linear-gradient(135deg, #252525 0%, #1a1a1a 100%) !important;
+                box-shadow: 0 6px 16px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+            }
+
+            .u-item:active:not(:disabled) {
+                transform: scale(0.97) !important;
+                box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+            }
+
+            .u-item b {
+                font-size: 0.75rem !important;
+            }
+
+            .u-item span {
+                font-size: 0.6rem !important;
+            }
+
+            .upgrade-list {
+                max-height: 400px !important;
+                flex: 0 0 400px !important;
+            }
         }
+
 

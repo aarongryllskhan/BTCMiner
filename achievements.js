@@ -35,6 +35,27 @@ const achievementDefinitions = {
     first_1sp: { id: 'first_1sp', name: 'Your First $1 Septillion', description: 'Lifetime earnings hit $1,000,000,000,000,000,000,000,000', emoji: '💎', category: 'earnings', threshold: 1000000000000000000000000 },
     first_1o: { id: 'first_1o', name: 'Your First $1 Octillion', description: 'Lifetime earnings hit $1,000,000,000,000,000,000,000,000,000', emoji: '💎', category: 'earnings', threshold: 1000000000000000000000000000 },
     first_1n: { id: 'first_1n', name: 'Your First $1 Nonillion', description: 'Lifetime earnings hit $1,000,000,000,000,000,000,000,000,000,000', emoji: '🏆', category: 'earnings', threshold: 1000000000000000000000000000000 },
+    first_1d: { id: 'first_1d', name: 'Your First $1 Decillion', description: 'Lifetime earnings hit $1 Decillion', emoji: '💫', category: 'earnings', threshold: 1e33 },
+    first_1ud: { id: 'first_1ud', name: 'Your First $1 Undecillion', description: 'Lifetime earnings hit $1 Undecillion', emoji: '✨', category: 'earnings', threshold: 1e36 },
+    first_1dd: { id: 'first_1dd', name: 'Your First $1 Duodecillion', description: 'Lifetime earnings hit $1 Duodecillion', emoji: '🌟', category: 'earnings', threshold: 1e39 },
+    first_1td: { id: 'first_1td', name: 'Your First $1 Tredecillion', description: 'Lifetime earnings hit $1 Tredecillion', emoji: '⭐', category: 'earnings', threshold: 1e42 },
+    first_1qad: { id: 'first_1qad', name: 'Your First $1 Quattuordecillion', description: 'Lifetime earnings hit $1 Quattuordecillion', emoji: '💥', category: 'earnings', threshold: 1e45 },
+    first_1qid: { id: 'first_1qid', name: 'Your First $1 Quindecillion', description: 'Lifetime earnings hit $1 Quindecillion', emoji: '🔥', category: 'earnings', threshold: 1e48 },
+    first_1sx: { id: 'first_1sx', name: 'Your First $1 Sexdecillion', description: 'Lifetime earnings hit $1 Sexdecillion', emoji: '🚀', category: 'earnings', threshold: 1e51 },
+    first_1spd: { id: 'first_1spd', name: 'Your First $1 Septendecillion', description: 'Lifetime earnings hit $1 Septendecillion', emoji: '🌌', category: 'earnings', threshold: 1e54 },
+    first_1octo: { id: 'first_1octo', name: 'Your First $1 Octodecillion', description: 'Lifetime earnings hit $1 Octodecillion', emoji: '🪐', category: 'earnings', threshold: 1e57 },
+    first_1novem: { id: 'first_1novem', name: 'Your First $1 Novemdecillion', description: 'Lifetime earnings hit $1 Novemdecillion', emoji: '🌠', category: 'earnings', threshold: 1e60 },
+    first_1vig: { id: 'first_1vig', name: 'Your First $1 Vigintillion', description: 'Lifetime earnings hit $1 Vigintillion', emoji: '♾️', category: 'earnings', threshold: 1e63 },
+    first_googol: { id: 'first_googol', name: 'Your First $1 Googol', description: 'Lifetime earnings hit $1 Googol', emoji: '👑', category: 'earnings', threshold: 1e100 },
+    first_centillion: { id: 'first_centillion', name: 'Your First $1 Centillion', description: 'Lifetime earnings hit $1 Centillion', emoji: '🏆', category: 'earnings', threshold: 1e303 },
+    first_1e150: { id: 'first_1e150', name: 'Your First 10^150', description: 'Lifetime earnings hit 10^150', emoji: '🌌', category: 'earnings', threshold: 1e150 },
+    first_1e200: { id: 'first_1e200', name: 'Your First 10^200', description: 'Lifetime earnings hit 10^200', emoji: '🔭', category: 'earnings', threshold: 1e200 },
+    first_1e250: { id: 'first_1e250', name: 'Your First 10^250', description: 'Lifetime earnings hit 10^250', emoji: '⚡', category: 'earnings', threshold: 1e250 },
+    first_1e300: { id: 'first_1e300', name: 'Your First 10^300', description: 'Lifetime earnings hit 10^300', emoji: '🌠', category: 'earnings', threshold: 1e300 },
+    first_1e350: { id: 'first_1e350', name: 'Your First 10^350', description: 'Lifetime earnings hit 10^350', emoji: '🚀', category: 'earnings', threshold: 1e350 },
+    first_1e400: { id: 'first_1e400', name: 'Your First 10^400', description: 'Lifetime earnings hit 10^400', emoji: '🛸', category: 'earnings', threshold: 1e400 },
+    first_1e450: { id: 'first_1e450', name: 'Your First 10^450', description: 'Lifetime earnings hit 10^450', emoji: '🌟', category: 'earnings', threshold: 1e450 },
+    first_1e500: { id: 'first_1e500', name: 'Your First 10^500 - INFINITE WEALTH', description: 'Lifetime earnings hit 10^500 - Ultimate achievement!', emoji: '✨', category: 'earnings', threshold: 1e500 },
 };
 
 // Generate equipment achievements for all miners (16 miners x 3 cryptos = 48 achievements)
@@ -133,6 +154,10 @@ Object.assign(achievementDefinitions, {
     first_rugpull: { id: 'first_rugpull', name: 'First Reset', description: 'Execute your first rugpull', emoji: '🔄', category: 'ascension' },
     five_rugpulls: { id: 'five_rugpulls', name: 'Serial Ascender', description: 'Execute 5 rugpulls', emoji: '🔄', category: 'ascension', threshold: 5, type: 'ascension_count' },
     ten_rugpulls: { id: 'ten_rugpulls', name: 'Prestige Master', description: 'Execute 10 rugpulls', emoji: '🔄', category: 'ascension', threshold: 10, type: 'ascension_count' },
+    twenty_five_rugpulls: { id: 'twenty_five_rugpulls', name: 'Ascension Addict', description: 'Execute 25 rugpulls', emoji: '♻️', category: 'ascension', threshold: 25, type: 'ascension_count' },
+    fifty_rugpulls: { id: 'fifty_rugpulls', name: 'Reality Bender', description: 'Execute 50 rugpulls', emoji: '🌀', category: 'ascension', threshold: 50, type: 'ascension_count' },
+    seventy_five_rugpulls: { id: 'seventy_five_rugpulls', name: 'Dimensional Traveler', description: 'Execute 75 rugpulls', emoji: '⏳', category: 'ascension', threshold: 75, type: 'ascension_count' },
+    hundred_rugpulls: { id: 'hundred_rugpulls', name: 'Ascension Deity', description: 'Execute 100 rugpulls', emoji: '👑', category: 'ascension', threshold: 100, type: 'ascension_count' },
 
     // ============ HACKING MINIGAME ============
     first_hack: { id: 'first_hack', name: 'First Hack', description: 'Complete your first hacking minigame', emoji: '🔐', category: 'hacking' },
@@ -292,10 +317,7 @@ function checkAchievements() {
         else if (id === 'first_rugpull' && typeof ascensionLevel !== 'undefined' && ascensionLevel >= 1) {
             unlocked = true;
         }
-        else if (id === 'five_rugpulls' && typeof ascensionLevel !== 'undefined' && ascensionLevel >= 5) {
-            unlocked = true;
-        }
-        else if (id === 'ten_rugpulls' && typeof ascensionLevel !== 'undefined' && ascensionLevel >= 10) {
+        else if (achievement.type === 'ascension_count' && achievement.threshold && typeof ascensionLevel !== 'undefined' && ascensionLevel >= achievement.threshold) {
             unlocked = true;
         }
 

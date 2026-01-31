@@ -5769,7 +5769,7 @@ function updateGlobalMultiplierButtons() {
 
         // Darken button if can't afford
         if (!btcCanAfford) {
-            btcBtn.style.opacity = '0.2';
+            btcBtn.style.opacity = '0.45';
             btcBtn.style.cursor = 'not-allowed';
         } else {
             btcBtn.style.opacity = '1';
@@ -5789,7 +5789,7 @@ function updateGlobalMultiplierButtons() {
 
         // Darken button if can't afford
         if (!ethCanAfford) {
-            ethBtn.style.opacity = '0.2';
+            ethBtn.style.opacity = '0.45';
             ethBtn.style.cursor = 'not-allowed';
         } else {
             ethBtn.style.opacity = '1';
@@ -5809,7 +5809,7 @@ function updateGlobalMultiplierButtons() {
 
         // Darken button if can't afford
         if (!dogeCanAfford) {
-            dogeBtn.style.opacity = '0.2';
+            dogeBtn.style.opacity = '0.45';
             dogeBtn.style.cursor = 'not-allowed';
         } else {
             dogeBtn.style.opacity = '1';
@@ -7854,9 +7854,9 @@ dogeUpgrades.forEach(u => {
                                 align: 'center',
                                 labels: {
                                     color: '#999',
-                                    font: { size: window.innerWidth <= 480 ? 6 : 8 },
-                                    boxWidth: 14,
-                                    boxHeight: 10,
+                                    font: { size: window.innerWidth <= 480 ? 6 : 12 },
+                                    boxWidth: 18,
+                                    boxHeight: 13,
                                     padding: 6
                                 }
                             },

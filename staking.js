@@ -121,6 +121,18 @@ function processStakingEarnings() {
         if (dogeEarned > 0) {
             dogeLifetime += dogeEarned;
         }
+    }
+
+    // Add online corrupt token generation (from token_generation upgrades)
+    if (typeof getTokenGenerationRate === 'function') {
+        const tokenGenerationRate = getTokenGenerationRate();
+        // APR_INTERVAL is 2 seconds, so divide rate by 2 to get per-2-second earnings
+        const onlineTokens = tokenGenerationRate / 2;
+        if (onlineTokens > 0 && typeof rugpullCurrency !== 'undefined') {
+            if (typeof window !== 'undefined' && window.rugpullCurrency !== undefined) {
+                window.rugpullCurrency += onlineTokens;
+            }
+        }
 
         updateUI();
     }
