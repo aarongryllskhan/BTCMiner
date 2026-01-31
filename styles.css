@@ -1016,9 +1016,9 @@
         .mini-stats { display: flex; justify-content: space-between; gap: 30px; margin-bottom: 6px; }
         .stat-item { flex: 1; }
         .stat-item:last-child { flex: 1.5; } /* Give more room to the long BTC string */
-        
+
         .stat-item span { font-size: 0.9rem; color: #777; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800; }
-        
+
         .stat-val {
             font-size: 1.1rem !important; /* Larger price text */
             color: #ffffff;
@@ -1029,6 +1029,398 @@
             font-weight: 900;
             letter-spacing: -2px;
             white-space: nowrap;
+        }
+
+        /* ===== UNIFIED BUTTON SYSTEM ===== */
+
+        /* Base Button Style */
+        .btn-base {
+            padding: 10px 16px;
+            font-weight: 700;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+            border: 2px solid;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        /* Primary Buttons (Mining, Upgrades) */
+        .btn-primary {
+            background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+            border-color: #f7931a !important;
+            color: #000 !important;
+            font-weight: 900 !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff9500 0%, #ffaa1a 100%) !important;
+            border-color: #ffaa1a !important;
+        }
+
+        .btn-primary:hover:disabled {
+            background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+            border-color: #f7931a !important;
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: scale(0.96) translateY(2px) !important;
+        }
+
+        /* BTC Primary Variant */
+        .btn-primary-btc {
+            background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+            border-color: #f7931a !important;
+            color: #fff !important;
+        }
+
+        .btn-primary-btc:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff9500 0%, #ffaa1a 100%) !important;
+            border-color: #ffaa1a !important;
+        }
+
+        /* ETH Primary Variant */
+        .btn-primary-eth {
+            background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
+            border-color: #627eea !important;
+            color: #fff !important;
+        }
+
+        .btn-primary-eth:hover:not(:disabled) {
+            background: linear-gradient(135deg, #7c8fff 0%, #9099ff 100%) !important;
+            border-color: #9099ff !important;
+        }
+
+        .btn-primary-eth:hover:disabled {
+            background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
+            border-color: #627eea !important;
+        }
+
+        /* DOGE Primary Variant */
+        .btn-primary-doge {
+            background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
+            border-color: #c2a633 !important;
+            color: #fff !important;
+        }
+
+        .btn-primary-doge:hover:not(:disabled) {
+            background: linear-gradient(135deg, #d4b644 0%, #e0c857 100%) !important;
+            border-color: #e0c857 !important;
+        }
+
+        .btn-primary-doge:hover:disabled {
+            background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
+            border-color: #c2a633 !important;
+        }
+
+        /* Secondary Buttons (Utilities, toggles) */
+        .btn-secondary {
+            background: rgba(100,100,100,0.2) !important;
+            border-color: #666 !important;
+            color: #ccc !important;
+            font-weight: 700 !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(100,100,100,0.4) !important;
+            border-color: #888 !important;
+            color: #fff !important;
+        }
+
+        .btn-secondary:active:not(:disabled) {
+            transform: scale(0.95) !important;
+        }
+
+        /* Tab Buttons (Navigation) */
+        .btn-tab {
+            border-color: #333 !important;
+            color: inherit !important;
+            font-weight: 700 !important;
+            font-size: 0.85rem !important;
+            padding: 8px !important;
+            box-shadow: none !important;
+            flex: 1 !important;
+            box-sizing: border-box !important;
+            border-radius: 6px !important;
+            border: 2px solid !important;
+            cursor: pointer !important;
+        }
+
+        .btn-tab:hover:not(:disabled) {
+            border-color: currentColor !important;
+            color: #fff !important;
+        }
+
+        .btn-tab.active {
+            /* Active state will be handled by crypto-specific rules */
+            border: 2px solid !important;
+            border-color: currentColor !important;
+            padding: 6px !important;
+        }
+
+        /* Tab Button Crypto Variants */
+        .btn-tab-btc {
+            color: #f7931a !important;
+            border-color: #f7931a !important;
+            background: transparent !important;
+        }
+
+        .btn-tab-btc:hover:not(:disabled) {
+            background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+            border-color: #ffaa1a !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-btc.active {
+            background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+            border-color: #ffaa1a !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-eth {
+            color: #627eea !important;
+            border-color: #627eea !important;
+            background: transparent !important;
+        }
+
+        .btn-tab-eth:hover:not(:disabled) {
+            background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
+            border-color: #9099ff !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-eth.active {
+            background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
+            border-color: #9099ff !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-doge {
+            color: #c2a633 !important;
+            border-color: #c2a633 !important;
+            background: transparent !important;
+        }
+
+        .btn-tab-doge:hover:not(:disabled) {
+            background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
+            border-color: #e0c857 !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-doge.active {
+            background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
+            border-color: #e0c857 !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-exchange {
+            color: #00ff88 !important;
+            border-color: #00ff88 !important;
+        }
+
+        .btn-tab-exchange:hover:not(:disabled) {
+            background: linear-gradient(135deg, #00ff88 0%, #33ffaa 100%) !important;
+            border-color: #33ffaa !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-exchange.active {
+            background: linear-gradient(135deg, #00ff88 0%, #33ffaa 100%) !important;
+            border-color: #33ffaa !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-minigames {
+            color: #d946ef !important;
+            border-color: #d946ef !important;
+        }
+
+        .btn-tab-minigames:hover:not(:disabled) {
+            background: linear-gradient(135deg, #d946ef 0%, #ec4eff 100%) !important;
+            border-color: #ec4eff !important;
+            color: #fff !important;
+        }
+
+        .btn-tab-minigames.active {
+            background: linear-gradient(135deg, #d946ef 0%, #ec4eff 100%) !important;
+            border-color: #ec4eff !important;
+            color: #fff !important;
+        }
+
+        /* Protect tab buttons from JS overrides */
+        #btc-tab-btn,
+        #eth-tab-btn,
+        #doge-tab-btn,
+        #crypto-exchange-btn,
+        #minigames-tab-btn {
+            border: 2px solid !important;
+            padding: 8px !important;
+            color: inherit !important;
+            font-weight: 700 !important;
+            font-size: 0.85rem !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 1 !important;
+        }
+
+        #btc-tab-btn { border-color: #f7931a !important; color: #f7931a !important; background: transparent !important; }
+        #btc-tab-btn:not(.active) { background: transparent !important; color: #f7931a !important; }
+        #btc-tab-btn:hover:not(.active) { border-color: #ffaa1a !important; background: transparent !important; }
+        #btc-tab-btn.active { border-color: #ffaa1a !important; background: linear-gradient(135deg, rgba(247, 147, 26, 0.5) 0%, rgba(255, 149, 0, 0.5) 100%) !important; color: #fff !important; }
+
+        #eth-tab-btn { border-color: #627eea !important; color: #627eea !important; background: transparent !important; }
+        #eth-tab-btn:not(.active) { background: transparent !important; color: #627eea !important; }
+        #eth-tab-btn:hover:not(.active) { border-color: #9099ff !important; background: transparent !important; }
+        #eth-tab-btn.active { border-color: #9099ff !important; background: linear-gradient(135deg, rgba(98, 126, 234, 0.5) 0%, rgba(124, 143, 255, 0.5) 100%) !important; color: #fff !important; }
+
+        #doge-tab-btn { border-color: #c2a633 !important; color: #c2a633 !important; background: transparent !important; }
+        #doge-tab-btn:not(.active) { background: transparent !important; color: #c2a633 !important; }
+        #doge-tab-btn:hover:not(.active) { border-color: #e0c857 !important; background: transparent !important; }
+        #doge-tab-btn.active { border-color: #e0c857 !important; background: linear-gradient(135deg, rgba(194, 166, 51, 0.5) 0%, rgba(212, 182, 68, 0.5) 100%) !important; color: #fff !important; }
+
+        #crypto-exchange-btn { border-color: #00ff88 !important; color: #00ff88 !important; background: transparent !important; }
+        #crypto-exchange-btn:not(.active) { background: transparent !important; color: #00ff88 !important; }
+        #crypto-exchange-btn:hover:not(.active) { border-color: #33ffaa !important; background: transparent !important; }
+        #crypto-exchange-btn.active { border-color: #33ffaa !important; background: linear-gradient(135deg, rgba(0, 255, 136, 0.5) 0%, rgba(51, 255, 170, 0.5) 100%) !important; color: #fff !important; }
+
+        #minigames-tab-btn { border-color: #d946ef !important; color: #d946ef !important; background: transparent !important; }
+        #minigames-tab-btn:not(.active) { background: transparent !important; color: #d946ef !important; }
+        #minigames-tab-btn:hover:not(.active) { border-color: #ec4eff !important; background: transparent !important; }
+        #minigames-tab-btn.active { border-color: #ec4eff !important; background: linear-gradient(135deg, rgba(217, 70, 239, 0.5) 0%, rgba(236, 78, 255, 0.5) 100%) !important; color: #fff !important; }
+
+        /* Action Buttons (RUGPULL, STORE, etc) */
+        .btn-action {
+            background: #9c27b0 !important;
+            border-color: #ffeb3b !important;
+            color: white !important;
+            font-weight: 900 !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+        }
+
+        .btn-action:hover:not(:disabled) {
+            background: #b339d1 !important;
+            border-color: #ffff66 !important;
+        }
+
+        .btn-action:active:not(:disabled) {
+            transform: scale(0.94) !important;
+        }
+
+        /* Confirm Buttons (Modal confirmations) */
+        .btn-confirm {
+            background: #4CAF50 !important;
+            border-color: #66BB6A !important;
+            color: white !important;
+            font-weight: 900 !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+        }
+
+        .btn-confirm:hover:not(:disabled) {
+            background: #66bb6a !important;
+            border-color: #7ecc82 !important;
+        }
+
+        .btn-confirm:active:not(:disabled) {
+            transform: scale(0.94) !important;
+        }
+
+        /* Danger Buttons (Reset, destructive) */
+        .btn-danger {
+            background: #ff3344 !important;
+            border-color: #ff6666 !important;
+            color: white !important;
+            font-weight: 900 !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #ff5566 !important;
+            border-color: #ff8899 !important;
+        }
+
+        .btn-danger:active:not(:disabled) {
+            transform: scale(0.94) !important;
+        }
+
+        /* Icon Button Variant (small circular buttons) */
+        .btn-icon {
+            width: 35px;
+            height: 35px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .btn-icon:hover:not(:disabled) {
+            transform: scale(1.1);
+        }
+
+        /* Size Variants */
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+        }
+
+        .btn-wide {
+            width: 100%;
+        }
+
+        /* Utility Buttons (Top bar) */
+        .btn-utility {
+            padding: 4px 8px !important;
+            font-size: 0.5rem !important;
+            height: 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            min-width: 60px !important;
+        }
+
+        /* Disabled State (Universal) */
+        button:disabled,
+        .btn-base:disabled,
+        .btn-primary:disabled,
+        .btn-secondary:disabled,
+        .btn-tab:disabled,
+        .btn-action:disabled,
+        .btn-confirm:disabled,
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #444 !important;
+            pointer-events: none;
+        }
+
+        button:disabled:hover,
+        .btn-base:disabled:hover,
+        .btn-primary:disabled:hover,
+        .btn-secondary:disabled:hover,
+        .btn-tab:disabled:hover,
+        .btn-action:disabled:hover,
+        .btn-confirm:disabled:hover,
+        .btn-danger:disabled:hover {
+            transform: none !important;
+            filter: none !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1) !important;
         }
 
         .chart-wrapper {
@@ -1060,18 +1452,20 @@
         }
 
         .tab-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
-        .tab-btn { flex: 1; padding: 8px; background: #333; border: 2px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; box-sizing: border-box; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.4); }
+        .tab-btn { flex: 1; padding: 8px; background: #333; border: 2px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; box-sizing: border-box; box-shadow: none !important; }
 
-        /* Only apply hover glow on devices that support true hover (desktop/mouse) */
+        /* Only apply color fill on devices that support true hover (desktop/mouse) */
         @media (hover: hover) {
-            .tab-btn:hover:not(:disabled) { box-shadow: 0 0 20px rgba(247, 147, 26, 0.5); filter: brightness(1.1); }
-            #btc-tab-btn:hover { box-shadow: 0 0 25px rgba(247, 147, 26, 0.6) !important; }
-            #eth-tab-btn:hover { box-shadow: 0 0 25px rgba(98, 126, 234, 0.6) !important; }
-            #doge-tab-btn:hover { box-shadow: 0 0 25px rgba(194, 166, 51, 0.6) !important; }
-            #crypto-exchange-btn:hover { box-shadow: 0 0 25px rgba(0, 255, 136, 0.6) !important; }
-            #hacking-tab-btn:hover { box-shadow: 0 0 25px rgba(255, 0, 255, 0.6) !important; }
-            #power-upgrade-btn:hover { box-shadow: 0 0 25px rgba(0, 255, 136, 0.6) !important; }
-            #autoclicker-btn:hover { box-shadow: 0 0 25px rgba(255, 255, 255, 0.6) !important; }
+            .tab-btn:hover:not(:disabled) { box-shadow: none !important; filter: none; }
+            #btc-tab-btn:hover { background: linear-gradient(135deg, rgba(247, 147, 26, 0.5) 0%, rgba(255, 149, 0, 0.5) 100%) !important; box-shadow: none !important; }
+            #eth-tab-btn:hover { background: linear-gradient(135deg, rgba(98, 126, 234, 0.5) 0%, rgba(124, 143, 255, 0.5) 100%) !important; box-shadow: none !important; }
+            #doge-tab-btn:hover { background: linear-gradient(135deg, rgba(194, 166, 51, 0.5) 0%, rgba(212, 182, 68, 0.5) 100%) !important; box-shadow: none !important; }
+            #crypto-exchange-btn:hover { background: linear-gradient(135deg, rgba(0, 255, 136, 0.5) 0%, rgba(51, 255, 170, 0.5) 100%) !important; box-shadow: none !important; }
+            #minigames-tab-btn:hover { background: linear-gradient(135deg, rgba(217, 70, 239, 0.5) 0%, rgba(236, 78, 255, 0.5) 100%) !important; box-shadow: none !important; }
+            #hacking-tab-btn:hover { background: linear-gradient(135deg, rgba(217, 70, 239, 0.5) 0%, rgba(236, 78, 255, 0.5) 100%) !important; box-shadow: none !important; }
+            #power-upgrade-btn { background: #333 !important; }
+            #power-upgrade-btn:hover { background: linear-gradient(135deg, rgba(0, 255, 136, 0.5) 0%, rgba(51, 255, 170, 0.5) 100%) !important; box-shadow: none !important; }
+            #autoclicker-btn:hover { background: linear-gradient(135deg, rgba(100, 100, 100, 0.5) 0%, rgba(150, 150, 150, 0.5) 100%) !important; box-shadow: none !important; }
         }
 
         /* Remove any persistent hover on touch devices */
@@ -1093,154 +1487,105 @@
 
         .tab-btn.active { background: transparent; border-width: 2px; }
 
-        .qty-toggle { flex: 1; padding: 5px; background: #1a1a1a; color: #666; border: 2px solid #333; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 0.7rem; transition: 0.2s; }
-        .qty-toggle:hover { background: #222; border-color: #444; color: #888; }
-        .qty-toggle.active { background: #222; color: #fff; border-color: #666; box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+        .qty-toggle {
+            flex: 1 !important;
+            padding: 5px !important;
+            background: #1a1a1a !important;
+            color: #666 !important;
+            border: 2px solid #333 !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            font-weight: 800 !important;
+            font-size: 0.7rem !important;
+            transition: all 0.15s ease !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            box-sizing: border-box !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        .qty-toggle:focus {
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        .qty-toggle:hover:not(.active) {
+            background: #222 !important;
+            border-color: #555 !important;
+            color: #999 !important;
+        }
+        .qty-toggle.active {
+            background: #333 !important;
+            color: #fff !important;
+            border-color: #888 !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
         .tab-content { display: none; flex-direction: column; min-height: 0; flex: 1; }
         .tab-content.active { display: flex; }
 
-        .mine-btn { background: var(--btc); color: #000; border: none; width: 100%; padding: 12px; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.1s; font-size: 0.85rem; margin-bottom: 8px; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.4); line-height: 1; }
-
-        /* Override for styled manual hash buttons - preserve inline styles */
-        #manual-hash-btc-btn,
-        #manual-hash-eth-btn,
-        #manual-hash-doge-btn {
-            background: inherit !important;
-            border: inherit !important;
-            box-shadow: inherit !important;
-            color: inherit !important;
+        /* Manual hash buttons - use new btn-primary system */
+        .mine-btn {
+            width: 100%;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+            line-height: 1;
         }
 
-        /* Preserve manual hash button BTC styles - ALL STATES */
-        #manual-hash-btc-btn,
-        #manual-hash-btc-btn:active,
+        /* Manual hash button specific animation handling */
         #manual-hash-btc-btn.active,
-        #manual-hash-btc-btn:focus,
-        #manual-hash-btc-btn:hover {
-            background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
-            border: 3px solid #f7931a !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
-        }
-
-        /* ONLY apply animation on .active class, NOT :active pseudo-class */
-        #manual-hash-btc-btn.active {
-            filter: brightness(0.85) !important;
-            transform: scale(0.94) translateY(3px) !important;
-        }
-
-        /* Preserve manual hash button ETH styles - ALL STATES */
-        #manual-hash-eth-btn,
-        #manual-hash-eth-btn:active,
         #manual-hash-eth-btn.active,
-        #manual-hash-eth-btn:focus,
-        #manual-hash-eth-btn:hover {
-            background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
-            border: 3px solid #627eea !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
-        }
-
-        /* ONLY apply animation on .active class, NOT :active pseudo-class */
-        #manual-hash-eth-btn.active {
-            filter: brightness(0.85) !important;
-            transform: scale(0.94) translateY(3px) !important;
-        }
-
-        /* Preserve manual hash button DOGE styles - ALL STATES */
-        #manual-hash-doge-btn,
-        #manual-hash-doge-btn:active,
-        #manual-hash-doge-btn.active,
-        #manual-hash-doge-btn:focus,
-        #manual-hash-doge-btn:hover {
-            background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
-            border: 3px solid #c2a633 !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
-        }
-
-        /* ONLY apply animation on .active class, NOT :active pseudo-class */
         #manual-hash-doge-btn.active {
-            filter: brightness(0.85) !important;
-            transform: scale(0.94) translateY(3px) !important;
+            filter: brightness(0.85);
+            transform: scale(0.94) translateY(3px);
         }
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item {
-            background: linear-gradient(135deg, #222 0%, #181818 100%);
-            border: 2px solid #333;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            cursor: pointer;
-            width: 100%;
-            color: #fff;
-            font-weight: bold;
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-            position: relative;
+            background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
+            border: 2px solid #333 !important;
+            border-radius: 6px !important;
+            padding: 15px !important;
+            margin-bottom: 8px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            cursor: pointer !important;
+            width: 100% !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+            position: relative !important;
+            font-size: 0.9rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
         }
 
-        @media (hover: hover) {
-            .u-item:hover:not(:disabled) {
-                border-color: var(--btc) !important;
-                background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
-                box-shadow: 0 8px 20px rgba(247, 147, 26, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
-                transform: translateY(-2px);
-                transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            }
+        /* u-item with btn-primary: only show hover effect if not disabled */
+        .u-item.btn-primary:hover:not(:disabled) {
+            /* No transform - keep button in place */
+            /* Color change is handled by btn-primary:hover */
         }
 
-        @media (hover: hover) {
-            .u-item:active:not(:disabled) {
-                transform: translateY(0px) scale(0.98);
-                box-shadow: 0 2px 8px rgba(247, 147, 26, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-            }
+        .u-item.btn-primary:active:not(:disabled),
+        .u-item.btn-primary.active {
+            /* No transform - keep button in place */
         }
 
-        @media (hover: none) {
-            .u-item {
-                border-color: #181818 !important;
-            }
+        /* Disabled u-item buttons show no hover effects */
+        .u-item:disabled:hover {
+            transform: none !important;
+            /* Let the button's crypto color show through with opacity */
         }
 
+
+        /* Manual hash button hover inherits from .btn-primary:hover */
         .mine-btn:hover {
-            box-shadow: 0 0 25px rgba(247, 147, 26, 0.6);
             cursor: pointer;
-            filter: brightness(1.1);
         }
 
-        .mine-btn:active:not(#manual-hash-btc-btn):not(#manual-hash-eth-btn):not(#manual-hash-doge-btn) {
-            transform: scale(0.96) translateY(2px) !important;
-            filter: brightness(0.85) !important;
-            background: inherit !important;
-            border: inherit !important;
-            box-shadow: inherit !important;
-        }
-
-        .mine-btn {
-            transition: transform 0.03s ease-out, filter 0.2s;
-        }
-
-        /* Active state class for manual touch feedback */
-        .mine-btn.active {
-            transform: scale(0.94) translateY(3px) !important;
-            filter: brightness(0.85) !important;
-            background: inherit !important;
-            border: inherit !important;
-            box-shadow: inherit !important;
-            transition: transform 0.03s ease-in, filter 0.03s ease-in;
-        }
-
-        /* Mobile touch feedback */
-        @media (hover: none) {
-            .mine-btn:active {
-                transform: scale(0.94) translateY(3px) !important;
-                filter: brightness(0.85) !important;
-                background: inherit !important;
-                border: inherit !important;
-                box-shadow: inherit !important;
-            }
-        }
+        /* Remove conflicting active styles - use button classes instead */
 
         .u-item:disabled {
             opacity: 0.2;

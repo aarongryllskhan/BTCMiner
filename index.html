@@ -76,10 +76,10 @@
             </div>
 
             <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="acceptAgeAndTerms()" style="background: #f7931a; color: #000; border: none; padding: 10px 24px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.4);">
+                <button onclick="acceptAgeAndTerms()" class="btn-confirm" style="padding: 10px 24px; font-size: 0.8rem;">
                     ✓ I AM 18+ & ACCEPT
                 </button>
-                <button onclick="declineTerms()" style="background: #333; color: #f7931a; border: 2px solid #f7931a; padding: 10px 24px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: 0.2s;">
+                <button onclick="declineTerms()" class="btn-secondary" style="padding: 10px 24px; font-size: 0.8rem;">
                     ✗ DECLINE
                 </button>
             </div>
@@ -89,7 +89,7 @@
     <!-- Privacy & Cookie Policy Modal -->
     <div id="privacy-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,1); z-index: 100000; justify-content: center; align-items: center; overflow: auto;">
         <div style="background: #fff; padding: 20px; border-radius: 12px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; margin: 20px; position: relative; border: 2px solid #f7931a; box-shadow: 0 0 30px rgba(247,147,26,0.5);">
-            <button onclick="closePrivacyModal()" style="position: absolute; top: 15px; right: 15px; background: #f7931a; color: #000; border: none; padding: 10px 20px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s; z-index: 1;">
+            <button onclick="closePrivacyModal()" class="btn-confirm" style="position: absolute; top: 15px; right: 15px; padding: 10px 20px; font-size: 1rem; z-index: 1;">
                 CLOSE
             </button>
             <!-- Policy Tabs -->
@@ -130,13 +130,13 @@
                 </ol>
             </div>
             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="closeBackupReminder()" style="background: #FFD700; color: #000; border: none; padding: 12px 25px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;">
+                <button onclick="closeBackupReminder()" class="btn-confirm" style="padding: 12px 25px; font-size: 0.9rem;">
                     Got It
                 </button>
-                <button onclick="openExportImportModal(); closeBackupReminder();" style="background: rgba(255,215,0,0.2); color: #FFD700; border: 2px solid #FFD700; padding: 10px 25px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;">
+                <button onclick="openExportImportModal(); closeBackupReminder();" class="btn-secondary" style="padding: 10px 25px; font-size: 0.9rem;">
                     Export Now
                 </button>
-                <button onclick="dismissBackupReminderPermanently()" style="background: rgba(255,215,0,0.1); color: #999; border: 2px solid #666; padding: 10px 25px; font-weight: 800; border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;">
+                <button onclick="dismissBackupReminderPermanently()" class="btn-secondary" style="padding: 10px 25px; font-size: 0.85rem;">
                     Never Show Again
                 </button>
             </div>
@@ -147,13 +147,13 @@
         <div class="panel">
             <!-- Top Horizontal Button Row -->
             <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; padding: 4px 24px; background: #1a1a1a; pointer-events: auto; width: 100vw; box-sizing: border-box; margin: 0 0 0 calc(-50vw + 50%); position: relative;" id="utility-buttons-container">
-                <button id="mute-btn" style="background: #888; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.5rem; white-space: nowrap; height: 24px; display: flex; align-items: center;" onclick="toggleMute()">SOUND ON</button>
-                <button id="vfx-btn" style="background: #888; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.5rem; white-space: nowrap; height: 24px; display: flex; align-items: center;" onclick="toggleVFX()">VFX ON</button>
-                <button style="background: #9c27b0; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.5rem; white-space: nowrap; height: 24px; display: flex; align-items: center;" onclick="toggleFullscreen()">⛶ FULLSCREEN</button>
-                <button style="background: #4CAF50; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.5rem; white-space: nowrap; height: 24px; display: flex; align-items: center;" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
-                <button style="background: #2196F3; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.5rem; white-space: nowrap; height: 24px; display: flex; align-items: center;" onclick="openExportImportModal()">EXPORT/IMPORT</button>
-                <button style="background: #ff3344; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.5rem; white-space: nowrap; height: 24px; display: flex; align-items: center;" onclick="resetGame()">RESET SAVE</button>
-                <button id="achievements-btn" style="background: #ff6b35; color: white; border: none; padding: 4px 8px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.5rem; white-space: nowrap; height: 24px; display: flex; align-items: center;" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
+                <button id="mute-btn" class="btn-secondary btn-utility" onclick="toggleMute()">SOUND ON</button>
+                <button id="vfx-btn" class="btn-secondary btn-utility" onclick="toggleVFX()">VFX ON</button>
+                <button class="btn-secondary btn-utility" onclick="toggleFullscreen()">⛶ FULLSCREEN</button>
+                <button class="btn-secondary btn-utility" onclick="document.getElementById('game-instructions').style.display='flex'; localStorage.removeItem('instructionsDismissed');">SHOW HELP</button>
+                <button class="btn-secondary btn-utility" onclick="openExportImportModal()">EXPORT/IMPORT</button>
+                <button class="btn-secondary btn-utility" onclick="resetGame()">RESET SAVE</button>
+                <button id="achievements-btn" class="btn-primary btn-primary-btc btn-utility" onclick="openAchievementsModal()">🏆 ACHIEVEMENTS</button>
             </div>
 
             <!-- Three-Column Layout -->
@@ -330,46 +330,46 @@
         </div>
 
         <div class="panel" style="display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 50;">
-            <button id="manual-hash-btc-btn" class="mine-btn" style="background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important; border: 3px solid #f7931a !important; color: #000 !important; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 8px; cursor: pointer; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important; transition: all 0.1s ease;">
+            <button id="manual-hash-btc-btn" class="mine-btn btn-primary btn-primary-btc" style="padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <div style="flex: 1; text-align: center;">
                     MANUAL BTC HASH<br>
                     <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+0.00000250 ₿</span>
                 </div>
                 <img src="bitcointoken.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="BTC">
             </button>
-            <button id="manual-hash-eth-btn" class="mine-btn" style="background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important; border: 3px solid #627eea !important; color: #fff !important; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 8px; cursor: pointer; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important; transition: all 0.1s ease;">
+            <button id="manual-hash-eth-btn" class="mine-btn btn-primary btn-primary-eth" style="padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <div style="flex: 1; text-align: center;">
                     MANUAL ETH HASH<br>
                     <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+0.00007143 Ξ</span>
                 </div>
                 <img src="ethcoin.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="ETH">
             </button>
-            <button id="manual-hash-doge-btn" class="mine-btn" style="background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important; border: 3px solid #c2a633 !important; color: #000 !important; padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 8px; cursor: pointer; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important; transition: all 0.1s ease;">
+            <button id="manual-hash-doge-btn" class="mine-btn btn-primary btn-primary-doge" style="padding: 8px; line-height: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <div style="flex: 1; text-align: center;">
                     MANUAL DOGE HASH<br>
                     <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+1.00000000 Ð</span>
                 </div>
                 <img src="dogecoin.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="DOGE">
             </button>
-            <button id="autoclicker-btn" style="background: #666; color: white; border: none; width: 100%; padding: 8px; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 8px; font-size: 0.75rem;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
+            <button id="autoclicker-btn" class="btn-secondary btn-wide" style="margin-bottom: 8px;" onclick="startAutoClicker()">AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown</button>
 
             <!-- Manual Hash Rate Upgrades Section -->
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px;">
-                <button id="btc-manual-hash-rate-btn" onclick="purchaseBTCManualHashRate()" style="background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%); border: 3px solid #f7931a; color: #000; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 0.75rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transition: all 0.1s ease; min-width: 0;">
+                <button id="btc-manual-hash-rate-btn" onclick="purchaseBTCManualHashRate()" class="btn-primary btn-primary-btc btn-small" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-width: 0;">
                     <span style="text-align: left; line-height: 1.2; white-space: nowrap;">
                         <div style="font-size: 0.7rem; font-weight: 700;">+10% HASH</div>
                         <div style="font-size: 0.6rem; font-weight: 600;">Cost: <span id="btc-mhr-cost" style="display: inline-block; min-width: 35px; text-align: right;">$10K</span></div>
                     </span>
                     <span id="btc-mhr-multi" style="font-size: 0.65rem; font-weight: 900; flex-shrink: 0; display: inline-block; min-width: 20px; text-align: right;">1x</span>
                 </button>
-                <button id="eth-manual-hash-rate-btn" onclick="purchaseETHManualHashRate()" style="background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%); border: 3px solid #627eea; color: #fff; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 0.75rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transition: all 0.1s ease; min-width: 0;">
+                <button id="eth-manual-hash-rate-btn" onclick="purchaseETHManualHashRate()" class="btn-primary btn-primary-eth btn-small" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-width: 0;">
                     <span style="text-align: left; line-height: 1.2; white-space: nowrap;">
                         <div style="font-size: 0.7rem; font-weight: 700;">+10% HASH</div>
                         <div style="font-size: 0.6rem; font-weight: 600;">Cost: <span id="eth-mhr-cost" style="display: inline-block; min-width: 35px; text-align: right;">$10K</span></div>
                     </span>
                     <span id="eth-mhr-multi" style="font-size: 0.65rem; font-weight: 900; flex-shrink: 0; display: inline-block; min-width: 20px; text-align: right;">1x</span>
                 </button>
-                <button id="doge-manual-hash-rate-btn" onclick="purchaseDOGEManualHashRate()" style="background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%); border: 3px solid #c2a633; color: #000; border-radius: 8px; cursor: pointer; font-weight: 900; font-size: 0.75rem; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transition: all 0.1s ease; min-width: 0;">
+                <button id="doge-manual-hash-rate-btn" onclick="purchaseDOGEManualHashRate()" class="btn-primary btn-primary-doge btn-small" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-width: 0;">
                     <span style="text-align: left; line-height: 1.2; white-space: nowrap;">
                         <div style="font-size: 0.7rem; font-weight: 700;">+10% HASH</div>
                         <div style="font-size: 0.6rem; font-weight: 600;">Cost: <span id="doge-mhr-cost" style="display: inline-block; min-width: 35px; text-align: right;">$10K</span></div>
@@ -381,7 +381,7 @@
             <!-- Desktop RUGPULL Section - Side by side (shown on non-mobile) -->
             <div id="desktop-rugpull-section" style="display: none; gap: 8px; margin-bottom: 12px; flex-direction: row; align-items: stretch;">
                 <!-- RUGPULL Button -->
-                <button id="rugpull-btn-desktop" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 8px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.75rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.2px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
+                <button id="rugpull-btn-desktop" class="btn-action" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
                     <span>RUGPULL</span>
                     <span id="rugpull-progress-text-desktop" style="color: #ffeb3b; font-size: 0.6rem; font-weight: bold;">$0 / $1B</span>
                     <div id="rugpull-tooltip-desktop" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
@@ -389,13 +389,13 @@
                     </div>
                 </button>
                 <!-- RUGPULL STORE Button -->
-                <button id="rugpull-store-btn-desktop" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 8px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.7rem; transition: all 0.3s ease; flex: 1; display: none; text-transform: uppercase; display: flex; align-items: center; justify-content: center;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+                <button id="rugpull-store-btn-desktop" class="btn-action" style="flex: 1; display: none;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
             </div>
 
             <!-- Mobile RUGPULL Section - Side by side -->
             <div id="mobile-rugpull-section" style="display: none; gap: 8px; margin-bottom: 12px; flex-direction: row; align-items: stretch;">
                 <!-- RUGPULL Button with counter inside -->
-                <button id="rugpull-btn-mobile" style="background: #9c27b0; color: white; border: 3px solid #ffeb3b; padding: 8px 12px; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 0.75rem; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(156, 39, 176, 0.7); text-transform: uppercase; letter-spacing: 1.2px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
+                <button id="rugpull-btn-mobile" class="btn-action" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
                     <span>RUGPULL</span>
                     <span id="rugpull-progress-text-mobile" style="color: #ffeb3b; font-size: 0.6rem; font-weight: bold;">$0 / $1B</span>
                     <div id="rugpull-tooltip-mobile" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
@@ -403,7 +403,7 @@
                     </div>
                 </button>
                 <!-- RUGPULL STORE Button -->
-                <button id="rugpull-store-btn-mobile-main" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 8px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; font-size: 0.7rem; transition: all 0.3s ease; flex: 1; display: none; text-transform: uppercase;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+                <button id="rugpull-store-btn-mobile-main" class="btn-action" style="flex: 1; display: none;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
             </div>
 
             <!-- Power Status Bar -->
@@ -416,7 +416,7 @@
                             <div id="power-bar-fill" style="height: 100%; background: #00ff88; border-radius: 3px; width: 0%;"></div>
                         </div>
                     </div>
-                    <button id="power-upgrade-btn" class="tab-btn" onclick="trackPowerUpgradeClick(); switchTab('power')" style="border-color: #00ff88; color: #00ff88;">UPGRADE POWER SUPPLY</button>
+                    <button id="power-upgrade-btn" class="btn-tab" onclick="trackPowerUpgradeClick(); switchTab('power')" style="color: #00ff88;">UPGRADE POWER SUPPLY</button>
                 </div>
             </div>
 
@@ -428,20 +428,20 @@
 
             <!-- Auto-Sell Toggle Button -->
             <div style="margin-bottom: 8px;">
-                <button id="auto-sell-toggle-btn" onclick="toggleAutoSellButton()" style="width: 100%; padding: 8px 12px; background: rgba(100,100,100,0.3); border: 2px solid #666; color: #999; border-radius: 6px; font-weight: 800; cursor: not-allowed; font-size: 0.8rem; text-transform: uppercase; transition: 0.2s;" title="Purchase 'Auto-Sell Crypto to USD' upgrade to enable" disabled>
+                <button id="auto-sell-toggle-btn" class="btn-secondary btn-wide" onclick="toggleAutoSellButton()" title="Purchase 'Auto-Sell Crypto to USD' upgrade to enable" disabled>
                     🔒 Auto-Sell: <span id="auto-sell-status">LOCKED</span>
                 </button>
             </div>
 
             <!-- Tab Buttons -->
             <div class="tab-buttons" style="margin-bottom: 6px;">
-                <button id="btc-tab-btn" class="tab-btn active" onclick="trackBTCTabClick(); switchTab('btc-mining')" style="border-color: #f7931a; color: #f7931a;">BTC</button>
-                <button id="eth-tab-btn" class="tab-btn" onclick="switchTab('eth-mining')" style="border-color: #627eea; color: #627eea;">ETH</button>
-                <button id="doge-tab-btn" class="tab-btn" onclick="switchTab('doge-mining')" style="border-color: #c2a633; color: #c2a633;">DOGE</button>
+                <button id="btc-tab-btn" class="btn-tab btn-tab-btc active" onclick="trackBTCTabClick(); switchTab('btc-mining')">BTC</button>
+                <button id="eth-tab-btn" class="btn-tab btn-tab-eth" onclick="switchTab('eth-mining')">ETH</button>
+                <button id="doge-tab-btn" class="btn-tab btn-tab-doge" onclick="switchTab('doge-mining')">DOGE</button>
             </div>
             <div class="tab-buttons">
-                <button id="crypto-exchange-btn" class="tab-btn" onclick="switchTab('market')" style="border-color: #00ff88; color: #00ff88;">CRYPTO EXCHANGE</button>
-                <button id="minigames-tab-btn" class="tab-btn" onclick="switchTab('minigames')" style="border-color: #ff00ff; color: #ff00ff;">MINIGAMES</button>
+                <button id="crypto-exchange-btn" class="btn-tab btn-tab-exchange" onclick="switchTab('market')">CRYPTO EXCHANGE</button>
+                <button id="minigames-tab-btn" class="btn-tab btn-tab-minigames" onclick="switchTab('minigames')">MINIGAMES</button>
             </div>
 
             <!-- BTC Mining Tab -->
@@ -457,10 +457,10 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="btc-global-multiplier-btn" class="u-item crypto-btn crypto-btn-btc" onclick="purchaseGlobalBTCMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%); border: 3px solid #f7931a; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
-                    <span style="display: block; color: #000; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif;">PERMANENT +100% BTC HASH RATE</span>
-                    <span id="btc-multiplier-cost" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
-                    <span id="btc-multiplier-level" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
+                <button id="btc-global-multiplier-btn" class="btn-primary btn-primary-btc u-item" onclick="purchaseGlobalBTCMultiplier()" style="margin-bottom: 10px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                    <span style="display: block; color: #fff; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900;">PERMANENT +100% BTC HASH RATE</span>
+                    <span id="btc-multiplier-cost" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
+                    <span id="btc-multiplier-level" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
                 </button>
                 <div class="upgrade-list" id="btc-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
             </div>
@@ -478,10 +478,10 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="eth-global-multiplier-btn" class="u-item crypto-btn crypto-btn-eth" onclick="purchaseGlobalETHMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #627eea 0%, #7c8ff5 100%); border: 3px solid #627eea; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
-                    <span style="display: block; color: #000; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif;">PERMANENT +100% ETH HASH RATE</span>
-                    <span id="eth-multiplier-cost" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
-                    <span id="eth-multiplier-level" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
+                <button id="eth-global-multiplier-btn" class="btn-primary btn-primary-eth u-item" onclick="purchaseGlobalETHMultiplier()" style="margin-bottom: 10px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                    <span style="display: block; color: #fff; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900;">PERMANENT +100% ETH HASH RATE</span>
+                    <span id="eth-multiplier-cost" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
+                    <span id="eth-multiplier-level" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
                 </button>
                 <div class="upgrade-list" id="eth-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
             </div>
@@ -499,10 +499,10 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="doge-global-multiplier-btn" class="u-item crypto-btn crypto-btn-doge" onclick="purchaseGlobalDogeMultiplier()" style="margin-bottom: 10px; background: linear-gradient(135deg, #c2a633 0%, #d4b747 100%); border: 3px solid #c2a633; width: 100%; padding: 12px 15px; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5); transform: scale(1); transition: all 0.1s ease; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
-                    <span style="display: block; color: #000; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif;">PERMANENT +100% DOGE HASH RATE</span>
-                    <span id="doge-multiplier-cost" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
-                    <span id="doge-multiplier-level" style="display: block; font-size: 0.9rem; color: #000; font-weight: 900; font-family: 'Inter', -apple-system, sans-serif; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
+                <button id="doge-global-multiplier-btn" class="btn-primary btn-primary-doge u-item" onclick="purchaseGlobalDogeMultiplier()" style="margin-bottom: 10px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                    <span style="display: block; color: #fff; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900;">PERMANENT +100% DOGE HASH RATE</span>
+                    <span id="doge-multiplier-cost" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
+                    <span id="doge-multiplier-level" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
                 </button>
                 <div class="upgrade-list" id="doge-shop" style="flex: 1; min-height: 0; overflow-y: auto;"></div>
             </div>
@@ -1074,8 +1074,8 @@
                 <!-- Populated dynamically by rugpull.js -->
             </div>
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <button id="milestone-confirm-btn" onclick="confirmRugpullFromModal()" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">RUGPULL NOW</button>
-                <button onclick="closeRugpullMilestoneModal()" style="background: #666; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">LATER</button>
+                <button id="milestone-confirm-btn" onclick="confirmRugpullFromModal()" class="btn-action" style="padding: 12px 30px; font-size: 1rem;">RUGPULL NOW</button>
+                <button onclick="closeRugpullMilestoneModal()" class="btn-secondary" style="padding: 12px 30px; font-size: 1rem;">LATER</button>
             </div>
         </div>
     </div>
@@ -1091,7 +1091,7 @@
             <div id="complete-modal-text" style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.8;">
                 <!-- Populated dynamically -->
             </div>
-            <button onclick="closeRugpullCompleteModal()" style="background: #9c27b0; color: white; border: 2px solid #ffeb3b; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">OK</button>
+            <button onclick="closeRugpullCompleteModal()" class="btn-action" style="padding: 12px 30px; font-size: 1rem;">OK</button>
         </div>
     </div>
 </div>
@@ -1106,7 +1106,7 @@
             <div id="generic-modal-text" style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.8;">
                 <!-- Populated dynamically -->
             </div>
-            <button onclick="closeGenericMessageModal()" style="background: #ff9800; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">OK</button>
+            <button onclick="closeGenericMessageModal()" class="btn-secondary" style="padding: 12px 30px; font-size: 1rem;">OK</button>
         </div>
     </div>
 </div>
@@ -1123,7 +1123,7 @@
             </div>
             <div style="display: flex; gap: 10px; justify-content: center;">
                 <button id="reset-earnings-confirm-btn" onclick="confirmResetEarnings()" style="background: #ff3344; color: white; border: 2px solid #ff6666; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">RESET</button>
-                <button onclick="closeResetEarningsModal()" style="background: #666; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">CANCEL</button>
+                <button onclick="closeResetEarningsModal()" class="btn-secondary" style="padding: 12px 30px; font-size: 1rem;">CANCEL</button>
             </div>
         </div>
     </div>
@@ -1139,7 +1139,7 @@
             <div style="color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.8;">
                 Lifetime and session earnings have been reset to $0.
             </div>
-            <button onclick="closeResetEarningsSuccessModal()" style="background: #4CAF50; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">OK</button>
+            <button onclick="closeResetEarningsSuccessModal()" class="btn-confirm" style="padding: 12px 30px; font-size: 1rem;">OK</button>
         </div>
     </div>
 </div>
@@ -1167,7 +1167,7 @@
             </div>
             <div style="display: flex; gap: 10px; justify-content: center;">
                 <button id="reset-save-confirm-btn" onclick="confirmResetGame()" style="background: #ff3344; color: white; border: 2px solid #ff6666; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">RESET SAVE</button>
-                <button onclick="closeResetSaveModal()" style="background: #666; color: white; border: none; padding: 12px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem;">CANCEL</button>
+                <button onclick="closeResetSaveModal()" class="btn-secondary" style="padding: 12px 30px; font-size: 1rem;">CANCEL</button>
             </div>
         </div>
     </div>
@@ -1686,7 +1686,7 @@
                         Lives: <span id="whack-lives-display">❤️ 5/5</span>
                     </div>
                 </div>
-                <button onclick="event.stopPropagation(); closeWhackMidGame();" style="background: #00ff88; color: #000; border: none; padding: 8px 12px; font-weight: 800; border-radius: 4px; cursor: pointer; font-size: 1.2rem; line-height: 1; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">×</button>
+                <button onclick="event.stopPropagation(); closeWhackMidGame();" class="btn-confirm btn-icon" style="padding: 0; width: 32px; height: 32px;">×</button>
             </div>
         </div>
 
@@ -1712,7 +1712,7 @@
         <div id="whack-results-message" style="display: none; text-align: center; padding: 30px; margin-bottom: 20px;"></div>
 
         <!-- Close Button -->
-        <button id="whack-close-btn" onclick="closeWhackModal()" style="display: none; background: #00ff88; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+        <button id="whack-close-btn" onclick="closeWhackModal()" class="btn-confirm" style="display: none; padding: 15px 40px; font-size: 1rem;">
             CLOSE
         </button>
     </div>
@@ -1750,7 +1750,7 @@
         </div>
 
         <div style="margin-bottom: 20px;">
-            <button onclick="closeWhackResultsModal()" style="background: #00ff88; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%;">
+            <button onclick="closeWhackResultsModal()" class="btn-confirm btn-wide" style="padding: 15px 40px; font-size: 1rem;">
                 CLOSE
             </button>
         </div>
@@ -1771,7 +1771,7 @@
                         <span id="network-time-display">10s</span>
                     </div>
                 </div>
-                <button onclick="closeNetworkModal()" style="background: #00b4ff; color: #000; border: none; padding: 8px 12px; font-weight: 800; border-radius: 4px; cursor: pointer; font-size: 1.2rem; line-height: 1; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">×</button>
+                <button onclick="closeNetworkModal()" class="btn-secondary btn-icon" style="padding: 0; width: 32px; height: 32px;">×</button>
             </div>
         </div>
 
@@ -1837,7 +1837,7 @@
         <div id="network-results-message" style="display: none; text-align: center; padding: 30px; margin-bottom: 20px;"></div>
 
         <!-- Close Button -->
-        <button id="network-close-btn" onclick="closeNetworkModal()" style="display: none; background: #00b4ff; color: #000; border: none; padding: 15px 40px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+        <button id="network-close-btn" onclick="closeNetworkModal()" class="btn-secondary" style="display: none; padding: 15px 40px; font-size: 1rem;">
             CLOSE
         </button>
     </div>

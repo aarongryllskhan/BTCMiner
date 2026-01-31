@@ -2674,7 +2674,7 @@ function loadGame() {
 
     function switchTab(tab) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active'));
 
         const tabElement = document.getElementById(tab + '-tab');
         tabElement.classList.add('active');
@@ -5135,23 +5135,21 @@ function updateAutoSellButtonUI() {
 
     if (isPurchased) {
         const isEnabled = upgradeToggleState && upgradeToggleState.auto_sell === true;
-        // Enable the button
+        // Enable the button - use CSS classes instead of inline styles
         btn.disabled = false;
-        btn.style.cursor = 'pointer';
-        btn.style.background = isEnabled ? 'rgba(0,255,136,0.2)' : 'rgba(255,100,255,0.15)';
-        btn.style.borderColor = isEnabled ? '#00ff88' : '#ff64ff';
-        btn.style.color = isEnabled ? '#00ff88' : '#ff64ff';
-        btn.innerHTML = (isEnabled ? '🟢' : '⭕') + ' Auto-Sell: <span id="auto-sell-status">' + (isEnabled ? 'ON' : 'OFF') + '</span> (25% Fee)';
+        btn.removeAttribute('disabled');
         btn.title = 'Click to toggle automatic crypto to USD conversion';
+        // Update text
+        statusEl.innerText = isEnabled ? 'ON' : 'OFF';
+        const icon = isEnabled ? '🟢' : '⭕';
+        btn.innerHTML = icon + ' Auto-Sell: <span id="auto-sell-status">' + (isEnabled ? 'ON' : 'OFF') + '</span>';
     } else {
-        // Keep disabled
+        // Keep disabled - use CSS classes instead of inline styles
         btn.disabled = true;
-        btn.style.cursor = 'not-allowed';
-        btn.style.background = 'rgba(100,100,100,0.3)';
-        btn.style.borderColor = '#666';
-        btn.style.color = '#999';
+        btn.setAttribute('disabled', 'disabled');
         statusEl.innerText = 'LOCKED';
         btn.title = 'Purchase "Auto-Sell Crypto to Cash" upgrade to enable';
+        btn.innerHTML = '🔒 Auto-Sell: <span id="auto-sell-status">LOCKED</span>';
     }
 }
 
