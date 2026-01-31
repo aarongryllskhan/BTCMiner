@@ -6793,6 +6793,9 @@ function updateManualHashRateButtons() {
         const dollarBalanceEl = document.getElementById('dollar-balance');
         if (dollarBalanceEl) dollarBalanceEl.innerText = "$" + formatNumberForDisplay(dollarBalance);
 
+        const dollarBalanceMiniEl = document.getElementById('dollar-balance-mini');
+        if (dollarBalanceMiniEl) dollarBalanceMiniEl.innerText = "$" + formatNumberForDisplay(dollarBalance);
+
         // Update market prices
         const marketBtcPrice = document.getElementById('market-btc-price');
         const marketEthPrice = document.getElementById('market-eth-price');

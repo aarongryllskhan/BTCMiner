@@ -1489,7 +1489,7 @@
 
         .qty-toggle {
             flex: 1 !important;
-            padding: 5px !important;
+            padding: 8px 12px !important;
             background: #1a1a1a !important;
             color: #666 !important;
             border: 2px solid #333 !important;
@@ -1503,6 +1503,10 @@
             box-sizing: border-box !important;
             box-shadow: none !important;
             outline: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 48px !important;
         }
         .qty-toggle:focus {
             box-shadow: none !important;
