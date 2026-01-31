@@ -1334,7 +1334,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 1 (Basic) - 8 base upgrades
         'power_capacity_1': '+0.5% Max Power Capacity',
         'miner_efficiency_1': '-0.5% Miner Power Consumption',
-        'staking_apy_1': '+0.05% Staking APR',
+        'staking_apy_1': '+0.005% Staking APR',
         'miner_hashrate_1': '+0.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_1': '+0.5% Manual Hash Rate',
         'offline_earnings_1': '+1 Hour Offline Earnings Cap (5h Total)',
@@ -1345,7 +1345,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 2 (Advanced) - 8 base + 1 unique (starter_miners_t1)
         'power_capacity_2': '+1% Max Power Capacity',
         'miner_efficiency_2': '-1% Miner Power Consumption',
-        'staking_apy_2': '+0.1% Staking APR',
+        'staking_apy_2': '+0.01% Staking APR',
         'miner_hashrate_2': '+1% Miner Hash Rate (All Crypto)',
         'click_hashrate_2': '+1% Manual Hash Rate',
         'offline_earnings_2': '+1 Hour Offline Earnings Cap (6h Total)',
@@ -1358,7 +1358,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 3 (Expert) - 8 base + 2 unique (auto_sell, starter_miners_t2)
         'power_capacity_3': '+1.5% Max Power Capacity',
         'miner_efficiency_3': '-1.5% Miner Power Consumption',
-        'staking_apy_3': '+0.15% Staking APR',
+        'staking_apy_3': '+0.015% Staking APR',
         'miner_hashrate_3': '+1.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_3': '+1.5% Manual Hash Rate',
         'offline_earnings_3': '+1 Hour Offline Earnings Cap (7h Total)',
@@ -1372,7 +1372,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 4 (Prestige) - 8 base + 1 unique (starter_miners_t3)
         'power_capacity_4': '+2% Max Power Capacity',
         'miner_efficiency_4': '-2% Miner Power Consumption',
-        'staking_apy_4': '+0.2% Staking APR',
+        'staking_apy_4': '+0.02% Staking APR',
         'miner_hashrate_4': '+2% Miner Hash Rate (All Crypto)',
         'click_hashrate_4': '+2% Manual Hash Rate',
         'offline_earnings_4': '+1 Hour Offline Earnings Cap (8h Total)',
@@ -1385,7 +1385,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 5 (Infinite) - 8 base + 1 unique (starter_miners_t4)
         'power_capacity_5': '+2.5% Max Power Capacity',
         'miner_efficiency_5': '-2.5% Miner Power Consumption',
-        'staking_apy_5': '+0.25% Staking APR',
+        'staking_apy_5': '+0.025% Staking APR',
         'miner_hashrate_5': '+2.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_5': '+2.5% Manual Hash Rate',
         'offline_earnings_5': '+1 Hour Offline Earnings Cap (9h Total)',
@@ -1398,7 +1398,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 6 (Cosmic) - 8 base + 2 unique (starter_miners_t5, token_generation_t6)
         'power_capacity_6': '+3% Max Power Capacity',
         'miner_efficiency_6': '-3% Miner Power Consumption',
-        'staking_apy_6': '+0.3% Staking APR',
+        'staking_apy_6': '+0.03% Staking APR',
         'miner_hashrate_6': '+3% Miner Hash Rate (All Crypto)',
         'click_hashrate_6': '+3% Manual Hash Rate',
         'offline_earnings_6': '+1 Hour Offline Earnings Cap (10h Total)',
@@ -1425,7 +1425,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 7 (Transcendent) - 8 base + 2 unique (starter_miners_t6, minigame_unlock)
         'power_capacity_7': '+3.5% Max Power Capacity',
         'miner_efficiency_7': '-3.5% Miner Power Consumption',
-        'staking_apy_7': '+0.35% Staking APR',
+        'staking_apy_7': '+0.035% Staking APR',
         'miner_hashrate_7': '+3.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_7': '+1.16% Manual Hash Rate',
         'offline_earnings_7': '+1 Hour Offline Earnings Cap (11h Total)',
@@ -1438,7 +1438,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 8 (Omnipotent) - 8 base + 2 unique (starter_miners_t7, cash_multiplier)
         'power_capacity_8': '+4% Max Power Capacity',
         'miner_efficiency_8': '-4% Miner Power Consumption',
-        'staking_apy_8': '+0.4% Staking APR',
+        'staking_apy_8': '+0.04% Staking APR',
         'miner_hashrate_8': '+4% Miner Hash Rate (All Crypto)',
         'click_hashrate_8': '+1.33% Manual Hash Rate',
         'offline_earnings_8': '+1 Hour Offline Earnings Cap (12h Total)',
@@ -1451,7 +1451,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 9 (Supreme) - 8 base + 2 unique (starter_miners_t8, crypto_efficiency_1)
         'power_capacity_9': '+4.5% Max Power Capacity',
         'miner_efficiency_9': '-4.5% Miner Power Consumption',
-        'staking_apy_9': '+0.45% Staking APR',
+        'staking_apy_9': '+0.045% Staking APR',
         'miner_hashrate_9': '+4.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_9': '+1.53% Manual Hash Rate',
         'offline_earnings_9': '+1 Hour Offline Earnings Cap (13h Total)',
@@ -1464,7 +1464,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 10 (Godlike) - 8 base + 2 unique (starter_miners_t9, token_generation_t10)
         'power_capacity_10': '+5% Max Power Capacity',
         'miner_efficiency_10': '-5% Miner Power Consumption',
-        'staking_apy_10': '+0.5% Staking APR',
+        'staking_apy_10': '+0.05% Staking APR',
         'miner_hashrate_10': '+5% Miner Hash Rate (All Crypto)',
         'click_hashrate_10': '+1.76% Manual Hash Rate',
         'offline_earnings_10': '+1 Hour Offline Earnings Cap (14h Total)',
@@ -1476,7 +1476,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 11 (Transcendence) - 8 base + 1 unique (starter_miners_t10)
         'power_capacity_11': '+5.5% Max Power Capacity',
         'miner_efficiency_11': '-5.5% Miner Power Consumption',
-        'staking_apy_11': '+0.55% Staking APR',
+        'staking_apy_11': '+0.055% Staking APR',
         'miner_hashrate_11': '+5.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_11': '+2.03% Manual Hash Rate',
         'offline_earnings_11': '+1 Hour Offline Earnings Cap (15h Total)',
@@ -1488,7 +1488,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 12 (Beyond) - 8 base + 2 unique (starter_miners_t11, crypto_efficiency_2)
         'power_capacity_12': '+6% Max Power Capacity',
         'miner_efficiency_12': '-6% Miner Power Consumption',
-        'staking_apy_12': '+0.6% Staking APR',
+        'staking_apy_12': '+0.06% Staking APR',
         'miner_hashrate_12': '+6% Miner Hash Rate (All Crypto)',
         'click_hashrate_12': '+2.34% Manual Hash Rate',
         'offline_earnings_12': '+1 Hour Offline Earnings Cap (16h Total)',
@@ -1501,7 +1501,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 13 (Godhood) - 8 base + 2 unique (starter_miners_t12, token_generation_t13)
         'power_capacity_13': '+6.5% Max Power Capacity',
         'miner_efficiency_13': '-6.5% Miner Power Consumption',
-        'staking_apy_13': '+0.65% Staking APR',
+        'staking_apy_13': '+0.065% Staking APR',
         'miner_hashrate_13': '+6.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_13': '+2.69% Manual Hash Rate',
         'offline_earnings_13': '+1 Hour Offline Earnings Cap (17h Total)',
@@ -1513,7 +1513,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 14 (Supreme Being) - 8 base + 1 unique (starter_miners_t13)
         'power_capacity_14': '+7% Max Power Capacity',
         'miner_efficiency_14': '-7% Miner Power Consumption',
-        'staking_apy_14': '+0.7% Staking APR',
+        'staking_apy_14': '+0.07% Staking APR',
         'miner_hashrate_14': '+7% Miner Hash Rate (All Crypto)',
         'click_hashrate_14': '+3.09% Manual Hash Rate',
         'offline_earnings_14': '+1 Hour Offline Earnings Cap (18h Total)',
@@ -1537,7 +1537,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 16 (Undecillion) - 8 base + 2 unique (starter_miners_t15, token_generation_4)
         'power_capacity_16': '+7.5% Max Power Capacity',
         'miner_efficiency_16': '-7.5% Miner Power Consumption',
-        'staking_apy_16': '+0.75% Staking APR',
+        'staking_apy_16': '+0.80% Staking APR',
         'miner_hashrate_16': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_16': '+2.78% Manual Hash Rate',
         'offline_earnings_16': '+1 Hour Offline Earnings Cap (20h Total)',
@@ -1552,7 +1552,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 17 (Duodecillion) - 8 base + 1 unique (token_generation_6)
         'power_capacity_17': '+7.5% Max Power Capacity',
         'miner_efficiency_17': '-7.5% Miner Power Consumption',
-        'staking_apy_17': '+0.75% Staking APR',
+        'staking_apy_17': '+0.85% Staking APR',
         'miner_hashrate_17': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_17': '+2.78% Manual Hash Rate',
         'offline_earnings_17': '+1 Hour Offline Earnings Cap (21h Total)',
@@ -1563,7 +1563,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 18 (Tredecillion) - 8 base
         'power_capacity_18': '+7.5% Max Power Capacity',
         'miner_efficiency_18': '-7.5% Miner Power Consumption',
-        'staking_apy_18': '+0.75% Staking APR',
+        'staking_apy_18': '+0.90% Staking APR',
         'miner_hashrate_18': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_18': '+2.78% Manual Hash Rate',
         'offline_earnings_18': '+1 Hour Offline Earnings Cap (22h Total)',
@@ -1573,7 +1573,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 19 (Quattuordecillion) - 8 base
         'power_capacity_19': '+7.5% Max Power Capacity',
         'miner_efficiency_19': '-7.5% Miner Power Consumption',
-        'staking_apy_19': '+0.75% Staking APR',
+        'staking_apy_19': '+0.95% Staking APR',
         'miner_hashrate_19': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_19': '+2.78% Manual Hash Rate',
         'offline_earnings_19': '+1 Hour Offline Earnings Cap (23h Total)',
@@ -1583,7 +1583,7 @@ function getUpgradeName(upgradeKey) {
         // TIER 20 (Novemcillion) - 8 base
         'power_capacity_20': '+7.5% Max Power Capacity',
         'miner_efficiency_20': '-7.5% Miner Power Consumption',
-        'staking_apy_20': '+0.75% Staking APR',
+        'staking_apy_20': '+1.0% Staking APR',
         'miner_hashrate_20': '+7.5% Miner Hash Rate (All Crypto)',
         'click_hashrate_20': '+2.78% Manual Hash Rate',
         'offline_earnings_20': '+1 Hour Offline Earnings Cap (24h Total)',
@@ -1661,9 +1661,9 @@ function updateMetaUpgradesUI() {
             if (key.includes('miner_efficiency')) {
                 minerPowerReduction += 0.5 * Math.pow(1.15, tier - 1);  // T1: 0.5%, T2: 0.575%, T3: 0.66%, ... T20: 59.42%
             }
-            // Staking APR bonuses (tiers 1-20) - exponential 1.15x scaling (0.05% base)
+            // Staking APR bonuses (tiers 1-20) - exponential 1.15x scaling (0.005% base)
             if (key.includes('staking_apy')) {
-                stakingAPRBonus += 0.05 * Math.pow(1.15, tier - 1);  // T1: 0.05%, T2: 0.0575%, T3: 0.066%, ... T20: 5.94%
+                stakingAPRBonus += 0.005 * Math.pow(1.15, tier - 1);  // T1: 0.005%, T2: 0.00575%, T3: 0.0066%, ... T20: 0.594%
             }
             // Miner hash rate bonuses (tiers 1-20) - exponential 1.15x scaling (0.5% base)
             if (key.includes('miner_hashrate')) {

@@ -1,13 +1,13 @@
 // Staking System for BTC Miner
-// Allows users to lock crypto to earn 0.1% APR every 2 seconds converted to cash
+// Allows users to lock crypto to earn 0.01% APR every 2 seconds converted to cash
 
 // Staking state
 let stakedBTC = 0;
 let stakedETH = 0;
 let stakedDOGE = 0;
 
-// APR rate: 0.1% per 2 seconds
-const APR_RATE = 0.001; // 0.1% as decimal
+// APR rate: 0.01% per 2 seconds
+const APR_RATE = 0.0001; // 0.01% as decimal
 const APR_INTERVAL = 2000; // 2 seconds in milliseconds
 
 // Staking interval reference
@@ -39,8 +39,8 @@ function getStakingAPRBonus() {
                 const tierMatch = key.match(/\d+$/);
                 if (tierMatch) {
                     const tier = parseInt(tierMatch[0]);
-                    // 0.05% base per tier with 1.15x scaling
-                    stakingAPRBonus += 0.05 * Math.pow(1.15, tier - 1);
+                    // 0.005% base per tier with 1.15x scaling
+                    stakingAPRBonus += 0.005 * Math.pow(1.15, tier - 1);
                 }
             }
         });
@@ -53,7 +53,7 @@ function getStakingAPRBonus() {
  * Update the staking APR display with actual bonus value
  */
 function updateStakingAPRDisplay() {
-    const baseAPR = 0.1; // 0.1% base
+    const baseAPR = 0.01; // 0.01% base
     const bonusAPR = getStakingAPRBonus();
     const totalAPR = baseAPR + bonusAPR;
 
@@ -314,6 +314,45 @@ function quickStake(crypto, percentage) {
  */
 function quickUnstake(crypto, percentage) {
     unstakeCrypto(crypto, percentage);
+}
+
+/**
+ * Stake all available BTC
+ */
+function stakeAllBTC(button) {
+    if (btcBalance > 0) {
+        stakeCrypto('BTC', 100);
+        if (button && typeof button.classList !== 'undefined') {
+            button.classList.add('sell-success');
+            setTimeout(() => button.classList.remove('sell-success'), 250);
+        }
+    }
+}
+
+/**
+ * Stake all available ETH
+ */
+function stakeAllETH(button) {
+    if (ethBalance > 0) {
+        stakeCrypto('ETH', 100);
+        if (button && typeof button.classList !== 'undefined') {
+            button.classList.add('sell-success');
+            setTimeout(() => button.classList.remove('sell-success'), 250);
+        }
+    }
+}
+
+/**
+ * Stake all available DOGE
+ */
+function stakeAllDOGE(button) {
+    if (dogeBalance > 0) {
+        stakeCrypto('DOGE', 100);
+        if (button && typeof button.classList !== 'undefined') {
+            button.classList.add('sell-success');
+            setTimeout(() => button.classList.remove('sell-success'), 250);
+        }
+    }
 }
 
 /**

@@ -282,11 +282,15 @@
     // Chart history tracking
     let chartHistory = [];
     let chartTimestamps = []; // Track when each data point was added
+    let btcChartHistory = []; // Track individual BTC values
+    let ethChartHistory = []; // Track individual ETH values
+    let dogeChartHistory = []; // Track individual DOGE values
+    let cashChartHistory = []; // Track individual CASH values
     let lastChartUpdateTime = Date.now();
     let chartStartTime = Date.now();
     let chartMarkers = []; // Fixed markers every 60 seconds: { index, time, value }
     let lastMarkerTime = Date.now();
-    let cryptoPieChart = null; // Global reference to pie chart
+    let chartIntervalMinutes = 10; // Current chart interval in minutes (1, 5, 10, 30, 60, 240, 1440)
 
     // Multi-axis hash rate chart tracking
     let hashRateChartHistory = [];
@@ -800,21 +804,21 @@
     // Bitcoin mining upgrades
     const btcUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 100, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.000000250 },
-        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.00011 },
-        { id: 2, name: "GTX 1660 Super", baseUsd: 50, baseYield: 0.000385 },
-        { id: 3, name: "RTX 5090 Rig", baseUsd: 550, baseYield: 0.001348 },
-        { id: 4, name: "ASIC Mining Unit", baseUsd: 6000, baseYield: 0.00471 },
-        { id: 5, name: "Liquid ASIC Rig", baseUsd: 66000, baseYield: 0.01648 },
-        { id: 6, name: "Mobile Mining Container", baseUsd: 726000, baseYield: 0.05768 },
-        { id: 7, name: "Geothermal Mining Farm", baseUsd: 8000000, baseYield: 0.2018 },
-        { id: 8, name: "Data Center Facility", baseUsd: 88000000, baseYield: 0.7063 },
-        { id: 9, name: "Orbital Data Relay", baseUsd: 970000000, baseYield: 2.472 },
-        { id: 10, name: "Quantum Computer", baseUsd: 10700000000, baseYield: 8.652 },
-        { id: 11, name: "Advanced Quantum Rig", baseUsd: 117000000000, baseYield: 30.28 },
-        { id: 12, name: "Superintelligent AI Network", baseUsd: 1290000000000, baseYield: 105.98 },
-        { id: 13, name: "Dimensional Mining Array", baseUsd: 14200000000000, baseYield: 370.93 },
-        { id: 14, name: "Multiversal Hash Grid", baseUsd: 156000000000000, baseYield: 1298.26 },
-        { id: 15, name: "Infinite Energy Extractor", baseUsd: 1720000000000000, baseYield: 4543.91 }
+        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.00002500 },
+        { id: 2, name: "GTX 1660 Super", baseUsd: 50, baseYield: 0.00025000 },
+        { id: 3, name: "RTX 5090 Rig", baseUsd: 550, baseYield: 0.00200000 },
+        { id: 4, name: "ASIC Mining Unit", baseUsd: 6000, baseYield: 0.01200000 },
+        { id: 5, name: "Liquid ASIC Rig", baseUsd: 66000, baseYield: 0.06600000 },
+        { id: 6, name: "Mobile Mining Container", baseUsd: 726000, baseYield: 0.35640000 },
+        { id: 7, name: "Geothermal Mining Farm", baseUsd: 8000000, baseYield: 1.99584000 },
+        { id: 8, name: "Data Center Facility", baseUsd: 88000000, baseYield: 11.17670400 },
+        { id: 9, name: "Orbital Data Relay", baseUsd: 970000000, baseYield: 65.94255360 },
+        { id: 10, name: "Quantum Computer", baseUsd: 10700000000, baseYield: 402.24957696 },
+        { id: 11, name: "Advanced Quantum Rig", baseUsd: 117000000000, baseYield: 2514.05985600 },
+        { id: 12, name: "Superintelligent AI Network", baseUsd: 1290000000000, baseYield: 15712.87410000 },
+        { id: 13, name: "Dimensional Mining Array", baseUsd: 14200000000000, baseYield: 98205.46312500 },
+        { id: 14, name: "Multiversal Hash Grid", baseUsd: 156000000000000, baseYield: 613784.14453125 },
+        { id: 15, name: "Infinite Energy Extractor", baseUsd: 1720000000000000, baseYield: 3836150.90332031 }
     ].map(u => ({
         ...u,
         level: 0,
@@ -827,21 +831,21 @@
     // Ethereum mining upgrades - Balanced to match BTC/DOGE USD/sec earnings
     const ethUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 100, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00007143 },
-        { id: 1, name: "Single GPU Rig", baseUsd: 5, baseYield: 0.002857 },
-        { id: 2, name: "RTX 4090 Miner", baseUsd: 50, baseYield: 0.009991 },
-        { id: 3, name: "8-GPU Mining Rig", baseUsd: 550, baseYield: 0.03497 },
-        { id: 4, name: "Professional ETH Farm", baseUsd: 6000, baseYield: 0.1224 },
-        { id: 5, name: "Staking Validator Node", baseUsd: 66000, baseYield: 0.4283 },
-        { id: 6, name: "Multi-Validator Farm", baseUsd: 726000, baseYield: 1.499 },
-        { id: 7, name: "ETH Mining Complex", baseUsd: 8000000, baseYield: 5.246 },
-        { id: 8, name: "Enterprise Staking Pool", baseUsd: 88000000, baseYield: 18.36 },
-        { id: 9, name: "Layer 2 Validation Network", baseUsd: 970000000, baseYield: 64.26 },
-        { id: 10, name: "Ethereum Foundation Node", baseUsd: 10700000000, baseYield: 224.91 },
-        { id: 11, name: "Global Validator Consortium", baseUsd: 117000000000, baseYield: 787.2 },
-        { id: 12, name: "Sharding Supernetwork", baseUsd: 1290000000000, baseYield: 2755.2 },
-        { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 14200000000000, baseYield: 9643.2 },
-        { id: 14, name: "Interchain Bridge Network", baseUsd: 156000000000000, baseYield: 33751.2 },
-        { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 1720000000000000, baseYield: 118130.4 }
+        { id: 1, name: "Single GPU Rig", baseUsd: 5, baseYield: 0.00071429 },
+        { id: 2, name: "RTX 4090 Miner", baseUsd: 50, baseYield: 0.00714286 },
+        { id: 3, name: "8-GPU Mining Rig", baseUsd: 550, baseYield: 0.05714286 },
+        { id: 4, name: "Professional ETH Farm", baseUsd: 6000, baseYield: 0.34285714 },
+        { id: 5, name: "Staking Validator Node", baseUsd: 66000, baseYield: 1.88571429 },
+        { id: 6, name: "Multi-Validator Farm", baseUsd: 726000, baseYield: 10.18285714 },
+        { id: 7, name: "ETH Mining Complex", baseUsd: 8000000, baseYield: 57.02400000 },
+        { id: 8, name: "Enterprise Staking Pool", baseUsd: 88000000, baseYield: 319.33440000 },
+        { id: 9, name: "Layer 2 Validation Network", baseUsd: 970000000, baseYield: 1884.07296000 },
+        { id: 10, name: "Ethereum Foundation Node", baseUsd: 10700000000, baseYield: 11492.84505600 },
+        { id: 11, name: "Global Validator Consortium", baseUsd: 117000000000, baseYield: 71830.28160000 },
+        { id: 12, name: "Sharding Supernetwork", baseUsd: 1290000000000, baseYield: 448939.26000000 },
+        { id: 13, name: "Zero-Knowledge Proof Farm", baseUsd: 14200000000000, baseYield: 2805870.37500000 },
+        { id: 14, name: "Interchain Bridge Network", baseUsd: 156000000000000, baseYield: 17536689.84375000 },
+        { id: 15, name: "Ethereum 3.0 Genesis Node", baseUsd: 1720000000000000, baseYield: 109604311.52343747 }
     ].map(u => ({
         ...u,
         level: 0,
@@ -855,21 +859,21 @@
     // All three currencies earn the same USD/sec at each tier (DOGE yields are 400x higher to compensate for $0.25 price)
     const dogeUpgrades = [
 	{ id: 0, name: "Manual Hash Rate", baseUsd: 100, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.01 },
-        { id: 1, name: "Basic Scrypt Miner", baseUsd: 5, baseYield: 40 },
-        { id: 2, name: "L3+ ASIC Miner", baseUsd: 50, baseYield: 140 },
-        { id: 3, name: "Mini DOGE Farm", baseUsd: 550, baseYield: 490 },
-        { id: 4, name: "Scrypt Mining Pool", baseUsd: 6000, baseYield: 1715 },
-        { id: 5, name: "Industrial DOGE Facility", baseUsd: 66000, baseYield: 6000 },
-        { id: 6, name: "DOGE Megafarm", baseUsd: 726000, baseYield: 21000 },
-        { id: 7, name: "WOW Mining Complex", baseUsd: 8000000, baseYield: 73500 },
-        { id: 8, name: "Moon Mining Station", baseUsd: 88000000, baseYield: 257250 },
-        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 970000000, baseYield: 900375 },
-        { id: 10, name: "To The Moon Supercomputer", baseUsd: 10700000000, baseYield: 3151313 },
-        { id: 11, name: "Mars Colony Mining Base", baseUsd: 117000000000, baseYield: 11029625 },
-        { id: 12, name: "Asteroid Belt DOGE Harvester", baseUsd: 1290000000000, baseYield: 38603375 },
-        { id: 13, name: "Jovian Satellite Network", baseUsd: 14200000000000, baseYield: 135113625 },
-        { id: 14, name: "Solar System DOGE Grid", baseUsd: 156000000000000, baseYield: 472896875 },
-        { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 1720000000000000, baseYield: 1655137500 }
+        { id: 1, name: "Basic Scrypt Miner", baseUsd: 5, baseYield: 10.00 },
+        { id: 2, name: "L3+ ASIC Miner", baseUsd: 50, baseYield: 100.00 },
+        { id: 3, name: "Mini DOGE Farm", baseUsd: 550, baseYield: 800.00 },
+        { id: 4, name: "Scrypt Mining Pool", baseUsd: 6000, baseYield: 4800.00 },
+        { id: 5, name: "Industrial DOGE Facility", baseUsd: 66000, baseYield: 26400.00 },
+        { id: 6, name: "DOGE Megafarm", baseUsd: 726000, baseYield: 142560.00 },
+        { id: 7, name: "WOW Mining Complex", baseUsd: 8000000, baseYield: 798336.00 },
+        { id: 8, name: "Moon Mining Station", baseUsd: 88000000, baseYield: 4470681.60 },
+        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 970000000, baseYield: 26377021.44 },
+        { id: 10, name: "To The Moon Supercomputer", baseUsd: 10700000000, baseYield: 160899830.78 },
+        { id: 11, name: "Mars Colony Mining Base", baseUsd: 117000000000, baseYield: 1005623942.40 },
+        { id: 12, name: "Asteroid Belt DOGE Harvester", baseUsd: 1290000000000, baseYield: 6285149640.00 },
+        { id: 13, name: "Jovian Satellite Network", baseUsd: 14200000000000, baseYield: 39282185250.00 },
+        { id: 14, name: "Solar System DOGE Grid", baseUsd: 156000000000000, baseYield: 245513657812.50 },
+        { id: 15, name: "Intergalactic SHIBE Matrix", baseUsd: 1720000000000000, baseYield: 1534460361328.12 }
     ].map(u => ({
         ...u,
         level: 0,
@@ -896,6 +900,10 @@
         const maxChartPoints = 4800;
         const trimmedChartHistory = chartHistory.length > maxChartPoints ? chartHistory.slice(-maxChartPoints) : chartHistory;
         const trimmedChartTimestamps = chartTimestamps.length > maxChartPoints ? chartTimestamps.slice(-maxChartPoints) : chartTimestamps;
+        const trimmedBtcChartHistory = btcChartHistory.length > maxChartPoints ? btcChartHistory.slice(-maxChartPoints) : btcChartHistory;
+        const trimmedEthChartHistory = ethChartHistory.length > maxChartPoints ? ethChartHistory.slice(-maxChartPoints) : ethChartHistory;
+        const trimmedDogeChartHistory = dogeChartHistory.length > maxChartPoints ? dogeChartHistory.slice(-maxChartPoints) : dogeChartHistory;
+        const trimmedCashChartHistory = cashChartHistory.length > maxChartPoints ? cashChartHistory.slice(-maxChartPoints) : cashChartHistory;
         const trimmedPowerChartHistory = powerChartHistory.length > maxChartPoints ? powerChartHistory.slice(-maxChartPoints) : powerChartHistory;
         const trimmedPowerChartColors = powerChartColors.length > maxChartPoints ? powerChartColors.slice(-maxChartPoints) : powerChartColors;
         const trimmedHashRateChartTimestamps = hashRateChartTimestamps.length > maxChartPoints ? hashRateChartTimestamps.slice(-maxChartPoints) : hashRateChartTimestamps;
@@ -934,6 +942,10 @@
             lifetimeEarningsDisplay: typeof window.rugpullState !== 'undefined' ? window.rugpullState.lifetimeEarningsDisplay : 0,
             chartHistory: trimmedChartHistory,
             chartTimestamps: trimmedChartTimestamps,
+            btcChartHistory: trimmedBtcChartHistory,
+            ethChartHistory: trimmedEthChartHistory,
+            dogeChartHistory: trimmedDogeChartHistory,
+            cashChartHistory: trimmedCashChartHistory,
             chartStartTime: chartStartTime,
             powerChartHistory: trimmedPowerChartHistory,
             powerChartColors: trimmedPowerChartColors,
@@ -1303,7 +1315,7 @@ function loadGame() {
         const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds * offlineBoostMultiplier;
 
         // Calculate offline staking earnings (cash from staked crypto)
-        let APR_RATE = 0.001; // 0.1% per 2 seconds
+        let APR_RATE = 0.0001; // 0.01% per 2 seconds
         // Apply staking APR bonus from tier upgrades
         if (typeof getSkillBonus === 'function') {
             const stakingAPRBonus = getSkillBonus('staking_apy') || 0;
@@ -1390,15 +1402,36 @@ function loadGame() {
 
         updateUI();
 
-        // Restore chart history from save, starting from 0
+        // Restore chart history from save, always starting from 0
         if (state.chartHistory && state.chartHistory.length > 0) {
             chartHistory = state.chartHistory;
             chartTimestamps = state.chartTimestamps || [];
             console.log('Chart data restored:', chartHistory.length, 'data points');
+            // Restore individual crypto chart histories
+            if (state.btcChartHistory) btcChartHistory = state.btcChartHistory;
+            if (state.ethChartHistory) ethChartHistory = state.ethChartHistory;
+            if (state.dogeChartHistory) dogeChartHistory = state.dogeChartHistory;
+            if (state.cashChartHistory) cashChartHistory = state.cashChartHistory;
+
+            // Ensure chart always starts at $0 by prepending a zero point if first point isn't zero
+            if (chartHistory.length > 0 && chartHistory[0] !== 0) {
+                const firstTimestamp = chartTimestamps.length > 0 ? chartTimestamps[0].time : Date.now() - 1000;
+                chartHistory.unshift(0);
+                btcChartHistory.unshift(0);
+                ethChartHistory.unshift(0);
+                dogeChartHistory.unshift(0);
+                cashChartHistory.unshift(0);
+                chartTimestamps.unshift({ time: firstTimestamp - 1000, value: 0, cash: 0, btc: 0, eth: 0, doge: 0 });
+                console.log('Prepended $0 starting point to chart');
+            }
         } else {
             // Start fresh if no saved chart data
             chartHistory = [];
             chartTimestamps = [];
+            btcChartHistory = [];
+            ethChartHistory = [];
+            dogeChartHistory = [];
+            cashChartHistory = [];
             console.log('No saved chart data, starting fresh');
         }
 
@@ -1476,6 +1509,10 @@ function loadGame() {
             lifetimeEarningsDisplay: typeof window.rugpullState !== 'undefined' ? window.rugpullState.lifetimeEarningsDisplay : 0,
             chartHistory: trimmedChartHistory,
             chartTimestamps: trimmedChartTimestamps,
+            btcChartHistory: trimmedBtcChartHistory,
+            ethChartHistory: trimmedEthChartHistory,
+            dogeChartHistory: trimmedDogeChartHistory,
+            cashChartHistory: trimmedCashChartHistory,
             chartStartTime: chartStartTime,
             powerChartHistory: trimmedPowerChartHistory,
             powerChartColors: trimmedPowerChartColors,
@@ -2468,7 +2505,7 @@ function loadGame() {
 
         btn.innerHTML = `
             <div style="text-align:left;flex:1">
-                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="mult-${u.id}" style="color:#ff4400;margin-right:4px"></span>${u.name}</div>
+                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="mult-${u.id}" style="color:#ff4400;margin-right:4px"></span>${u.name} <span style="color:#888;font-size:0.85rem">${formatLevelTag(u.level)}</span></div>
                 <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="yield-${u.id}">+0 ₿/s - Current Speed</div>
                 <div style="font-size:0.9rem;color:#f7931a;font-weight:700;display:block;margin-top:3px" id="increase-${u.id}">+0 ₿/s per level</div>
                 ${powerDisplay}
@@ -2506,7 +2543,7 @@ function loadGame() {
             const costBtc = u.currentUsd / btcPrice;
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#00ff88;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px">${u.name}</div>
+                    <div style="font-size:0.9rem;color:#00ff88;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px">${u.name} <span style="color:#888;font-size:0.85rem">${formatLevelTag(u.level)}</span></div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="pow-current-${u.id}">+0W - Current Power</div>
                     <div style="font-size:1.1rem;color:#00ff88;font-family:monospace;font-weight:700;display:block" id="pow-power-${u.id}">+0W Produced per level</div>
                 </div>
@@ -2538,7 +2575,7 @@ function loadGame() {
 
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-mult-${u.id}" style="color:#627eea;margin-right:4px"></span>${u.name}</div>
+                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-mult-${u.id}" style="color:#627eea;margin-right:4px"></span>${u.name} <span style="color:#888;font-size:0.85rem">${formatLevelTag(u.level)}</span></div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="eth-yield-${u.id}">+0 Ξ/s - Current Speed</div>
                     <div style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-increase-${u.id}">+0 Ξ/s per level</div>
                     ${powerDisplay}
@@ -2584,7 +2621,7 @@ function loadGame() {
 
             btn.innerHTML = `
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-mult-${u.id}" style="color:#c2a633;margin-right:4px"></span>${u.name}</div>
+                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-mult-${u.id}" style="color:#c2a633;margin-right:4px"></span>${u.name} <span style="color:#888;font-size:0.85rem">${formatLevelTag(u.level)}</span></div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="doge-yield-${u.id}">+0 Ð/s - Current Speed</div>
                     <div style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-increase-${u.id}">+0 Ð/s per level</div>
                     ${powerDisplay}
@@ -2922,6 +2959,17 @@ function loadGame() {
         });
     }
 
+    // Helper function for sell button visual feedback
+    function showSellFeedback(button) {
+        if (!button) return;
+        button.classList.add('sell-success');
+        playUpgradeSound();
+        // Add a brief scale pulse
+        setTimeout(() => {
+            button.classList.remove('sell-success');
+        }, 500);
+    }
+
     // Market sell functions
     function sellBTC(amount) {
         if (btcBalance < amount) {
@@ -2956,12 +3004,8 @@ function loadGame() {
         }
         updateUI();
         saveGame();
-        playUpgradeSound();
-        // Flash the button
-        if (button) {
-            button.classList.add('button-flash');
-            setTimeout(() => button.classList.remove('button-flash'), 300);
-        }
+        // Show enhanced visual feedback
+        showSellFeedback(button);
     }
 
     function sellETH(amount) {
@@ -2998,12 +3042,8 @@ function loadGame() {
         }
         updateUI();
         saveGame();
-        playUpgradeSound();
-        // Flash the button
-        if (button) {
-            button.classList.add('button-flash');
-            setTimeout(() => button.classList.remove('button-flash'), 300);
-        }
+        // Show enhanced visual feedback
+        showSellFeedback(button);
     }
 
     function sellDOGE(amount) {
@@ -3041,12 +3081,8 @@ function loadGame() {
         }
         updateUI();
         saveGame();
-        playUpgradeSound();
-        // Flash the button
-        if (button) {
-            button.classList.add('button-flash');
-            setTimeout(() => button.classList.remove('button-flash'), 300);
-        }
+        // Show enhanced visual feedback
+        showSellFeedback(button);
     }
 
     /**
@@ -3063,12 +3099,8 @@ function loadGame() {
         spawnCoinsForClick('usd', saleValue);
         updateUI();
         saveGame();
-        playUpgradeSound();
-        // Flash the button
-        if (button) {
-            button.classList.add('button-flash');
-            setTimeout(() => button.classList.remove('button-flash'), 300);
-        }
+        // Show enhanced visual feedback
+        showSellFeedback(button);
     }
 
     function quickSellETH(percentage, button) {
@@ -3082,12 +3114,8 @@ function loadGame() {
         spawnCoinsForClick('usd', saleValue);
         updateUI();
         saveGame();
-        playUpgradeSound();
-        // Flash the button
-        if (button) {
-            button.classList.add('button-flash');
-            setTimeout(() => button.classList.remove('button-flash'), 300);
-        }
+        // Show enhanced visual feedback
+        showSellFeedback(button);
     }
 
     function quickSellDOGE(percentage, button) {
@@ -3101,12 +3129,8 @@ function loadGame() {
         spawnCoinsForClick('usd', saleValue);
         updateUI();
         saveGame();
-        playUpgradeSound();
-        // Flash the button
-        if (button) {
-            button.classList.add('button-flash');
-            setTimeout(() => button.classList.remove('button-flash'), 300);
-        }
+        // Show enhanced visual feedback
+        showSellFeedback(button);
     }
 
     function buyPowerUpgrade(i) {
@@ -5023,6 +5047,14 @@ function loadGame() {
         powerUpgrades.forEach(u => {
             const costUsd = u.currentUsd;
 
+            // Update level tag in equipment name
+            const nameEl = document.querySelector(`#pow-${u.id} > div:first-child > div:first-child`);
+            if (nameEl) {
+                const levelTag = formatLevelTag(u.level);
+                // Replace or add the level tag after the equipment name
+                nameEl.innerHTML = nameEl.innerHTML.replace(/\s*<span style="color:#888;font-size:0\.85rem">\[.*?\]<\/span>/g, '') + ` <span style="color:#888;font-size:0.85rem">${levelTag}</span>`;
+            }
+
             const currentPowerEl = document.getElementById(`pow-current-${u.id}`);
             if (currentPowerEl) currentPowerEl.innerText = `+${formatPower(u.currentPower)} - Current Power`;
 
@@ -6068,6 +6100,15 @@ function updateGlobalMultiplierButtons() {
         return num.toFixed(8);
     }
 
+    // Format equipment level tags like [0], [1K], [1M], etc.
+    function formatLevelTag(level) {
+        if (level === 0) return '[0]';
+        if (level >= 1e9) return '[' + (level / 1e9).toFixed(1).replace(/\.0$/, '') + 'B]';
+        if (level >= 1e6) return '[' + (level / 1e6).toFixed(1).replace(/\.0$/, '') + 'M]';
+        if (level >= 1e3) return '[' + (level / 1e3).toFixed(1).replace(/\.0$/, '') + 'K]';
+        return '[' + level + ']';
+    }
+
     // Format crypto prices - keeps 8 decimal places until 1, then abbreviates
     function formatCryptoPrice(num) {
         const abs = Math.abs(num);
@@ -6149,103 +6190,92 @@ function updateGlobalMultiplierButtons() {
         return watts.toFixed(2) + ' W';  // Watts
     }
 
-    function initPieChart() {
-        const ctx = document.getElementById('cryptoPieChart');
-        if (!ctx) return null;
+    function initBars() {
+        // Just verify the bar elements exist
+        const btcBar = document.getElementById('btc-bar');
+        const ethBar = document.getElementById('eth-bar');
+        const dogeBar = document.getElementById('doge-bar');
 
-        const btcValue = btcBalance * btcPrice;
-        const ethValue = ethBalance * ethPrice;
-        const dogeValue = dogeBalance * dogePrice;
-        const totalValue = btcValue + ethValue + dogeValue;
-
-        if (totalValue === 0) {
-            cryptoPieChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Bitcoin', 'Ethereum', 'Dogecoin'],
-                    datasets: [{
-                        data: [0, 0, 0],
-                        backgroundColor: ['#f7931a', '#627eea', '#c2a633'],
-                        borderColor: '#1a1a1a',
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            enabled: false
-                        }
-                    }
-                }
-            });
-        } else {
-            cryptoPieChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Bitcoin', 'Ethereum', 'Dogecoin'],
-                    datasets: [{
-                        data: [
-                            (btcValue / totalValue) * 100,
-                            (ethValue / totalValue) * 100,
-                            (dogeValue / totalValue) * 100
-                        ],
-                        backgroundColor: ['#f7931a', '#627eea', '#c2a633'],
-                        borderColor: '#1a1a1a',
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.8)',
-                            padding: 8,
-                            titleFont: { size: 12 },
-                            bodyFont: { size: 11 },
-                            callbacks: {
-                                label: function(context) {
-                                    return context.label + ': ' + context.parsed.toFixed(1) + '%';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+        if (!btcBar || !ethBar || !dogeBar) {
+            console.warn('Crypto bar elements not found');
+            return false;
         }
 
-        return cryptoPieChart;
+        // Initialize bars to 0%
+        updateCryptoBars();
+        return true;
     }
 
-    function updateCryptoPieChart() {
-        if (!cryptoPieChart) {
-            return; // Chart hasn't been initialized yet
-        }
-
+    function updateCryptoBars() {
         const btcValue = btcBalance * btcPrice;
         const ethValue = ethBalance * ethPrice;
         const dogeValue = dogeBalance * dogePrice;
         const totalValue = btcValue + ethValue + dogeValue;
 
-        if (totalValue === 0) {
-            cryptoPieChart.data.datasets[0].data = [0, 0, 0];
-        } else {
-            cryptoPieChart.data.datasets[0].data = [
-                (btcValue / totalValue) * 100,
-                (ethValue / totalValue) * 100,
-                (dogeValue / totalValue) * 100
-            ];
+        let btcPercent = 0;
+        let ethPercent = 0;
+        let dogePercent = 0;
+
+        if (totalValue > 0) {
+            btcPercent = (btcValue / totalValue) * 100;
+            ethPercent = (ethValue / totalValue) * 100;
+            dogePercent = (dogeValue / totalValue) * 100;
         }
 
-        cryptoPieChart.update();
+        // Update bar widths with smooth transition
+        const btcBar = document.getElementById('btc-bar');
+        const ethBar = document.getElementById('eth-bar');
+        const dogeBar = document.getElementById('doge-bar');
+
+        if (btcBar) btcBar.style.width = btcPercent + '%';
+        if (ethBar) ethBar.style.width = ethPercent + '%';
+        if (dogeBar) dogeBar.style.width = dogePercent + '%';
+
+        // Update percentage text
+        document.getElementById('btc-bar-percent').textContent = btcPercent.toFixed(1) + '%';
+        document.getElementById('eth-bar-percent').textContent = ethPercent.toFixed(1) + '%';
+        document.getElementById('doge-bar-percent').textContent = dogePercent.toFixed(1) + '%';
+    }
+
+    function updateHashrateBars() {
+        // Calculate USD value per second for each crypto (hashrate * price)
+        const btcHashrate = btcPerSec * totalMiningMultiplier;
+        const ethHashrate = ethPerSec * totalMiningMultiplier;
+        const dogeHashrate = dogePerSec * totalMiningMultiplier;
+
+        const btcUsdPerSec = btcHashrate * btcPrice;
+        const ethUsdPerSec = ethHashrate * ethPrice;
+        const dogeUsdPerSec = dogeHashrate * dogePrice;
+
+        const totalUsdPerSec = btcUsdPerSec + ethUsdPerSec + dogeUsdPerSec;
+
+        let btcPercent = 0;
+        let ethPercent = 0;
+        let dogePercent = 0;
+
+        if (totalUsdPerSec > 0) {
+            btcPercent = (btcUsdPerSec / totalUsdPerSec) * 100;
+            ethPercent = (ethUsdPerSec / totalUsdPerSec) * 100;
+            dogePercent = (dogeUsdPerSec / totalUsdPerSec) * 100;
+        }
+
+        // Update hashrate bar widths
+        const btcHashrateBar = document.getElementById('btc-hashrate-bar');
+        const ethHashrateBar = document.getElementById('eth-hashrate-bar');
+        const dogeHashrateBar = document.getElementById('doge-hashrate-bar');
+
+        if (btcHashrateBar) btcHashrateBar.style.width = btcPercent + '%';
+        if (ethHashrateBar) ethHashrateBar.style.width = ethPercent + '%';
+        if (dogeHashrateBar) dogeHashrateBar.style.width = dogePercent + '%';
+
+        // Update USD/sec value display
+        const btcHashratePercent = document.getElementById('btc-hashrate-percent');
+        const ethHashratePercent = document.getElementById('eth-hashrate-percent');
+        const dogeHashratePercent = document.getElementById('doge-hashrate-percent');
+
+        if (btcHashratePercent) btcHashratePercent.textContent = formatCurrencyAbbreviated(btcUsdPerSec) + '/sec';
+        if (ethHashratePercent) ethHashratePercent.textContent = formatCurrencyAbbreviated(ethUsdPerSec) + '/sec';
+        if (dogeHashratePercent) dogeHashratePercent.textContent = formatCurrencyAbbreviated(dogeUsdPerSec) + '/sec';
     }
 
     function updateRugpullProgressDisplay() {
@@ -6345,6 +6375,14 @@ function updateGlobalMultiplierButtons() {
             document.getElementById('nw-btc').innerText = btcValue;
             document.getElementById('nw-eth').innerText = ethValue;
             document.getElementById('nw-doge').innerText = dogeValue;
+
+            // Also update visible bar amounts
+            const btcAmountEl = document.querySelector('.btc-amount');
+            const ethAmountEl = document.querySelector('.eth-amount');
+            const dogeAmountEl = document.querySelector('.doge-amount');
+            if (btcAmountEl) btcAmountEl.innerText = btcValue;
+            if (ethAmountEl) ethAmountEl.innerText = ethValue;
+            if (dogeAmountEl) dogeAmountEl.innerText = dogeValue;
         }
 
         // Format balances with smart abbreviations
@@ -6365,8 +6403,11 @@ function updateGlobalMultiplierButtons() {
         if (document.getElementById('bal-eth')) document.getElementById('bal-eth').innerText = formatCryptoBalance(ethBalance);
         if (document.getElementById('bal-doge')) document.getElementById('bal-doge').innerText = formatCryptoBalance(dogeBalance);
 
-        // Update pie chart with current crypto distribution
-        updateCryptoPieChart();
+        // Update crypto bars with current distribution
+        updateCryptoBars();
+
+        // Update hashrate distribution bars
+        updateHashrateBars();
 
         // Update manual hash button text (with ascension multiplier applied)
         const ascensionClickMultiplier = (typeof ascensionLevel !== 'undefined' && ascensionLevel > 0) ? (1 + ascensionLevel * 0.01) : 1;
@@ -6621,6 +6662,15 @@ function updateGlobalMultiplierButtons() {
 
         btcUpgrades.forEach(u => {
     const costUsd = u.currentUsd;
+
+    // Update level tag in equipment name
+    const nameEl = document.querySelector(`#up-${u.id} > div:first-child > div:first-child`);
+    if (nameEl) {
+        const levelTag = formatLevelTag(u.level);
+        // Replace or add the level tag after the equipment name
+        nameEl.innerHTML = nameEl.innerHTML.replace(/\s*<span style="color:#888;font-size:0\.85rem">\[.*?\]<\/span>/g, '') + ` <span style="color:#888;font-size:0.85rem">${levelTag}</span>`;
+    }
+
     const yEl = document.getElementById(`yield-${u.id}`);
 
     if (yEl) {
@@ -6853,6 +6903,15 @@ function updateGlobalMultiplierButtons() {
 // Update ETH upgrades display
 ethUpgrades.forEach(u => {
     const costUsd = u.currentUsd;
+
+    // Update level tag in equipment name
+    const nameEl = document.querySelector(`#eth-up-${u.id} > div:first-child > div:first-child`);
+    if (nameEl) {
+        const levelTag = formatLevelTag(u.level);
+        // Replace or add the level tag after the equipment name
+        nameEl.innerHTML = nameEl.innerHTML.replace(/\s*<span style="color:#888;font-size:0\.85rem">\[.*?\]<\/span>/g, '') + ` <span style="color:#888;font-size:0.85rem">${levelTag}</span>`;
+    }
+
     const yEl = document.getElementById(`eth-yield-${u.id}`);
     if (yEl) {
         if (u.isClickUpgrade) {
@@ -7072,6 +7131,15 @@ ethUpgrades.forEach(u => {
 // Update DOGE upgrades display
 dogeUpgrades.forEach(u => {
     const costUsd = u.currentUsd;
+
+    // Update level tag in equipment name
+    const nameEl = document.querySelector(`#doge-up-${u.id} > div:first-child > div:first-child`);
+    if (nameEl) {
+        const levelTag = formatLevelTag(u.level);
+        // Replace or add the level tag after the equipment name
+        nameEl.innerHTML = nameEl.innerHTML.replace(/\s*<span style="color:#888;font-size:0\.85rem">\[.*?\]<\/span>/g, '') + ` <span style="color:#888;font-size:0.85rem">${levelTag}</span>`;
+    }
+
     const yEl = document.getElementById(`doge-yield-${u.id}`);
     if (yEl) {
         if (u.isClickUpgrade) {
@@ -7650,12 +7718,25 @@ dogeUpgrades.forEach(u => {
             console.log('hardwareEquity:', hardwareEquity);
             console.log('Current net worth for chart:', currentNetWorth);
 
-            // Always start chart at 0
+            // Always start chart with current values
             if (chartHistory.length === 0) {
-                chartHistory.push(0);
-                chartHistory.push(0);
-                chartTimestamps.push({ time: Date.now(), value: 0, cash: dollarBalance });
-                chartTimestamps.push({ time: Date.now() + 1000, value: 0, cash: dollarBalance });
+                const btcUSD = btcBalance * btcPrice;
+                const ethUSD = ethBalance * ethPrice;
+                const dogeUSD = dogeBalance * dogePrice;
+                const netWorthVal = btcUSD + ethUSD + dogeUSD + dollarBalance;
+
+                chartHistory.push(netWorthVal);
+                chartHistory.push(netWorthVal);
+                btcChartHistory.push(btcUSD);
+                btcChartHistory.push(btcUSD);
+                ethChartHistory.push(ethUSD);
+                ethChartHistory.push(ethUSD);
+                dogeChartHistory.push(dogeUSD);
+                dogeChartHistory.push(dogeUSD);
+                cashChartHistory.push(dollarBalance);
+                cashChartHistory.push(dollarBalance);
+                chartTimestamps.push({ time: Date.now(), value: netWorthVal, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
+                chartTimestamps.push({ time: Date.now() + 1000, value: netWorthVal, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
             }
 
             console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
@@ -7694,29 +7775,61 @@ dogeUpgrades.forEach(u => {
                     data: {
                         labels: getChartLabels(),
                         datasets: [{
-                            label: 'CRYPTO',
-                            data: getChartValues(),
-                            borderColor: '#FFD700',
+                            label: 'BTC',
+                            data: btcChartHistory,
+                            borderColor: '#f7931a',
                             backgroundColor: 'transparent',
                             borderWidth: 2.5,
                             fill: false,
-                            tension: 0.95,
+                            tension: 0,
                             pointRadius: 0,
-                            pointBackgroundColor: '#FFD700',
+                            pointBackgroundColor: '#f7931a',
                             pointBorderColor: 'transparent',
                             pointBorderWidth: 0,
                             pointHoverRadius: 5,
-                            pointHoverBackgroundColor: '#FFD700',
+                            pointHoverBackgroundColor: '#f7931a',
+                            pointHoverBorderColor: 'transparent',
+                            pointHoverBorderWidth: 0
+                        }, {
+                            label: 'ETH',
+                            data: ethChartHistory,
+                            borderColor: '#627eea',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2.5,
+                            fill: false,
+                            tension: 0,
+                            pointRadius: 0,
+                            pointBackgroundColor: '#627eea',
+                            pointBorderColor: 'transparent',
+                            pointBorderWidth: 0,
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: '#627eea',
+                            pointHoverBorderColor: 'transparent',
+                            pointHoverBorderWidth: 0
+                        }, {
+                            label: 'DOGE',
+                            data: dogeChartHistory,
+                            borderColor: '#c2a633',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2.5,
+                            fill: false,
+                            tension: 0,
+                            pointRadius: 0,
+                            pointBackgroundColor: '#c2a633',
+                            pointBorderColor: 'transparent',
+                            pointBorderWidth: 0,
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: '#c2a633',
                             pointHoverBorderColor: 'transparent',
                             pointHoverBorderWidth: 0
                         }, {
                             label: 'CASH',
-                            data: chartTimestamps.map((ts) => ts.cash || 0),
+                            data: cashChartHistory,
                             borderColor: '#00ff88',
                             backgroundColor: 'transparent',
                             borderWidth: 2.5,
                             fill: false,
-                            tension: 0.95,
+                            tension: 0,
                             pointRadius: 0,
                             pointBackgroundColor: '#00ff88',
                             pointBorderColor: 'transparent',
@@ -7804,6 +7917,7 @@ dogeUpgrades.forEach(u => {
                             y: {
                                 display: true,
                                 position: 'left',
+                                min: 0,
                                 grid: {
                                     color: 'rgba(255, 255, 255, 0.05)',
                                     drawBorder: false
@@ -7842,6 +7956,20 @@ dogeUpgrades.forEach(u => {
             if (nwChart) {
                 chartInitialized = true;
                 console.log('Chart successfully initialized');
+
+                // Initialize chart with starting data point if empty AND it's a fresh game (no balances)
+                if (chartHistory.length === 0 && btcBalance === 0 && ethBalance === 0 && dogeBalance === 0 && dollarBalance === 0) {
+                    const now = Date.now();
+                    chartHistory.push(0);
+                    btcChartHistory.push(0);
+                    ethChartHistory.push(0);
+                    dogeChartHistory.push(0);
+                    cashChartHistory.push(0);
+                    chartTimestamps.push({ time: now, value: 0, cash: 0, btc: 0, eth: 0, doge: 0 });
+                    chartStartTime = now;
+                    console.log('Chart initialized with starting data point (fresh game)');
+                }
+
                 // Update the date tracker on initialization
                 updateChartDateTracker();
             }
@@ -7866,11 +7994,10 @@ dogeUpgrades.forEach(u => {
                 }, 200);
             }
 
-            // Initialize pie chart
-            console.log('Initializing crypto pie chart...');
-            cryptoPieChart = initPieChart();
-            if (cryptoPieChart) {
-                console.log('Pie chart successfully initialized');
+            // Initialize crypto bars
+            console.log('Initializing crypto bars...');
+            if (initBars()) {
+                console.log('Crypto bars successfully initialized');
             }
 
             // Power chart has been removed from the UI - skipping initialization
@@ -7946,13 +8073,18 @@ dogeUpgrades.forEach(u => {
             // Update power tracking for continuous rendering
             lastHashRateChartUpdateTime = now;
 
-            // Collect chart data points every 1500ms with heavy interpolation between points
-            if (now - lastChartDataCollectionTime >= 1500) {
+
+            // Collect chart data points every 500ms for smoother updates
+            if (now - lastChartDataCollectionTime >= 500) {
                 lastChartDataCollectionTime = now;
 
                 // Collect net worth data for primary chart
                 chartHistory.push(netWorth);
-                chartTimestamps.push({ time: now, value: netWorth, cash: dollarBalance });
+                btcChartHistory.push(btcBalance * btcPrice);
+                ethChartHistory.push(ethBalance * ethPrice);
+                dogeChartHistory.push(dogeBalance * dogePrice);
+                cashChartHistory.push(dollarBalance);
+                chartTimestamps.push({ time: now, value: netWorth, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
 
                 // Collect hash rate and power data for secondary charts
                 hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
@@ -7972,28 +8104,96 @@ dogeUpgrades.forEach(u => {
                 }
             }
 
-            // Trim arrays to prevent memory growth - keep last 720 points (1 hour at 5000ms = 5 sec intervals)
-            // Only trim every 30 seconds to avoid constant trimming during chart updates
+            // Trim chart data intelligently: remove points from BETWEEN old data (not edges)
+            // This keeps the full time span visible while reducing point density as you play longer
             if (now - lastTrimTime >= 30000) {
                 lastTrimTime = now;
-                const maxChartPointsRuntime = 720;
-                if (chartHistory.length > maxChartPointsRuntime) {
-                    chartHistory.splice(0, chartHistory.length - maxChartPointsRuntime);
-                    chartTimestamps.splice(0, chartTimestamps.length - maxChartPointsRuntime);
-                }
-                // Trim all hash rate arrays together to keep them synchronized
-                if (hashRateChartHistory.length > maxChartPointsRuntime) {
-                    const trimAmount = hashRateChartHistory.length - maxChartPointsRuntime;
-                    hashRateChartHistory.splice(0, trimAmount);
-                    ethHashRateChartHistory.splice(0, trimAmount);
-                    dogeHashRateChartHistory.splice(0, trimAmount);
-                    hashRateChartTimestamps.splice(0, trimAmount);
-                }
-                if (powerChartHistory.length > maxChartPointsRuntime) {
-                    const trimAmount = powerChartHistory.length - maxChartPointsRuntime;
-                    powerChartHistory.splice(0, trimAmount);
-                    powerChartColors.splice(0, trimAmount);
-                    currentPowerValues.splice(0, trimAmount);
+                const maxChartPoints = 3800; // Production limit: ~31-32 minutes at 500ms intervals
+
+                if (chartTimestamps.length > maxChartPoints) {
+                    // Uniform decimation: trim evenly across ALL data points
+                    // This makes the entire line progressively sparser as you play longer
+                    const decimationFactor = Math.ceil(chartTimestamps.length / Math.floor(maxChartPoints * 0.9));
+
+                    let newTimestamps = [];
+                    let newChartHistory = [];
+                    let newBtcHistory = [];
+                    let newEthHistory = [];
+                    let newDogeHistory = [];
+                    let newCashHistory = [];
+
+                    // ALWAYS keep the first point (game start at $0)
+                    newTimestamps.push(chartTimestamps[0]);
+                    newChartHistory.push(chartHistory[0]);
+                    newBtcHistory.push(btcChartHistory[0]);
+                    newEthHistory.push(ethChartHistory[0]);
+                    newDogeHistory.push(dogeChartHistory[0]);
+                    newCashHistory.push(cashChartHistory[0]);
+
+                    // Keep every Nth point starting from index 1 (skip the first since we already added it)
+                    for (let i = decimationFactor; i < chartTimestamps.length; i += decimationFactor) {
+                        newTimestamps.push(chartTimestamps[i]);
+                        newChartHistory.push(chartHistory[i]);
+                        newBtcHistory.push(btcChartHistory[i]);
+                        newEthHistory.push(ethChartHistory[i]);
+                        newDogeHistory.push(dogeChartHistory[i]);
+                        newCashHistory.push(cashChartHistory[i]);
+                    }
+
+                    // Always keep the last point (current moment)
+                    if (newTimestamps[newTimestamps.length - 1] !== chartTimestamps[chartTimestamps.length - 1]) {
+                        newTimestamps.push(chartTimestamps[chartTimestamps.length - 1]);
+                        newChartHistory.push(chartHistory[chartHistory.length - 1]);
+                        newBtcHistory.push(btcChartHistory[btcChartHistory.length - 1]);
+                        newEthHistory.push(ethChartHistory[ethChartHistory.length - 1]);
+                        newDogeHistory.push(dogeChartHistory[dogeChartHistory.length - 1]);
+                        newCashHistory.push(cashChartHistory[cashChartHistory.length - 1]);
+                    }
+
+                    // Replace arrays with decimated versions
+                    chartTimestamps = newTimestamps;
+                    chartHistory = newChartHistory;
+                    btcChartHistory = newBtcHistory;
+                    ethChartHistory = newEthHistory;
+                    dogeChartHistory = newDogeHistory;
+                    cashChartHistory = newCashHistory;
+
+                    // Also trim hash rate arrays uniformly
+                    if (hashRateChartTimestamps.length > maxChartPoints) {
+                        const hashDecFactor = Math.ceil(hashRateChartTimestamps.length / Math.floor(maxChartPoints * 0.9));
+
+                        let newHashTimestamps = [];
+                        let newHashRate = [];
+                        let newEthHashRate = [];
+                        let newDogeHashRate = [];
+
+                        // ALWAYS keep the first point
+                        newHashTimestamps.push(hashRateChartTimestamps[0]);
+                        newHashRate.push(hashRateChartHistory[0]);
+                        newEthHashRate.push(ethHashRateChartHistory[0]);
+                        newDogeHashRate.push(dogeHashRateChartHistory[0]);
+
+                        // Keep every Nth point starting from hashDecFactor
+                        for (let i = hashDecFactor; i < hashRateChartTimestamps.length; i += hashDecFactor) {
+                            newHashTimestamps.push(hashRateChartTimestamps[i]);
+                            newHashRate.push(hashRateChartHistory[i]);
+                            newEthHashRate.push(ethHashRateChartHistory[i]);
+                            newDogeHashRate.push(dogeHashRateChartHistory[i]);
+                        }
+
+                        // Always keep the last point
+                        if (newHashTimestamps[newHashTimestamps.length - 1] !== hashRateChartTimestamps[hashRateChartTimestamps.length - 1]) {
+                            newHashTimestamps.push(hashRateChartTimestamps[hashRateChartTimestamps.length - 1]);
+                            newHashRate.push(hashRateChartHistory[hashRateChartHistory.length - 1]);
+                            newEthHashRate.push(ethHashRateChartHistory[ethHashRateChartHistory.length - 1]);
+                            newDogeHashRate.push(dogeHashRateChartHistory[dogeHashRateChartHistory.length - 1]);
+                        }
+
+                        hashRateChartTimestamps = newHashTimestamps;
+                        hashRateChartHistory = newHashRate;
+                        ethHashRateChartHistory = newEthHashRate;
+                        dogeHashRateChartHistory = newDogeHashRate;
+                    }
                 }
             }
 
@@ -8012,34 +8212,49 @@ dogeUpgrades.forEach(u => {
                 }
             }
 
-            // Update net worth chart
-            if (chartHistory && chartHistory.length > 0) {
-                // Ensure both arrays are the same length
-                const dataLength = Math.min(chartHistory.length, chartTimestamps.length);
+            // Update net worth chart - show ALL stored data (already trimmed for performance)
+            // Chart always shows from $0 (start of game) to current
+            // Storage arrays are trimmed progressively to keep ~5k points max, preventing lag
+            // Render chart every 500ms to balance smoothness with performance
+            if (chartTimestamps.length > 0 && now - lastChartUpdateTime >= 500) {
+                lastChartUpdateTime = now;
+                // Display all data we have (storage arrays are already managed for performance)
+                const displayTimestamps = chartTimestamps.map(ts => ts.time);
+                const displayBTC = btcChartHistory.slice();
+                const displayETH = ethChartHistory.slice();
+                const displayDOGE = dogeChartHistory.slice();
+                const displayCASH = cashChartHistory.slice();
 
-                // Calculate start index based on the actual synchronized data length
-                let startIndex = 0;
-                if (timeRangePercent < 100) {
-                    // Ensure minimum of 3 data points even for very small percentages
-                    const minPoints = Math.max(3, Math.ceil(dataLength * (timeRangePercent / 100)));
-                    startIndex = Math.max(0, dataLength - minPoints);
-                }
-
-                const slicedTimestamps = chartTimestamps.slice(startIndex, startIndex + (dataLength - startIndex));
-                const slicedHistory = chartHistory.slice(startIndex, startIndex + (dataLength - startIndex));
-
-                nwChart.data.labels = slicedTimestamps.map((ts) =>
-                    new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                // Update chart with data
+                nwChart.data.labels = displayTimestamps.map((ts) =>
+                    new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                 );
-                nwChart.data.datasets[0].data = slicedHistory;
-                nwChart.data.datasets[1].data = slicedTimestamps.map((ts) => ts.cash || 0);
+                nwChart.data.datasets[0].data = displayBTC;      // BTC USD value
+                nwChart.data.datasets[1].data = displayETH;      // ETH USD value
+                nwChart.data.datasets[2].data = displayDOGE;     // DOGE USD value
+                nwChart.data.datasets[3].data = displayCASH;     // CASH USD value
 
-                // Recalculate Y-axis scale to fit the current data range
-                if (slicedHistory.length > 0) {
-                    const maxValue = Math.max(...slicedHistory, ...slicedTimestamps.map(ts => ts.cash || 0));
-                    const minValue = Math.min(...slicedHistory, ...slicedTimestamps.map(ts => ts.cash || 0));
-                    nwChart.options.scales.y.min = Math.max(0, minValue * 0.95);
-                    nwChart.options.scales.y.max = maxValue * 1.05;
+                // Recalculate Y-axis scale dynamically from min to max of all displayed data
+                if (displayBTC.length > 0 || displayETH.length > 0 || displayDOGE.length > 0 || displayCASH.length > 0) {
+                    const allValues = [
+                        ...displayBTC,
+                        ...displayETH,
+                        ...displayDOGE,
+                        ...displayCASH
+                    ].filter(v => v !== undefined && v !== null);
+
+                    if (allValues.length > 0) {
+                        const minValue = Math.min(...allValues, 0);
+                        const maxValue = Math.max(...allValues, 0);
+                        const range = maxValue - minValue;
+
+                        // Add padding to Y-axis for visual breathing room
+                        const padding = range < 1 ? range * 0.2 : range * 0.05;
+                        const paddingAmount = Math.max(padding, maxValue * 0.1);
+
+                        nwChart.options.scales.y.min = 0;
+                        nwChart.options.scales.y.max = maxValue + paddingAmount;
+                    }
                 }
 
                 nwChart.update('none');
@@ -8106,25 +8321,94 @@ dogeUpgrades.forEach(u => {
             });
         }
 
-        // Add chart time range slider functionality with debouncing
-        const timeRangeSlider = document.getElementById('chart-time-slider');
+        // Add chart interval button functionality
         const timeRangeLabel = document.getElementById('chart-time-label');
+        const intervalButtons = document.querySelectorAll('.chart-interval-btn');
+
+        if (intervalButtons.length > 0) {
+            intervalButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const interval = parseFloat(e.target.getAttribute('data-interval'));
+
+                    // Update chart interval
+                    chartIntervalMinutes = interval;
+
+                    // Update button styles
+                    intervalButtons.forEach(b => {
+                        b.style.background = 'rgba(100,100,100,0.2)';
+                        b.style.borderColor = '#666';
+                        b.style.color = '#999';
+                    });
+                    e.target.style.background = 'rgba(0,255,136,0.2)';
+                    e.target.style.borderColor = '#00ff88';
+                    e.target.style.color = '#00ff88';
+
+                    // Update label - support sub-minute intervals
+                    const labels = {
+                        0.0167: '1s',
+                        0.0833: '5s',
+                        0.5: '30s',
+                        1: '1m',
+                        5: '5m',
+                        10: '10m',
+                        30: '30m',
+                        60: '1h',
+                        240: '4h',
+                        1440: '1d'
+                    };
+                    timeRangeLabel.textContent = labels[interval] + ' interval';
+
+                    // Trigger chart update
+                    if (nwChart) {
+                        nwChart.update('none');
+                    }
+                });
+            });
+        }
+
+        // Keep old slider code for backwards compatibility (hidden)
+        const timeRangeSlider = document.getElementById('chart-time-slider');
         let sliderUpdateTimeout;
 
-        if (timeRangeSlider) {
+        if (false && timeRangeSlider) {
             timeRangeSlider.addEventListener('input', (e) => {
                 const sliderValue = parseInt(e.target.value);
+                const VIEWPORT_SIZE = 10; // Always show exactly 10 minute window
 
-                // Slider goes 1-30, representing 1-30 minutes directly
-                const minutes = sliderValue;
+                // Calculate the actual maximum slider value based on oldest data available
+                let maxSliderValue = 100; // Default max
+                if (chartTimestamps.length > 0) {
+                    const oldestTimestamp = chartTimestamps[0].time;
+                    const ageMs = Date.now() - oldestTimestamp;
+                    const ageMinutes = Math.ceil(ageMs / (60 * 1000));
+                    // Max slider = oldest data age in minutes
+                    maxSliderValue = Math.max(VIEWPORT_SIZE, ageMinutes);
 
-                // Use friendly time range labels for common positions
-                let label = `Last ${minutes} Min`;
-                if (minutes === 1) label = 'Last 1 Minute';
-                else if (minutes === 3) label = 'Last 3 Minutes';
-                else if (minutes === 5) label = 'Last 5 Minutes';
-                else if (minutes === 15) label = 'Last 15 Minutes';
-                else if (minutes === 30) label = 'Last 30 Minutes';
+                    // Update slider max attribute
+                    if (parseInt(timeRangeSlider.max) !== maxSliderValue) {
+                        timeRangeSlider.max = maxSliderValue;
+                    }
+                }
+
+                // Pan logic (TradingView style):
+                // sliderValue = how many minutes ago the RIGHT edge of the viewport is
+                // Viewport is always 10 minutes wide
+                // At slider max (left): RIGHT edge is at oldest data, showing oldest 10 mins
+                // At slider 10 (right): RIGHT edge is at now, showing last 10 mins
+                const viewportEndMinutesAgo = Math.max(VIEWPORT_SIZE, sliderValue);
+
+                // Generate label showing what time range is visible
+                let label;
+                const startMinutesAgo = viewportEndMinutesAgo + VIEWPORT_SIZE;
+                if (viewportEndMinutesAgo === VIEWPORT_SIZE) {
+                    label = 'Last 10 Minutes';
+                } else if (startMinutesAgo < 60) {
+                    label = `${Math.round(startMinutesAgo)}-${Math.round(viewportEndMinutesAgo)} min ago`;
+                } else {
+                    const startHours = (startMinutesAgo / 60).toFixed(1);
+                    const endHours = (viewportEndMinutesAgo / 60).toFixed(1);
+                    label = `${startHours}-${endHours}h ago`;
+                }
 
                 // Update label immediately
                 timeRangeLabel.textContent = label;
@@ -8132,20 +8416,68 @@ dogeUpgrades.forEach(u => {
                 // Debounce chart update to avoid lag while dragging
                 clearTimeout(sliderUpdateTimeout);
                 sliderUpdateTimeout = setTimeout(() => {
-                    const isDesktop = window.innerWidth > 1200;
-                    const percentRatio = sliderValue / 30; // Convert 1-30 to 0-1 ratio
-
                     if (nwChart && chartHistory.length > 0) {
-                        // Ensure both arrays are the same length
-                        const dataLength = Math.min(chartHistory.length, chartTimestamps.length);
-                        const startIndex = Math.max(0, dataLength - Math.max(1, Math.ceil(dataLength * percentRatio)));
-                        const sliceLength = Math.max(1, dataLength - startIndex);
+                        // TradingView pan: show 10-minute window ending at viewportEndMinutesAgo
+                        const now = Date.now();
+                        const endTimeMs = now - (viewportEndMinutesAgo * 60 * 1000);
+                        const startTimeMs = endTimeMs - (10 * 60 * 1000); // 10 minute window
+
+                        // Find indices for the 10-minute window
+                        let startIndex = 0;
+                        let endIndex = chartTimestamps.length - 1;
+
+                        for (let i = 0; i < chartTimestamps.length; i++) {
+                            if (chartTimestamps[i].time >= startTimeMs) {
+                                startIndex = i;
+                                break;
+                            }
+                        }
+
+                        for (let i = chartTimestamps.length - 1; i >= 0; i--) {
+                            if (chartTimestamps[i].time <= endTimeMs) {
+                                endIndex = i;
+                                break;
+                            }
+                        }
+
+                        // Ensure we have valid slice
+                        const sliceLength = Math.max(1, endIndex - startIndex + 1);
 
                         nwChart.data.labels = chartTimestamps.slice(startIndex, startIndex + sliceLength).map((ts) =>
                             new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                         );
-                        nwChart.data.datasets[0].data = chartHistory.slice(startIndex, startIndex + sliceLength);
-                        nwChart.data.datasets[1].data = chartTimestamps.slice(startIndex, startIndex + sliceLength).map((ts) => ts.cash || 0);
+                        const slicedBTC = btcChartHistory.slice(startIndex, startIndex + sliceLength); // BTC USD
+                        const slicedETH = ethChartHistory.slice(startIndex, startIndex + sliceLength); // ETH USD
+                        const slicedDOGE = dogeChartHistory.slice(startIndex, startIndex + sliceLength); // DOGE USD
+                        const slicedCASH = cashChartHistory.slice(startIndex, startIndex + sliceLength); // CASH USD
+
+                        nwChart.data.datasets[0].data = slicedBTC;
+                        nwChart.data.datasets[1].data = slicedETH;
+                        nwChart.data.datasets[2].data = slicedDOGE;
+                        nwChart.data.datasets[3].data = slicedCASH;
+
+                        // Update Y-axis scale for slider changes
+                        if (slicedBTC.length > 0 || slicedETH.length > 0 || slicedDOGE.length > 0 || slicedCASH.length > 0) {
+                            const allValues = [
+                                ...slicedBTC,
+                                ...slicedETH,
+                                ...slicedDOGE,
+                                ...slicedCASH
+                            ].filter(v => v !== undefined && v !== null);
+
+                            if (allValues.length > 0) {
+                                const minValue = Math.min(...allValues, 0);
+                                const maxValue = Math.max(...allValues, 0);
+                                const range = maxValue - minValue;
+
+                                const padding = range < 1 ? range * 0.2 : range * 0.05;
+                                const paddingAmount = Math.max(padding, maxValue * 0.1);
+
+                                nwChart.options.scales.y.min = 0;
+                                nwChart.options.scales.y.max = maxValue + paddingAmount;
+                            }
+                        }
+
                         nwChart.update('none');
                     }
 
@@ -8334,7 +8666,7 @@ dogeUpgrades.forEach(u => {
                             pointRadius: 0,
                             pointHoverRadius: 0,
                             yAxisID: 'y',
-                            tension: 0.95,
+                            tension: 0,
                             fill: false,
                             borderWidth: 2
                         },
@@ -8348,7 +8680,7 @@ dogeUpgrades.forEach(u => {
                             pointRadius: 0,
                             pointHoverRadius: 0,
                             yAxisID: 'y',
-                            tension: 0.95,
+                            tension: 0,
                             fill: false,
                             borderWidth: 2
                         },
@@ -8362,7 +8694,7 @@ dogeUpgrades.forEach(u => {
                             pointRadius: 0,
                             pointHoverRadius: 0,
                             yAxisID: 'y',
-                            tension: 0.95,
+                            tension: 0,
                             fill: false,
                             borderWidth: 2
                         }

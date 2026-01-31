@@ -357,16 +357,37 @@
 
             /* Crypto prices - 3 column grid like 600px layout */
             #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 12px 0 !important; width: 100% !important; max-width: 100% !important; }
-            #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 8px !important; background: rgba(0,0,0,0.3) !important; border-radius: 4px !important; border: 1px solid #333 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
+            #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 8px !important; background: transparent !important; border-radius: 4px !important; border: none !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
+            #crypto-prices-flex > div:nth-child(2) { background: transparent !important; border: none !important; }
             #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
             #crypto-prices-flex span { font-size: 0.6rem !important; }
-            #crypto-prices-flex > div > div { width: 100% !important; grid-row: 1 !important; }
+            #crypto-prices-flex > div > div { width: 100% !important; }
             /* Make ALL manual hash buttons smaller on mobile */
             .mine-btn { padding: 6px 8px !important; font-size: 1rem !important; margin-bottom: 4px !important; }
-            /* Reduce stat boxes height and padding */
-            .stat-box { padding: 4px 8px !important; margin-bottom: 2px !important; }
-            .stat-box span { margin-bottom: 1px !important; }
-            .stat-box b { font-size: 0.9rem !important; }
+
+            /* Keep hashrate boxes styled correctly on mobile */
+            .stat-box-btc, .stat-box-eth, .stat-box-doge {
+                padding: 9px 15px !important;
+                margin-bottom: 0 !important;
+                flex: 1 1 33.333% !important;
+                min-width: 0 !important;
+                overflow: visible !important;
+            }
+            .stat-box-btc span, .stat-box-eth span, .stat-box-doge span {
+                font-size: clamp(0.6rem, 1.5vw, 0.75rem) !important;
+                margin-bottom: 3px !important;
+                font-weight: 800 !important;
+                white-space: nowrap !important;
+            }
+            .stat-box-btc b, .stat-box-eth b, .stat-box-doge b {
+                font-size: clamp(0.8rem, 2vw, 1.1rem) !important;
+                white-space: nowrap !important;
+                min-width: 0 !important;
+            }
+
+            /* Keep crypto holdings section identical to desktop on mobile */
+            div[style*="background: rgba(0,0,0,0.1)"][style*="border: 1px solid rgba"][style*="padding: 12px 6px"] { padding: 12px 6px !important; margin: 12px 0 8px 0 !important; }
+            div[style*="gap: 8px"][style*="flex-wrap: nowrap"][style*="justify-content: center"] > div { min-width: 60px !important; }
 
             /* Pin achievement button to the bottom on mobile */
             #achievements-btn {
@@ -529,7 +550,7 @@
 
             /* Net worth and pie chart side by side */
             .nw-label { display: none; }
-            .nw-amount { font-size: clamp(3rem, 10vw, 6rem); margin: 12px 0 12px 0; text-align: left; font-family: monospace; font-weight: 900; }
+            .nw-amount { font-size: clamp(7.5rem, 22.5vw, 9rem); margin: 12px 0 4px 0; text-align: center; font-family: monospace; font-weight: 900; }
 
             /* Portfolio layout - net worth on left, pie chart on right */
             div[style*="display: flex"][style*="gap: 10px"][style*="align-items: flex-start"][style*="margin-bottom: 12px"] {
@@ -604,13 +625,11 @@
             .chart-wrapper { min-height: 250px !important; height: 250px !important; flex: 0 0 250px !important; padding: 0; margin: 6px 0; overflow: hidden; position: relative; }
 
             /* Keep crypto prices in a 3-column row on mobile */
-            #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 12px 0 !important; width: 100% !important; max-width: 100% !important; }
-            #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 8px !important; background: rgba(0,0,0,0.3) !important; border-radius: 4px !important; border: 1px solid #333 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
+            #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 12px 0 !important; width: 100% !important; max-width: 100% !important; align-items: center !important; padding: 0 10px 10px 10px !important; box-sizing: border-box !important; }
+            #crypto-prices-flex > div { background: transparent !important; border: none !important; padding: 0 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; gap: 2px !important; }
             #crypto-prices-flex .stat-val { font-size: 0.9rem !important; }
             #crypto-prices-flex span { font-size: 0.6rem !important; }
-            #crypto-prices-flex > div > div { width: 100% !important;
-                grid-row: 1 !important;
-            }
+            #crypto-prices-flex > div > div { width: 100% !important; }
             .stat-box-session-earnings {
                 width: auto !important;
                 order: 2 !important;
@@ -689,16 +708,47 @@
                 font-size: 0.75rem !important;
                 line-height: 1.3;
                 display: block;
-                word-break: break-all;
+                word-break: normal !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
             }
-            /* Mobile hashrate display as colored boxes - outline style matching desktop */
-            .stat-box-btc,
-            .stat-box-eth,
-            .stat-box-doge {
-                padding: 8px 14px !important;
-                width: auto !important;
-                background: rgba(0,0,0,0.3) !important;
-                border-radius: 4px !important;
+            /* Mobile hashrate display - match desktop layout */
+            div[style*="display: flex"][style*="gap: 8px"][style*="padding: 0"][style*="box-sizing: border-box"][style*="flex-wrap: nowrap"][style*="margin: 4px"] {
+                display: flex !important;
+                gap: 8px !important;
+                width: calc(100% - 20px) !important;
+                margin: 4px 10px 0 10px !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+            }
+            div[style*="display: flex"][style*="gap: 8px"][style*="padding: 0"][style*="box-sizing: border-box"][style*="flex-wrap: nowrap"][style*="margin: 4px"] > div {
+                flex: 1 !important;
+                min-width: 60px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 4px !important;
+            }
+            div[style*="display: flex"][style*="gap: 8px"][style*="padding: 0"][style*="box-sizing: border-box"][style*="flex-wrap: nowrap"][style*="margin: 4px"] > div > div:first-child {
+                height: auto !important;
+                min-height: 22px !important;
+                font-size: clamp(0.75rem, 1.8vw, 0.95rem) !important;
+                font-weight: bold !important;
+                font-family: monospace !important;
+                line-height: 1.3 !important;
+                word-break: normal !important;
+                white-space: normal !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 2px !important;
+            }
+            div[style*="display: flex"][style*="gap: 8px"][style*="padding: 0"][style*="box-sizing: border-box"][style*="flex-wrap: nowrap"][style*="margin: 4px"] b {
+                font-size: clamp(0.75rem, 1.8vw, 0.95rem) !important;
+                color: inherit !important;
+                white-space: nowrap !important;
+                font-family: monospace !important;
             }
             .stat-box-btc {
                 border: 2px solid #f7931a !important;
@@ -741,13 +791,14 @@
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .upgrade-list { overflow-y: auto !important; }
             .nw-label { font-size: 0.6rem; color: #555; }
-            .nw-amount { font-size: 1.5rem; margin: 1px 0; }
+            div[style*="order: -1"] { margin-bottom: 0 !important; }
+            .nw-amount { font-size: clamp(3.75rem, 11.25vw, 4.5rem); margin: 0 0 0 0; }
             .stat-val { font-size: 0.95rem !important; }
             .chart-wrapper { min-height: 200px !important; height: 200px !important; flex: 0 0 200px !important; margin-top: 2px; padding: 2px; overflow: hidden; position: relative; }
             #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 200px !important; }
             /* Keep crypto prices in 3-column row on small phones */
             #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 4px !important; overflow: visible !important; margin-bottom: 6px !important; width: 100% !important; max-width: 100% !important; }
-            #crypto-prices-flex > div { flex: 1 !important; width: auto !important; max-width: none !important; padding: 6px !important; background: rgba(0,0,0,0.3) !important; border-radius: 4px !important; border: 1px solid #333 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; }
+            #crypto-prices-flex > div { background: transparent !important; border: none !important; padding: 0 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; text-align: center !important; min-width: 0 !important; gap: 2px !important; }
             #crypto-prices-flex .stat-val { font-size: 0.75rem !important; }
             #crypto-prices-flex span { font-size: 0.5rem !important; }
             #crypto-prices-flex > div > div { width: 100% !important; }
@@ -847,7 +898,7 @@
         
         .nw-label { font-size: 1.5rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; margin-top: 0 !important; padding-top: 0 !important; margin-bottom: 8px; }
         .nw-amount {
-            font-size: 4.5rem;
+            font-size: 5.625rem;
             font-weight: 950;
             color: var(--green);
             font-family: monospace;
@@ -865,12 +916,12 @@
         
         .stat-item span { font-size: 0.9rem; color: #777; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800; }
         
-        .stat-val { 
-            font-size: 2.8rem !important; /* BACK TO BIG FONT */
-            color: #ffffff; 
-            font-family: monospace; 
-            display: flex; 
-            align-items: center; 
+        .stat-val {
+            font-size: 0.7rem !important; /* Small price text */
+            color: #ffffff;
+            font-family: monospace;
+            display: flex;
+            align-items: center;
             line-height: 1;
             font-weight: 900;
             letter-spacing: -2px;
@@ -962,6 +1013,7 @@
             font-weight: bold;
             transition: all 0.2s ease;
             box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4);
+            position: relative;
         }
 
         @media (hover: hover) {
@@ -2051,12 +2103,29 @@ button:disabled:hover {
         }
 
         @keyframes buttonFlash {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.95); }
         }
 
         .button-flash {
             animation: buttonFlash 0.3s ease-in-out !important;
+        }
+
+        @keyframes sellSuccess {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .sell-success {
+            animation: sellSuccess 0.25s ease-out !important;
         }
 
         @keyframes modalShake {
@@ -2525,10 +2594,16 @@ button:disabled:hover {
             }
 
             #crypto-prices-flex > div {
-                flex: 1 !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
                 text-align: center !important;
-                padding: 8px !important;
                 min-width: auto !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 2px !important;
             }
 
             #crypto-prices-flex .stat-val {
@@ -2558,6 +2633,8 @@ button:disabled:hover {
             /* Remove gap after crypto prices */
             #main-layout > div:first-child > div:nth-of-type(3) > div {
                 margin-bottom: 0 !important;
+                background: transparent !important;
+                border: none !important;
             }
 
             /* Session stats container - remove gaps */
@@ -2691,7 +2768,7 @@ button:disabled:hover {
             }
 
             .nw-amount {
-                font-size: 1.8rem !important;
+                font-size: clamp(3.75rem, 11.25vw, 4.5rem) !important;
             }
 
             .stat-box-session,
@@ -2709,11 +2786,13 @@ button:disabled:hover {
             }
 
             #crypto-prices-flex > div {
-                padding: 4px !important;
+                padding: 8px !important;
+                background: transparent !important;
+                border: none !important;
             }
 
             #crypto-prices-flex .stat-val {
-                font-size: 0.95rem !important;
+                font-size: 1.1rem !important;
             }
         }
 
