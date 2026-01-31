@@ -1492,6 +1492,10 @@ function loadGame() {
         const maxChartPoints = 4800;
         const trimmedChartHistory = chartHistory.length > maxChartPoints ? chartHistory.slice(-maxChartPoints) : chartHistory;
         const trimmedChartTimestamps = chartTimestamps.length > maxChartPoints ? chartTimestamps.slice(-maxChartPoints) : chartTimestamps;
+        const trimmedBtcChartHistory = btcChartHistory.length > maxChartPoints ? btcChartHistory.slice(-maxChartPoints) : btcChartHistory;
+        const trimmedEthChartHistory = ethChartHistory.length > maxChartPoints ? ethChartHistory.slice(-maxChartPoints) : ethChartHistory;
+        const trimmedDogeChartHistory = dogeChartHistory.length > maxChartPoints ? dogeChartHistory.slice(-maxChartPoints) : dogeChartHistory;
+        const trimmedCashChartHistory = cashChartHistory.length > maxChartPoints ? cashChartHistory.slice(-maxChartPoints) : cashChartHistory;
         const trimmedPowerChartHistory = powerChartHistory.length > maxChartPoints ? powerChartHistory.slice(-maxChartPoints) : powerChartHistory;
         const trimmedPowerChartColors = powerChartColors.length > maxChartPoints ? powerChartColors.slice(-maxChartPoints) : powerChartColors;
         const trimmedHashRateChartTimestamps = hashRateChartTimestamps.length > maxChartPoints ? hashRateChartTimestamps.slice(-maxChartPoints) : hashRateChartTimestamps;
@@ -1669,64 +1673,115 @@ function loadGame() {
      * Export save to clipboard
      */
     function exportSaveToClipboard() {
-        const gameState = getExportableGameState();
-        const encoded = encodeGameState(gameState);
+        try {
+            const gameState = getExportableGameState();
+            if (!gameState) {
+                showExportStatus('Failed to get game state!', false);
+                console.error('getExportableGameState returned null or undefined');
+                return;
+            }
 
-        if (!encoded) {
-            showExportStatus('Failed to encode save data!', false);
-            return;
+            const encoded = encodeGameState(gameState);
+            if (!encoded) {
+                showExportStatus('Failed to encode save data!', false);
+                console.error('encodeGameState returned null or undefined');
+                return;
+            }
+
+            console.log('Encoded save string, length:', encoded.length);
+
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(encoded)
+                    .then(() => {
+                        showExportStatus('Save copied to clipboard!', true);
+                        console.log('Save exported to clipboard via clipboard API, length:', encoded.length, 'characters');
+                    })
+                    .catch(err => {
+                        console.warn('Clipboard API failed, trying fallback:', err);
+                        copyToClipboardFallback(encoded);
+                    });
+            } else {
+                console.log('Clipboard API not available, using fallback');
+                copyToClipboardFallback(encoded);
+            }
+        } catch (error) {
+            console.error('Error in exportSaveToClipboard:', error);
+            showExportStatus('Error exporting save!', false);
         }
+    }
 
-        // Copy to clipboard
-        navigator.clipboard.writeText(encoded).then(() => {
-            showExportStatus('Save copied to clipboard!', true);
-            console.log('Save exported to clipboard, length:', encoded.length, 'characters');
-        }).catch(err => {
-            // Fallback for older browsers
+    function copyToClipboardFallback(text) {
+        try {
             const textarea = document.createElement('textarea');
-            textarea.value = encoded;
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-999999px';
+            textarea.style.top = '-999999px';
             document.body.appendChild(textarea);
             textarea.select();
-            try {
-                document.execCommand('copy');
-                showExportStatus('Save copied to clipboard!', true);
-            } catch (e) {
-                showExportStatus('Failed to copy to clipboard!', false);
-            }
+            const success = document.execCommand('copy');
             document.body.removeChild(textarea);
-        });
+            if (success) {
+                showExportStatus('Save copied to clipboard!', true);
+                console.log('Save exported to clipboard via fallback, length:', text.length, 'characters');
+            } else {
+                showExportStatus('Failed to copy to clipboard!', false);
+                console.error('execCommand("copy") returned false');
+            }
+        } catch (e) {
+            console.error('Fallback clipboard copy failed:', e);
+            showExportStatus('Failed to copy to clipboard!', false);
+        }
     }
 
     /**
      * Export save to a downloadable file
      */
     function exportSaveToFile() {
-        const gameState = getExportableGameState();
-        const encoded = encodeGameState(gameState);
+        try {
+            const gameState = getExportableGameState();
+            if (!gameState) {
+                showExportStatus('Failed to get game state!', false);
+                console.error('getExportableGameState returned null or undefined');
+                return;
+            }
 
-        if (!encoded) {
-            showExportStatus('Failed to encode save data!', false);
-            return;
+            const encoded = encodeGameState(gameState);
+            if (!encoded) {
+                showExportStatus('Failed to encode save data!', false);
+                console.error('encodeGameState returned null or undefined');
+                return;
+            }
+
+            console.log('Encoded save string, length:', encoded.length);
+
+            // Create filename with timestamp
+            const date = new Date();
+            const timestamp = date.toISOString().slice(0, 10).replace(/-/g, '');
+            const filename = `IdleBTCMiner_${timestamp}.txt`;
+
+            // Create and download file
+            const blob = new Blob([encoded], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+
+            // Use setTimeout to ensure the element is in the DOM
+            setTimeout(() => {
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showExportStatus(`Save downloaded as ${filename}`, true);
+                console.log('Save exported to file:', filename);
+            }, 100);
+        } catch (error) {
+            console.error('Error in exportSaveToFile:', error);
+            showExportStatus('Error exporting save!', false);
         }
-
-        // Create filename with timestamp
-        const date = new Date();
-        const timestamp = date.toISOString().slice(0, 10).replace(/-/g, '');
-        const filename = `SatoshiTerminal_${timestamp}.txt`;
-
-        // Create and download file
-        const blob = new Blob([encoded], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        showExportStatus(`Save downloaded as ${filename}`, true);
-        console.log('Save exported to file:', filename);
     }
 
     /**
