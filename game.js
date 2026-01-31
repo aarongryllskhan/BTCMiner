@@ -5177,6 +5177,22 @@ function toggleAutoSellButton() {
     }
 }
 
+function flashCryptoBar(barId) {
+    const bar = document.getElementById(barId);
+    if (bar) {
+        // Remove class if already present
+        if (bar.classList.contains('bar-flash')) {
+            bar.classList.remove('bar-flash');
+            // Use setTimeout to ensure the removal is processed before re-adding
+            setTimeout(() => {
+                bar.classList.add('bar-flash');
+            }, 10);
+        } else {
+            bar.classList.add('bar-flash');
+        }
+    }
+}
+
 function manualHash() {
     // Pause coin animation during manual hash to reduce lag
     if (typeof pauseCoinRain === 'function') {
@@ -5241,6 +5257,9 @@ function manualHash() {
 
     // Spawn coins on click
     spawnCoinsForClick('btc', usdValue);
+
+    // Flash the BTC bar
+    flashCryptoBar('btc-bar');
 
     // Play click sound
     playClickSound();
@@ -5311,6 +5330,9 @@ function manualEthHash() {
     // Spawn coins on click
     spawnCoinsForClick('eth', usdValue);
 
+    // Flash the ETH bar
+    flashCryptoBar('eth-bar');
+
     // Play click sound
     playClickSound();
 
@@ -5379,6 +5401,9 @@ function manualDogeHash() {
 
     // Spawn coins on click
     spawnCoinsForClick('doge', usdValue);
+
+    // Flash the DOGE bar
+    flashCryptoBar('doge-bar');
 
     // Play click sound
     playClickSound();

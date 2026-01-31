@@ -30,6 +30,16 @@
         .short-label { display: none !important; }
         .long-label { display: inline !important; }
 
+        /* Flash animation for crypto bars on manual click */
+        @keyframes barFlash {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+            100% { filter: brightness(1); }
+        }
+        .bar-flash {
+            animation: barFlash 0.5s ease-out;
+        }
+
         /* Grey background to match panels */
         body::before {
             content: '';
@@ -125,7 +135,7 @@
             }
         }
 
-        .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow: hidden; overflow-x: hidden; max-width: 100%; width: 100%; box-sizing: border-box; }
+        .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow-y: auto; overflow-x: hidden; max-width: 100%; width: 100%; box-sizing: border-box; }
 
         /* Manual Hash Buttons - Lightweight patterns */
         #manual-hash-btc-btn::before,

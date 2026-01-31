@@ -196,7 +196,7 @@
                 opacity: startOpacity, // Full opacity for USD, 0.7 for others
                 type: coinType.name,
                 lifetime: 0,
-                maxLifetime: 12000 + Math.random() * 6000, // Much longer lifetime (12-18 seconds)
+                maxLifetime: 1000, // 1 second lifetime
                 isClickCoin: consistentSize // Mark as click coin if consistent size
             };
 
@@ -226,12 +226,12 @@
                     coin.opacity = Math.max(0, 1 - lifeProgress);
                 } else if (coin.isClickCoin) {
                     // Click coins: fall all the way down, fade by lifetime
-                    coin.vy += 0.08;
+                    coin.vy += 0.25; // Increased gravity for faster fall
                     coin.vx *= 0.99;
 
                     // Fade out based on lifetime (not screen position)
                     const lifeProgress = coin.lifetime / coin.maxLifetime;
-                    coin.opacity = Math.max(0, 0.7 - (lifeProgress * 0.7)); // Fade from 0.7 to 0
+                    coin.opacity = Math.max(0, 1 - lifeProgress); // Fade from 1 to 0
                 } else {
                     // Passive coins: slow gravity, fade at midpoint
                     coin.vy += 0.08;
@@ -373,7 +373,7 @@
                 opacity: 1,
                 type: coinType,
                 lifetime: 0,
-                maxLifetime: 2500 + Math.random() * 1500
+                maxLifetime: 1000 // 1 second lifetime
             };
 
             window.coinRainSystem.coins.push(coin);
