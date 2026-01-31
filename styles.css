@@ -304,6 +304,12 @@
 
         /* Desktop refinement */
         @media (min-width: 1300px) {
+            /* Reduce manual hash buttons vertical padding on desktop */
+            .mine-btn {
+                padding: 4px 8px !important;
+                margin-bottom: 4px !important;
+            }
+
             .panel:first-child {
                 max-width: 100%;
             }
@@ -626,7 +632,7 @@
 
             /* Net worth and pie chart side by side */
             .nw-label { display: none; }
-            .nw-amount { font-size: clamp(7.5rem, 22.5vw, 9rem); margin: 12px 0 4px 0; text-align: center; font-family: monospace; font-weight: 900; }
+            .nw-amount { font-size: clamp(7.5rem, 22.5vw, 9rem); margin: 0 0 4px 0; text-align: center; font-family: monospace; font-weight: 900; }
 
             /* Portfolio layout - net worth on left, pie chart on right */
             div[style*="display: flex"][style*="gap: 10px"][style*="align-items: flex-start"][style*="margin-bottom: 12px"] {
@@ -2642,7 +2648,7 @@ button:disabled:hover {
             .nw-amount {
                 font-size: clamp(3rem, 10vw, 6rem) !important;
                 margin-bottom: 0 !important;
-                margin-top: 13px !important;
+                margin-top: 0 !important;
                 font-weight: 900 !important;
                 line-height: 1 !important;
             }
