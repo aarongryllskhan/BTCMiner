@@ -399,7 +399,7 @@
                     </div>
                 </button>
                 <!-- RUGPULL STORE Button -->
-                <button id="rugpull-store-btn-desktop" class="btn-action" style="flex: 1; display: none;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
+                <button id="rugpull-store-btn-desktop" class="btn-action" style="flex: 1; display: none; display: flex; align-items: center; justify-content: center;" onclick="openMetaUpgradesModal()">RUGPULL STORE</button>
             </div>
 
             <!-- Mobile RUGPULL Section - Side by side -->
@@ -455,13 +455,13 @@
                 <!-- Buy Quantity Toggle with Cash Balance -->
                 <div style="margin-bottom: 10px;">
                     <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
-                    <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px;">
-                        <!-- Cash Balance Box -->
-                        <div style="padding: 8px 12px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; min-width: 80px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center;">
-                            <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Cash</div>
-                            <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 0.9rem;" id="dollar-balance-btc">$0</div>
-                        </div>
-                        <!-- Quantity Buttons -->
+                    <!-- Cash Balance Box - Full Width -->
+                    <div style="padding: 12px 16px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 6px; width: 100%; box-sizing: border-box;">
+                        <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 3px;">Cash</div>
+                        <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 1.4rem;" id="dollar-balance-btc">$0</div>
+                    </div>
+                    <!-- Quantity Buttons - Below -->
+                    <div style="display: flex; gap: 4px;">
                         <button id="qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
                         <button id="qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
                         <button id="qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
@@ -482,13 +482,13 @@
                 <!-- Buy Quantity Toggle with Cash Balance -->
                 <div style="margin-bottom: 10px;">
                     <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
-                    <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px;">
-                        <!-- Cash Balance Box -->
-                        <div style="padding: 8px 12px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; min-width: 80px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center;">
-                            <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Cash</div>
-                            <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 0.9rem;" id="dollar-balance-eth">$0</div>
-                        </div>
-                        <!-- Quantity Buttons -->
+                    <!-- Cash Balance Box - Full Width -->
+                    <div style="padding: 12px 16px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 6px; width: 100%; box-sizing: border-box;">
+                        <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 3px;">Cash</div>
+                        <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 1.4rem;" id="dollar-balance-eth">$0</div>
+                    </div>
+                    <!-- Quantity Buttons - Below -->
+                    <div style="display: flex; gap: 4px;">
                         <button id="eth-qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
                         <button id="eth-qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
                         <button id="eth-qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
@@ -509,13 +509,13 @@
                 <!-- Buy Quantity Toggle with Cash Balance -->
                 <div style="margin-bottom: 10px;">
                     <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
-                    <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px;">
-                        <!-- Cash Balance Box -->
-                        <div style="padding: 8px 12px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; min-width: 80px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center;">
-                            <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Cash</div>
-                            <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 0.9rem;" id="dollar-balance-doge">$0</div>
-                        </div>
-                        <!-- Quantity Buttons -->
+                    <!-- Cash Balance Box - Full Width -->
+                    <div style="padding: 12px 16px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 6px; width: 100%; box-sizing: border-box;">
+                        <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 3px;">Cash</div>
+                        <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 1.4rem;" id="dollar-balance-doge">$0</div>
+                    </div>
+                    <!-- Quantity Buttons - Below -->
+                    <div style="display: flex; gap: 4px;">
                         <button id="doge-qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
                         <button id="doge-qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
                         <button id="doge-qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
@@ -536,12 +536,13 @@
                 <!-- Buy Quantity Toggle -->
                 <div style="margin-bottom: 10px;">
                     <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 5px; font-weight: 800;">Purchase Amount</span>
-                    <div style="display: flex; gap: 6px; align-items: center;">
-                        <!-- Cash Balance Box -->
-                        <div style="padding: 8px 12px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; min-width: 80px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center;">
-                            <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Cash</div>
-                            <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 0.9rem;" id="dollar-balance-power">$0</div>
-                        </div>
+                    <!-- Cash Balance Box - Full Width -->
+                    <div style="padding: 12px 16px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 6px; width: 100%; box-sizing: border-box;">
+                        <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 3px;">Cash</div>
+                        <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 1.4rem;" id="dollar-balance-power">$0</div>
+                    </div>
+                    <!-- Quantity Buttons - Below -->
+                    <div style="display: flex; gap: 4px;">
                         <button class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
                         <button class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
                         <button class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
@@ -555,10 +556,12 @@
             <div id="market-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
                 <div class="upgrade-list" style="flex: 1; min-height: 0; overflow-y: auto; padding: 10px; padding-bottom: 80px;">
                     <div style="margin-bottom: 15px;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <h3 style="color: #00ff88; margin: 0; font-size: 1.2rem;">Sell Crypto for Cash</h3>
-                            <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 0.9rem; background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 8px; padding: 8px 12px; min-width: 100px; text-align: center;" id="dollar-balance-exchange">$0</div>
+                        <!-- Cash Balance Box - Full Width -->
+                        <div style="padding: 12px 16px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 10px; width: 100%; box-sizing: border-box;">
+                            <div style="font-size: 0.5rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 3px;">Cash</div>
+                            <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 1.4rem;" id="dollar-balance-exchange">$0</div>
                         </div>
+                        <h3 style="color: #00ff88; margin: 0 0 5px 0; font-size: 1.2rem;">Sell Crypto for Cash</h3>
                         <p style="color: #888; font-size: 0.75rem; margin: 0;">Convert your mined cryptocurrency to dollars to purchase upgrades</p>
                     </div>
 
@@ -1224,7 +1227,7 @@
 <div id="achievements-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;">
         <div class="modal-header" style="position: sticky; top: 0; z-index: 10; background: #111; border-bottom: 1px solid #333; flex-shrink: 0;">
-            <h2>🏆 Achievements</h2>
+            <h2>🏆 Achievements <span id="modal-achievement-counter" style="color: #00ff88; font-weight: 600;">0/100</span></h2>
             <button onclick="closeAchievementsModal()" class="modal-close">&times;</button>
         </div>
         <div class="modal-body" style="padding: 20px; overflow-y: auto; flex: 1;">
@@ -2036,11 +2039,11 @@ function handleRugpullButtonClick() {
 }
 </script>
 
-<script src="game.js?v=3.1.0"></script>
+<script src="game.js?v=3.8.0"></script>
 <script src="packet-interceptor.js?v=1.0.0"></script>
 
 <!-- Load rugpull/ascension system after main game variables are defined, BEFORE staking (staking needs rugpullAddEarnings) -->
-<script src="rugpull.js?v=2.0.1"></script>
+<script src="rugpull.js?v=2.0.2"></script>
 
 <!-- Load staking system after rugpull (needs window.rugpullAddEarnings to be available) -->
 <script src="staking.js?v=1.1.0"></script>

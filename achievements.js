@@ -62,17 +62,17 @@ const achievementDefinitions = {
     first_1e500: { id: 'first_1e500', name: 'Your First 10^500 - INFINITE WEALTH', description: 'Lifetime earnings hit 10^500 - Ultimate achievement!', emoji: '✨', category: 'earnings', threshold: 1e500 },
 };
 
-// Generate equipment achievements for all miners (16 miners x 3 cryptos = 48 achievements)
-// Generate for all miners except manual hash (id 1-15), with levels 10, 20, 50, 100
+// Generate equipment achievements for all miners (15 miners x 3 cryptos x 7 levels = 315 achievements)
+// Generate for all miners except manual hash (id 1-15), with levels 5, 10, 25, 50, 100, 1000, 10000
 const minerIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-const levels = [10, 20, 50, 100];
-const levelNames = { 10: 'Starter', 20: 'Master', 50: 'Legend', 100: 'God' };
+const levels = [5, 10, 25, 50, 100, 1000, 10000];
+const levelNames = { 5: 'Novice', 10: 'Starter', 25: 'Veteran', 50: 'Master', 100: 'Legend', 1000: 'Titan', 10000: 'God' };
 const cryptos = ['btc', 'eth', 'doge'];
 const cryptoEmojis = { btc: '₿', eth: 'Ξ', doge: 'Ð' };
 
-// Manual hash achievements (levels 10, 20, 50, 100 for each crypto)
+// Manual hash achievements (levels 5, 10, 25, 50, 100, 1000, 10000 for each crypto)
 ['btc', 'eth', 'doge'].forEach(crypto => {
-    [10, 20, 50, 100].forEach(level => {
+    [5, 10, 25, 50, 100, 1000, 10000].forEach(level => {
         const levelName = levelNames[level];
         const cryptoName = crypto.toUpperCase();
         achievementDefinitions[`manual_${crypto}_${level}`] = {
@@ -88,62 +88,154 @@ const cryptoEmojis = { btc: '₿', eth: 'Ξ', doge: 'Ð' };
     });
 });
 
-// Equipment achievements for miners 1-15
-cryptos.forEach(crypto => {
-    minerIds.forEach(minerId => {
-        const minerName = minerNames[crypto][minerId];
-        const cryptoName = crypto.toUpperCase();
-
-        levels.forEach(level => {
-            const levelName = levelNames[level];
-            const emojis = { btc: '💾', eth: '🎮', doge: '🚀' };
-            const emojiMap = {
-                1: '💾', 2: '🎮', 3: '🚀', 4: '⛏️', 5: '🔧',
-                6: '🏭', 7: '🏢', 8: '🌍', 9: '🛰️', 10: '🌌',
-                11: '⚛️', 12: '🧠', 13: '🎪', 14: '🌀', 15: '♾️'
-            };
-            const emoji = emojiMap[minerId];
-
-            achievementDefinitions[`${crypto}_miner${minerId}_${level}`] = {
-                id: `${crypto}_miner${minerId}_${level}`,
-                name: `${crypto.toUpperCase()} ${minerName} ${levelName}`,
-                description: `Get ${minerName} to level ${level}`,
-                emoji,
-                category: 'equipment',
-                type: 'miner',
-                crypto,
-                minerId,
-                level
-            };
-        });
-    });
-});
+// Miner milestone achievements - track progress across miners
+// Instead of per-miner achievements, track how many miners reach each level
 
 // General equipment achievements
 Object.assign(achievementDefinitions, {
-    all_miners_level_1: { id: 'all_miners_level_1', name: 'Diverse Portfolio', description: 'Get all miners in one crypto to level 1+', emoji: '📊', category: 'equipment', type: 'all_miners', level: 1 },
-    all_miners_level_10: { id: 'all_miners_level_10', name: 'Complete Arsenal', description: 'Get all miners in one crypto to level 10+', emoji: '⚒️', category: 'equipment', type: 'all_miners', level: 10 },
-    any_miner_level_50: { id: 'any_miner_level_50', name: 'Legendary Status', description: 'Get any miner to level 50', emoji: '👑', category: 'equipment', type: 'any_miner', level: 50 },
-    any_miner_level_100: { id: 'any_miner_level_100', name: 'Godlike Power', description: 'Get any miner to level 100', emoji: '💫', category: 'equipment', type: 'any_miner', level: 100 },
+    all_miners_level_10: { id: 'all_miners_level_10', name: 'Diverse Portfolio', description: 'Get all miners in one crypto to level 10+', emoji: '📊', category: 'equipment', type: 'all_miners', level: 10 },
+    all_miners_level_100: { id: 'all_miners_level_100', name: 'Complete Arsenal', description: 'Get all miners in one crypto to level 100+', emoji: '⚒️', category: 'equipment', type: 'all_miners', level: 100 },
+    all_miners_level_1000: { id: 'all_miners_level_1000', name: 'Titanic Force', description: 'Get all miners in one crypto to level 1,000+', emoji: '💥', category: 'equipment', type: 'all_miners', level: 1000 },
+    all_miners_level_10000: { id: 'all_miners_level_10000', name: 'Infinite Power', description: 'Get all miners in one crypto to level 10,000+', emoji: '✨', category: 'equipment', type: 'all_miners', level: 10000 },
+
+    // Milestone achievements - N miners at specific levels (per crypto)
+    // BTC 5 miners
+    btc_five_miners_level_10: { id: 'btc_five_miners_level_10', name: 'BTC Small Team', description: 'Get 5+ BTC miners to level 10', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 5, level: 10 },
+    btc_five_miners_level_25: { id: 'btc_five_miners_level_25', name: 'BTC Growing Team', description: 'Get 5+ BTC miners to level 25', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 5, level: 25 },
+    btc_five_miners_level_50: { id: 'btc_five_miners_level_50', name: 'BTC Strong Team', description: 'Get 5+ BTC miners to level 50', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 5, level: 50 },
+    btc_five_miners_level_100: { id: 'btc_five_miners_level_100', name: 'BTC Elite Five', description: 'Get 5+ BTC miners to level 100', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 5, level: 100 },
+    btc_five_miners_level_1000: { id: 'btc_five_miners_level_1000', name: 'BTC Legendary Five', description: 'Get 5+ BTC miners to level 1,000', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 5, level: 1000 },
+
+    // BTC 10 miners
+    btc_ten_miners_level_10: { id: 'btc_ten_miners_level_10', name: 'BTC Solid Squad', description: 'Get 10+ BTC miners to level 10', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 10, level: 10 },
+    btc_ten_miners_level_25: { id: 'btc_ten_miners_level_25', name: 'BTC Rising Squad', description: 'Get 10+ BTC miners to level 25', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 10, level: 25 },
+    btc_ten_miners_level_50: { id: 'btc_ten_miners_level_50', name: 'BTC Powerful Squad', description: 'Get 10+ BTC miners to level 50', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 10, level: 50 },
+    btc_ten_miners_level_100: { id: 'btc_ten_miners_level_100', name: 'BTC Elite Squad', description: 'Get 10+ BTC miners to level 100', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 10, level: 100 },
+    btc_ten_miners_level_1000: { id: 'btc_ten_miners_level_1000', name: 'BTC Legendary Squad', description: 'Get 10+ BTC miners to level 1,000', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 10, level: 1000 },
+
+    // BTC 15 miners
+    btc_fifteen_miners_level_10: { id: 'btc_fifteen_miners_level_10', name: 'BTC Full Force', description: 'Get all 15 BTC miners to level 10', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 15, level: 10 },
+    btc_fifteen_miners_level_25: { id: 'btc_fifteen_miners_level_25', name: 'BTC Full Arsenal', description: 'Get all 15 BTC miners to level 25', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 15, level: 25 },
+    btc_fifteen_miners_level_50: { id: 'btc_fifteen_miners_level_50', name: 'BTC Full Power', description: 'Get all 15 BTC miners to level 50', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 15, level: 50 },
+    btc_fifteen_miners_level_100: { id: 'btc_fifteen_miners_level_100', name: 'BTC Full Potential', description: 'Get all 15 BTC miners to level 100', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 15, level: 100 },
+    btc_fifteen_miners_level_1000: { id: 'btc_fifteen_miners_level_1000', name: 'BTC Ultimate Fleet', description: 'Get all 15 BTC miners to level 1,000', emoji: '₿', category: 'equipment', type: 'n_miners', crypto: 'btc', count: 15, level: 1000 },
+
+    // ETH 5 miners
+    eth_five_miners_level_10: { id: 'eth_five_miners_level_10', name: 'ETH Small Team', description: 'Get 5+ ETH miners to level 10', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 5, level: 10 },
+    eth_five_miners_level_25: { id: 'eth_five_miners_level_25', name: 'ETH Growing Team', description: 'Get 5+ ETH miners to level 25', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 5, level: 25 },
+    eth_five_miners_level_50: { id: 'eth_five_miners_level_50', name: 'ETH Strong Team', description: 'Get 5+ ETH miners to level 50', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 5, level: 50 },
+    eth_five_miners_level_100: { id: 'eth_five_miners_level_100', name: 'ETH Elite Five', description: 'Get 5+ ETH miners to level 100', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 5, level: 100 },
+    eth_five_miners_level_1000: { id: 'eth_five_miners_level_1000', name: 'ETH Legendary Five', description: 'Get 5+ ETH miners to level 1,000', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 5, level: 1000 },
+
+    // ETH 10 miners
+    eth_ten_miners_level_10: { id: 'eth_ten_miners_level_10', name: 'ETH Solid Squad', description: 'Get 10+ ETH miners to level 10', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 10, level: 10 },
+    eth_ten_miners_level_25: { id: 'eth_ten_miners_level_25', name: 'ETH Rising Squad', description: 'Get 10+ ETH miners to level 25', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 10, level: 25 },
+    eth_ten_miners_level_50: { id: 'eth_ten_miners_level_50', name: 'ETH Powerful Squad', description: 'Get 10+ ETH miners to level 50', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 10, level: 50 },
+    eth_ten_miners_level_100: { id: 'eth_ten_miners_level_100', name: 'ETH Elite Squad', description: 'Get 10+ ETH miners to level 100', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 10, level: 100 },
+    eth_ten_miners_level_1000: { id: 'eth_ten_miners_level_1000', name: 'ETH Legendary Squad', description: 'Get 10+ ETH miners to level 1,000', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 10, level: 1000 },
+
+    // ETH 15 miners
+    eth_fifteen_miners_level_10: { id: 'eth_fifteen_miners_level_10', name: 'ETH Full Force', description: 'Get all 15 ETH miners to level 10', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 15, level: 10 },
+    eth_fifteen_miners_level_25: { id: 'eth_fifteen_miners_level_25', name: 'ETH Full Arsenal', description: 'Get all 15 ETH miners to level 25', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 15, level: 25 },
+    eth_fifteen_miners_level_50: { id: 'eth_fifteen_miners_level_50', name: 'ETH Full Power', description: 'Get all 15 ETH miners to level 50', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 15, level: 50 },
+    eth_fifteen_miners_level_100: { id: 'eth_fifteen_miners_level_100', name: 'ETH Full Potential', description: 'Get all 15 ETH miners to level 100', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 15, level: 100 },
+    eth_fifteen_miners_level_1000: { id: 'eth_fifteen_miners_level_1000', name: 'ETH Ultimate Fleet', description: 'Get all 15 ETH miners to level 1,000', emoji: 'Ξ', category: 'equipment', type: 'n_miners', crypto: 'eth', count: 15, level: 1000 },
+
+    // DOGE 5 miners
+    doge_five_miners_level_10: { id: 'doge_five_miners_level_10', name: 'DOGE Small Team', description: 'Get 5+ DOGE miners to level 10', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 5, level: 10 },
+    doge_five_miners_level_25: { id: 'doge_five_miners_level_25', name: 'DOGE Growing Team', description: 'Get 5+ DOGE miners to level 25', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 5, level: 25 },
+    doge_five_miners_level_50: { id: 'doge_five_miners_level_50', name: 'DOGE Strong Team', description: 'Get 5+ DOGE miners to level 50', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 5, level: 50 },
+    doge_five_miners_level_100: { id: 'doge_five_miners_level_100', name: 'DOGE Elite Five', description: 'Get 5+ DOGE miners to level 100', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 5, level: 100 },
+    doge_five_miners_level_1000: { id: 'doge_five_miners_level_1000', name: 'DOGE Legendary Five', description: 'Get 5+ DOGE miners to level 1,000', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 5, level: 1000 },
+
+    // DOGE 10 miners
+    doge_ten_miners_level_10: { id: 'doge_ten_miners_level_10', name: 'DOGE Solid Squad', description: 'Get 10+ DOGE miners to level 10', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 10, level: 10 },
+    doge_ten_miners_level_25: { id: 'doge_ten_miners_level_25', name: 'DOGE Rising Squad', description: 'Get 10+ DOGE miners to level 25', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 10, level: 25 },
+    doge_ten_miners_level_50: { id: 'doge_ten_miners_level_50', name: 'DOGE Powerful Squad', description: 'Get 10+ DOGE miners to level 50', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 10, level: 50 },
+    doge_ten_miners_level_100: { id: 'doge_ten_miners_level_100', name: 'DOGE Elite Squad', description: 'Get 10+ DOGE miners to level 100', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 10, level: 100 },
+    doge_ten_miners_level_1000: { id: 'doge_ten_miners_level_1000', name: 'DOGE Legendary Squad', description: 'Get 10+ DOGE miners to level 1,000', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 10, level: 1000 },
+
+    // DOGE 15 miners
+    doge_fifteen_miners_level_10: { id: 'doge_fifteen_miners_level_10', name: 'DOGE Full Force', description: 'Get all 15 DOGE miners to level 10', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 15, level: 10 },
+    doge_fifteen_miners_level_25: { id: 'doge_fifteen_miners_level_25', name: 'DOGE Full Arsenal', description: 'Get all 15 DOGE miners to level 25', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 15, level: 25 },
+    doge_fifteen_miners_level_50: { id: 'doge_fifteen_miners_level_50', name: 'DOGE Full Power', description: 'Get all 15 DOGE miners to level 50', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 15, level: 50 },
+    doge_fifteen_miners_level_100: { id: 'doge_fifteen_miners_level_100', name: 'DOGE Full Potential', description: 'Get all 15 DOGE miners to level 100', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 15, level: 100 },
+    doge_fifteen_miners_level_1000: { id: 'doge_fifteen_miners_level_1000', name: 'DOGE Ultimate Fleet', description: 'Get all 15 DOGE miners to level 1,000', emoji: 'Ð', category: 'equipment', type: 'n_miners', crypto: 'doge', count: 15, level: 1000 },
+
+    // Any miner achievements - per crypto (levels 5, 10, 25, 50, 100, 1k, 10k, 100k, 1m)
+    // BTC Any Miner
+    btc_any_miner_level_5: { id: 'btc_any_miner_level_5', name: 'BTC First Spark', description: 'Get any BTC miner to level 5', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 5 },
+    btc_any_miner_level_10: { id: 'btc_any_miner_level_10', name: 'BTC First Step', description: 'Get any BTC miner to level 10', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 10 },
+    btc_any_miner_level_25: { id: 'btc_any_miner_level_25', name: 'BTC Rising Power', description: 'Get any BTC miner to level 25', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 25 },
+    btc_any_miner_level_50: { id: 'btc_any_miner_level_50', name: 'BTC Master Miner', description: 'Get any BTC miner to level 50', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 50 },
+    btc_any_miner_level_100: { id: 'btc_any_miner_level_100', name: 'BTC Rising Star', description: 'Get any BTC miner to level 100', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 100 },
+    btc_any_miner_level_1000: { id: 'btc_any_miner_level_1000', name: 'BTC Legendary Miner', description: 'Get any BTC miner to level 1,000', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 1000 },
+    btc_any_miner_level_10000: { id: 'btc_any_miner_level_10000', name: 'BTC Godly Miner', description: 'Get any BTC miner to level 10,000', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 10000 },
+    btc_any_miner_level_100000: { id: 'btc_any_miner_level_100000', name: 'BTC Supreme Miner', description: 'Get any BTC miner to level 100,000', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 100000 },
+    btc_any_miner_level_250000: { id: 'btc_any_miner_level_250000', name: 'BTC Transcendent Miner', description: 'Get any BTC miner to level 250,000', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 250000 },
+    btc_any_miner_level_500000: { id: 'btc_any_miner_level_500000', name: 'BTC Eternal Miner', description: 'Get any BTC miner to level 500,000', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 500000 },
+    btc_any_miner_level_1000000: { id: 'btc_any_miner_level_1000000', name: 'BTC Infinite Miner', description: 'Get any BTC miner to level 1,000,000', emoji: '₿', category: 'equipment', type: 'any_miner', crypto: 'btc', level: 1000000 },
+
+    // ETH Any Miner
+    eth_any_miner_level_5: { id: 'eth_any_miner_level_5', name: 'ETH First Spark', description: 'Get any ETH miner to level 5', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 5 },
+    eth_any_miner_level_10: { id: 'eth_any_miner_level_10', name: 'ETH First Step', description: 'Get any ETH miner to level 10', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 10 },
+    eth_any_miner_level_25: { id: 'eth_any_miner_level_25', name: 'ETH Rising Power', description: 'Get any ETH miner to level 25', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 25 },
+    eth_any_miner_level_50: { id: 'eth_any_miner_level_50', name: 'ETH Master Miner', description: 'Get any ETH miner to level 50', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 50 },
+    eth_any_miner_level_100: { id: 'eth_any_miner_level_100', name: 'ETH Rising Star', description: 'Get any ETH miner to level 100', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 100 },
+    eth_any_miner_level_1000: { id: 'eth_any_miner_level_1000', name: 'ETH Legendary Miner', description: 'Get any ETH miner to level 1,000', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 1000 },
+    eth_any_miner_level_10000: { id: 'eth_any_miner_level_10000', name: 'ETH Godly Miner', description: 'Get any ETH miner to level 10,000', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 10000 },
+    eth_any_miner_level_100000: { id: 'eth_any_miner_level_100000', name: 'ETH Supreme Miner', description: 'Get any ETH miner to level 100,000', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 100000 },
+    eth_any_miner_level_250000: { id: 'eth_any_miner_level_250000', name: 'ETH Transcendent Miner', description: 'Get any ETH miner to level 250,000', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 250000 },
+    eth_any_miner_level_500000: { id: 'eth_any_miner_level_500000', name: 'ETH Eternal Miner', description: 'Get any ETH miner to level 500,000', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 500000 },
+    eth_any_miner_level_1000000: { id: 'eth_any_miner_level_1000000', name: 'ETH Infinite Miner', description: 'Get any ETH miner to level 1,000,000', emoji: 'Ξ', category: 'equipment', type: 'any_miner', crypto: 'eth', level: 1000000 },
+
+    // DOGE Any Miner
+    doge_any_miner_level_5: { id: 'doge_any_miner_level_5', name: 'DOGE First Spark', description: 'Get any DOGE miner to level 5', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 5 },
+    doge_any_miner_level_10: { id: 'doge_any_miner_level_10', name: 'DOGE First Step', description: 'Get any DOGE miner to level 10', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 10 },
+    doge_any_miner_level_25: { id: 'doge_any_miner_level_25', name: 'DOGE Rising Power', description: 'Get any DOGE miner to level 25', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 25 },
+    doge_any_miner_level_50: { id: 'doge_any_miner_level_50', name: 'DOGE Master Miner', description: 'Get any DOGE miner to level 50', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 50 },
+    doge_any_miner_level_100: { id: 'doge_any_miner_level_100', name: 'DOGE Rising Star', description: 'Get any DOGE miner to level 100', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 100 },
+    doge_any_miner_level_1000: { id: 'doge_any_miner_level_1000', name: 'DOGE Legendary Miner', description: 'Get any DOGE miner to level 1,000', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 1000 },
+    doge_any_miner_level_10000: { id: 'doge_any_miner_level_10000', name: 'DOGE Godly Miner', description: 'Get any DOGE miner to level 10,000', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 10000 },
+    doge_any_miner_level_100000: { id: 'doge_any_miner_level_100000', name: 'DOGE Supreme Miner', description: 'Get any DOGE miner to level 100,000', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 100000 },
+    doge_any_miner_level_250000: { id: 'doge_any_miner_level_250000', name: 'DOGE Transcendent Miner', description: 'Get any DOGE miner to level 250,000', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 250000 },
+    doge_any_miner_level_500000: { id: 'doge_any_miner_level_500000', name: 'DOGE Eternal Miner', description: 'Get any DOGE miner to level 500,000', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 500000 },
+    doge_any_miner_level_1000000: { id: 'doge_any_miner_level_1000000', name: 'DOGE Infinite Miner', description: 'Get any DOGE miner to level 1,000,000', emoji: 'Ð', category: 'equipment', type: 'any_miner', crypto: 'doge', level: 1000000 },
 
     // ============ POWER ============
     power_1mw: { id: 'power_1mw', name: 'Power User', description: 'Reach 1 MW of power consumption', emoji: '⚡', category: 'power', threshold: 1000000 },
+    power_10mw: { id: 'power_10mw', name: 'Industrial Power', description: 'Reach 10 MW of power consumption', emoji: '🏭', category: 'power', threshold: 10000000 },
+    power_100mw: { id: 'power_100mw', name: 'City Power', description: 'Reach 100 MW of power consumption', emoji: '🏙️', category: 'power', threshold: 100000000 },
     power_1gw: { id: 'power_1gw', name: 'Gigantic Setup', description: 'Reach 1 GW of power consumption', emoji: '⚡', category: 'power', threshold: 1000000000 },
     power_1tw: { id: 'power_1tw', name: 'Planetary Scale', description: 'Reach 1 TW of power consumption', emoji: '⚡', category: 'power', threshold: 1000000000000 },
     power_1pw: { id: 'power_1pw', name: 'Star Power', description: 'Reach 1 PW of power consumption', emoji: '⭐', category: 'power', threshold: 1000000000000000 },
+    power_1ew: { id: 'power_1ew', name: 'Galactic Force', description: 'Reach 1 EW of power consumption', emoji: '🌌', category: 'power', threshold: 1000000000000000000 },
+    power_1zw: { id: 'power_1zw', name: 'Universal Power', description: 'Reach 1 ZW of power consumption', emoji: '🪐', category: 'power', threshold: 1000000000000000000000 },
+    power_1yw: { id: 'power_1yw', name: 'Omnipotent', description: 'Reach 1 YW of power consumption', emoji: '✨', category: 'power', threshold: 1000000000000000000000000 },
 
     // ============ CRYPTO HOLDINGS ============
     own_1_btc: { id: 'own_1_btc', name: 'Bitcoin Holder', description: 'Own 1 BTC', emoji: '₿', category: 'holdings', threshold: 1, type: 'btc' },
     own_10_btc: { id: 'own_10_btc', name: 'BTC Whale Starter', description: 'Own 10 BTC', emoji: '₿', category: 'holdings', threshold: 10, type: 'btc' },
     own_100_btc: { id: 'own_100_btc', name: 'BTC Whale', description: 'Own 100 BTC', emoji: '₿', category: 'holdings', threshold: 100, type: 'btc' },
     own_1000_btc: { id: 'own_1000_btc', name: 'BTC Titan', description: 'Own 1000 BTC', emoji: '💎', category: 'holdings', threshold: 1000, type: 'btc' },
+    own_10000_btc: { id: 'own_10000_btc', name: 'BTC Deity', description: 'Own 10,000 BTC', emoji: '👑', category: 'holdings', threshold: 10000, type: 'btc' },
+    own_1e6_btc: { id: 'own_1e6_btc', name: 'Bitcoin Millionaire', description: 'Own 1 Million BTC', emoji: '💰', category: 'holdings', threshold: 1e6, type: 'btc' },
+    own_1e15_btc: { id: 'own_1e15_btc', name: 'Bitcoin Quadrillionaire', description: 'Own 1 Quadrillion BTC', emoji: '🌌', category: 'holdings', threshold: 1e15, type: 'btc' },
+    own_1e50_btc: { id: 'own_1e50_btc', name: 'Bitcoin Quindecillion', description: 'Own 10^50 BTC', emoji: '✨', category: 'holdings', threshold: 1e50, type: 'btc' },
 
     own_50_eth: { id: 'own_50_eth', name: 'Ethereum Collector', description: 'Own 50 ETH', emoji: 'Ξ', category: 'holdings', threshold: 50, type: 'eth' },
     own_100_eth: { id: 'own_100_eth', name: 'Ethereum Hodler', description: 'Own 100 ETH', emoji: 'Ξ', category: 'holdings', threshold: 100, type: 'eth' },
     own_1000_eth: { id: 'own_1000_eth', name: 'Ethereum Whale', description: 'Own 1000 ETH', emoji: 'Ξ', category: 'holdings', threshold: 1000, type: 'eth' },
+    own_10000_eth: { id: 'own_10000_eth', name: 'Ethereum Deity', description: 'Own 10,000 ETH', emoji: '👑', category: 'holdings', threshold: 10000, type: 'eth' },
+    own_1e6_eth: { id: 'own_1e6_eth', name: 'Ethereum Millionaire', description: 'Own 1 Million ETH', emoji: '💰', category: 'holdings', threshold: 1e6, type: 'eth' },
+    own_1e15_eth: { id: 'own_1e15_eth', name: 'Ethereum Quadrillionaire', description: 'Own 1 Quadrillion ETH', emoji: '🌌', category: 'holdings', threshold: 1e15, type: 'eth' },
+    own_1e50_eth: { id: 'own_1e50_eth', name: 'Ethereum Quindecillion', description: 'Own 10^50 ETH', emoji: '✨', category: 'holdings', threshold: 1e50, type: 'eth' },
 
     own_1m_doge: { id: 'own_1m_doge', name: 'Doge Millionaire', description: 'Own 1,000,000 DOGE', emoji: 'Ð', category: 'holdings', threshold: 1000000, type: 'doge' },
     own_1b_doge: { id: 'own_1b_doge', name: 'Doge Billionaire', description: 'Own 1,000,000,000 DOGE', emoji: 'Ð', category: 'holdings', threshold: 1000000000, type: 'doge' },
+    own_1t_doge: { id: 'own_1t_doge', name: 'Doge Trillionaire', description: 'Own 1,000,000,000,000 DOGE', emoji: '💫', category: 'holdings', threshold: 1000000000000, type: 'doge' },
+    own_1e15_doge: { id: 'own_1e15_doge', name: 'Doge Quadrillionaire', description: 'Own 1 Quadrillion DOGE', emoji: '🌌', category: 'holdings', threshold: 1e15, type: 'doge' },
+    own_1e50_doge: { id: 'own_1e50_doge', name: 'Doge Quindecillion', description: 'Own 10^50 DOGE', emoji: '✨', category: 'holdings', threshold: 1e50, type: 'doge' },
 
     // ============ STAKING ============
     first_stake: { id: 'first_stake', name: 'First Stake', description: 'Stake your first crypto', emoji: '📦', category: 'staking' },
@@ -215,7 +307,9 @@ function initAchievements() {
 }
 
 // Check all achievement conditions and unlock if conditions are met
-function checkAchievements() {
+function checkAchievements(powerUsed = 0) {
+    const totalPowerUsed = powerUsed;
+
     Object.keys(achievementDefinitions).forEach(id => {
         const achievement = achievementDefinitions[id];
         const state = achievementsData.achievements[id];
@@ -252,7 +346,7 @@ function checkAchievements() {
             }
         }
 
-        // ========== ALL MINERS LEVEL 1+ / 10+ ==========
+        // ========== ALL MINERS LEVEL 10+ / 100+ / 1000+ / 10000+ ==========
         else if (achievement.type === 'all_miners') {
             const { level } = achievement;
             const btcAllLevel = btcUpgrades.every(u => u.level >= level);
@@ -263,12 +357,35 @@ function checkAchievements() {
             }
         }
 
-        // ========== ANY MINER LEVEL 50/100 ==========
+        // ========== ANY MINER LEVEL (PER CRYPTO OR CROSS-CRYPTO) ==========
         else if (achievement.type === 'any_miner') {
-            const { level } = achievement;
-            const anyLevel = [...btcUpgrades, ...ethUpgrades, ...dogeUpgrades].some(u => u.level >= level);
-            if (anyLevel) {
-                unlocked = true;
+            const { crypto, level } = achievement;
+            if (crypto) {
+                // Per-crypto any miner achievement
+                const upgrades = crypto === 'btc' ? btcUpgrades : crypto === 'eth' ? ethUpgrades : dogeUpgrades;
+                const anyLevel = upgrades.some(u => u.level >= level);
+                if (anyLevel) {
+                    unlocked = true;
+                }
+            } else {
+                // Cross-crypto any miner achievement (for legacy support)
+                const anyLevel = [...btcUpgrades, ...ethUpgrades, ...dogeUpgrades].some(u => u.level >= level);
+                if (anyLevel) {
+                    unlocked = true;
+                }
+            }
+        }
+
+        // ========== N MINERS AT SPECIFIC LEVEL (PER CRYPTO) ==========
+        else if (achievement.type === 'n_miners') {
+            const { crypto, count, level } = achievement;
+            if (crypto) {
+                // Per-crypto achievement
+                const upgrades = crypto === 'btc' ? btcUpgrades : crypto === 'eth' ? ethUpgrades : dogeUpgrades;
+                const cryptoCount = upgrades.filter(u => u.level >= level).length;
+                if (cryptoCount >= count) {
+                    unlocked = true;
+                }
             }
         }
 
@@ -291,6 +408,9 @@ function checkAchievements() {
         }
 
         // ========== STAKING ==========
+        else if (id === 'first_stake' && typeof stakingEarnings !== 'undefined' && (stakingEarnings.stakedBTC > 0 || stakingEarnings.stakedETH > 0 || stakingEarnings.stakedDOGE > 0)) {
+            unlocked = true;
+        }
         else if (id === 'stake_1_btc' && typeof stakingEarnings !== 'undefined' && stakingEarnings.stakedBTC >= 1) {
             unlocked = true;
         }
@@ -337,6 +457,16 @@ function checkAchievements() {
         else if (id === 'hack_perfectionist' && typeof hackingConsecutiveWins !== 'undefined' && hackingConsecutiveWins >= 3) {
             unlocked = true;
         }
+        // Difficulty-based hacking achievements
+        else if (id === 'hack_master_easy' && typeof hackingGamesWonByDifficulty !== 'undefined' && hackingGamesWonByDifficulty.EASY >= 10) {
+            unlocked = true;
+        }
+        else if (id === 'hack_master_medium' && typeof hackingGamesWonByDifficulty !== 'undefined' && hackingGamesWonByDifficulty.MEDIUM >= 10) {
+            unlocked = true;
+        }
+        else if (id === 'hack_master_hard' && typeof hackingGamesWonByDifficulty !== 'undefined' && hackingGamesWonByDifficulty.HARD >= 5) {
+            unlocked = true;
+        }
 
         // ========== BREAKING SUPPLY CAPS ==========
         else if (achievement.type === 'btc_supply' && btcBalance >= achievement.threshold) {
@@ -361,6 +491,42 @@ function checkAchievements() {
             showAchievementNotification(id);
             state.notificationShown = true;
             saveGame(); // Save the notificationShown flag
+
+            // Update counters dynamically
+            updateAchievementCounters();
+        }
+    });
+}
+
+// Update all achievement counters dynamically
+function updateAchievementCounters() {
+    // Update total counter
+    let totalUnlocked = 0;
+    let totalAchievements = 0;
+    Object.keys(achievementDefinitions).forEach(id => {
+        totalAchievements++;
+        if (achievementsData.achievements[id] && achievementsData.achievements[id].unlocked) {
+            totalUnlocked++;
+        }
+    });
+
+    const modalCounter = document.getElementById('modal-achievement-counter');
+    if (modalCounter) {
+        modalCounter.textContent = `${totalUnlocked}/${totalAchievements}`;
+    }
+
+    // Update category counters
+    const categoryHeaders = document.querySelectorAll('.achievement-category-header');
+    categoryHeaders.forEach(header => {
+        const counter = header.querySelector('.category-counter');
+        if (counter) {
+            const h3Text = header.querySelector('h3').textContent;
+            // Get category from data attribute or recalculate
+            const unlockedItems = header.parentElement.querySelector('.category-content')?.querySelectorAll('.achievement-item:not(.achievement-locked)').length || 0;
+            const totalItems = header.parentElement.querySelector('.category-content')?.querySelectorAll('.achievement-item').length || 0;
+            if (totalItems > 0) {
+                counter.textContent = `${unlockedItems}/${totalItems}`;
+            }
         }
     });
 }
@@ -559,7 +725,7 @@ function processNotificationQueue() {
     document.body.appendChild(notification);
     activeNotifications.push(notification);
 
-    // Display for 2 seconds, then remove and process next in queue
+    // Display for 3 seconds, then remove and process next in queue
     setTimeout(() => {
         notification.remove();
         activeNotifications = activeNotifications.filter(n => n !== notification);
@@ -569,7 +735,7 @@ function processNotificationQueue() {
 
         // Process next notification in queue
         processNotificationQueue();
-    }, 2000);
+    }, 3000);
 }
 
 // Update positions of all active notifications
@@ -607,6 +773,9 @@ function populateAchievementsModal() {
     container.innerHTML = '';
 
     const categories = {};
+    let totalAchievements = 0;
+    let unlockedTotal = 0;
+
     Object.keys(achievementDefinitions).forEach(id => {
         const achievement = achievementDefinitions[id];
         const category = achievement.category;
@@ -614,7 +783,17 @@ function populateAchievementsModal() {
             categories[category] = [];
         }
         categories[category].push({ id, ...achievement });
+        totalAchievements++;
+        if (achievementsData.achievements[id] && achievementsData.achievements[id].unlocked) {
+            unlockedTotal++;
+        }
     });
+
+    // Update modal header counter
+    const modalCounter = document.getElementById('modal-achievement-counter');
+    if (modalCounter) {
+        modalCounter.textContent = `${unlockedTotal}/${totalAchievements}`;
+    }
 
     const categoryLabels = {
         earnings: '💵 Earnings Milestones',
@@ -622,16 +801,29 @@ function populateAchievementsModal() {
         power: '⚡ Power',
         holdings: '₿ Crypto Holdings',
         staking: '📦 Staking',
-        ascension: '🔄 Ascension',
-        hacking: '🔐 Hacking',
-        session: '⚡ Session Challenges'
+        ascension: '🔄 Rugpulls',
+        hacking: '🎮 Minigames',
+        session: '⚡ Session Challenges',
+        supply_cap: '🏆 Supply Cap'
     };
 
     Object.keys(categories).forEach(category => {
         const categoryHeader = document.createElement('div');
         categoryHeader.className = 'achievement-category-header';
-        categoryHeader.innerHTML = `<h3>${categoryLabels[category] || category}</h3>`;
+        const count = categories[category].length;
+        const unlockedCount = categories[category].filter(a => achievementsData.achievements[a.id] && achievementsData.achievements[a.id].unlocked).length;
+
+        categoryHeader.innerHTML = `
+            <div class="category-header-content">
+                <h3>${categoryLabels[category] || category} <span class="category-counter">${unlockedCount}/${count}</span></h3>
+                <span class="category-toggle">▼</span>
+            </div>
+        `;
+        categoryHeader.style.cursor = 'pointer';
         container.appendChild(categoryHeader);
+
+        const categoryContent = document.createElement('div');
+        categoryContent.className = 'category-content';
 
         categories[category].forEach(achievement => {
             // Ensure the achievement has been initialized in achievementsData
@@ -655,8 +847,8 @@ function populateAchievementsModal() {
                 const dateStr = unlockedDate.toLocaleDateString();
                 achievementDiv.innerHTML = `
                     <div class="achievement-emoji">${achievement.emoji}</div>
-                    <div class="achievement-info">
-                        <div class="achievement-name">${achievement.name}</div>
+                    <div class="achievement-name-only">${achievement.name}</div>
+                    <div class="achievement-hover-info">
                         <div class="achievement-desc">${achievement.description}</div>
                         <div class="achievement-date">Unlocked: ${dateStr}</div>
                     </div>
@@ -664,14 +856,23 @@ function populateAchievementsModal() {
             } else {
                 achievementDiv.innerHTML = `
                     <div class="achievement-emoji">❓</div>
-                    <div class="achievement-info">
-                        <div class="achievement-name">???</div>
+                    <div class="achievement-name-only">Locked</div>
+                    <div class="achievement-hover-info">
                         <div class="achievement-desc">???</div>
                     </div>
                 `;
             }
 
-            container.appendChild(achievementDiv);
+            categoryContent.appendChild(achievementDiv);
+        });
+
+        container.appendChild(categoryContent);
+
+        // Add click handler for collapse/expand
+        categoryHeader.addEventListener('click', () => {
+            categoryContent.classList.toggle('collapsed');
+            const toggle = categoryHeader.querySelector('.category-toggle');
+            toggle.textContent = categoryContent.classList.contains('collapsed') ? '▶' : '▼';
         });
     });
 }

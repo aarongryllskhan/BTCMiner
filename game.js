@@ -334,6 +334,10 @@
     let lastStatsUpdateTime = 0; // Track when stat updates were last done (250ms interval)
     let lastChartScaleCalcTime = 0; // Track when chart min/max scale was last calculated (60s interval)
     let lastChartDataLength = 0; // Track previous chart data length to detect new data
+    let lastAscensionUIUpdateTime = 0; // Track when rugpull UI was last updated (throttle to 10000ms)
+    let lastMilestoneCheckTime = 0; // Track when milestone check was last called (throttle to 2000ms)
+    let lastAchievementCheckTime = 0; // Track when achievements were last checked (throttle to 1000ms)
+    let rugpullMilestoneAnnounced = false; // Flag to stop checking once goal is hit and announced
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -349,6 +353,7 @@
     let speedBoostMultiplier = 1.0;
     let hackingGamesPlayed = 0;
     let hackingGamesWon = 0;
+    let hackingGamesWonByDifficulty = { EASY: 0, MEDIUM: 0, HARD: 0 }; // Track wins per difficulty for achievements
     let hackingConsecutiveWins = 0;
     let hackingNextNotificationTime = 0;
     let hackingTotalRewardsEarned = 0;
@@ -1014,6 +1019,7 @@
             hackingData: {
                 gamesPlayed: hackingGamesPlayed,
                 gamesWon: hackingGamesWon,
+                gamesWonByDifficulty: hackingGamesWonByDifficulty,
                 consecutiveWins: hackingConsecutiveWins,
                 totalRewardsEarned: hackingTotalRewardsEarned,
                 speedBoostEndTime: speedBoostActive ? speedBoostEndTime : 0,
@@ -1045,19 +1051,12 @@
 
         try {
             const saveString = JSON.stringify(gameState);
-            console.log('=== ATTEMPTING SAVE ===');
-            console.log('BTC Balance:', btcBalance);
-            console.log('Dollar Balance:', dollarBalance);
-            console.log('Ascension Data:', gameState.ascensionData);
-            console.log('Save string length:', saveString.length, 'bytes');
 
             localStorage.setItem('satoshiTerminalSave', saveString);
 
             // Verify save worked
             const testLoad = localStorage.getItem('satoshiTerminalSave');
-            if (testLoad && testLoad.length > 0) {
-                console.log('✓ SAVE SUCCESSFUL - Verified in localStorage');
-            } else {
+            if (!testLoad || testLoad.length === 0) {
                 console.error('✗ SAVE FAILED - Could not verify in localStorage');
             }
         } catch (error) {
@@ -1067,28 +1066,20 @@
     }
 
 function loadGame() {
-    console.log('=== LOAD GAME CALLED ===');
     try {
         const savedData = localStorage.getItem('satoshiTerminalSave');
-        console.log('localStorage.getItem returned:', savedData ? 'DATA FOUND' : 'NULL/UNDEFINED');
 
         if (!savedData) {
-            console.log('✗ No saved game found, starting fresh');
             return;
         }
 
-        console.log('✓ Loading game... Save data size:', savedData.length, 'bytes');
         const state = JSON.parse(savedData);
-        console.log('✓ Save data parsed successfully');
-        console.log('Loaded BTC balance:', state.btcBalance);
-        console.log('Loaded dollar balance:', state.dollarBalance);
 
         // Load achievements data FIRST before any game logic
         if (state.achievements && typeof achievementsData !== 'undefined') {
             Object.keys(state.achievements).forEach(id => {
                 achievementsData.achievements[id] = state.achievements[id];
             });
-            console.log('🏆 Achievements loaded early:', Object.values(achievementsData.achievements).filter(a => a.unlocked).length, 'unlocked');
         }
 
         // Load Bitcoin data
@@ -1230,7 +1221,6 @@ function loadGame() {
             if (typeof window.lifetimeEarningsThisRugpull !== 'undefined') {
                 if (window.lifetimeEarningsThisRugpull === 0 && lifetimeEarnings > 0) {
                     window.lifetimeEarningsThisRugpull = lifetimeEarnings;
-                    console.log('[LOAD] Synced lifetimeEarningsThisRugpull to:', lifetimeEarnings);
                 }
             }
             // Update UI to show/hide rugpull store button based on loaded currency
@@ -1243,6 +1233,7 @@ function loadGame() {
         if (state.hackingData) {
             hackingGamesPlayed = state.hackingData.gamesPlayed || 0;
             hackingGamesWon = state.hackingData.gamesWon || 0;
+            hackingGamesWonByDifficulty = state.hackingData.gamesWonByDifficulty || { EASY: 0, MEDIUM: 0, HARD: 0 };
             hackingConsecutiveWins = state.hackingData.consecutiveWins || 0;
             hackingTotalRewardsEarned = state.hackingData.totalRewardsEarned || 0;
             hackingNextNotificationTime = state.hackingData.nextNotificationTime || 0;
@@ -1322,12 +1313,6 @@ function loadGame() {
         const maxOfflineSeconds = 14400; // Cap at 4 hours
         if (offlineSeconds > maxOfflineSeconds) offlineSeconds = maxOfflineSeconds;
 
-        console.log('=== OFFLINE EARNINGS DEBUG ===');
-        console.log('Last save time:', new Date(lastSaveTime));
-        console.log('Current time:', new Date(currentTime));
-        console.log('Offline seconds:', offlineSeconds);
-        console.log('Will show modal:', offlineSeconds >= 5);
-
         // Cap offline time at 4 hours (14400 seconds) + skill tree bonuses
         const BASE_OFFLINE_CAP = 14400; // 4 hours
         const MAX_OFFLINE_SECONDS = (typeof getOfflineCap === 'function') ? getOfflineCap() : BASE_OFFLINE_CAP;
@@ -1399,10 +1384,7 @@ function loadGame() {
             sessionEarnings += btcUsdValue; // Offline earnings count toward session
             // Update rugpull tracker for offline crypto earnings
             if (typeof window.rugpullAddEarnings === 'function') {
-                console.log('[OFFLINE] Adding BTC earnings to rugpull:', btcUsdValue);
                 window.rugpullAddEarnings(btcUsdValue);
-            } else {
-                console.log('[OFFLINE] ✗ rugpullAddEarnings NOT available for BTC');
             }
         }
         if (offlineEthEarnings > 0) {
@@ -1441,9 +1423,6 @@ function loadGame() {
                 wasCapped: wasTimeCaped,
                 cappedSeconds: cappedOfflineSeconds
             };
-            console.log('Offline earnings set:', window.offlineEarningsToShow);
-        } else {
-            console.log('Time away too short for offline modal:', offlineSeconds, 'seconds');
         }
 
         updateUI();
@@ -1452,7 +1431,6 @@ function loadGame() {
         if (state.chartHistory && state.chartHistory.length > 0) {
             chartHistory = state.chartHistory;
             chartTimestamps = state.chartTimestamps || [];
-            console.log('Chart data restored:', chartHistory.length, 'data points');
             // Restore individual crypto chart histories
             if (state.btcChartHistory) btcChartHistory = state.btcChartHistory;
             if (state.ethChartHistory) ethChartHistory = state.ethChartHistory;
@@ -1468,7 +1446,6 @@ function loadGame() {
                 dogeChartHistory.unshift(0);
                 cashChartHistory.unshift(0);
                 chartTimestamps.unshift({ time: firstTimestamp - 1000, value: 0, cash: 0, btc: 0, eth: 0, doge: 0 });
-                console.log('Prepended $0 starting point to chart');
             }
         } else {
             // Start fresh if no saved chart data
@@ -1478,7 +1455,6 @@ function loadGame() {
             ethChartHistory = [];
             dogeChartHistory = [];
             cashChartHistory = [];
-            console.log('No saved chart data, starting fresh');
         }
 
         // Restore power chart history from save
@@ -1487,19 +1463,12 @@ function loadGame() {
             powerChartColors = state.powerChartColors || [];
             // Don't restore old timestamps - start fresh with current time to avoid showing stale data
             hashRateChartTimestamps = [];
-            console.log('Power chart data restored:', powerChartHistory.length, 'data points');
         } else {
             // Start fresh if no saved power chart data
             powerChartHistory = [];
             powerChartColors = [];
             hashRateChartTimestamps = [];
-            console.log('No saved power chart data, starting fresh');
         }
-
-        // Debug log
-        console.log('✓ LOAD COMPLETE');
-        console.log('Final balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
-        console.log('Chart history length:', chartHistory.length);
     } catch (error) {
         console.error('✗ ERROR loading game from localStorage:', error);
         console.error('Error stack:', error.stack);
@@ -2207,6 +2176,12 @@ function loadGame() {
         }
     };
 
+    // Reset rugpull milestone announcement flag when new rugpull starts
+    window.resetRugpullMilestoneFlag = function() {
+        rugpullMilestoneAnnounced = false;
+        console.log('🔄 Rugpull milestone announcement flag reset - ready to declare next goal');
+    };
+
     function resetGame() {
         const modal = document.getElementById('reset-save-modal');
         if (modal) {
@@ -2325,6 +2300,11 @@ function loadGame() {
             // Reset lifetime earnings display (rugpull.js variable)
             if (typeof window.rugpullState !== 'undefined') {
                 window.rugpullState.lifetimeEarningsDisplay = 0;
+            }
+
+            // Also reset rugpull progress counter directly
+            if (typeof window.lifetimeEarningsThisRugpull !== 'undefined') {
+                window.lifetimeEarningsThisRugpull = 0;
             }
 
             // Reset hacking minigame data
@@ -2612,7 +2592,7 @@ function loadGame() {
 
         btcUpgrades.forEach((u, i) => {
             const btn = document.createElement('button');
-            btn.className = 'u-item';
+            btn.className = 'u-item btn-primary btn-primary-btc';
             btn.id = `up-${u.id}`;
             if (u.isClickUpgrade) {
                 btn.classList.add('click-upgrade');
@@ -2682,7 +2662,7 @@ function loadGame() {
 
         ethUpgrades.forEach((u, i) => {
             const btn = document.createElement('button');
-            btn.className = 'u-item';
+            btn.className = 'u-item btn-primary btn-primary-eth';
             btn.id = `eth-up-${u.id}`;
             if (u.isClickUpgrade) {
                 btn.classList.add('click-upgrade');
@@ -2728,7 +2708,7 @@ function loadGame() {
 
         dogeUpgrades.forEach((u, i) => {
             const btn = document.createElement('button');
-            btn.className = 'u-item';
+            btn.className = 'u-item btn-primary btn-primary-doge';
             btn.id = `doge-up-${u.id}`;
             if (u.isClickUpgrade) {
                 btn.classList.add('click-upgrade');
@@ -3590,6 +3570,7 @@ function loadGame() {
 
         if (won) {
             hackingGamesWon++;
+            hackingGamesWonByDifficulty[hackingGameDifficulty]++;
             hackingConsecutiveWins++;
 
             // Calculate multipliers
@@ -3625,7 +3606,7 @@ function loadGame() {
             // Check achievements (delay to ensure UI is ready)
             if (typeof checkAchievements === 'function') {
                 setTimeout(() => {
-                    checkAchievements();
+                    checkAchievements(totalPowerUsed);
                 }, 100);
             }
         } else {
@@ -5851,15 +5832,12 @@ function purchaseGlobalBTCMultiplier() {
     const cost = getNextMultiplierCost(btcMultiplierLevel);
 
     if (dollarBalance < cost) {
-        console.log(`[DEBUG] Cannot afford BTC multiplier. Cost: $${cost}, Balance: $${dollarBalance}`);
         return;
     }
 
     dollarBalance -= cost;
     hardwareEquity += cost;
     btcMultiplierLevel++;
-
-    console.log(`[DEBUG] Purchased BTC multiplier ${btcMultiplierLevel}! Next cost: $${getNextMultiplierCost(btcMultiplierLevel)}`);
 
     // Recalculate yields for all BTC miners
     const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
@@ -6609,6 +6587,9 @@ function updateManualHashRateButtons() {
 
     // Format watts to power units: W, KW, MW, GW, TW, PW
     function formatPower(watts) {
+        if (watts >= 1e24) return (watts / 1e24).toFixed(2) + ' YW';  // Yottawatt
+        if (watts >= 1e21) return (watts / 1e21).toFixed(2) + ' ZW';  // Zettawatt
+        if (watts >= 1e18) return (watts / 1e18).toFixed(2) + ' EW';  // Exawatt
         if (watts >= 1e15) return (watts / 1e15).toFixed(2) + ' PW';  // Petawatt
         if (watts >= 1e12) return (watts / 1e12).toFixed(2) + ' TW';  // Terawatt
         if (watts >= 1e9)  return (watts / 1e9).toFixed(2) + ' GW';   // Gigawatt
@@ -6798,16 +6779,22 @@ function updateManualHashRateButtons() {
             lastSyncedSessionEarnings = sessionEarnings;
         }
 
-        // Update rugpull progress display and UI (calls rugpull.js function)
-        if (typeof window.updateAscensionUI === 'function') {
-            window.updateAscensionUI();
-        } else {
-            updateRugpullProgressDisplay();
+        // Update rugpull progress display and UI (calls rugpull.js function) - throttle to 10000ms
+        if (now - lastAscensionUIUpdateTime >= 10000) {
+            lastAscensionUIUpdateTime = now;
+            if (typeof window.updateAscensionUI === 'function') {
+                window.updateAscensionUI();
+            } else {
+                updateRugpullProgressDisplay();
+            }
         }
 
-        // Check achievements every UI update
-        if (typeof checkAchievements === 'function') {
-            checkAchievements();
+        // Check achievements every 1000ms (throttle expensive iteration)
+        if (now - lastAchievementCheckTime >= 1000) {
+            lastAchievementCheckTime = now;
+            if (typeof checkAchievements === 'function') {
+                checkAchievements(totalPowerUsed);
+            }
         }
 
         // NOTE: Chart data collection has been moved to the main game loop (line ~7200)
@@ -7256,7 +7243,6 @@ function updateManualHashRateButtons() {
             bEl.style.opacity = '1';
             bEl.style.cursor = 'pointer';
         }
-        if (u.id === 1) console.log(`USB Miner: dollars=${dollarBalance}/${totalCost}, power=${totalPowerUsed}/${availablePower}, needed=${powerNeeded}, qty=${buyQuantity}, disabled=${shouldDisable}`);
 
         // Ensure button has relative positioning for overlay to work
         if (bEl.style.position !== 'absolute' && bEl.style.position !== 'fixed') {
@@ -7938,9 +7924,33 @@ dogeUpgrades.forEach(u => {
 
         // Chart data collection moved to main 1000ms loop for perfect timing
 
-        // Check for rugpull milestone
-        if (typeof window.checkRugpullMilestone === 'function') {
-            window.checkRugpullMilestone();
+        // Check for rugpull milestone (only until goal is announced, then stop calling to save CPU) - throttle to 2000ms
+        if (!rugpullMilestoneAnnounced && (now - lastMilestoneCheckTime >= 2000)) {
+            lastMilestoneCheckTime = now;
+            const hasCheckFunc = typeof window.checkRugpullMilestone === 'function';
+            const hasReqFunc = typeof window.getRugpullRequirement === 'function';
+            const earnings = window.lifetimeEarningsThisRugpull;
+
+            if (earnings > 0 && earnings % 5000000 < 100000) { // Debug every ~$5M
+                console.log('[MILESTONE-DEBUG] Check func: ' + hasCheckFunc + ', Req func: ' + hasReqFunc + ', Earnings: $' + earnings.toFixed(0));
+            }
+
+            if (hasCheckFunc) {
+                window.checkRugpullMilestone();
+
+                // Check if milestone was just announced
+                if (hasReqFunc) {
+                    const requirement = window.getRugpullRequirement();
+                    if (earnings > 0 && earnings % 1000000 < 100000) { // Log roughly every $1M in earnings
+                        console.log('[MILESTONE-CHECK] Earnings: $' + earnings.toFixed(0) + ' vs Requirement: $' + requirement.toFixed(0) + ' | Flag: ' + rugpullMilestoneAnnounced);
+                    }
+                    if (earnings >= requirement && earnings > 0) {
+                        rugpullMilestoneAnnounced = true;
+                        console.log('✅ RUGPULL MILESTONE ANNOUNCED - Earnings: $' + earnings.toFixed(0) + ' >= Requirement: $' + requirement.toFixed(0));
+                        console.log('🎯 Stopping milestone checks to save CPU - flag is now true');
+                    }
+                }
+            }
         }
 
     }, 100);

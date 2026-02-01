@@ -947,13 +947,10 @@ function checkTutorialProgress() {
     // Always update button state for Steps 1 and 2, regardless of trigger type
     if (step.id === 'manual_hash') {
         const totalCryptoValue = getTotalCryptoValue();
-        console.log(`🎓 Checking manual_hash condition: dollarBalance=${totalCryptoValue}`);
 
         // Update the "Got It!" button state for step 1
         const gotItButton = document.getElementById('tutorial-got-it-btn');
         const hasEarned30 = totalCryptoValue >= 30;
-
-        console.log(`🎓 Button state update: hasEarned30=${hasEarned30}, dollarBalance=${totalCryptoValue}, button exists=${!!gotItButton}`);
 
         if (gotItButton) {
             if (hasEarned30) {

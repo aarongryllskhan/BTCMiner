@@ -1,5 +1,3 @@
-console.log('🔴 RUGPULL.JS LOADING - START');
-
 // RUGPULL / ASCENSION SYSTEM
 // Cookie Clicker-style ascending system with permanent meta-upgrades
 // Players sacrifice current progress for permanent bonuses
@@ -760,6 +758,11 @@ function executeRugpull(reward) {
     // Reset milestone tracking for the new run (so popup only shows when NEW requirement is reached)
     lastShownMilestoneEarnings = 0;
     lifetimeEarningsThisRugpull = 0;  // Reset earnings counter for new run's rugpull tracking
+
+    // Reset rugpull milestone announcement flag so it will declare again when next goal is reached
+    if (typeof window.resetRugpullMilestoneFlag === 'function') {
+        window.resetRugpullMilestoneFlag();
+    }
 
     // Restore ascension data
     ascensionLevel = newAscensionLevel;
@@ -1972,7 +1975,6 @@ function updateMetaUpgradesUI() {
  * Get ascension data for saving/loading
  */
 function getAscensionData() {
-    console.log('[RUGPULL-SAVE] Saving lifetimeEarningsThisRugpull:', lifetimeEarningsThisRugpull);
     return {
         ascensionLevel,
         rugpullCurrency,
@@ -2043,6 +2045,8 @@ function resetAscensionData() {
     ascensionLevel = 0;
     rugpullCurrency = 0;
     lastShownMilestoneEarnings = 0;
+    lifetimeEarningsThisRugpull = 0;  // Reset rugpull progress
+    console.log('[RUGPULL-RESET] lifetimeEarningsThisRugpull reset to:', lifetimeEarningsThisRugpull);
     ascensionStats = {
         totalRunsCompleted: 0,
         currencyEarned: 0,
@@ -2330,7 +2334,6 @@ function updateAscensionUI() {
         requirementLabel = formatLargeNumber(requirement);
 
         earningsLabel = formatLargeNumber(lifetimeEarningsThisRugpull);
-        console.log('[RUGPULL-UI] Updating display - lifetimeEarningsThisRugpull:', lifetimeEarningsThisRugpull, 'formatted:', earningsLabel);
 
         // Update mobile version
         if (progressTextMobile) {
@@ -2487,10 +2490,6 @@ function closeGenericMessageModal() {
  * Type in console: testRugpull()
  */
 function testRugpull() {
-    console.log('TEST MODE: Showing rugpull offer...');
-    console.log('Current eligibility:', isRugpullEligible());
-    console.log('Lifetime earnings:', lifetimeEarnings);
-    console.log('BTC per second:', btcPerSec);
     showRugpullOffer();
 }
 
@@ -2504,8 +2503,6 @@ window.giveTestMillion = function() {
         setTestEarnings(1000000);
     }
     lastShownMilestoneEarnings = 0;
-    console.log('TEST: Set earnings to $1M');
-    console.log('Rugpull eligible:', isRugpullEligible());
     if (typeof updateUI === 'function') {
         updateUI();
     }
@@ -2520,8 +2517,6 @@ window.giveTestTenMillion = function() {
         setTestEarnings(10000000);
     }
     lastShownMilestoneEarnings = 0;
-    console.log('TEST: Set earnings to $10M');
-    console.log('Rugpull eligible:', isRugpullEligible());
     if (typeof updateUI === 'function') {
         updateUI();
     }
@@ -2536,8 +2531,6 @@ window.giveTestHundredMillion = function() {
         setTestEarnings(100000000);
     }
     lastShownMilestoneEarnings = 0;
-    console.log('TEST: Set earnings to $100M');
-    console.log('Rugpull eligible:', isRugpullEligible());
     if (typeof updateUI === 'function') {
         updateUI();
     }
@@ -2552,9 +2545,6 @@ window.giveTest10Billion = function() {
         setTestEarnings(10000000000);
     }
     lastShownMilestoneEarnings = 0;
-    console.log('TEST: Set earnings to $10B');
-    console.log('Tokens earned:', calculateRugpullReward());
-    console.log('Rugpull eligible:', isRugpullEligible());
     if (typeof updateUI === 'function') {
         updateUI();
     }
@@ -2569,9 +2559,6 @@ window.giveTest100Billion = function() {
         setTestEarnings(100000000000);
     }
     lastShownMilestoneEarnings = 0;
-    console.log('TEST: Set earnings to $100B');
-    console.log('Tokens earned:', calculateRugpullReward());
-    console.log('Rugpull eligible:', isRugpullEligible());
     if (typeof updateUI === 'function') {
         updateUI();
     }
@@ -2586,9 +2573,6 @@ window.giveTest1Trillion = function() {
         setTestEarnings(1000000000000);
     }
     lastShownMilestoneEarnings = 0;
-    console.log('TEST: Set earnings to $1T');
-    console.log('Tokens earned:', calculateRugpullReward());
-    console.log('Rugpull eligible:', isRugpullEligible());
     if (typeof updateUI === 'function') {
         updateUI();
     }
@@ -2597,11 +2581,8 @@ window.giveTest1Trillion = function() {
 // Commented out for now - causing issues
 // ensureMetaUpgradesInitialized();
 
-console.log('[RUGPULL] About to export functions to window');
-
 // Export testRugpull to window so it can be called from console
 window.testRugpull = testRugpull;
-console.log('[RUGPULL] ✓ Exported testRugpull');
 
 // Export metaUpgrades and upgradeToggleState to window so game.js can access them
 window.metaUpgrades = metaUpgrades;
@@ -2627,6 +2608,9 @@ window.updateCurrentRunEarnings = updateCurrentRunEarnings;
 
 // Export checkRugpullMilestone to window so game.js can call it
 window.checkRugpullMilestone = checkRugpullMilestone;
+
+// Export getRugpullRequirement to window so game.js can check if goal is reached
+window.getRugpullRequirement = getRugpullRequirement;
 
 // Create getter for lifetimeEarningsThisRugpull so it updates dynamically
 Object.defineProperty(window, 'lifetimeEarningsThisRugpull', {
@@ -2674,11 +2658,3 @@ window.resetRugpullTracker = function() {
     }
 };
 
-// Debug: Confirm exports are available
-console.log('[RUGPULL] ✓✓✓ RUGPULL.JS LOADED ✓✓✓');
-console.log('[RUGPULL] Exports set to window:', {
-    metaUpgradesAvailable: !!window.metaUpgrades,
-    auto_sell_crypto: window.metaUpgrades && window.metaUpgrades.auto_sell_crypto ? window.metaUpgrades.auto_sell_crypto : 'NOT FOUND',
-    upgradeToggleState: window.upgradeToggleState,
-    rugpullAddEarnings: typeof window.rugpullAddEarnings === 'function' ? '✓ AVAILABLE' : '✗ NOT AVAILABLE'
-});
