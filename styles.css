@@ -904,8 +904,31 @@
             .tab-btn { padding: 8px 6px !important; font-size: 0.7rem !important; }
         }
 
-        .u-item { padding: 10px; margin-bottom: 4px; }
-        
+        .u-item {
+            padding: 10px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            transition: all 0.15s ease;
+            background: #1a1a1a;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .u-item:hover:not(:disabled) {
+            border-color: #00dd77 !important;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.25) !important;
+            background: rgba(0, 255, 136, 0.02) !important;
+        }
+
+        .u-item:active:not(:disabled) {
+            transform: scale(0.98) translateY(1px) !important;
+            filter: brightness(1.1) !important;
+            box-shadow: 0 0 16px rgba(0, 255, 136, 0.6), inset 0 0 10px rgba(0, 255, 136, 0.2) !important;
+        }
+
         .nw-label { font-size: 1.5rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; margin-top: 0 !important; padding-top: 0 !important; margin-bottom: 8px; }
         .nw-amount {
             font-size: 5.625rem;
@@ -1046,6 +1069,15 @@
         .btn-primary-doge:hover:disabled {
             background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
             border-color: #c2a633 !important;
+        }
+
+        /* Manual Hash Rate Buttons - Override all active effects */
+        #btc-manual-hash-rate-btn.btn-primary-btc:active:not(:disabled),
+        #eth-manual-hash-rate-btn.btn-primary-eth:active:not(:disabled),
+        #doge-manual-hash-rate-btn.btn-primary-doge:active:not(:disabled) {
+            transform: none !important;
+            filter: brightness(1) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1) !important;
         }
 
         /* Secondary Buttons (Utilities, toggles) */
@@ -1192,15 +1224,95 @@
         }
 
         #power-upgrade-btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #00ff88 0%, #33ffaa 100%) !important;
-            border-color: #33ffaa !important;
+            background: linear-gradient(135deg, #00bb66 0%, #00dd88 100%) !important;
+            border-color: #00bb66 !important;
+            color: #fff !important;
+        }
+
+        #power-upgrade-btn:active:not(:disabled) {
+            transform: scale(0.98) translateY(1px) !important;
+            filter: brightness(1.1) !important;
+            box-shadow: 0 0 12px rgba(0, 221, 136, 0.5) !important;
             color: #fff !important;
         }
 
         #power-upgrade-btn.active {
-            background: linear-gradient(135deg, #00ff88 0%, #33ffaa 100%) !important;
-            border-color: #33ffaa !important;
-            color: #fff !important;
+            background: linear-gradient(135deg, #00bb66 0%, #00dd88 100%) !important;
+            border-color: #00bb66 !important;
+        }
+
+        /* Exchange Action Buttons (Sell, Stake, Unstake) */
+        .btn-exchange-action {
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 0.75rem;
+            width: 100%;
+            margin-top: 6px;
+            border: 1px solid;
+            background: #333;
+            transition: all 0.15s ease;
+        }
+
+        /* BTC Exchange Buttons */
+        .btn-exchange-btc {
+            color: #f7931a !important;
+            border-color: #f7931a !important;
+            background: #333 !important;
+        }
+
+        .btn-exchange-btc:hover:not(:disabled) {
+            background: rgba(247, 147, 26, 0.2) !important;
+            border-color: #ffaa1a !important;
+            color: #ffaa1a !important;
+            box-shadow: 0 0 8px rgba(247, 147, 26, 0.6) !important;
+        }
+
+        .btn-exchange-btc:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.2) !important;
+            box-shadow: 0 0 12px rgba(247, 147, 26, 0.8) !important;
+        }
+
+        /* ETH Exchange Buttons */
+        .btn-exchange-eth {
+            color: #627eea !important;
+            border-color: #627eea !important;
+            background: #333 !important;
+        }
+
+        .btn-exchange-eth:hover:not(:disabled) {
+            background: rgba(98, 126, 234, 0.2) !important;
+            border-color: #9099ff !important;
+            color: #9099ff !important;
+            box-shadow: 0 0 8px rgba(98, 126, 234, 0.6) !important;
+        }
+
+        .btn-exchange-eth:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.2) !important;
+            box-shadow: 0 0 12px rgba(98, 126, 234, 0.8) !important;
+        }
+
+        /* DOGE Exchange Buttons */
+        .btn-exchange-doge {
+            color: #c2a633 !important;
+            border-color: #c2a633 !important;
+            background: #333 !important;
+        }
+
+        .btn-exchange-doge:hover:not(:disabled) {
+            background: rgba(194, 166, 51, 0.2) !important;
+            border-color: #e0c857 !important;
+            color: #e0c857 !important;
+            box-shadow: 0 0 8px rgba(194, 166, 51, 0.6) !important;
+        }
+
+        .btn-exchange-doge:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.2) !important;
+            box-shadow: 0 0 12px rgba(194, 166, 51, 0.8) !important;
         }
 
         /* Protect tab buttons from JS overrides */
@@ -1222,29 +1334,34 @@
             flex: 1 !important;
         }
 
-        #btc-tab-btn { border-color: #f7931a !important; color: #f7931a !important; background: transparent !important; }
+        #btc-tab-btn { border-color: #f7931a !important; color: #f7931a !important; background: transparent !important; transition: all 0.15s ease !important; }
         #btc-tab-btn:not(.active) { background: transparent !important; color: #f7931a !important; }
-        #btc-tab-btn:hover:not(.active) { border-color: #ffaa1a !important; background: transparent !important; }
+        #btc-tab-btn:hover:not(.active) { border-color: #ffaa1a !important; background: rgba(247, 147, 26, 0.1) !important; box-shadow: 0 0 12px rgba(247, 147, 26, 0.4) !important; }
+        #btc-tab-btn:active:not(.active) { transform: scale(0.98) translateY(1px) !important; filter: brightness(1.1) !important; box-shadow: 0 0 16px rgba(247, 147, 26, 0.6) !important; }
         #btc-tab-btn.active { border-color: #ffaa1a !important; background: linear-gradient(135deg, rgba(247, 147, 26, 0.5) 0%, rgba(255, 149, 0, 0.5) 100%) !important; color: #fff !important; }
 
-        #eth-tab-btn { border-color: #627eea !important; color: #627eea !important; background: transparent !important; }
+        #eth-tab-btn { border-color: #627eea !important; color: #627eea !important; background: transparent !important; transition: all 0.15s ease !important; }
         #eth-tab-btn:not(.active) { background: transparent !important; color: #627eea !important; }
-        #eth-tab-btn:hover:not(.active) { border-color: #9099ff !important; background: transparent !important; }
+        #eth-tab-btn:hover:not(.active) { border-color: #9099ff !important; background: rgba(98, 126, 234, 0.1) !important; box-shadow: 0 0 12px rgba(98, 126, 234, 0.4) !important; }
+        #eth-tab-btn:active:not(.active) { transform: scale(0.98) translateY(1px) !important; filter: brightness(1.1) !important; box-shadow: 0 0 16px rgba(98, 126, 234, 0.6) !important; }
         #eth-tab-btn.active { border-color: #9099ff !important; background: linear-gradient(135deg, rgba(98, 126, 234, 0.5) 0%, rgba(124, 143, 255, 0.5) 100%) !important; color: #fff !important; }
 
-        #doge-tab-btn { border-color: #c2a633 !important; color: #c2a633 !important; background: transparent !important; }
+        #doge-tab-btn { border-color: #c2a633 !important; color: #c2a633 !important; background: transparent !important; transition: all 0.15s ease !important; }
         #doge-tab-btn:not(.active) { background: transparent !important; color: #c2a633 !important; }
-        #doge-tab-btn:hover:not(.active) { border-color: #e0c857 !important; background: transparent !important; }
+        #doge-tab-btn:hover:not(.active) { border-color: #e0c857 !important; background: rgba(194, 166, 51, 0.1) !important; box-shadow: 0 0 12px rgba(194, 166, 51, 0.4) !important; }
+        #doge-tab-btn:active:not(.active) { transform: scale(0.98) translateY(1px) !important; filter: brightness(1.1) !important; box-shadow: 0 0 16px rgba(194, 166, 51, 0.6) !important; }
         #doge-tab-btn.active { border-color: #e0c857 !important; background: linear-gradient(135deg, rgba(194, 166, 51, 0.5) 0%, rgba(212, 182, 68, 0.5) 100%) !important; color: #fff !important; }
 
-        #crypto-exchange-btn { border-color: #00ff88 !important; color: #00ff88 !important; background: transparent !important; }
+        #crypto-exchange-btn { border-color: #00ff88 !important; color: #00ff88 !important; background: transparent !important; transition: all 0.15s ease !important; }
         #crypto-exchange-btn:not(.active) { background: transparent !important; color: #00ff88 !important; }
-        #crypto-exchange-btn:hover:not(.active) { border-color: #33ffaa !important; background: transparent !important; }
+        #crypto-exchange-btn:hover:not(.active) { border-color: #33ffaa !important; background: rgba(0, 255, 136, 0.1) !important; box-shadow: 0 0 12px rgba(0, 255, 136, 0.4) !important; }
+        #crypto-exchange-btn:active:not(.active) { transform: scale(0.98) translateY(1px) !important; filter: brightness(1.1) !important; box-shadow: 0 0 16px rgba(0, 255, 136, 0.6) !important; }
         #crypto-exchange-btn.active { border-color: #33ffaa !important; background: linear-gradient(135deg, rgba(0, 255, 136, 0.5) 0%, rgba(51, 255, 170, 0.5) 100%) !important; color: #fff !important; }
 
-        #minigames-tab-btn { border-color: #d946ef !important; color: #d946ef !important; background: transparent !important; }
+        #minigames-tab-btn { border-color: #d946ef !important; color: #d946ef !important; background: transparent !important; transition: all 0.15s ease !important; }
         #minigames-tab-btn:not(.active) { background: transparent !important; color: #d946ef !important; }
-        #minigames-tab-btn:hover:not(.active) { border-color: #ec4eff !important; background: transparent !important; }
+        #minigames-tab-btn:hover:not(.active) { border-color: #ec4eff !important; background: rgba(217, 70, 239, 0.1) !important; box-shadow: 0 0 12px rgba(217, 70, 239, 0.4) !important; }
+        #minigames-tab-btn:active:not(.active) { transform: scale(0.98) translateY(1px) !important; filter: brightness(1.1) !important; box-shadow: 0 0 16px rgba(217, 70, 239, 0.6) !important; }
         #minigames-tab-btn.active { border-color: #ec4eff !important; background: linear-gradient(135deg, rgba(217, 70, 239, 0.5) 0%, rgba(236, 78, 255, 0.5) 100%) !important; color: #fff !important; }
 
         /* Action Buttons (RUGPULL, STORE, etc) */
@@ -1339,6 +1456,199 @@
             filter: brightness(0.5) !important;
         }
 
+        /* Minigame Play Buttons */
+        #packet-easy-btn,
+        #packet-medium-btn,
+        #packet-hard-btn,
+        #whack-easy-btn,
+        #whack-medium-btn,
+        #whack-hard-btn {
+            transition: all 0.15s ease !important;
+        }
+
+        /* Packet Interceptor - Easy (Green) */
+        #packet-easy-btn {
+            background: #2ecc71 !important;
+            border: none !important;
+        }
+
+        #packet-easy-btn:hover:not(:disabled) {
+            background: #27ae60 !important;
+            box-shadow: 0 0 12px rgba(46, 204, 113, 0.5) !important;
+        }
+
+        #packet-easy-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(46, 204, 113, 0.7) !important;
+        }
+
+        /* Packet Interceptor - Medium (Orange) */
+        #packet-medium-btn {
+            background: #f39c12 !important;
+            border: none !important;
+        }
+
+        #packet-medium-btn:hover:not(:disabled) {
+            background: #d68910 !important;
+            box-shadow: 0 0 12px rgba(243, 156, 18, 0.5) !important;
+        }
+
+        #packet-medium-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(243, 156, 18, 0.7) !important;
+        }
+
+        /* Packet Interceptor - Hard (Red) */
+        #packet-hard-btn {
+            background: #e74c3c !important;
+            border: none !important;
+        }
+
+        #packet-hard-btn:hover:not(:disabled) {
+            background: #c0392b !important;
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.5) !important;
+        }
+
+        #packet-hard-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(231, 76, 60, 0.7) !important;
+        }
+
+        /* Whack Minigame - Easy (Green) */
+        #whack-easy-btn {
+            background: #2ecc71 !important;
+            border: none !important;
+        }
+
+        #whack-easy-btn:hover:not(:disabled) {
+            background: #27ae60 !important;
+            box-shadow: 0 0 12px rgba(46, 204, 113, 0.5) !important;
+        }
+
+        #whack-easy-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(46, 204, 113, 0.7) !important;
+        }
+
+        /* Whack Minigame - Medium (Orange) */
+        #whack-medium-btn {
+            background: #f39c12 !important;
+            border: none !important;
+        }
+
+        #whack-medium-btn:hover:not(:disabled) {
+            background: #d68910 !important;
+            box-shadow: 0 0 12px rgba(243, 156, 18, 0.5) !important;
+        }
+
+        #whack-medium-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(243, 156, 18, 0.7) !important;
+        }
+
+        /* Whack Minigame - Hard (Red) */
+        #whack-hard-btn {
+            background: #e74c3c !important;
+            border: none !important;
+        }
+
+        #whack-hard-btn:hover:not(:disabled) {
+            background: #c0392b !important;
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.5) !important;
+        }
+
+        #whack-hard-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(231, 76, 60, 0.7) !important;
+        }
+
+        /* Network Stress Test Button (Cyan) */
+        #network-play-btn {
+            transition: all 0.15s ease !important;
+            background: #00b4ff !important;
+            border: none !important;
+            color: #000 !important;
+        }
+
+        #network-play-btn:hover:not(:disabled) {
+            background: #0080cc !important;
+            box-shadow: 0 0 12px rgba(0, 180, 255, 0.5) !important;
+            color: #fff !important;
+        }
+
+        #network-play-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(0, 180, 255, 0.7) !important;
+            color: #fff !important;
+        }
+
+        /* Packet Interceptor PLAY NOW button */
+        #packet-play-btn {
+            transition: all 0.15s ease !important;
+            background: #ff8c00 !important;
+            border: none !important;
+            color: #000 !important;
+        }
+
+        #packet-play-btn:hover:not(:disabled) {
+            background: #cc7000 !important;
+            box-shadow: 0 0 12px rgba(255, 140, 0, 0.5) !important;
+            color: #fff !important;
+        }
+
+        #packet-play-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(255, 140, 0, 0.7) !important;
+            color: #fff !important;
+        }
+
+        /* Block Suppression PLAY NOW button */
+        #whack-play-btn {
+            transition: all 0.15s ease !important;
+            background: #00ff88 !important;
+            border: none !important;
+            color: #000 !important;
+        }
+
+        #whack-play-btn:hover:not(:disabled) {
+            background: #00cc6a !important;
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.5) !important;
+            color: #000 !important;
+        }
+
+        #whack-play-btn:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(0, 255, 136, 0.7) !important;
+            color: #000 !important;
+        }
+
+        button[onclick*="initNetworkMinigame"] {
+            transition: all 0.15s ease !important;
+            background: linear-gradient(135deg, #00b4ff 0%, #0080ff 100%) !important;
+            border: none !important;
+            color: #fff !important;
+        }
+
+        button[onclick*="initNetworkMinigame"]:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0080cc 0%, #005fcc 100%) !important;
+            box-shadow: 0 0 12px rgba(0, 180, 255, 0.5) !important;
+        }
+
+        button[onclick*="initNetworkMinigame"]:active:not(:disabled) {
+            transform: scale(0.96) translateY(1px) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 16px rgba(0, 180, 255, 0.7) !important;
+            color: #fff !important;
+        }
 
         .btn-wide {
             width: 100%;
@@ -1428,6 +1738,15 @@
             #power-upgrade-btn { background: #333 !important; }
             #power-upgrade-btn:hover { background: linear-gradient(135deg, rgba(0, 255, 136, 0.5) 0%, rgba(51, 255, 170, 0.5) 100%) !important; box-shadow: none !important; }
             #autoclicker-btn:hover { background: linear-gradient(135deg, rgba(100, 100, 100, 0.5) 0%, rgba(150, 150, 150, 0.5) 100%) !important; box-shadow: none !important; }
+
+            /* Manual Hash Rate Buttons - Minimal click effects on desktop */
+            #btc-manual-hash-rate-btn:active:not(:disabled),
+            #eth-manual-hash-rate-btn:active:not(:disabled),
+            #doge-manual-hash-rate-btn:active:not(:disabled) {
+                transform: none !important;
+                filter: brightness(1) !important;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.1) !important;
+            }
         }
 
         /* Disable persistent hover effects on touch devices */
@@ -1623,48 +1942,153 @@
         }
 
         /* Manual hash button specific animation handling */
-        #manual-hash-btc-btn.active {
-            animation: manualHashPressBTC 0.15s ease-out !important;
-        }
-
-        #manual-hash-eth-btn.active {
-            animation: manualHashPressETH 0.15s ease-out !important;
-        }
-
-        #manual-hash-doge-btn.active {
-            animation: manualHashPressDOGE 0.15s ease-out !important;
-        }
-
-        /* Manual hash click button press animations */
+        /* Manual hash click button press animations - mobile/default (more prominent) */
         @keyframes manualHashPressBTC {
             0% { transform: scale(1) translateY(0); filter: brightness(1); }
-            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(247, 147, 26, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            50% { transform: scale(0.98) translateY(0px); filter: brightness(1.2); box-shadow: 0 0 16px rgba(247, 147, 26, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
             100% { transform: scale(1) translateY(0); filter: brightness(1); }
         }
 
         @keyframes manualHashPressETH {
             0% { transform: scale(1) translateY(0); filter: brightness(1); }
-            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(98, 126, 234, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            50% { transform: scale(0.98) translateY(0px); filter: brightness(1.2); box-shadow: 0 0 16px rgba(98, 126, 234, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
             100% { transform: scale(1) translateY(0); filter: brightness(1); }
         }
 
         @keyframes manualHashPressDOGE {
             0% { transform: scale(1) translateY(0); filter: brightness(1); }
-            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(194, 166, 51, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            50% { transform: scale(0.98) translateY(0px); filter: brightness(1.2); box-shadow: 0 0 16px rgba(194, 166, 51, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
             100% { transform: scale(1) translateY(0); filter: brightness(1); }
         }
 
-        /* Manual hash rate button (+10%) specific animation handling */
+        /* Desktop versions - no shrink, just brightness and glow */
+        @keyframes manualHashPressBTCDesktop {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); box-shadow: none; }
+            50% { transform: scale(0.988) translateY(0px); filter: brightness(1.2); box-shadow: 0 0 16px rgba(247, 147, 26, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); box-shadow: none; }
+        }
+
+        @keyframes manualHashPressETHDesktop {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); box-shadow: none; }
+            50% { transform: scale(0.988) translateY(0px); filter: brightness(1.2); box-shadow: 0 0 16px rgba(98, 126, 234, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); box-shadow: none; }
+        }
+
+        @keyframes manualHashPressDOGEDesktop {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); box-shadow: none; }
+            50% { transform: scale(0.988) translateY(0px); filter: brightness(1.2); box-shadow: 0 0 16px rgba(194, 166, 51, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); box-shadow: none; }
+        }
+
+        /* Default animations for mobile/smaller screens */
+        @media (max-width: 932px) {
+            #manual-hash-btc-btn.active {
+                animation: manualHashPressBTC 0.15s ease-out !important;
+            }
+
+            #manual-hash-eth-btn.active {
+                animation: manualHashPressETH 0.15s ease-out !important;
+            }
+
+            #manual-hash-doge-btn.active {
+                animation: manualHashPressDOGE 0.15s ease-out !important;
+            }
+        }
+
+        /* Disable browser native :active on manual hash buttons - let animations handle it */
+        #manual-hash-btc-btn:active,
+        #manual-hash-eth-btn:active,
+        #manual-hash-doge-btn:active {
+            transform: none !important;
+        }
+
+        /* Manual hash rate button (+10%) - NO animation */
         #btc-manual-hash-rate-btn.active {
-            animation: buttonPressBTC 0.2s ease-out !important;
+            animation: none !important;
         }
 
         #eth-manual-hash-rate-btn.active {
-            animation: buttonPressETH 0.2s ease-out !important;
+            animation: none !important;
         }
 
         #doge-manual-hash-rate-btn.active {
-            animation: buttonPressDOGE 0.2s ease-out !important;
+            animation: none !important;
+        }
+
+        /* Power, Sell, and Stake button hover/click effects on desktop */
+        @media (hover: hover) and (pointer: fine) {
+            button[onclick*="Sell"], button[onclick*="Stake"], button[onclick*="quickUnstake"] {
+                transition: all 0.15s ease !important;
+            }
+            button[onclick*="Sell"]:hover:not(:disabled), button[onclick*="Stake"]:hover:not(:disabled), button[onclick*="quickUnstake"]:hover:not(:disabled) {
+                filter: brightness(1.2) !important;
+                transform: scale(1.02) !important;
+                box-shadow: 0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.2) !important;
+            }
+        }
+
+        /* Click animations for sell and stake buttons */
+        button[onclick*="Sell"].active, button[onclick*="Stake"].active, button[onclick*="quickUnstake"].active {
+            animation: sellStakePress 0.15s ease-out !important;
+        }
+
+        @keyframes sellStakePress {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.98) translateY(0px); filter: brightness(1.2); box-shadow: 0 0 16px rgba(100, 200, 100, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        /* Minigame button click animations */
+        #network-play-btn.active,
+        #packet-play-btn.active,
+        #whack-play-btn.active,
+        #packet-easy-btn.active,
+        #packet-medium-btn.active,
+        #packet-hard-btn.active,
+        #whack-easy-btn.active,
+        #whack-medium-btn.active,
+        #whack-hard-btn.active {
+            animation: minigameButtonPress 0.15s ease-out !important;
+        }
+
+        @keyframes minigameButtonPress {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.98) translateY(0px); filter: brightness(1.15); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        /* Large resolution (933px+): use subtle desktop animations - NO SHRINK */
+        @media (min-width: 933px) {
+            #manual-hash-btc-btn.active,
+            .panel #manual-hash-btc-btn.active {
+                animation: manualHashPressBTCDesktop 0.15s ease-out !important;
+            }
+
+            #manual-hash-eth-btn.active,
+            .panel #manual-hash-eth-btn.active {
+                animation: manualHashPressETHDesktop 0.15s ease-out !important;
+            }
+
+            #manual-hash-doge-btn.active,
+            .panel #manual-hash-doge-btn.active {
+                animation: manualHashPressDOGEDesktop 0.15s ease-out !important;
+            }
+
+            /* Subtle hover darkening for manual hash buttons - just a bit darker */
+            #manual-hash-btc-btn:hover:not(:disabled) {
+                background: linear-gradient(135deg, #f0800d 0%, #ff8c1a 100%) !important;
+                border-color: #f0800d !important;
+            }
+
+            #manual-hash-eth-btn:hover:not(:disabled) {
+                background: linear-gradient(135deg, #5a6fd0 0%, #6f7ff0 100%) !important;
+                border-color: #5a6fd0 !important;
+            }
+
+            #manual-hash-doge-btn:hover:not(:disabled) {
+                background: linear-gradient(135deg, #b89925 0%, #c9a73a 100%) !important;
+                border-color: #b89925 !important;
+            }
         }
 
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }

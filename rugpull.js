@@ -1967,6 +1967,7 @@ function updateMetaUpgradesUI() {
             btn.style.cursor = upgrade.purchased ? 'default' : (isLocked ? 'not-allowed' : 'pointer');
             btn.style.fontWeight = 'bold';
             btn.style.opacity = isLocked ? '0.5' : '1';
+            btn.disabled = isLocked;
 
             const name = getUpgradeName(upgradeKey);
             const costDisplay = formatTokenCost(upgrade.cost);

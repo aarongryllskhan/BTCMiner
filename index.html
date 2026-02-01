@@ -588,7 +588,7 @@
                             <button onclick="quickSellBTC(50, this)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
                             <button onclick="quickSellBTC(75, this)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
-                        <button onclick="sellAllBTC(this)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                        <button onclick="sellAllBTC(this)" class="btn-exchange-action btn-exchange-btc">SELL ALL</button>
                     </div>
 
                     <!-- ETH Sell -->
@@ -603,7 +603,7 @@
                             <button onclick="quickSellETH(50, this)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
                             <button onclick="quickSellETH(75, this)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
-                        <button onclick="sellAllETH(this)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                        <button onclick="sellAllETH(this)" class="btn-exchange-action btn-exchange-eth">SELL ALL</button>
                     </div>
 
                     <!-- DOGE Sell -->
@@ -618,7 +618,7 @@
                             <button onclick="quickSellDOGE(50, this)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 50%</button>
                             <button onclick="quickSellDOGE(75, this)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">SELL 75%</button>
                         </div>
-                        <button onclick="sellAllDOGE(this)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">SELL ALL</button>
+                        <button onclick="sellAllDOGE(this)" class="btn-exchange-action btn-exchange-doge">SELL ALL</button>
                     </div>
 
                     <!-- Staking Section -->
@@ -646,15 +646,15 @@
                                 <button onclick="quickStake('BTC', 50)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
                                 <button onclick="quickStake('BTC', 75)" style="background: #f7931a; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
                             </div>
-                            <button onclick="stakeAllBTC(this)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">STAKE ALL</button>
+                            <button onclick="stakeAllBTC(this)" class="btn-exchange-action btn-exchange-btc">STAKE ALL</button>
                         </div>
                         <div style="margin-bottom: 0px;">
                             <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
                             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                                <button onclick="quickUnstake('BTC', 25)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
-                                <button onclick="quickUnstake('BTC', 50)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
-                                <button onclick="quickUnstake('BTC', 75)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
-                                <button onclick="quickUnstake('BTC', 100)" style="background: #333; color: #f7931a; border: 1px solid #f7931a; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                                <button onclick="quickUnstake('BTC', 25)" class="btn-exchange-action btn-exchange-btc">25%</button>
+                                <button onclick="quickUnstake('BTC', 50)" class="btn-exchange-action btn-exchange-btc">50%</button>
+                                <button onclick="quickUnstake('BTC', 75)" class="btn-exchange-action btn-exchange-btc">75%</button>
+                                <button onclick="quickUnstake('BTC', 100)" class="btn-exchange-action btn-exchange-btc">100%</button>
                             </div>
                         </div>
                     </div>
@@ -677,15 +677,15 @@
                                 <button onclick="quickStake('ETH', 50)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
                                 <button onclick="quickStake('ETH', 75)" style="background: #627eea; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
                             </div>
-                            <button onclick="stakeAllETH(this)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">STAKE ALL</button>
+                            <button onclick="stakeAllETH(this)" class="btn-exchange-action btn-exchange-eth">STAKE ALL</button>
                         </div>
                         <div style="margin-bottom: 0px;">
                             <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
                             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                                <button onclick="quickUnstake('ETH', 25)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
-                                <button onclick="quickUnstake('ETH', 50)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
-                                <button onclick="quickUnstake('ETH', 75)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
-                                <button onclick="quickUnstake('ETH', 100)" style="background: #333; color: #627eea; border: 1px solid #627eea; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                                <button onclick="quickUnstake('ETH', 25)" class="btn-exchange-action btn-exchange-eth">25%</button>
+                                <button onclick="quickUnstake('ETH', 50)" class="btn-exchange-action btn-exchange-eth">50%</button>
+                                <button onclick="quickUnstake('ETH', 75)" class="btn-exchange-action btn-exchange-eth">75%</button>
+                                <button onclick="quickUnstake('ETH', 100)" class="btn-exchange-action btn-exchange-eth">100%</button>
                             </div>
                         </div>
                     </div>
@@ -708,15 +708,15 @@
                                 <button onclick="quickStake('DOGE', 50)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
                                 <button onclick="quickStake('DOGE', 75)" style="background: #c2a633; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
                             </div>
-                            <button onclick="stakeAllDOGE(this)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem; width: 100%; margin-top: 6px;">STAKE ALL</button>
+                            <button onclick="stakeAllDOGE(this)" class="btn-exchange-action btn-exchange-doge">STAKE ALL</button>
                         </div>
                         <div style="margin-bottom: 0px;">
                             <span style="color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Unstake Amount</span>
                             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                                <button onclick="quickUnstake('DOGE', 25)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">25%</button>
-                                <button onclick="quickUnstake('DOGE', 50)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">50%</button>
-                                <button onclick="quickUnstake('DOGE', 75)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">75%</button>
-                                <button onclick="quickUnstake('DOGE', 100)" style="background: #333; color: #c2a633; border: 1px solid #c2a633; padding: 8px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 0.75rem;">100%</button>
+                                <button onclick="quickUnstake('DOGE', 25)" class="btn-exchange-action btn-exchange-doge">25%</button>
+                                <button onclick="quickUnstake('DOGE', 50)" class="btn-exchange-action btn-exchange-doge">50%</button>
+                                <button onclick="quickUnstake('DOGE', 75)" class="btn-exchange-action btn-exchange-doge">75%</button>
+                                <button onclick="quickUnstake('DOGE', 100)" class="btn-exchange-action btn-exchange-doge">100%</button>
                             </div>
                         </div>
                     </div>
@@ -753,7 +753,7 @@
                                 <div style="color: #ff8c00; font-weight: 800; font-size: 0.9rem;" id="packet-rewards-display">$0</div>
                             </div>
                         </div>
-                        <button onclick="switchTab('packet-interceptor')" style="background: #ff8c00; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
+                        <button id="packet-play-btn" onclick="switchTab('packet-interceptor')" style="background: #ff8c00; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
                             PLAY NOW →
                         </button>
                         <div id="packet-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
@@ -786,7 +786,7 @@
                                 <div style="color: #00b4ff; font-weight: 800; font-size: 0.9rem;" id="network-rewards-display">$0</div>
                             </div>
                         </div>
-                        <button onclick="initNetworkMinigame()" style="background: #00b4ff; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
+                        <button id="network-play-btn" onclick="initNetworkMinigame()" style="background: #00b4ff; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
                             PLAY NOW →
                         </button>
                         <div id="network-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">
@@ -819,7 +819,7 @@
                                 <div style="color: #00ff88; font-weight: 800; font-size: 0.9rem;" id="whack-rewards-display">$0</div>
                             </div>
                         </div>
-                        <button onclick="switchTab('whack')" style="background: #00ff88; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
+                        <button id="whack-play-btn" onclick="switchTab('whack')" style="background: #00ff88; color: #000; border: none; padding: 12px 20px; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%;">
                             PLAY NOW →
                         </button>
                         <div id="whack-card-locked" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; font-weight: 700; z-index: 20; text-align: center;">

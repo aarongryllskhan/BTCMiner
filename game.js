@@ -154,6 +154,7 @@
     let manualHashClickTime = 0;
     let manualHashCooldownEnd = 0;
     let clickTimestamps = [];
+    let lastCoinSpawnTime = 0; // Throttle coin spawning on rapid clicks
     let priceSwingsStarted = false; // Flag to prevent starting price swings multiple times
 
     // Session tracking
@@ -401,6 +402,12 @@
     let userHasSetZoom = false; // Flag that user has manually set zoom - disables zoom-out permanently (until refresh)
     let userLockedChartMax = null; // Stores the Y-axis max value user locked in (prevents chart from moving after zoom set)
     let zoomResetTimeout = null; // Timeout for resetting zoom flag after user stops interacting
+
+    // Chart performance optimization caches
+    let cachedChartMax = 0; // Cache the calculated max value for Y-axis scaling
+    let lastCachedChartLength = 0; // Track array length to invalidate cache when data changes
+    let cachedChartLabels = []; // Cache formatted labels to avoid repeated toLocaleTimeString() calls
+    let lastCachedLabelCount = 0; // Track label count to detect when cache is stale
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -988,17 +995,17 @@
             return;
         }
 
-        // Trim chart history to prevent localStorage quota issues - keep last 4,800 points per chart (1 hour at 750ms intervals)
-        const maxChartPoints = 4800;
-        const trimmedChartHistory = chartHistory.length > maxChartPoints ? chartHistory.slice(-maxChartPoints) : chartHistory;
-        const trimmedChartTimestamps = chartTimestamps.length > maxChartPoints ? chartTimestamps.slice(-maxChartPoints) : chartTimestamps;
-        const trimmedBtcChartHistory = btcChartHistory.length > maxChartPoints ? btcChartHistory.slice(-maxChartPoints) : btcChartHistory;
-        const trimmedEthChartHistory = ethChartHistory.length > maxChartPoints ? ethChartHistory.slice(-maxChartPoints) : ethChartHistory;
-        const trimmedDogeChartHistory = dogeChartHistory.length > maxChartPoints ? dogeChartHistory.slice(-maxChartPoints) : dogeChartHistory;
-        const trimmedCashChartHistory = cashChartHistory.length > maxChartPoints ? cashChartHistory.slice(-maxChartPoints) : cashChartHistory;
-        const trimmedPowerChartHistory = powerChartHistory.length > maxChartPoints ? powerChartHistory.slice(-maxChartPoints) : powerChartHistory;
-        const trimmedPowerChartColors = powerChartColors.length > maxChartPoints ? powerChartColors.slice(-maxChartPoints) : powerChartColors;
-        const trimmedHashRateChartTimestamps = hashRateChartTimestamps.length > maxChartPoints ? hashRateChartTimestamps.slice(-maxChartPoints) : hashRateChartTimestamps;
+        // Keep all chart history - LTTB decimation handles display optimization
+        // No trimming of data, let Chart.js render 600 samples from full history
+        const trimmedChartHistory = chartHistory;
+        const trimmedChartTimestamps = chartTimestamps;
+        const trimmedBtcChartHistory = btcChartHistory;
+        const trimmedEthChartHistory = ethChartHistory;
+        const trimmedDogeChartHistory = dogeChartHistory;
+        const trimmedCashChartHistory = cashChartHistory;
+        const trimmedPowerChartHistory = powerChartHistory;
+        const trimmedPowerChartColors = powerChartColors;
+        const trimmedHashRateChartTimestamps = hashRateChartTimestamps;
 
         const gameState = {
             // Bitcoin data
@@ -1515,6 +1522,95 @@ function loadGame() {
             if (state.dogeChartHistory) dogeChartHistory = state.dogeChartHistory;
             if (state.cashChartHistory) cashChartHistory = state.cashChartHistory;
 
+            // Keep all historical data from old saves - LTTB will handle display decimation
+            const targetLoadPoints = null; // No trimming, keep all data
+            if (targetLoadPoints !== null && chartHistory.length > targetLoadPoints) {
+                const originalLength = chartHistory.length;
+                const decimationFactor = Math.ceil(chartHistory.length / targetLoadPoints);
+
+                let newChartHistory = [];
+                let newChartTimestamps = [];
+                let newBtcHistory = [];
+                let newEthHistory = [];
+                let newDogeHistory = [];
+                let newCashHistory = [];
+
+                // Keep every Nth point uniformly across entire timeline
+                for (let i = 0; i < chartHistory.length; i += decimationFactor) {
+                    newChartHistory.push(chartHistory[i]);
+                    newChartTimestamps.push(chartTimestamps[i]);
+                    newBtcHistory.push(btcChartHistory[i]);
+                    newEthHistory.push(ethChartHistory[i]);
+                    newDogeHistory.push(dogeChartHistory[i]);
+                    newCashHistory.push(cashChartHistory[i]);
+                }
+
+                // Always ensure we have the last point
+                if (newChartHistory[newChartHistory.length - 1] !== chartHistory[chartHistory.length - 1]) {
+                    newChartHistory.push(chartHistory[chartHistory.length - 1]);
+                    newChartTimestamps.push(chartTimestamps[chartTimestamps.length - 1]);
+                    newBtcHistory.push(btcChartHistory[btcChartHistory.length - 1]);
+                    newEthHistory.push(ethChartHistory[ethChartHistory.length - 1]);
+                    newDogeHistory.push(dogeChartHistory[dogeChartHistory.length - 1]);
+                    newCashHistory.push(cashChartHistory[cashChartHistory.length - 1]);
+                }
+
+                chartHistory = newChartHistory;
+                chartTimestamps = newChartTimestamps;
+                btcChartHistory = newBtcHistory;
+                ethChartHistory = newEthHistory;
+                dogeChartHistory = newDogeHistory;
+                cashChartHistory = newCashHistory;
+
+                // Post-decimation: Remove redundant flat-line points where no values change
+                let flatlineFiltered = [];
+                let flatlineTimestamps = [];
+                let flatlineBTC = [];
+                let flatlineETH = [];
+                let flatlineDOGE = [];
+                let flatlineCASH = [];
+
+                for (let i = 0; i < chartTimestamps.length; i++) {
+                    // Always keep first and last points
+                    if (i === 0 || i === chartTimestamps.length - 1) {
+                        flatlineTimestamps.push(chartTimestamps[i]);
+                        flatlineFiltered.push(chartHistory[i]);
+                        flatlineBTC.push(btcChartHistory[i]);
+                        flatlineETH.push(ethChartHistory[i]);
+                        flatlineDOGE.push(dogeChartHistory[i]);
+                        flatlineCASH.push(cashChartHistory[i]);
+                    } else {
+                        // Check if any value changed from previous point
+                        const prevIdx = i - 1;
+                        const anyChanged =
+                            chartHistory[i] !== chartHistory[prevIdx] ||
+                            btcChartHistory[i] !== btcChartHistory[prevIdx] ||
+                            ethChartHistory[i] !== ethChartHistory[prevIdx] ||
+                            dogeChartHistory[i] !== dogeChartHistory[prevIdx] ||
+                            cashChartHistory[i] !== cashChartHistory[prevIdx];
+
+                        // Only keep if at least one value changed
+                        if (anyChanged) {
+                            flatlineTimestamps.push(chartTimestamps[i]);
+                            flatlineFiltered.push(chartHistory[i]);
+                            flatlineBTC.push(btcChartHistory[i]);
+                            flatlineETH.push(ethChartHistory[i]);
+                            flatlineDOGE.push(dogeChartHistory[i]);
+                            flatlineCASH.push(cashChartHistory[i]);
+                        }
+                    }
+                }
+
+                chartHistory = flatlineFiltered;
+                chartTimestamps = flatlineTimestamps;
+                btcChartHistory = flatlineBTC;
+                ethChartHistory = flatlineETH;
+                dogeChartHistory = flatlineDOGE;
+                cashChartHistory = flatlineCASH;
+
+                console.log('Auto-decimated chart data from', originalLength, 'to', chartHistory.length, 'points on load (factor:', decimationFactor, ')');
+            }
+
             // Ensure chart always starts at $0 by prepending a zero point if first point isn't zero
             if (chartHistory.length > 0 && chartHistory[0] !== 0) {
                 const firstTimestamp = chartTimestamps.length > 0 ? chartTimestamps[0].time : Date.now() - 1000;
@@ -1561,17 +1657,17 @@ function loadGame() {
      * Get the current game state for export (reuses saveGame structure)
      */
     function getExportableGameState() {
-        // Trim chart history to prevent localStorage quota issues - keep last 4,800 points per chart
-        const maxChartPoints = 4800;
-        const trimmedChartHistory = chartHistory.length > maxChartPoints ? chartHistory.slice(-maxChartPoints) : chartHistory;
-        const trimmedChartTimestamps = chartTimestamps.length > maxChartPoints ? chartTimestamps.slice(-maxChartPoints) : chartTimestamps;
-        const trimmedBtcChartHistory = btcChartHistory.length > maxChartPoints ? btcChartHistory.slice(-maxChartPoints) : btcChartHistory;
-        const trimmedEthChartHistory = ethChartHistory.length > maxChartPoints ? ethChartHistory.slice(-maxChartPoints) : ethChartHistory;
-        const trimmedDogeChartHistory = dogeChartHistory.length > maxChartPoints ? dogeChartHistory.slice(-maxChartPoints) : dogeChartHistory;
-        const trimmedCashChartHistory = cashChartHistory.length > maxChartPoints ? cashChartHistory.slice(-maxChartPoints) : cashChartHistory;
-        const trimmedPowerChartHistory = powerChartHistory.length > maxChartPoints ? powerChartHistory.slice(-maxChartPoints) : powerChartHistory;
-        const trimmedPowerChartColors = powerChartColors.length > maxChartPoints ? powerChartColors.slice(-maxChartPoints) : powerChartColors;
-        const trimmedHashRateChartTimestamps = hashRateChartTimestamps.length > maxChartPoints ? hashRateChartTimestamps.slice(-maxChartPoints) : hashRateChartTimestamps;
+        // Keep all chart history - LTTB decimation handles display optimization
+        // No trimming of data, let Chart.js render 600 samples from full history
+        const trimmedChartHistory = chartHistory;
+        const trimmedChartTimestamps = chartTimestamps;
+        const trimmedBtcChartHistory = btcChartHistory;
+        const trimmedEthChartHistory = ethChartHistory;
+        const trimmedDogeChartHistory = dogeChartHistory;
+        const trimmedCashChartHistory = cashChartHistory;
+        const trimmedPowerChartHistory = powerChartHistory;
+        const trimmedPowerChartColors = powerChartColors;
+        const trimmedHashRateChartTimestamps = hashRateChartTimestamps;
 
         return {
             // Game version for compatibility checks
@@ -4364,11 +4460,20 @@ function loadGame() {
         const hasMinigameUnlock = (typeof metaUpgrades !== 'undefined' && metaUpgrades.minigame_unlock && metaUpgrades.minigame_unlock.purchased);
 
         const networkLockedCard = document.getElementById('network-card-locked');
+        const networkPlayBtn = document.getElementById('network-play-btn');
         if (networkLockedCard) {
             if (!hasMinigameUnlock && lifetimeEarnings < 20000) {
                 networkLockedCard.style.display = 'flex';
+                if (networkPlayBtn) {
+                    networkPlayBtn.disabled = true;
+                    networkPlayBtn.style.opacity = '0.6';
+                }
             } else {
                 networkLockedCard.style.display = 'none';
+                if (networkPlayBtn) {
+                    networkPlayBtn.disabled = false;
+                    networkPlayBtn.style.opacity = '1';
+                }
             }
         }
 
@@ -4379,6 +4484,48 @@ function loadGame() {
                 whackLockedCard.style.display = 'flex';
             } else {
                 whackLockedCard.style.display = 'none';
+            }
+        }
+
+        // Check if whack-a-block EASY is locked (requires $50k lifetime earnings)
+        const whackEasyLocked = document.getElementById('whack-easy-locked');
+        if (whackEasyLocked) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 50000) {
+                whackEasyLocked.style.display = 'flex';
+                document.getElementById('whack-easy-btn').disabled = true;
+                document.getElementById('whack-easy-btn').style.opacity = '0.6';
+            } else {
+                whackEasyLocked.style.display = 'none';
+                document.getElementById('whack-easy-btn').disabled = false;
+                document.getElementById('whack-easy-btn').style.opacity = '1';
+            }
+        }
+
+        // Check if whack-a-block MEDIUM is locked (requires $150k lifetime earnings)
+        const whackMediumLocked = document.getElementById('whack-medium-locked');
+        if (whackMediumLocked) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 150000) {
+                whackMediumLocked.style.display = 'flex';
+                document.getElementById('whack-medium-btn').disabled = true;
+                document.getElementById('whack-medium-btn').style.opacity = '0.6';
+            } else {
+                whackMediumLocked.style.display = 'none';
+                document.getElementById('whack-medium-btn').disabled = false;
+                document.getElementById('whack-medium-btn').style.opacity = '1';
+            }
+        }
+
+        // Check if whack-a-block HARD is locked (requires $500k lifetime earnings)
+        const whackHardLocked = document.getElementById('whack-hard-locked');
+        if (whackHardLocked) {
+            if (!hasMinigameUnlock && lifetimeEarnings < 500000) {
+                whackHardLocked.style.display = 'flex';
+                document.getElementById('whack-hard-btn').disabled = true;
+                document.getElementById('whack-hard-btn').style.opacity = '0.6';
+            } else {
+                whackHardLocked.style.display = 'none';
+                document.getElementById('whack-hard-btn').disabled = false;
+                document.getElementById('whack-hard-btn').style.opacity = '1';
             }
         }
 
@@ -5420,9 +5567,11 @@ function loadGame() {
                 if (dollarBalance < costUsd) {
                     btn.style.opacity = '0.2';
                     btn.style.cursor = 'not-allowed';
+                    btn.disabled = true;
                 } else {
                     btn.style.opacity = '1';
                     btn.style.cursor = 'pointer';
+                    btn.disabled = false;
                 }
             }
         });
@@ -5560,8 +5709,11 @@ function manualHash() {
     // Play click sound
     playClickSound();
 
-    // This refreshes the screen so you see the numbers go up
-    updateUI();
+    // Defer UI update to next frame to keep clicks responsive
+    // Schedule instead of blocking on updateUI()
+    requestAnimationFrame(() => {
+        updateUI();
+    });
 }
 
 function manualEthHash() {
@@ -5632,8 +5784,10 @@ function manualEthHash() {
     // Play click sound
     playClickSound();
 
-    // Refresh the screen
-    updateUI();
+    // Defer UI update to next frame to keep clicks responsive
+    requestAnimationFrame(() => {
+        updateUI();
+    });
 }
 
 function manualDogeHash() {
@@ -5704,12 +5858,21 @@ function manualDogeHash() {
     // Play click sound
     playClickSound();
 
-    // Refresh the screen
-    updateUI();
+    // Defer UI update to next frame to keep clicks responsive
+    requestAnimationFrame(() => {
+        updateUI();
+    });
 }
 
 function spawnCoinsForClick(coinType, usdValue) {
     if (!vfxEnabled) return;
+
+    // Throttle coin spawning on rapid clicks - only spawn every 100ms to prevent lag
+    const now = Date.now();
+    if (now - lastCoinSpawnTime < 100) {
+        return; // Too soon, skip this spawn
+    }
+    lastCoinSpawnTime = now;
 
     // Initialize coin rain system if not already done
     if (typeof window.coinRainSystem === 'undefined' || !window.coinRainSystem) {
@@ -6317,9 +6480,11 @@ function updateGlobalMultiplierButtons() {
         if (!btcCanAfford) {
             btcBtn.style.opacity = '0.45';
             btcBtn.style.cursor = 'not-allowed';
+            btcBtn.disabled = true;
         } else {
             btcBtn.style.opacity = '1';
             btcBtn.style.cursor = 'pointer';
+            btcBtn.disabled = false;
         }
     }
 
@@ -6346,9 +6511,11 @@ function updateGlobalMultiplierButtons() {
         if (!ethCanAfford) {
             ethBtn.style.opacity = '0.45';
             ethBtn.style.cursor = 'not-allowed';
+            ethBtn.disabled = true;
         } else {
             ethBtn.style.opacity = '1';
             ethBtn.style.cursor = 'pointer';
+            ethBtn.disabled = false;
         }
     }
 
@@ -6375,9 +6542,11 @@ function updateGlobalMultiplierButtons() {
         if (!dogeCanAfford) {
             dogeBtn.style.opacity = '0.45';
             dogeBtn.style.cursor = 'not-allowed';
+            dogeBtn.disabled = true;
         } else {
             dogeBtn.style.opacity = '1';
             dogeBtn.style.cursor = 'pointer';
+            dogeBtn.disabled = false;
         }
     }
 }
@@ -7519,8 +7688,7 @@ function updateManualHashRateButtons() {
         const availablePower = getTotalPowerAvailableWithBonus();
         const hasEnoughPower = powerNeeded <= availablePower || powerReq === 0;
         const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
-        // Don't set disabled attribute - it prevents click events. Use CSS opacity/cursor instead
-        // bEl.disabled = shouldDisable;
+        bEl.disabled = shouldDisable;
         if (shouldDisable) {
             bEl.style.opacity = '0.2';
             bEl.style.cursor = 'not-allowed';
@@ -7753,8 +7921,7 @@ ethUpgrades.forEach(u => {
         const ethAvailablePower = getTotalPowerAvailableWithBonus();
         const hasEnoughPower = powerNeeded <= ethAvailablePower || powerReq === 0;
         const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
-        // Don't set disabled attribute - it prevents click events. Use CSS opacity/cursor instead
-        // bEl.disabled = shouldDisable;
+        bEl.disabled = shouldDisable;
         if (shouldDisable) {
             bEl.style.opacity = '0.2';
             bEl.style.cursor = 'not-allowed';
@@ -7981,8 +8148,7 @@ dogeUpgrades.forEach(u => {
         const dogeAvailablePower = getTotalPowerAvailableWithBonus();
         const hasEnoughPower = powerNeeded <= dogeAvailablePower || powerReq === 0;
         const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
-        // Don't set disabled attribute - it prevents click events. Use CSS opacity/cursor instead
-        // bEl.disabled = shouldDisable;
+        bEl.disabled = shouldDisable;
         if (shouldDisable) {
             bEl.style.opacity = '0.2';
             bEl.style.cursor = 'not-allowed';
@@ -8324,102 +8490,48 @@ dogeUpgrades.forEach(u => {
         updateMinigamesTab();
 
         // Initialize event handlers for manual hash buttons (mobile + desktop support)
-        const manualBtcBtn = document.getElementById('manual-hash-btc-btn');
-        const manualEthBtn = document.getElementById('manual-hash-eth-btn');
-        const manualDogeBtn = document.getElementById('manual-hash-doge-btn');
+        // Get ALL buttons with each ID (there may be multiple for responsive design)
+        const manualBtcBtns = document.querySelectorAll('#manual-hash-btc-btn');
+        const manualEthBtns = document.querySelectorAll('#manual-hash-eth-btn');
+        const manualDogeBtns = document.querySelectorAll('#manual-hash-doge-btn');
 
-        if (manualBtcBtn) {
-            let btcAnimTimeout = null;
-            let btcTouched = false;
-            const btcClick = () => {
-                trackManualHashClick();
-                manualHash();
-            };
-            const triggerBtcAnimation = () => {
-                // Clear any pending timeout to prevent glitching on rapid clicks
-                if (btcAnimTimeout) clearTimeout(btcAnimTimeout);
-                // Add active state class for animation
-                manualBtcBtn.classList.add('active');
-                // Schedule removal - animation is 150ms
-                btcAnimTimeout = setTimeout(() => {
-                    manualBtcBtn.classList.remove('active');
-                    btcAnimTimeout = null;
-                }, 150);
-            };
-            manualBtcBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                btcTouched = true;
-                triggerBtcAnimation();
-                btcClick();
-            });
-            manualBtcBtn.addEventListener('click', (e) => {
-                if (!btcTouched) {
-                    triggerBtcAnimation();
-                    btcClick();
-                }
-                btcTouched = false;
-            });
-        }
+        // Helper function to attach click handlers to all instances of a button
+        const setupManualHashButton = (buttons, clickHandler, trackingFn) => {
+            buttons.forEach(btn => {
+                let touched = false;
+                let animTimeout = null;
 
-        if (manualEthBtn) {
-            let ethAnimTimeout = null;
-            let ethTouched = false;
-            const ethClick = () => {
-                trackManualHashClick();
-                manualEthHash();
-            };
-            const triggerEthAnimation = () => {
-                if (ethAnimTimeout) clearTimeout(ethAnimTimeout);
-                manualEthBtn.classList.add('active');
-                ethAnimTimeout = setTimeout(() => {
-                    manualEthBtn.classList.remove('active');
-                    ethAnimTimeout = null;
-                }, 150);
-            };
-            manualEthBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                ethTouched = true;
-                triggerEthAnimation();
-                ethClick();
-            });
-            manualEthBtn.addEventListener('click', (e) => {
-                if (!ethTouched) {
-                    triggerEthAnimation();
-                    ethClick();
-                }
-                ethTouched = false;
-            });
-        }
+                const triggerAnimation = () => {
+                    if (animTimeout) clearTimeout(animTimeout);
+                    btn.classList.remove('active');
+                    void btn.offsetWidth;
+                    btn.classList.add('active');
+                    animTimeout = setTimeout(() => {
+                        btn.classList.remove('active');
+                        animTimeout = null;
+                    }, 150);
+                };
 
-        if (manualDogeBtn) {
-            let dogeAnimTimeout = null;
-            let dogeTouched = false;
-            const dogeClick = () => {
-                trackManualHashClick();
-                manualDogeHash();
-            };
-            const triggerDogeAnimation = () => {
-                if (dogeAnimTimeout) clearTimeout(dogeAnimTimeout);
-                manualDogeBtn.classList.add('active');
-                dogeAnimTimeout = setTimeout(() => {
-                    manualDogeBtn.classList.remove('active');
-                    dogeAnimTimeout = null;
-                }, 150);
-            };
-            manualDogeBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                dogeTouched = true;
-                triggerDogeAnimation();
-                dogeClick();
+                btn.addEventListener('touchstart', () => {
+                    touched = true;
+                    triggerAnimation();
+                    trackingFn();
+                    clickHandler();
+                });
+                btn.addEventListener('click', () => {
+                    if (!touched) {
+                        triggerAnimation();
+                        trackingFn();
+                        clickHandler();
+                    }
+                    touched = false;
+                });
             });
-            manualDogeBtn.addEventListener('click', (e) => {
-                if (!dogeTouched) {
-                    triggerDogeAnimation();
-                    dogeClick();
-                }
-                dogeTouched = false;
-            });
-        }
+        };
+
+        setupManualHashButton(manualBtcBtns, manualHash, trackManualHashClick);
+        setupManualHashButton(manualEthBtns, manualEthHash, trackManualHashClick);
+        setupManualHashButton(manualDogeBtns, manualDogeHash, trackManualHashClick);
 
         // Add touch feedback to +10% upgrade buttons
         const mhrButtons = [
@@ -8453,6 +8565,84 @@ dogeUpgrades.forEach(u => {
                         }, 50);
                     }
                 });
+            }
+        });
+
+        // Add click animation to sell and stake buttons (same effect as manual hash buttons)
+        const sellStakeButtonSelectors = [
+            'button[onclick*="Sell"]',
+            'button[onclick*="Stake"]',
+            'button[onclick*="quickUnstake"]'
+        ];
+
+        sellStakeButtonSelectors.forEach(selector => {
+            const buttons = document.querySelectorAll(selector);
+            buttons.forEach(btn => {
+                let animTimeout = null;
+
+                // Add touchstart for mobile
+                btn.addEventListener('touchstart', (e) => {
+                    if (animTimeout) clearTimeout(animTimeout);
+                    btn.classList.remove('active');
+                    void btn.offsetWidth;
+                    btn.classList.add('active');
+                    animTimeout = setTimeout(() => {
+                        btn.classList.remove('active');
+                        animTimeout = null;
+                    }, 150);
+                });
+
+                // Add click for desktop (use same effect)
+                btn.addEventListener('click', (e) => {
+                    if (animTimeout) clearTimeout(animTimeout);
+                    btn.classList.remove('active');
+                    void btn.offsetWidth;
+                    btn.classList.add('active');
+                    animTimeout = setTimeout(() => {
+                        btn.classList.remove('active');
+                        animTimeout = null;
+                    }, 150);
+                }, true);
+            });
+        });
+
+        // Add click animation to minigame buttons (Network Stress, Packet Interceptor, Whack-a-block)
+        const minigameButtonIds = [
+            'network-play-btn',
+            'packet-play-btn',
+            'whack-play-btn',
+            'packet-easy-btn', 'packet-medium-btn', 'packet-hard-btn',
+            'whack-easy-btn', 'whack-medium-btn', 'whack-hard-btn'
+        ];
+
+        minigameButtonIds.forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                let animTimeout = null;
+
+                // Add touchstart for mobile
+                btn.addEventListener('touchstart', (e) => {
+                    if (animTimeout) clearTimeout(animTimeout);
+                    btn.classList.remove('active');
+                    void btn.offsetWidth;
+                    btn.classList.add('active');
+                    animTimeout = setTimeout(() => {
+                        btn.classList.remove('active');
+                        animTimeout = null;
+                    }, 150);
+                });
+
+                // Add click for desktop (use same effect)
+                btn.addEventListener('click', (e) => {
+                    if (animTimeout) clearTimeout(animTimeout);
+                    btn.classList.remove('active');
+                    void btn.offsetWidth;
+                    btn.classList.add('active');
+                    animTimeout = setTimeout(() => {
+                        btn.classList.remove('active');
+                        animTimeout = null;
+                    }, 150);
+                }, true);
             }
         });
 
@@ -8568,17 +8758,11 @@ dogeUpgrades.forEach(u => {
                 const netWorthVal = btcUSD + ethUSD + dogeUSD + dollarBalance;
 
                 chartHistory.push(netWorthVal);
-                chartHistory.push(netWorthVal);
-                btcChartHistory.push(btcUSD);
                 btcChartHistory.push(btcUSD);
                 ethChartHistory.push(ethUSD);
-                ethChartHistory.push(ethUSD);
                 dogeChartHistory.push(dogeUSD);
-                dogeChartHistory.push(dogeUSD);
-                cashChartHistory.push(dollarBalance);
                 cashChartHistory.push(dollarBalance);
                 chartTimestamps.push({ time: Date.now(), value: netWorthVal, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
-                chartTimestamps.push({ time: Date.now() + 1000, value: netWorthVal, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
             }
 
             console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
@@ -8739,6 +8923,11 @@ dogeUpgrades.forEach(u => {
                                         return context.dataset.label + ': $' + abbreviateNumber(value, 2);
                                     }
                                 }
+                            },
+                            decimation: {
+                                enabled: true,
+                                algorithm: 'lttb',
+                                samples: 600
                             }
                         },
                         scales: {
@@ -9025,98 +9214,6 @@ dogeUpgrades.forEach(u => {
                 powerChartColors[powerChartColors.length - 1] = color;
             }
 
-            // Trim chart data intelligently: remove points from BETWEEN old data (not edges)
-            // This keeps the full time span visible while reducing point density as you play longer
-            if (now - lastTrimTime >= 120000) {
-                lastTrimTime = now;
-                const maxChartPoints = 7600; // Allow up to 63+ minutes at 500ms intervals before decimating
-
-                if (chartTimestamps.length > maxChartPoints) {
-                    // Uniform decimation: trim evenly across ALL data points
-                    // This makes the entire line progressively sparser as you play longer
-                    const decimationFactor = Math.ceil(chartTimestamps.length / Math.floor(maxChartPoints * 0.9));
-
-                    let newTimestamps = [];
-                    let newChartHistory = [];
-                    let newBtcHistory = [];
-                    let newEthHistory = [];
-                    let newDogeHistory = [];
-                    let newCashHistory = [];
-
-                    // ALWAYS keep the first point (game start at $0)
-                    newTimestamps.push(chartTimestamps[0]);
-                    newChartHistory.push(chartHistory[0]);
-                    newBtcHistory.push(btcChartHistory[0]);
-                    newEthHistory.push(ethChartHistory[0]);
-                    newDogeHistory.push(dogeChartHistory[0]);
-                    newCashHistory.push(cashChartHistory[0]);
-
-                    // Keep every Nth point starting from index 1 (skip the first since we already added it)
-                    for (let i = decimationFactor; i < chartTimestamps.length; i += decimationFactor) {
-                        newTimestamps.push(chartTimestamps[i]);
-                        newChartHistory.push(chartHistory[i]);
-                        newBtcHistory.push(btcChartHistory[i]);
-                        newEthHistory.push(ethChartHistory[i]);
-                        newDogeHistory.push(dogeChartHistory[i]);
-                        newCashHistory.push(cashChartHistory[i]);
-                    }
-
-                    // Always keep the last point (current moment)
-                    if (newTimestamps[newTimestamps.length - 1] !== chartTimestamps[chartTimestamps.length - 1]) {
-                        newTimestamps.push(chartTimestamps[chartTimestamps.length - 1]);
-                        newChartHistory.push(chartHistory[chartHistory.length - 1]);
-                        newBtcHistory.push(btcChartHistory[btcChartHistory.length - 1]);
-                        newEthHistory.push(ethChartHistory[ethChartHistory.length - 1]);
-                        newDogeHistory.push(dogeChartHistory[dogeChartHistory.length - 1]);
-                        newCashHistory.push(cashChartHistory[cashChartHistory.length - 1]);
-                    }
-
-                    // Replace arrays with decimated versions
-                    chartTimestamps = newTimestamps;
-                    chartHistory = newChartHistory;
-                    btcChartHistory = newBtcHistory;
-                    ethChartHistory = newEthHistory;
-                    dogeChartHistory = newDogeHistory;
-                    cashChartHistory = newCashHistory;
-
-                    // Also trim hash rate arrays uniformly
-                    if (hashRateChartTimestamps.length > maxChartPoints) {
-                        const hashDecFactor = Math.ceil(hashRateChartTimestamps.length / Math.floor(maxChartPoints * 0.9));
-
-                        let newHashTimestamps = [];
-                        let newHashRate = [];
-                        let newEthHashRate = [];
-                        let newDogeHashRate = [];
-
-                        // ALWAYS keep the first point
-                        newHashTimestamps.push(hashRateChartTimestamps[0]);
-                        newHashRate.push(hashRateChartHistory[0]);
-                        newEthHashRate.push(ethHashRateChartHistory[0]);
-                        newDogeHashRate.push(dogeHashRateChartHistory[0]);
-
-                        // Keep every Nth point starting from hashDecFactor
-                        for (let i = hashDecFactor; i < hashRateChartTimestamps.length; i += hashDecFactor) {
-                            newHashTimestamps.push(hashRateChartTimestamps[i]);
-                            newHashRate.push(hashRateChartHistory[i]);
-                            newEthHashRate.push(ethHashRateChartHistory[i]);
-                            newDogeHashRate.push(dogeHashRateChartHistory[i]);
-                        }
-
-                        // Always keep the last point
-                        if (newHashTimestamps[newHashTimestamps.length - 1] !== hashRateChartTimestamps[hashRateChartTimestamps.length - 1]) {
-                            newHashTimestamps.push(hashRateChartTimestamps[hashRateChartTimestamps.length - 1]);
-                            newHashRate.push(hashRateChartHistory[hashRateChartHistory.length - 1]);
-                            newEthHashRate.push(ethHashRateChartHistory[ethHashRateChartHistory.length - 1]);
-                            newDogeHashRate.push(dogeHashRateChartHistory[dogeHashRateChartHistory.length - 1]);
-                        }
-
-                        hashRateChartTimestamps = newHashTimestamps;
-                        hashRateChartHistory = newHashRate;
-                        ethHashRateChartHistory = newEthHashRate;
-                        dogeHashRateChartHistory = newDogeHashRate;
-                    }
-                }
-            }
 
             // Add a marker every minute (60 seconds)
             if (now - lastMarkerTime >= 60000) {
@@ -9134,7 +9231,9 @@ dogeUpgrades.forEach(u => {
             }
 
             // Collect chart data every loop (loop runs every 1000ms)
+            // Simply collect all data - Chart.js decimation plugin will handle optimization
             const wasEmpty = chartHistory.length === 0; // Track if this is first data point
+
             chartHistory.push(netWorth);
             btcChartHistory.push(btcBalance * btcPrice);
             ethChartHistory.push(ethBalance * ethPrice);
@@ -9145,25 +9244,185 @@ dogeUpgrades.forEach(u => {
             ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
             dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
 
-            // Update net worth chart - show ALL stored data (already trimmed for performance)
+            // Keep all historical data - Chart.js LTTB decimation will display as 600 samples
+            // No trimming needed during gameplay - all data is preserved for full chart history
+            // Large datasets are handled efficiently by the LTTB algorithm
+
+            // Keep all historical data - LTTB decimation handles display optimization
+
+            // DISABLED: Chart.js decimation plugin handles this now
+            // Kept for reference in case we need to revert
+            /*
+            const maxChartPoints = 100; // Hard limit for data points
+            const targetChartPoints = 75; // Target size after decimation (to stay well below limit)
+            if (chartTimestamps.length > maxChartPoints) {*/
+            if (false) { // DISABLED - Chart.js handles decimation
+                console.log('===== DECIMATION START =====');
+                console.log('Before decimation:', chartTimestamps.length, 'points');
+                // Uniform decimation: trim evenly across ALL data points
+                const decimationFactor = Math.ceil(chartTimestamps.length / targetChartPoints);
+                console.log('Decimation factor:', decimationFactor);
+
+                let newTimestamps = [];
+                let newChartHistory = [];
+                let newBtcHistory = [];
+                let newEthHistory = [];
+                let newDogeHistory = [];
+                let newCashHistory = [];
+
+                // ALWAYS keep the first point (game start at $0)
+                newTimestamps.push(chartTimestamps[0]);
+                newChartHistory.push(chartHistory[0]);
+                newBtcHistory.push(btcChartHistory[0]);
+                newEthHistory.push(ethChartHistory[0]);
+                newDogeHistory.push(dogeChartHistory[0]);
+                newCashHistory.push(cashChartHistory[0]);
+
+                // Keep every Nth point starting from decimationFactor
+                for (let i = decimationFactor; i < chartTimestamps.length; i += decimationFactor) {
+                    newTimestamps.push(chartTimestamps[i]);
+                    newChartHistory.push(chartHistory[i]);
+                    newBtcHistory.push(btcChartHistory[i]);
+                    newEthHistory.push(ethChartHistory[i]);
+                    newDogeHistory.push(dogeChartHistory[i]);
+                    newCashHistory.push(cashChartHistory[i]);
+                }
+
+                // Always keep the last point (current moment)
+                if (newTimestamps[newTimestamps.length - 1] !== chartTimestamps[chartTimestamps.length - 1]) {
+                    newTimestamps.push(chartTimestamps[chartTimestamps.length - 1]);
+                    newChartHistory.push(chartHistory[chartHistory.length - 1]);
+                    newBtcHistory.push(btcChartHistory[btcChartHistory.length - 1]);
+                    newEthHistory.push(ethChartHistory[ethChartHistory.length - 1]);
+                    newDogeHistory.push(dogeChartHistory[dogeChartHistory.length - 1]);
+                    newCashHistory.push(cashChartHistory[cashChartHistory.length - 1]);
+                }
+
+                // Replace arrays with decimated versions
+                chartTimestamps = newTimestamps;
+                chartHistory = newChartHistory;
+                btcChartHistory = newBtcHistory;
+                ethChartHistory = newEthHistory;
+                dogeChartHistory = newDogeHistory;
+                cashChartHistory = newCashHistory;
+                console.log('After decimation:', chartTimestamps.length, 'points');
+
+                // Post-decimation: Remove redundant flat-line points where values don't change
+                // Keep first and last points always, remove middle points where all values are identical to previous
+                let flatlineFiltered = [];
+                let flatlineTimestamps = [];
+                let flatlineBTC = [];
+                let flatlineETH = [];
+                let flatlineDOGE = [];
+                let flatlineCASH = [];
+
+                for (let i = 0; i < chartTimestamps.length; i++) {
+                    // Always keep first and last points
+                    if (i === 0 || i === chartTimestamps.length - 1) {
+                        flatlineTimestamps.push(chartTimestamps[i]);
+                        flatlineFiltered.push(chartHistory[i]);
+                        flatlineBTC.push(btcChartHistory[i]);
+                        flatlineETH.push(ethChartHistory[i]);
+                        flatlineDOGE.push(dogeChartHistory[i]);
+                        flatlineCASH.push(cashChartHistory[i]);
+                    } else {
+                        // Check if any value changed from previous point
+                        const prevIdx = i - 1;
+                        const anyChanged =
+                            chartHistory[i] !== chartHistory[prevIdx] ||
+                            btcChartHistory[i] !== btcChartHistory[prevIdx] ||
+                            ethChartHistory[i] !== ethChartHistory[prevIdx] ||
+                            dogeChartHistory[i] !== dogeChartHistory[prevIdx] ||
+                            cashChartHistory[i] !== cashChartHistory[prevIdx];
+
+                        // Only keep if at least one value changed
+                        if (anyChanged) {
+                            flatlineTimestamps.push(chartTimestamps[i]);
+                            flatlineFiltered.push(chartHistory[i]);
+                            flatlineBTC.push(btcChartHistory[i]);
+                            flatlineETH.push(ethChartHistory[i]);
+                            flatlineDOGE.push(dogeChartHistory[i]);
+                            flatlineCASH.push(cashChartHistory[i]);
+                        }
+                    }
+                }
+
+                // Replace with flatline-filtered versions
+                const beforeFlatline = chartTimestamps.length;
+                chartTimestamps = flatlineTimestamps;
+                chartHistory = flatlineFiltered;
+                btcChartHistory = flatlineBTC;
+                ethChartHistory = flatlineETH;
+                dogeChartHistory = flatlineDOGE;
+                cashChartHistory = flatlineCASH;
+                console.log('FLATLINE FILTER: Before =', beforeFlatline, 'After =', chartTimestamps.length, 'Removed =', beforeFlatline - chartTimestamps.length);
+                console.log('===== DECIMATION END =====');
+
+                // Also decimate hash rate arrays uniformly
+                if (hashRateChartTimestamps.length > maxChartPoints) {
+                    const hashDecFactor = Math.ceil(hashRateChartTimestamps.length / targetChartPoints);
+
+                    let newHashTimestamps = [];
+                    let newHashRate = [];
+                    let newEthHashRate = [];
+                    let newDogeHashRate = [];
+
+                    // ALWAYS keep the first point
+                    newHashTimestamps.push(hashRateChartTimestamps[0]);
+                    newHashRate.push(hashRateChartHistory[0]);
+                    newEthHashRate.push(ethHashRateChartHistory[0]);
+                    newDogeHashRate.push(dogeHashRateChartHistory[0]);
+
+                    // Keep every Nth point starting from hashDecFactor
+                    for (let i = hashDecFactor; i < hashRateChartTimestamps.length; i += hashDecFactor) {
+                        newHashTimestamps.push(hashRateChartTimestamps[i]);
+                        newHashRate.push(hashRateChartHistory[i]);
+                        newEthHashRate.push(ethHashRateChartHistory[i]);
+                        newDogeHashRate.push(dogeHashRateChartHistory[i]);
+                    }
+
+                    // Always keep the last point
+                    if (newHashTimestamps[newHashTimestamps.length - 1] !== hashRateChartTimestamps[hashRateChartTimestamps.length - 1]) {
+                        newHashTimestamps.push(hashRateChartTimestamps[hashRateChartTimestamps.length - 1]);
+                        newHashRate.push(hashRateChartHistory[hashRateChartHistory.length - 1]);
+                        newEthHashRate.push(ethHashRateChartHistory[ethHashRateChartHistory.length - 1]);
+                        newDogeHashRate.push(dogeHashRateChartHistory[dogeHashRateChartHistory.length - 1]);
+                    }
+
+                    // Replace with decimated versions
+                    hashRateChartTimestamps = newHashTimestamps;
+                    hashRateChartHistory = newHashRate;
+                    ethHashRateChartHistory = newEthHashRate;
+                    dogeHashRateChartHistory = newDogeHashRate;
+                }
+
+                // Invalidate both caches when data is decimated
+                lastCachedChartLength = 0;
+                lastCachedLabelCount = 0; // Force label recalculation on next update
+                console.log('DECIMATED: After =', chartTimestamps.length, 'points');
+            }
+
+            // Update net worth chart - show ALL stored data, LTTB decimation plugin handles display optimization
             // Chart always shows from $0 (start of game) to current
-            // Storage arrays are trimmed progressively to keep ~5k points max, preventing lag
+            // Storage arrays are trimmed during gameplay to keep ~5k points max, preventing lag
             // Update immediately on first data point, then every 1000ms to prevent flickering on far right
             const timeSinceLastChartUpdate = now - lastChartUpdateTime;
             if ((wasEmpty || timeSinceLastChartUpdate >= 1000) && nwChart && chartTimestamps.length > 0) {
                 lastChartUpdateTime = now;
 
-                // Display all data we have (storage arrays are already managed for performance)
-                const displayTimestamps = chartTimestamps.map(ts => ts.time);
+                // Generate labels for all data points (LTTB will select which ones to display)
+                const labels = chartTimestamps.map(ts => {
+                    return new Date(ts.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                });
 
-                // Update chart with data - create fresh arrays for Chart.js
-                nwChart.data.labels = displayTimestamps.map((ts) =>
-                    new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-                );
-                nwChart.data.datasets[0].data = [...btcChartHistory];
-                nwChart.data.datasets[1].data = [...ethChartHistory];
-                nwChart.data.datasets[2].data = [...dogeChartHistory];
-                nwChart.data.datasets[3].data = [...cashChartHistory];
+                // Update chart with ALL data - LTTB decimation plugin will intelligently reduce to 600 samples
+                nwChart.data.labels = labels;
+                nwChart.data.datasets[0].data = btcChartHistory;
+                nwChart.data.datasets[1].data = ethChartHistory;
+                nwChart.data.datasets[2].data = dogeChartHistory;
+                nwChart.data.datasets[3].data = cashChartHistory;
+
+                nwChart.update('none'); // Update chart without animation for performance
 
                 // Force preserve zoom settings if user has set zoom
                 // Do this BEFORE updating chart data to prevent Chart.js auto-scaling
@@ -9172,18 +9431,37 @@ dogeUpgrades.forEach(u => {
                     nwChart.options.scales.y.max = userLockedChartMax;
                 }
 
-                // Smart Y-axis scaling: only recalculate when data exceeds current max (not every 500ms)
-                // Skip scaling updates if user is actively controlling the zoom
+                // Smart Y-axis scaling: cache the max value to avoid recalculating every update
+                // Only recalculate when data length changes or cache is invalidated
                 if (!userControllingZoom && (btcChartHistory.length > 0 || ethChartHistory.length > 0 || dogeChartHistory.length > 0 || cashChartHistory.length > 0)) {
-                    // Find the HIGHEST value across ALL visible data (not just the latest)
-                    let currentMax = 0;
-                    if (btcChartHistory.length > 0) currentMax = Math.max(currentMax, Math.max(...btcChartHistory));
-                    if (ethChartHistory.length > 0) currentMax = Math.max(currentMax, Math.max(...ethChartHistory));
-                    if (dogeChartHistory.length > 0) currentMax = Math.max(currentMax, Math.max(...dogeChartHistory));
-                    if (cashChartHistory.length > 0) currentMax = Math.max(currentMax, Math.max(...cashChartHistory));
-
-                    // Only recalculate scale if current value exceeds 90% of current max (data is growing into limit)
-                    const currentScale = nwChart.options.scales.y.max || 1;
+                    // Check if cache is stale (array size changed)
+                    const currentDataLength = btcChartHistory.length + ethChartHistory.length + dogeChartHistory.length + cashChartHistory.length;
+                    if (currentDataLength !== lastCachedChartLength) {
+                        lastCachedChartLength = currentDataLength;
+                        // Recalculate max value only when data changes
+                        let currentMax = 0;
+                        if (btcChartHistory.length > 0) {
+                            for (let i = 0; i < btcChartHistory.length; i++) {
+                                if (btcChartHistory[i] > currentMax) currentMax = btcChartHistory[i];
+                            }
+                        }
+                        if (ethChartHistory.length > 0) {
+                            for (let i = 0; i < ethChartHistory.length; i++) {
+                                if (ethChartHistory[i] > currentMax) currentMax = ethChartHistory[i];
+                            }
+                        }
+                        if (dogeChartHistory.length > 0) {
+                            for (let i = 0; i < dogeChartHistory.length; i++) {
+                                if (dogeChartHistory[i] > currentMax) currentMax = dogeChartHistory[i];
+                            }
+                        }
+                        if (cashChartHistory.length > 0) {
+                            for (let i = 0; i < cashChartHistory.length; i++) {
+                                if (cashChartHistory[i] > currentMax) currentMax = cashChartHistory[i];
+                            }
+                        }
+                        cachedChartMax = currentMax;
+                    }
 
                     if (userHasSetZoom && userLockedChartMax !== null) {
                         // User has manually set zoom: keep zoom level completely fixed
@@ -9195,11 +9473,11 @@ dogeUpgrades.forEach(u => {
                         let yAxisMax;
                         if (chartYAxisScaleMultiplier === 0) {
                             // At exactly 0%, line touches the top
-                            yAxisMax = currentMax;
+                            yAxisMax = cachedChartMax;
                         } else {
                             // At 1-10%, add small padding as you zoom in
                             const paddingPercent = (10 - chartYAxisScaleMultiplier) / 100; // Less padding as zoom increases
-                            yAxisMax = currentMax * (1 + paddingPercent);
+                            yAxisMax = cachedChartMax * (1 + paddingPercent);
                         }
 
                         nwChart.options.scales.y.min = 0;
@@ -9252,8 +9530,8 @@ dogeUpgrades.forEach(u => {
             updateUI();
 
             updateCount++;
-            if (updateCount % 20 === 0) {
-                console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length);
+            if (updateCount % 10 === 0) {
+                console.log('Chart:', chartTimestamps.length, 'points | BTC:', btcChartHistory.length, 'ETH:', ethChartHistory.length, 'DOGE:', dogeChartHistory.length, 'CASH:', cashChartHistory.length);
             }
         }, 1000);
 
