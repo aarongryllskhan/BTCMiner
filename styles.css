@@ -1398,6 +1398,9 @@
             .u-item.btn-primary-doge:focus,
             .u-item.btn-primary-doge:active {
                 background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
+                border-color: #333 !important;
+                outline: none !important;
+            }
 
             /* Manual hash buttons stay colorful */
             .mine-btn.btn-primary-btc,
