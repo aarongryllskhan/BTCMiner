@@ -332,6 +332,8 @@
     let lastPowerChartUpdateTime = 0; // Track when power chart was last updated (3000ms interval)
     let lastShopReinitTime = 0; // Track when shops were last reinitialized (500ms interval)
     let lastStatsUpdateTime = 0; // Track when stat updates were last done (250ms interval)
+    let lastChartScaleCalcTime = 0; // Track when chart min/max scale was last calculated (60s interval)
+    let lastChartDataLength = 0; // Track previous chart data length to detect new data
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -2242,10 +2244,24 @@ function loadGame() {
             sessionEarnings = 0;
             lifetimeEarnings = 0;
             earningsThisRun = 0;  // Reset earnings since last rugpull
-            // Reset chart history
+            // Reset chart history - clear all chart data arrays
             chartHistory = [];
             chartTimestamps = [];
+            btcChartHistory = [];
+            ethChartHistory = [];
+            dogeChartHistory = [];
+            cashChartHistory = [];
+            hashRateChartHistory = [];
+            ethHashRateChartHistory = [];
+            dogeHashRateChartHistory = [];
+            hashRateChartTimestamps = [];
+            powerChartHistory = [];
+            currentPowerValues = [];
+            powerChartColors = [];
+            chartMarkers = [];
             chartStartTime = Date.now();
+            lastChartUpdateTime = Date.now();
+            lastChartDataLength = 0;
             // Reset power system
             totalPowerAvailable = 0;
             totalPowerUsed = 0;
@@ -7824,7 +7840,7 @@ dogeUpgrades.forEach(u => {
     }
     }
 
-    // Mining loop - runs every 50ms
+    // Mining loop - runs every 100ms for smooth earning display
     setInterval(() => {
         const now = Date.now();
         const deltaTime = (now - lastTickTime) / 1000;
@@ -7920,27 +7936,14 @@ dogeUpgrades.forEach(u => {
             lastStatsUpdateTime = now;
         }
 
-        // Collect chart data every 500ms
-        if (now - lastChartDataCollectionTime >= 500) {
-            lastChartDataCollectionTime = now;
-            const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-            chartHistory.push(netWorth);
-            btcChartHistory.push(btcBalance * btcPrice);
-            ethChartHistory.push(ethBalance * ethPrice);
-            dogeChartHistory.push(dogeBalance * dogePrice);
-            cashChartHistory.push(dollarBalance);
-            chartTimestamps.push({ time: now, value: netWorth, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
-            hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
-            ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
-            dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
-        }
+        // Chart data collection moved to main 1000ms loop for perfect timing
 
         // Check for rugpull milestone
         if (typeof window.checkRugpullMilestone === 'function') {
             window.checkRugpullMilestone();
         }
 
-    }, 50);
+    }, 100);
 
     // Initialize all shops after DOM is ready
     function initializeGame() {
@@ -8395,6 +8398,7 @@ dogeUpgrades.forEach(u => {
                                 display: true,
                                 position: 'left',
                                 min: 0,
+                                max: 10,
                                 grid: {
                                     color: 'rgba(255, 255, 255, 0.05)',
                                     drawBorder: false
@@ -8571,42 +8575,18 @@ dogeUpgrades.forEach(u => {
             // Update power tracking for continuous rendering
             lastHashRateChartUpdateTime = now;
 
-
-            // Collect chart data points every 500ms for smoother updates
-            if (now - lastChartDataCollectionTime >= 500) {
-                lastChartDataCollectionTime = now;
-
-                // Collect net worth data for primary chart
-                chartHistory.push(netWorth);
-                btcChartHistory.push(btcBalance * btcPrice);
-                ethChartHistory.push(ethBalance * ethPrice);
-                dogeChartHistory.push(dogeBalance * dogePrice);
-                cashChartHistory.push(dollarBalance);
-                chartTimestamps.push({ time: now, value: netWorth, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
-
-                // Collect hash rate and power data for secondary charts
-                hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
-                ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
-                dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
-
-                powerChartHistory.push(currentPercentage);
-                currentPowerValues.push(totalPowerUsed);
-                powerChartColors.push(color);
-                hashRateChartTimestamps.push({ time: now });
-            } else {
-                // Even when not collecting full data, keep power chart updated every frame for smooth rendering
-                if (powerChartHistory.length > 0 && hashRateChartTimestamps.length > 0) {
-                    // Update the last power data point to reflect current usage
-                    powerChartHistory[powerChartHistory.length - 1] = currentPercentage;
-                    powerChartColors[powerChartColors.length - 1] = color;
-                }
+            // Power chart updates every loop for smooth rendering (data already collected above in mining loop)
+            if (powerChartHistory.length > 0 && hashRateChartTimestamps.length > 0) {
+                // Update the last power data point to reflect current usage
+                powerChartHistory[powerChartHistory.length - 1] = currentPercentage;
+                powerChartColors[powerChartColors.length - 1] = color;
             }
 
             // Trim chart data intelligently: remove points from BETWEEN old data (not edges)
             // This keeps the full time span visible while reducing point density as you play longer
-            if (now - lastTrimTime >= 30000) {
+            if (now - lastTrimTime >= 120000) {
                 lastTrimTime = now;
-                const maxChartPoints = 3800; // Production limit: ~31-32 minutes at 500ms intervals
+                const maxChartPoints = 7600; // Allow up to 63+ minutes at 500ms intervals before decimating
 
                 if (chartTimestamps.length > maxChartPoints) {
                     // Uniform decimation: trim evenly across ALL data points
@@ -8710,48 +8690,52 @@ dogeUpgrades.forEach(u => {
                 }
             }
 
+            // Collect chart data every loop (loop runs every 500ms)
+            chartHistory.push(netWorth);
+            btcChartHistory.push(btcBalance * btcPrice);
+            ethChartHistory.push(ethBalance * ethPrice);
+            dogeChartHistory.push(dogeBalance * dogePrice);
+            cashChartHistory.push(dollarBalance);
+            chartTimestamps.push({ time: now, value: netWorth, cash: dollarBalance, btc: btcBalance, eth: ethBalance, doge: dogeBalance });
+            hashRateChartHistory.push(btcPerSec * totalMiningMultiplier);
+            ethHashRateChartHistory.push(ethPerSec * totalMiningMultiplier);
+            dogeHashRateChartHistory.push(dogePerSec * totalMiningMultiplier);
+
             // Update net worth chart - show ALL stored data (already trimmed for performance)
             // Chart always shows from $0 (start of game) to current
             // Storage arrays are trimmed progressively to keep ~5k points max, preventing lag
-            // Render chart every 500ms to balance smoothness with performance
-            if (nwChart && chartTimestamps.length > 0 && now - lastChartUpdateTime >= 500) {
-                lastChartUpdateTime = now;
+            // Render chart every loop (every 500ms for smooth animation)
+            if (nwChart && chartTimestamps.length > 0) {
+
                 // Display all data we have (storage arrays are already managed for performance)
                 const displayTimestamps = chartTimestamps.map(ts => ts.time);
-                const displayBTC = btcChartHistory.slice();
-                const displayETH = ethChartHistory.slice();
-                const displayDOGE = dogeChartHistory.slice();
-                const displayCASH = cashChartHistory.slice();
 
-                // Update chart with data
+                // Update chart with data - create fresh arrays for Chart.js
                 nwChart.data.labels = displayTimestamps.map((ts) =>
                     new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                 );
-                nwChart.data.datasets[0].data = displayBTC;      // BTC USD value
-                nwChart.data.datasets[1].data = displayETH;      // ETH USD value
-                nwChart.data.datasets[2].data = displayDOGE;     // DOGE USD value
-                nwChart.data.datasets[3].data = displayCASH;     // CASH USD value
+                nwChart.data.datasets[0].data = [...btcChartHistory];
+                nwChart.data.datasets[1].data = [...ethChartHistory];
+                nwChart.data.datasets[2].data = [...dogeChartHistory];
+                nwChart.data.datasets[3].data = [...cashChartHistory];
 
-                // Recalculate Y-axis scale dynamically from min to max of all displayed data
-                if (displayBTC.length > 0 || displayETH.length > 0 || displayDOGE.length > 0 || displayCASH.length > 0) {
-                    const allValues = [
-                        ...displayBTC,
-                        ...displayETH,
-                        ...displayDOGE,
-                        ...displayCASH
-                    ].filter(v => v !== undefined && v !== null);
+                // Smart Y-axis scaling: only recalculate when data exceeds current max (not every 500ms)
+                if (btcChartHistory.length > 0 || ethChartHistory.length > 0 || dogeChartHistory.length > 0 || cashChartHistory.length > 0) {
+                    // Find current max value (just the latest values, not the entire history)
+                    let currentMax = 0;
+                    if (btcChartHistory.length > 0) currentMax = Math.max(currentMax, btcChartHistory[btcChartHistory.length - 1]);
+                    if (ethChartHistory.length > 0) currentMax = Math.max(currentMax, ethChartHistory[ethChartHistory.length - 1]);
+                    if (dogeChartHistory.length > 0) currentMax = Math.max(currentMax, dogeChartHistory[dogeChartHistory.length - 1]);
+                    if (cashChartHistory.length > 0) currentMax = Math.max(currentMax, cashChartHistory[cashChartHistory.length - 1]);
 
-                    if (allValues.length > 0) {
-                        const minValue = Math.min(...allValues, 0);
-                        const maxValue = Math.max(...allValues, 0);
-                        const range = maxValue - minValue;
-
-                        // Add padding to Y-axis for visual breathing room
-                        const padding = range < 1 ? range * 0.2 : range * 0.05;
-                        const paddingAmount = Math.max(padding, maxValue * 0.1);
+                    // Only recalculate scale if current value exceeds 90% of current max (data is growing into limit)
+                    const currentScale = nwChart.options.scales.y.max || 1;
+                    if (currentMax > currentScale * 0.9) {
+                        const padding = currentMax < 1 ? currentMax * 0.2 : currentMax * 0.05;
+                        const paddingAmount = Math.max(padding, currentMax * 0.1);
 
                         nwChart.options.scales.y.min = 0;
-                        nwChart.options.scales.y.max = maxValue + paddingAmount;
+                        nwChart.options.scales.y.max = currentMax + paddingAmount;
                     }
                 }
 
