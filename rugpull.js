@@ -1750,7 +1750,7 @@ function updateMetaUpgradesUI() {
     const rugpullHeader = document.getElementById('rugpull-header');
     if (rugpullHeader) {
         const tokenDisplay = formatTokenCost(rugpullCurrency);
-        rugpullHeader.textContent = `🔴 RUGPULL UPGRADES | Corrupt Tokens: ${tokenDisplay}`;
+        rugpullHeader.innerHTML = `<div>RUGPULL UPGRADES</div><div style="font-size: 0.85rem; color: #999; margin-top: 4px;">Corrupt Tokens: ${tokenDisplay}</div>`;
     }
 
     // Display current bonuses (Cookie Clicker-style: +1% per ascension level)
@@ -1824,43 +1824,77 @@ function updateMetaUpgradesUI() {
     });
 
     const bonusesDiv = document.createElement('div');
-    bonusesDiv.style.background = '#1a2e2e';
-    bonusesDiv.style.border = '2px solid #4CAF50';
+    bonusesDiv.style.background = 'rgba(0, 0, 0, 0.4)';
+    bonusesDiv.style.border = '1px solid rgba(128, 0, 255, 0.3)';
     bonusesDiv.style.borderRadius = '6px';
-    bonusesDiv.style.padding = '15px';
+    bonusesDiv.style.padding = '16px';
     bonusesDiv.style.marginBottom = '20px';
-    bonusesDiv.style.textAlign = 'center';
     bonusesDiv.style.color = '#fff';
 
-    let bonusText = `<div style="color: #4CAF50; font-weight: bold; margin-bottom: 12px; font-size: 1.1rem;">YOUR CURRENT BONUSES</div>`;
-    bonusText += `<div style="font-size: 0.85rem; line-height: 2;">`;
-    bonusText += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">`;
-
-    // Row 1
-    bonusText += `<div>🔷 <strong>Rugpulls:</strong> <span style="color: #ffeb3b;">${ascensionLevel}</span></div>`;
-    bonusText += `<div>🖱️ <strong>Manual Hash:</strong> <span style="color: #ffeb3b;">+${((totalClickBonus - 1) * 100).toFixed(1)}%</span></div>`;
-
-    // Row 2
-    bonusText += `<div>📍 <strong>% of Hash Rate as Manual Hash:</strong> <span style="color: #ffeb3b;">+${clickHashRateBonus.toFixed(1)}%</span></div>`;
-    bonusText += `<div>⚙️ <strong>Power Capacity:</strong> <span style="color: #ffeb3b;">+${powerCapacityBonus.toFixed(1)}%</span></div>`;
-
-    // Row 3
-    bonusText += `<div>🔧 <strong>Miner Power Consumption:</strong> <span style="color: #ffeb3b;">-${minerPowerReduction.toFixed(1)}%</span></div>`;
-    bonusText += `<div>📈 <strong>Miner Hash Rate:</strong> <span style="color: #ffeb3b;">+${minerHashRateBonus.toFixed(1)}%</span></div>`;
-
-    // Row 4
-    bonusText += `<div>💰 <strong>Staking APR:</strong> <span style="color: #ffeb3b;">+${stakingAPRBonus.toFixed(2)}%</span></div>`;
-    bonusText += `<div>🌙 <strong>Offline Earnings Cap (Total):</strong> <span style="color: #ffeb3b;">${offlineEarningsBonus + 4}h</span></div>`;
-
-    // Row 5
-    bonusText += `<div>💵 <strong>Crypto Sale Value:</strong> <span style="color: #ffeb3b;">+${allEarningsBonus.toFixed(1)}%</span></div>`;
-    bonusText += `<div>🎮 <strong>Minigame Rewards:</strong> <span style="color: #ffeb3b;">+${minigameRewardBonus.toFixed(1)}%</span></div>`;
+    let bonusText = `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(128, 0, 255, 0.2);">`;
+    bonusText += `<div style="color: #8000ff; font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;">Active Bonuses</div>`;
     bonusText += `</div>`;
 
-    // Token Generation (full width)
-    bonusText += `<div style="margin-top: 12px;">🪙 <strong>Corrupt Tokens/s Passively:</strong> <span style="color: #ffeb3b;">+${tokenGenerationBonus.toFixed(5)}</span></div>`;
+    bonusText += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px; font-size: 0.8rem; line-height: 1.5;">`;
 
-    bonusText += `</div></div>`;
+    // Stat rows - all purple boxes
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Rugpulls</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">${ascensionLevel}</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Manual Hash</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">+${((totalClickBonus - 1) * 100).toFixed(1)}%</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Hash as Manual</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">+${clickHashRateBonus.toFixed(1)}%</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Power Capacity</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">+${powerCapacityBonus.toFixed(1)}%</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Miner Power</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">-${minerPowerReduction.toFixed(1)}%</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Miner Hash Rate</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">+${minerHashRateBonus.toFixed(1)}%</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Staking APR</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">+${stakingAPRBonus.toFixed(2)}%</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Offline Earnings</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">${offlineEarningsBonus + 4}h</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Crypto Sale Value</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">+${allEarningsBonus.toFixed(1)}%</div>
+    </div>`;
+
+    bonusText += `<div style="background: rgba(128, 0, 255, 0.15); padding: 8px; border-radius: 4px; border-left: 3px solid #8000ff;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Minigame Rewards</div>
+        <div style="color: #00ff88; font-weight: 700; font-size: 0.95rem;">+${minigameRewardBonus.toFixed(1)}%</div>
+    </div>`;
+
+    // Token Generation (full width)
+    bonusText += `<div style="grid-column: 1 / -1; background: rgba(247, 147, 26, 0.1); padding: 10px; border-radius: 4px; border-left: 3px solid #f7931a;">
+        <div style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 3px; font-weight: 600;">Passive Token Generation</div>
+        <div style="color: #f7931a; font-weight: 700; font-size: 1rem;">+${tokenGenerationBonus.toFixed(5)}/s</div>
+    </div>`;
+
+    bonusText += `</div>`;
     bonusesDiv.innerHTML = bonusText;
     container.appendChild(bonusesDiv);
 
@@ -1926,7 +1960,7 @@ function updateMetaUpgradesUI() {
             btn.style.width = '100%';
             btn.style.padding = '10px';
             btn.style.marginBottom = '8px';
-            btn.style.border = '2px solid #ff00ff';
+            btn.style.border = '2px solid #8000ff';
             btn.style.borderRadius = '6px';
             btn.style.background = upgrade.purchased ? '#333333' : (isLocked ? '#1a1a1a' : '#1a1a2e');
             btn.style.color = upgrade.purchased ? '#888888' : (isLocked ? '#555555' : '#ffffff');
@@ -2353,7 +2387,7 @@ function updateAscensionUI() {
     if (storeBtn || storeBtnDesktop || storeBtnMobile) {
         if (rugpullCurrency > 0) {
             if (storeBtn) storeBtn.style.display = 'inline-block';
-            if (storeBtnMobile) storeBtnMobile.style.display = 'block';
+            if (storeBtnMobile) storeBtnMobile.style.display = 'flex';
             if (storeBtnDesktop) storeBtnDesktop.style.display = 'flex';
         } else {
             if (storeBtn) storeBtn.style.display = 'none';

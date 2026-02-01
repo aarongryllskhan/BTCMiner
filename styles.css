@@ -3136,6 +3136,8 @@ button:disabled:hover {
                 width: calc(100% + 40px) !important;
                 box-sizing: border-box !important;
                 align-items: stretch !important;
+                display: flex !important;
+                height: 48px !important;
             }
 
             #rugpull-btn-mobile,
@@ -3146,9 +3148,10 @@ button:disabled:hover {
                 height: 100% !important;
                 min-height: 100% !important;
                 border-radius: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
                 flex: 1 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
 
             #mobile-rugpull-section .btn-action {
@@ -3159,6 +3162,13 @@ button:disabled:hover {
                 border-radius: 0 !important;
                 width: 100% !important;
                 max-width: 100% !important;
+                line-height: 1 !important;
+            }
+
+            #rugpull-store-btn-mobile-main {
+                display: flex !important;
+                height: 100% !important;
+                min-height: 100% !important;
             }
 
             /* Power status bar */
