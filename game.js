@@ -65,7 +65,90 @@
     let dogeManualHashRateLevel = 0;
 
     let hardwareEquity = 0;
-    let dollarBalance = 0; // USD balance from selling crypto
+    // BigNumber system: stores large numbers as {mantissa: 1.5, exponent: 9} instead of 1500000000
+    // This allows handling numbers beyond JavaScript's precision limit
+    class BigNumber {
+        constructor(mantissa = 0, exponent = 0) {
+            // Normalize: keep mantissa between 1 and 999.999...
+            if (mantissa !== 0) {
+                while (mantissa >= 1000 && exponent < 2000) {
+                    mantissa /= 1000;
+                    exponent += 3;
+                }
+                while (mantissa < 1 && mantissa !== 0 && exponent > -2000) {
+                    mantissa *= 1000;
+                    exponent -= 3;
+                }
+            }
+            this.mantissa = mantissa;
+            this.exponent = exponent;
+        }
+
+        // Convert to regular number (for numbers small enough)
+        toNumber() {
+            if (this.mantissa === 0) return 0;
+            return this.mantissa * Math.pow(10, this.exponent);
+        }
+
+        // Add two BigNumbers
+        add(other) {
+            if (this.mantissa === 0) return new BigNumber(other.mantissa, other.exponent);
+            if (other.mantissa === 0) return new BigNumber(this.mantissa, this.exponent);
+
+            // If exponents differ significantly, the smaller one is negligible
+            if (Math.abs(this.exponent - other.exponent) > 3) {
+                return this.exponent > other.exponent ?
+                    new BigNumber(this.mantissa, this.exponent) :
+                    new BigNumber(other.mantissa, other.exponent);
+            }
+
+            // Convert to same exponent
+            if (this.exponent === other.exponent) {
+                return new BigNumber(this.mantissa + other.mantissa, this.exponent);
+            } else if (this.exponent > other.exponent) {
+                const diff = this.exponent - other.exponent;
+                const otherMantissa = other.mantissa / Math.pow(10, diff);
+                return new BigNumber(this.mantissa + otherMantissa, this.exponent);
+            } else {
+                const diff = other.exponent - this.exponent;
+                const thisMantissa = this.mantissa / Math.pow(10, diff);
+                return new BigNumber(other.mantissa + thisMantissa, other.exponent);
+            }
+        }
+
+        // Multiply two BigNumbers
+        multiply(other) {
+            if (this.mantissa === 0 || other.mantissa === 0) return new BigNumber(0, 0);
+            return new BigNumber(this.mantissa * other.mantissa, this.exponent + other.exponent);
+        }
+
+        // Divide two BigNumbers
+        divide(other) {
+            if (other.mantissa === 0) return new BigNumber(0, 0);
+            if (this.mantissa === 0) return new BigNumber(0, 0);
+            return new BigNumber(this.mantissa / other.mantissa, this.exponent - other.exponent);
+        }
+
+        // Compare: returns -1 (this < other), 0 (equal), or 1 (this > other)
+        compare(other) {
+            if (this.exponent !== other.exponent) {
+                return this.exponent > other.exponent ? 1 : -1;
+            }
+            if (this.mantissa > other.mantissa) return 1;
+            if (this.mantissa < other.mantissa) return -1;
+            return 0;
+        }
+
+        // Create from regular number
+        static fromNumber(num) {
+            if (num === 0) return new BigNumber(0, 0);
+            const exp = Math.floor(Math.log10(Math.abs(num)));
+            const mantissa = num / Math.pow(10, exp);
+            return new BigNumber(mantissa, exp);
+        }
+    }
+
+    let dollarBalance = 0; // USD balance from selling crypto (use BigNumber for very large amounts)
     let lastTickTime = Date.now();
     let lastPriceUpdateTime = 0; // Track when price was last updated
     let manualHashClickTime = 0;
@@ -85,200 +168,175 @@
 
     // Master abbreviation system for all number formatting
     const ABBREVIATIONS = [
-        // ============ BEYOND CENTILLION (Extended to 1e500+) ============
-        { threshold: 1e500, suffix: 'NoDec' },
-        { threshold: 1e497, suffix: 'OcDec' },
-        { threshold: 1e494, suffix: 'SpDec' },
-        { threshold: 1e491, suffix: 'SxDec' },
-        { threshold: 1e488, suffix: 'QiDec' },
-        { threshold: 1e485, suffix: 'QaDec' },
-        { threshold: 1e482, suffix: 'TDec' },
-        { threshold: 1e479, suffix: 'DDec' },
-        { threshold: 1e476, suffix: 'UDec' },
-        { threshold: 1e473, suffix: 'Dec' },
-        { threshold: 1e470, suffix: 'NoDeci' },
-        { threshold: 1e467, suffix: 'OcDeci' },
-        { threshold: 1e464, suffix: 'SpDeci' },
-        { threshold: 1e461, suffix: 'SxDeci' },
-        { threshold: 1e458, suffix: 'QiDeci' },
-        { threshold: 1e455, suffix: 'QaDeci' },
-        { threshold: 1e452, suffix: 'TDeci' },
-        { threshold: 1e449, suffix: 'DDeci' },
-        { threshold: 1e446, suffix: 'UDeci' },
-        { threshold: 1e443, suffix: 'Deci' },
-        { threshold: 1e440, suffix: 'NoUnd' },
-        { threshold: 1e437, suffix: 'OcUnd' },
-        { threshold: 1e434, suffix: 'SpUnd' },
-        { threshold: 1e431, suffix: 'SxUnd' },
-        { threshold: 1e428, suffix: 'QiUnd' },
-        { threshold: 1e425, suffix: 'QaUnd' },
-        { threshold: 1e422, suffix: 'TUnd' },
-        { threshold: 1e419, suffix: 'DUnd' },
-        { threshold: 1e416, suffix: 'UUnd' },
-        { threshold: 1e413, suffix: 'Und' },
-        { threshold: 1e410, suffix: 'NoDuod' },
-        { threshold: 1e407, suffix: 'OcDuod' },
-        { threshold: 1e404, suffix: 'SpDuod' },
-        { threshold: 1e401, suffix: 'SxDuod' },
-        { threshold: 1e398, suffix: 'QiDuod' },
-        { threshold: 1e395, suffix: 'QaDuod' },
-        { threshold: 1e392, suffix: 'TDuod' },
-        { threshold: 1e389, suffix: 'DDuod' },
-        { threshold: 1e386, suffix: 'UDuod' },
-        { threshold: 1e383, suffix: 'Duod' },
-        { threshold: 1e380, suffix: 'NoTred' },
-        { threshold: 1e377, suffix: 'OcTred' },
-        { threshold: 1e374, suffix: 'SpTred' },
-        { threshold: 1e371, suffix: 'SxTred' },
-        { threshold: 1e368, suffix: 'QiTred' },
-        { threshold: 1e365, suffix: 'QaTred' },
-        { threshold: 1e362, suffix: 'TTred' },
-        { threshold: 1e359, suffix: 'DTred' },
-        { threshold: 1e356, suffix: 'UTred' },
-        { threshold: 1e353, suffix: 'Tred' },
-        { threshold: 1e350, suffix: 'NoQuad' },
-        { threshold: 1e347, suffix: 'OcQuad' },
-        { threshold: 1e344, suffix: 'SpQuad' },
-        { threshold: 1e341, suffix: 'SxQuad' },
-        { threshold: 1e338, suffix: 'QiQuad' },
-        { threshold: 1e335, suffix: 'QaQuad' },
-        { threshold: 1e332, suffix: 'TQuad' },
-        { threshold: 1e329, suffix: 'DQuad' },
-        { threshold: 1e326, suffix: 'UQuad' },
-        { threshold: 1e323, suffix: 'Quad' },
-        { threshold: 1e320, suffix: 'NoQuin' },
-        { threshold: 1e317, suffix: 'OcQuin' },
-        { threshold: 1e314, suffix: 'SpQuin' },
-        { threshold: 1e311, suffix: 'SxQuin' },
-        // ============ CENTILLION LEVEL (Extended structure) ============
-        { threshold: 1e308, suffix: '100Uc' },
-        { threshold: 1e307, suffix: '10Uc' },
-        { threshold: 1e306, suffix: 'Uc' },
-        { threshold: 1e305, suffix: '100Dc' },
-        { threshold: 1e304, suffix: '10Dc' },
-        { threshold: 1e303, suffix: 'Dc' },
-        { threshold: 1e302, suffix: '100Tc' },
-        { threshold: 1e301, suffix: '10Tc' },
-        { threshold: 1e300, suffix: 'Tc' },
-        { threshold: 1e299, suffix: '100Qac' },
-        { threshold: 1e298, suffix: '10Qac' },
-        { threshold: 1e297, suffix: 'Qac' },
-        { threshold: 1e296, suffix: '100Qic' },
-        { threshold: 1e295, suffix: '10Qic' },
-        { threshold: 1e294, suffix: 'Qic' },
-        { threshold: 1e293, suffix: '100Sxc' },
-        { threshold: 1e292, suffix: '10Sxc' },
-        { threshold: 1e291, suffix: 'Sxc' },
-        { threshold: 1e290, suffix: '100Spc' },
-        { threshold: 1e289, suffix: '10Spc' },
-        { threshold: 1e288, suffix: 'Spc' },
-        { threshold: 1e287, suffix: '100Occ' },
-        { threshold: 1e286, suffix: '10Occ' },
-        { threshold: 1e285, suffix: 'Occ' },
-        { threshold: 1e284, suffix: '100Noc' },
-        { threshold: 1e283, suffix: '10Noc' },
-        { threshold: 1e282, suffix: 'Noc' },
-        { threshold: 1e281, suffix: '100Ce' },
-        { threshold: 1e280, suffix: '10Ce' },
-        { threshold: 1e279, suffix: 'Ce' },
-        { threshold: 1e278, suffix: '100UCe' },
-        { threshold: 1e277, suffix: '10UCe' },
-        { threshold: 1e276, suffix: 'UCe' },
-        { threshold: 1e275, suffix: '100NoN' },
-        { threshold: 1e274, suffix: '10NoN' },
-        { threshold: 1e273, suffix: 'NoN' },
-        // ============ NONILLION AND BELOW (Original structure) ============
-        { threshold: 1e270, suffix: 'OcN' },
-        { threshold: 1e267, suffix: 'SpN' },
-        { threshold: 1e264, suffix: 'SxN' },
-        { threshold: 1e261, suffix: 'QiNg' },
-        { threshold: 1e258, suffix: 'QNg' },
-        { threshold: 1e255, suffix: 'TNg' },
-        { threshold: 1e252, suffix: 'DNg' },
-        { threshold: 1e249, suffix: 'UNg' },
-        { threshold: 1e246, suffix: 'Ng' },
-        { threshold: 1e243, suffix: 'NoO' },
-        { threshold: 1e240, suffix: 'OcO' },
-        { threshold: 1e237, suffix: 'SpO' },
-        { threshold: 1e234, suffix: 'SxO' },
-        { threshold: 1e231, suffix: 'QiO' },
-        { threshold: 1e228, suffix: 'QOg' },
-        { threshold: 1e225, suffix: 'TOg' },
-        { threshold: 1e222, suffix: 'DOg' },
-        { threshold: 1e219, suffix: 'UOg' },
-        { threshold: 1e216, suffix: 'Og' },
-        { threshold: 1e213, suffix: 'NoSp' },
-        { threshold: 1e210, suffix: 'OcSp' },
-        { threshold: 1e207, suffix: 'SpSp' },
-        { threshold: 1e204, suffix: 'SxSp' },
-        { threshold: 1e201, suffix: 'QiSp' },
-        { threshold: 1e198, suffix: 'QSp' },
-        { threshold: 1e195, suffix: 'TSp' },
-        { threshold: 1e192, suffix: 'DSp' },
-        { threshold: 1e189, suffix: 'USp' },
-        { threshold: 1e186, suffix: 'Spt' },
-        { threshold: 1e183, suffix: 'NoS' },
-        { threshold: 1e180, suffix: 'OcS' },
-        { threshold: 1e177, suffix: 'SpS' },
-        { threshold: 1e174, suffix: 'SxS' },
-        { threshold: 1e171, suffix: 'QiS' },
-        { threshold: 1e168, suffix: 'QSg' },
-        { threshold: 1e165, suffix: 'TSg' },
-        { threshold: 1e162, suffix: 'DSg' },
-        { threshold: 1e159, suffix: 'USg' },
-        { threshold: 1e156, suffix: 'Sg' },
-        { threshold: 1e153, suffix: 'NoQi' },
-        { threshold: 1e150, suffix: 'OcQi' },
-        { threshold: 1e147, suffix: 'SpQi' },
-        { threshold: 1e144, suffix: 'SxQi' },
-        { threshold: 1e141, suffix: 'QiQi' },
-        { threshold: 1e138, suffix: 'QQi' },
-        { threshold: 1e135, suffix: 'TQi' },
-        { threshold: 1e132, suffix: 'DQi' },
-        { threshold: 1e129, suffix: 'UQi' },
-        { threshold: 1e126, suffix: 'Qui' },
-        { threshold: 1e123, suffix: 'NoQ' },
-        { threshold: 1e120, suffix: 'OcQ' },
-        { threshold: 1e117, suffix: 'SpQ' },
-        { threshold: 1e114, suffix: 'SxQ' },
-        { threshold: 1e111, suffix: 'QiQ' },
-        { threshold: 1e108, suffix: 'QQu' },
-        { threshold: 1e105, suffix: 'TQu' },
-        { threshold: 1e102, suffix: 'DQu' },
-        { threshold: 1e99, suffix: 'UQu' },
-        { threshold: 1e96, suffix: 'Qua' },
-        { threshold: 1e93, suffix: 'NoT' },
-        { threshold: 1e90, suffix: 'OcT' },
-        { threshold: 1e87, suffix: 'SpT' },
-        { threshold: 1e84, suffix: 'SxT' },
-        { threshold: 1e81, suffix: 'QiT' },
-        { threshold: 1e78, suffix: 'QaT' },
-        { threshold: 1e75, suffix: 'TTr' },
-        { threshold: 1e72, suffix: 'DTr' },
-        { threshold: 1e69, suffix: 'UTr' },
-        { threshold: 1e66, suffix: 'Tr' },
-        { threshold: 1e63, suffix: 'NoV' },
-        { threshold: 1e60, suffix: 'OcV' },
-        { threshold: 1e57, suffix: 'SpV' },
-        { threshold: 1e54, suffix: 'SxV' },
-        { threshold: 1e51, suffix: 'QiV' },
-        { threshold: 1e48, suffix: 'QaV' },
-        { threshold: 1e45, suffix: 'TVi' },
-        { threshold: 1e42, suffix: 'DVi' },
-        { threshold: 1e39, suffix: 'UVi' },
-        { threshold: 1e36, suffix: 'Vi' },
-        { threshold: 1e33, suffix: 'NoD' },
-        { threshold: 1e30, suffix: 'OcD' },
-        { threshold: 1e27, suffix: 'SpD' },
-        { threshold: 1e24, suffix: 'SxD' },
-        { threshold: 1e21, suffix: 'QiD' },
-        { threshold: 1e18, suffix: 'QaD' },
-        // ============ STANDARD ABBREVIATIONS (Billion, Trillion, etc.) ============
-        { threshold: 1e15, suffix: 'Q' },       // Quadrillion
-        { threshold: 1e12, suffix: 'T' },       // Trillion
-        { threshold: 1e9, suffix: 'B' },        // Billion
-        { threshold: 1e6, suffix: 'M' },        // Million
-        { threshold: 1e3, suffix: 'K' }         // Thousand
+        // ============ EXTENDED RANGE (10^306 to 10^500) ============
+        { threshold: 1e500, suffix: 'Qng' },        // 10^500
+        { threshold: 1e497, suffix: 'Qg' },         // 10^497
+        { threshold: 1e494, suffix: 'Dg' },         // 10^494
+        { threshold: 1e491, suffix: 'Tg' },         // 10^491
+        { threshold: 1e488, suffix: 'Qag' },        // 10^488
+        { threshold: 1e485, suffix: 'Qig' },        // 10^485
+        { threshold: 1e482, suffix: 'Sxg' },        // 10^482
+        { threshold: 1e479, suffix: 'Spg' },        // 10^479
+        { threshold: 1e476, suffix: 'Ocg' },        // 10^476
+        { threshold: 1e473, suffix: 'Nog' },        // 10^473
+        { threshold: 1e470, suffix: 'Ung' },        // 10^470
+        { threshold: 1e467, suffix: 'Dung' },       // 10^467
+        { threshold: 1e464, suffix: 'Tung' },       // 10^464
+        { threshold: 1e461, suffix: 'Qaung' },      // 10^461
+        { threshold: 1e458, suffix: 'Qiung' },      // 10^458
+        { threshold: 1e455, suffix: 'Sxung' },      // 10^455
+        { threshold: 1e452, suffix: 'Spung' },      // 10^452
+        { threshold: 1e449, suffix: 'Ocung' },      // 10^449
+        { threshold: 1e446, suffix: 'Noung' },      // 10^446
+        { threshold: 1e443, suffix: 'Unng' },       // 10^443
+        { threshold: 1e440, suffix: 'Dunng' },      // 10^440
+        { threshold: 1e437, suffix: 'Tunng' },      // 10^437
+        { threshold: 1e434, suffix: 'Qaung' },      // 10^434
+        { threshold: 1e431, suffix: 'Qiung' },      // 10^431
+        { threshold: 1e428, suffix: 'Sxun' },       // 10^428
+        { threshold: 1e425, suffix: 'Spun' },       // 10^425
+        { threshold: 1e422, suffix: 'Ocun' },       // 10^422
+        { threshold: 1e419, suffix: 'Noun' },       // 10^419
+        { threshold: 1e416, suffix: 'Unt' },        // 10^416
+        { threshold: 1e413, suffix: 'Dunt' },       // 10^413
+        { threshold: 1e410, suffix: 'Tunt' },       // 10^410
+        { threshold: 1e407, suffix: 'Qaunt' },      // 10^407
+        { threshold: 1e404, suffix: 'Qiunt' },      // 10^404
+        { threshold: 1e401, suffix: 'Sxunt' },      // 10^401
+        { threshold: 1e398, suffix: 'Spunt' },      // 10^398
+        { threshold: 1e395, suffix: 'Ocunt' },      // 10^395
+        { threshold: 1e392, suffix: 'Nount' },      // 10^392
+        { threshold: 1e389, suffix: 'Unqua' },      // 10^389
+        { threshold: 1e386, suffix: 'Dunqua' },     // 10^386
+        { threshold: 1e383, suffix: 'Tunqua' },     // 10^383
+        { threshold: 1e380, suffix: 'Qaqua' },      // 10^380
+        { threshold: 1e377, suffix: 'Qiqua' },      // 10^377
+        { threshold: 1e374, suffix: 'Sxqua' },      // 10^374
+        { threshold: 1e371, suffix: 'Spqua' },      // 10^371
+        { threshold: 1e368, suffix: 'Ocqua' },      // 10^368
+        { threshold: 1e365, suffix: 'Noqua' },      // 10^365
+        { threshold: 1e363, suffix: 'VgCe' },        // 10^363 Viginticentillion
+        { threshold: 1e360, suffix: 'UDcCe' },      // 10^360 Undecicentillion
+        { threshold: 1e357, suffix: 'DcCe' },       // 10^357 Decicentillion
+        { threshold: 1e354, suffix: 'NCe' },        // 10^354 Novemcentillion
+        { threshold: 1e351, suffix: 'OCe' },        // 10^351 Octocentillion
+        { threshold: 1e348, suffix: 'SpCe' },       // 10^348 Septencentillion
+        { threshold: 1e345, suffix: 'SxCe' },       // 10^345 Sexcentillion
+        { threshold: 1e342, suffix: 'QiCe' },       // 10^342 Quincentillion
+        { threshold: 1e339, suffix: 'QaCe' },       // 10^339 Quattuorcentillion
+        { threshold: 1e336, suffix: 'TCe' },        // 10^336 Trescentillion
+        { threshold: 1e333, suffix: 'DCe' },        // 10^333 Duocentillion
+        { threshold: 1e330, suffix: 'UCe' },        // 10^330 Uncentillion
+        { threshold: 1e327, suffix: 'NCe' },        // 10^327 Novemcentillion
+        { threshold: 1e324, suffix: 'OCe' },        // 10^324 Octocentillion
+        { threshold: 1e321, suffix: 'SpCe' },       // 10^321 Septencentillion
+        { threshold: 1e318, suffix: 'SxCe' },       // 10^318 Sexcentillion
+        { threshold: 1e315, suffix: 'QiCe' },       // 10^315 Quincentillion
+        { threshold: 1e312, suffix: 'QaCe' },       // 10^312 Quattuorcentillion
+        { threshold: 1e309, suffix: 'TCe' },        // 10^309 Trescentillion
+        { threshold: 1e306, suffix: 'UCe' },        // 10^306 Uncentillion
+        { threshold: 1e303, suffix: 'Ce' },         // Centillion (10^303)
+        { threshold: 1e300, suffix: 'NoN' },        // 10^300
+        { threshold: 1e297, suffix: 'OcN' },        // 10^297
+        { threshold: 1e294, suffix: 'SpN' },        // 10^294
+        { threshold: 1e291, suffix: 'SxN' },        // 10^291
+        { threshold: 1e288, suffix: 'QiNg' },       // 10^288
+        { threshold: 1e285, suffix: 'QNg' },        // 10^285
+        { threshold: 1e282, suffix: 'TNg' },        // 10^282
+        { threshold: 1e279, suffix: 'DNg' },        // 10^279
+        { threshold: 1e276, suffix: 'UNg' },        // 10^276
+        { threshold: 1e273, suffix: 'Ng' },         // 10^273
+        { threshold: 1e270, suffix: 'NoO' },        // 10^270
+        { threshold: 1e267, suffix: 'OcO' },        // 10^267
+        { threshold: 1e264, suffix: 'SpO' },        // 10^264
+        { threshold: 1e261, suffix: 'SxO' },        // 10^261
+        { threshold: 1e258, suffix: 'QiO' },        // 10^258
+        { threshold: 1e255, suffix: 'QOg' },        // 10^255
+        { threshold: 1e252, suffix: 'TOg' },        // 10^252
+        { threshold: 1e249, suffix: 'DOg' },        // 10^249
+        { threshold: 1e246, suffix: 'UOg' },        // 10^246
+        { threshold: 1e243, suffix: 'Og' },         // 10^243
+        { threshold: 1e240, suffix: 'NoSp' },       // 10^240
+        { threshold: 1e237, suffix: 'OcSp' },       // 10^237
+        { threshold: 1e234, suffix: 'SpSp' },       // 10^234
+        { threshold: 1e231, suffix: 'SxSp' },       // 10^231
+        { threshold: 1e228, suffix: 'QiSp' },       // 10^228
+        { threshold: 1e225, suffix: 'QSp' },        // 10^225
+        { threshold: 1e222, suffix: 'TSp' },        // 10^222
+        { threshold: 1e219, suffix: 'DSp' },        // 10^219
+        { threshold: 1e216, suffix: 'USp' },        // 10^216
+        { threshold: 1e213, suffix: 'Spt' },        // 10^213
+        { threshold: 1e210, suffix: 'NoS' },        // 10^210
+        { threshold: 1e207, suffix: 'OcS' },        // 10^207
+        { threshold: 1e204, suffix: 'SpS' },        // 10^204
+        { threshold: 1e201, suffix: 'SxS' },        // 10^201
+        { threshold: 1e198, suffix: 'QiS' },        // 10^198
+        { threshold: 1e195, suffix: 'QSg' },        // 10^195
+        { threshold: 1e192, suffix: 'TSg' },        // 10^192
+        { threshold: 1e189, suffix: 'DSg' },        // 10^189
+        { threshold: 1e186, suffix: 'USg' },        // 10^186
+        { threshold: 1e183, suffix: 'Sg' },         // 10^183
+        { threshold: 1e180, suffix: 'NoQi' },       // 10^180
+        { threshold: 1e177, suffix: 'OcQi' },       // 10^177
+        { threshold: 1e174, suffix: 'SpQi' },       // 10^174
+        { threshold: 1e171, suffix: 'SxQi' },       // 10^171
+        { threshold: 1e168, suffix: 'QiQi' },       // 10^168
+        { threshold: 1e165, suffix: 'QQi' },        // 10^165
+        { threshold: 1e162, suffix: 'TQi' },        // 10^162
+        { threshold: 1e159, suffix: 'DQi' },        // 10^159
+        { threshold: 1e156, suffix: 'UQi' },        // 10^156
+        { threshold: 1e153, suffix: 'Qui' },        // 10^153
+        { threshold: 1e150, suffix: 'NoQ' },        // 10^150
+        { threshold: 1e147, suffix: 'OcQ' },        // 10^147
+        { threshold: 1e144, suffix: 'SpQ' },        // 10^144
+        { threshold: 1e141, suffix: 'SxQ' },        // 10^141
+        { threshold: 1e138, suffix: 'QiQ' },        // 10^138
+        { threshold: 1e135, suffix: 'QQu' },        // 10^135
+        { threshold: 1e132, suffix: 'TQu' },        // 10^132
+        { threshold: 1e129, suffix: 'DQu' },        // 10^129
+        { threshold: 1e126, suffix: 'UQu' },        // 10^126
+        { threshold: 1e123, suffix: 'Qua' },        // 10^123
+        { threshold: 1e120, suffix: 'NoT' },        // 10^120
+        { threshold: 1e117, suffix: 'OcT' },        // 10^117
+        { threshold: 1e114, suffix: 'SpT' },        // 10^114
+        { threshold: 1e111, suffix: 'SxT' },        // 10^111
+        { threshold: 1e108, suffix: 'QiT' },        // 10^108
+        { threshold: 1e105, suffix: 'QaT' },        // 10^105
+        { threshold: 1e102, suffix: 'TTr' },        // 10^102
+        { threshold: 1e99, suffix: 'DTr' },         // 10^99
+        { threshold: 1e96, suffix: 'UTr' },         // 10^96
+        { threshold: 1e93, suffix: 'Tr' },          // 10^93
+        { threshold: 1e90, suffix: 'NoV' },         // 10^90
+        { threshold: 1e87, suffix: 'OcV' },         // 10^87
+        { threshold: 1e84, suffix: 'SpV' },         // 10^84
+        { threshold: 1e81, suffix: 'SxV' },         // 10^81
+        { threshold: 1e78, suffix: 'QiV' },         // 10^78
+        { threshold: 1e75, suffix: 'QaV' },         // 10^75
+        { threshold: 1e72, suffix: 'TVi' },         // 10^72
+        { threshold: 1e69, suffix: 'DVi' },         // 10^69
+        { threshold: 1e66, suffix: 'UVi' },         // 10^66
+        { threshold: 1e63, suffix: 'Vi' },          // 10^63
+        { threshold: 1e60, suffix: 'NoD' },         // 10^60
+        { threshold: 1e57, suffix: 'OcD' },         // 10^57
+        { threshold: 1e54, suffix: 'SpD' },         // 10^54
+        { threshold: 1e51, suffix: 'SxD' },         // 10^51
+        { threshold: 1e48, suffix: 'QiD' },         // 10^48
+        { threshold: 1e45, suffix: 'QaD' },         // 10^45
+        { threshold: 1e42, suffix: 'TVi' },         // 10^42
+        { threshold: 1e39, suffix: 'DDe' },         // 10^39
+        { threshold: 1e36, suffix: 'UDe' },         // 10^36
+        { threshold: 1e33, suffix: 'De' },          // 10^33
+        { threshold: 1e30, suffix: 'No' },          // Nonillion (10^30)
+        { threshold: 1e27, suffix: 'Oc' },          // Octillion (10^27)
+        { threshold: 1e24, suffix: 'Sp' },          // Septillion (10^24)
+        // ============ STANDARD ABBREVIATIONS ============
+        { threshold: 1e21, suffix: 'Sx' },          // Sextillion (10^21)
+        { threshold: 1e18, suffix: 'Qi' },          // Quintillion (10^18)
+        { threshold: 1e15, suffix: 'Qa' },          // Quadrillion (10^15)
+        { threshold: 1e12, suffix: 'T' },           // Trillion (10^12)
+        { threshold: 1e9, suffix: 'B' },            // Billion (10^9)
+        { threshold: 1e6, suffix: 'M' },            // Million (10^6)
+        { threshold: 1e3, suffix: 'K' }             // Thousand (10^3)
     ];
 
     // Initialize gameState early so rugpull.js can access it
@@ -410,6 +468,7 @@
     // Power system - Rebalanced for strategic gameplay
     let totalPowerAvailable = 0; // Total watts available
     let totalPowerUsed = 0; // Total watts being used
+    let totalPowerUSD = 0; // Total USD spent on power equipment
     const powerUpgrades = [
         { id: 0, name: "Basic Power Strip", baseUsd: 10, basePower: 25 },
         { id: 1, name: "Regulated PSU", baseUsd: 100, basePower: 750 },
@@ -979,6 +1038,7 @@
             powerChartColors: trimmedPowerChartColors,
             hashRateChartTimestamps: trimmedHashRateChartTimestamps,
             totalPowerAvailable,
+            totalPowerUSD,
             // Staking data
             staking: getStakingData(),
             powerUpgrades: powerUpgrades.map(u => ({
@@ -1145,6 +1205,7 @@ function loadGame() {
             });
         }
         totalPowerAvailable = state.totalPowerAvailable || 0;
+        totalPowerUSD = state.totalPowerUSD || 0;
 
         // Load BTC upgrades
         if (state.btcUpgrades) {
@@ -1537,6 +1598,7 @@ function loadGame() {
             powerChartColors: trimmedPowerChartColors,
             hashRateChartTimestamps: trimmedHashRateChartTimestamps,
             totalPowerAvailable,
+            totalPowerUSD,
             // Staking data
             staking: getStakingData(),
             powerUpgrades: powerUpgrades.map(u => ({
@@ -3258,6 +3320,7 @@ function loadGame() {
 
         if (dollarBalance >= costUsd) {
             dollarBalance -= costUsd;
+            totalPowerUSD += costUsd;
             hardwareEquity += u.currentUsd;
             u.level++;
             u.currentPower = u.basePower * u.level;
@@ -3282,6 +3345,13 @@ function loadGame() {
             updateUI();
             saveGame();
             playUpgradeSound();
+
+            // Check power achievements based on total capacity and USD spent
+            if (typeof checkAchievements === 'function') {
+                // Make totalPowerUSD available globally for achievements check
+                window.totalPowerUSD = totalPowerUSD;
+                checkAchievements(totalPowerAvailable);
+            }
         }
     }
 
@@ -6451,19 +6521,68 @@ function updateManualHashRateButtons() {
 
     // Universal abbreviation function using master ABBREVIATIONS system
     function abbreviateNumber(num, decimals = 3) {
+        // Handle BigNumber objects
+        if (num instanceof BigNumber) {
+            const value = num.toNumber();
+            // If it fits in a regular number, use normal abbreviation
+            if (isFinite(value)) {
+                return abbreviateNumber(value, decimals);
+            }
+            // For extremely large BigNumbers, find matching abbreviation by exponent
+            for (let i = 0; i < ABBREVIATIONS.length; i++) {
+                // Get the exponent of the threshold (e.g., 1e500 has exponent 500)
+                const thresholdExp = Math.floor(Math.log10(ABBREVIATIONS[i].threshold));
+                if (num.exponent === thresholdExp) {
+                    const mantissaAbbr = num.mantissa.toFixed(2).replace(/\.?0+$/, '');
+                    return mantissaAbbr + ABBREVIATIONS[i].suffix;
+                }
+            }
+            // Fallback: just display mantissa and exponent
+            const mantissaAbbr = num.mantissa.toFixed(2).replace(/\.?0+$/, '');
+            return mantissaAbbr + ' × 10^' + num.exponent;
+        }
+
+        // Handle string input
+        if (typeof num === 'string') {
+            if (num === '∞') {
+                return '∞';
+            }
+            num = parseFloat(num);
+        }
+        if (typeof num !== 'number' || isNaN(num)) {
+            return '0';
+        }
+
         const abs = Math.abs(num);
 
+        // Handle infinity and NaN
+        if (!isFinite(abs)) {
+            return '∞';
+        }
+
+        // Check every threshold starting from the highest
         for (let i = 0; i < ABBREVIATIONS.length; i++) {
             if (abs >= ABBREVIATIONS[i].threshold) {
-                return (num / ABBREVIATIONS[i].threshold).toFixed(decimals) + ABBREVIATIONS[i].suffix;
+                const divided = num / ABBREVIATIONS[i].threshold;
+                const abbreviated = divided.toFixed(decimals);
+                // Remove trailing zeros after decimal point
+                const cleaned = abbreviated.replace(/\.?0+$/, '');
+                const suffix = String(ABBREVIATIONS[i].suffix || '');
+                return cleaned + suffix;
             }
         }
 
-        // Numbers below 1000
-        if (abs < 1) {
-            return num.toFixed(decimals);
+        // Numbers below smallest threshold (1000)
+        if (abs >= 1) {
+            // For numbers >= 1 but < 1000, use regular formatting without decimals if integer
+            if (num === Math.floor(num)) {
+                return Math.floor(num).toString();
+            }
+            return num.toFixed(decimals).replace(/\.?0+$/, '');
         }
-        return Math.floor(num).toLocaleString();
+
+        // Numbers below 1
+        return num.toFixed(decimals);
     }
 
     // Helper function to abbreviate large numbers (mobile always, desktop at 1B+)
@@ -6508,9 +6627,7 @@ function updateManualHashRateButtons() {
     // Format equipment level tags like [0], [1K], [1M], etc.
     function formatLevelTag(level) {
         if (level === 0) return '[0]';
-        if (level >= 1e9) return '[' + (level / 1e9).toFixed(1).replace(/\.0$/, '') + 'B]';
-        if (level >= 1e6) return '[' + (level / 1e6).toFixed(1).replace(/\.0$/, '') + 'M]';
-        if (level >= 1e3) return '[' + (level / 1e3).toFixed(1).replace(/\.0$/, '') + 'K]';
+        if (level >= 1e3) return '[' + abbreviateNumber(level, 1) + ']';
         return '[' + level + ']';
     }
 
@@ -6587,15 +6704,12 @@ function updateManualHashRateButtons() {
 
     // Format watts to power units: W, KW, MW, GW, TW, PW
     function formatPower(watts) {
-        if (watts >= 1e24) return (watts / 1e24).toFixed(2) + ' YW';  // Yottawatt
-        if (watts >= 1e21) return (watts / 1e21).toFixed(2) + ' ZW';  // Zettawatt
-        if (watts >= 1e18) return (watts / 1e18).toFixed(2) + ' EW';  // Exawatt
-        if (watts >= 1e15) return (watts / 1e15).toFixed(2) + ' PW';  // Petawatt
-        if (watts >= 1e12) return (watts / 1e12).toFixed(2) + ' TW';  // Terawatt
-        if (watts >= 1e9)  return (watts / 1e9).toFixed(2) + ' GW';   // Gigawatt
-        if (watts >= 1e6)  return (watts / 1e6).toFixed(2) + ' MW';   // Megawatt
-        if (watts >= 1e3)  return (watts / 1e3).toFixed(2) + ' KW';   // Kilowatt
-        return watts.toFixed(2) + ' W';  // Watts
+        // Use unified abbreviation system for all power amounts
+        if (watts >= 1e3) {
+            return abbreviateNumber(watts, 2) + 'W';
+        } else {
+            return watts.toFixed(2) + 'W';
+        }
     }
 
     function initBars() {
@@ -6831,12 +6945,9 @@ function updateManualHashRateButtons() {
 
         // Format balances with smart abbreviations
         const formatCryptoBalance = (balance, decimals = 8) => {
-            if (balance >= 1e9) {
-                return (balance / 1e9).toFixed(2) + 'B';
-            } else if (balance >= 1e6) {
-                return (balance / 1e6).toFixed(2) + 'M';
-            } else if (balance >= 1e3) {
-                return (balance / 1e3).toFixed(2) + 'K';
+            // Use unified abbreviation system for large numbers
+            if (balance >= 1e3) {
+                return abbreviateNumber(balance, 2);
             } else {
                 return balance.toFixed(decimals);
             }
@@ -6894,14 +7005,10 @@ function updateManualHashRateButtons() {
         // Update hardware equity with smart abbreviations
         document.getElementById('asset-usd').innerText = formatCurrencyAbbreviated(hardwareEquity, 1);
 
-        // Format hashrate with abbreviations (K, M, B, etc)
+        // Format hashrate with unified abbreviations
         const formatHashrate = (hashrate) => {
-            if (hashrate >= 1e9) {
-                return (hashrate / 1e9).toFixed(2) + 'B/s';
-            } else if (hashrate >= 1e6) {
-                return (hashrate / 1e6).toFixed(2) + 'M/s';
-            } else if (hashrate >= 1e3) {
-                return (hashrate / 1e3).toFixed(2) + 'K/s';
+            if (hashrate >= 1e3) {
+                return abbreviateNumber(hashrate, 2) + '/s';
             } else {
                 return hashrate.toFixed(8) + '/s';
             }
@@ -7018,7 +7125,17 @@ function updateManualHashRateButtons() {
         document.getElementById('doge-price').innerText = "$" + formatCryptoPrice(dogePrice);
 
         // Update dollar balance display
-        const dollarText = "$" + formatNumberForDisplay(dollarBalance);
+        // Handle Infinity by converting to BigNumber representation
+        let displayBalance = dollarBalance;
+        if (typeof dollarBalance === 'number' && !isFinite(dollarBalance) && dollarBalance > 0) {
+            // When a number exceeds MAX_VALUE and becomes Infinity,
+            // we need to represent it as a very large number
+            // Assume it's something like 1e500 for now, show appropriate suffix
+            displayBalance = new BigNumber(1, 500); // 1 × 10^500
+        } else if (typeof dollarBalance === 'number' && !isFinite(dollarBalance)) {
+            displayBalance = '∞';
+        }
+        const dollarText = "$" + formatNumberForDisplay(displayBalance);
         const dollarBalanceEl = document.getElementById('dollar-balance');
         if (dollarBalanceEl) dollarBalanceEl.innerText = dollarText;
         const dollarBalanceBtcEl = document.getElementById('dollar-balance-btc');
@@ -8375,7 +8492,7 @@ dogeUpgrades.forEach(u => {
                                         };
                                     },
                                     label: function(context) {
-                                        const value = context.parsed.y;
+                                        const value = parseFloat(context.parsed.y) || 0;
                                         return context.dataset.label + ': $' + abbreviateNumber(value, 2);
                                     }
                                 }
@@ -8710,8 +8827,10 @@ dogeUpgrades.forEach(u => {
             // Update net worth chart - show ALL stored data (already trimmed for performance)
             // Chart always shows from $0 (start of game) to current
             // Storage arrays are trimmed progressively to keep ~5k points max, preventing lag
-            // Render chart every loop (every 500ms for smooth animation)
-            if (nwChart && chartTimestamps.length > 0) {
+            // Only update chart rendering every 1000ms to prevent flickering on far right
+            const timeSinceLastChartUpdate = now - lastChartUpdateTime;
+            if (timeSinceLastChartUpdate >= 1000 && nwChart && chartTimestamps.length > 0) {
+                lastChartUpdateTime = now;
 
                 // Display all data we have (storage arrays are already managed for performance)
                 const displayTimestamps = chartTimestamps.map(ts => ts.time);
@@ -9232,15 +9351,8 @@ dogeUpgrades.forEach(u => {
                                     };
                                 },
                                 label: function(context) {
-                                    const value = context.parsed.y;
-                                    let formatted = '$' + value.toFixed(2);
-                                    if (value >= 1000000000) {
-                                        formatted = '$' + (value / 1000000000).toFixed(2) + 'B';
-                                    } else if (value >= 1000000) {
-                                        formatted = '$' + (value / 1000000).toFixed(2) + 'M';
-                                    } else if (value >= 1000) {
-                                        formatted = '$' + (value / 1000).toFixed(2) + 'k';
-                                    }
+                                    const value = parseFloat(context.parsed.y) || 0;
+                                    const formatted = '$' + abbreviateNumber(value, 2);
                                     return context.dataset.label + ': ' + formatted;
                                 }
                             }

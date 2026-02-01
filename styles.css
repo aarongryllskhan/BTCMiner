@@ -109,7 +109,7 @@
         #manual-hash-eth-btn,
         #manual-hash-doge-btn {
             border-radius: 0 !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.5) !important;
         }
 
         #btc-manual-hash-rate-btn,
@@ -182,7 +182,10 @@
         /* Manual Hash Buttons - Lightweight patterns */
         #manual-hash-btc-btn::before,
         #manual-hash-eth-btn::before,
-        #manual-hash-doge-btn::before {
+        #manual-hash-doge-btn::before,
+        #btc-manual-hash-rate-btn::before,
+        #eth-manual-hash-rate-btn::before,
+        #doge-manual-hash-rate-btn::before {
             content: '';
             position: absolute;
             top: 0;
@@ -198,7 +201,10 @@
 
         #manual-hash-btc-btn,
         #manual-hash-eth-btn,
-        #manual-hash-doge-btn {
+        #manual-hash-doge-btn,
+        #btc-manual-hash-rate-btn,
+        #eth-manual-hash-rate-btn,
+        #doge-manual-hash-rate-btn {
             position: relative;
             overflow: hidden;
         }
@@ -211,7 +217,13 @@
         #manual-hash-doge-btn img,
         #manual-hash-btc-btn br,
         #manual-hash-eth-btn br,
-        #manual-hash-doge-btn br {
+        #manual-hash-doge-btn br,
+        #btc-manual-hash-rate-btn span,
+        #eth-manual-hash-rate-btn span,
+        #doge-manual-hash-rate-btn span,
+        #btc-manual-hash-rate-btn div,
+        #eth-manual-hash-rate-btn div,
+        #doge-manual-hash-rate-btn div {
             position: relative;
             z-index: 2;
         }
@@ -1209,7 +1221,19 @@
         .btn-small {
             padding: 6px 12px;
             font-size: 0.75rem;
+            opacity: 1 !important;
+            filter: none !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
         }
+
+        .btn-small:active:not(:disabled) {
+            filter: none !important;
+        }
+
+        .btn-small:disabled {
+            filter: brightness(0.5) !important;
+        }
+
 
         .btn-wide {
             width: 100%;
@@ -1396,13 +1420,25 @@
             line-height: 1;
         }
 
+        .mine-btn:disabled {
+        }
+
         /* Manual hash button specific animation handling */
         #manual-hash-btc-btn.active,
         #manual-hash-eth-btn.active,
         #manual-hash-doge-btn.active {
-            filter: brightness(0.85);
-            transform: scale(0.94) translateY(3px);
+            filter: none;
+            transform: scale(0.96) translateY(2px);
         }
+
+        /* Manual hash rate button (+10%) specific animation handling */
+        #btc-manual-hash-rate-btn.active,
+        #eth-manual-hash-rate-btn.active,
+        #doge-manual-hash-rate-btn.active {
+            filter: none;
+            transform: scale(0.975) translateY(0px);
+        }
+
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .u-item {
             background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
@@ -2250,29 +2286,61 @@ button:disabled:hover {
 
         /* Achievements modal */
         #achievements-modal .modal-content {
-            max-width: 90vw;
-            max-height: 90vh;
-            width: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
+            max-width: 95vw !important;
+            max-height: 90vh !important;
+            width: calc(100vw - 20px) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding: 12px !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Desktop: reasonable modal size */
+        @media (min-width: 1025px) {
+            #achievements-modal .modal-content {
+                max-width: 75vw !important;
+                width: 75vw !important;
+                padding: 12px !important;
+            }
         }
 
         /* Mobile: tighter constraints */
+        @media (max-width: 768px) {
+            #achievements-modal .modal-content {
+                max-width: calc(100vw - 10px) !important;
+                width: calc(100vw - 10px) !important;
+                padding: 4px !important;
+                margin: 0 !important;
+            }
+        }
 
-        /* Desktop modal - constrained width */
+        /* Modal body padding override */
+        #achievements-modal .modal-body {
+            padding: 8px !important;
+            box-sizing: border-box !important;
+        }
+
+        @media (max-width: 768px) {
+            #achievements-modal .modal-body {
+                padding: 4px !important;
+            }
+        }
 
         /* Achievement items grid - responsive */
         #achievements-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 6px;
+            box-sizing: border-box;
         }
 
-        /* Mobile: 3 columns */
+        /* Mobile: 3 columns with minimal gaps */
         @media (max-width: 768px) {
             #achievements-container {
                 grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
+                gap: 3px;
+                padding: 0 !important;
+                box-sizing: border-box;
             }
         }
 
@@ -2367,9 +2435,24 @@ button:disabled:hover {
             flex-direction: column;
             gap: 4px;
             transition: all 0.3s ease;
-            aspect-ratio: 1 / 1.2;
+            aspect-ratio: 1 / 1;
             overflow: visible;
             position: relative;
+            box-sizing: border-box;
+        }
+
+        /* Mobile: More compact achievement items */
+        @media (max-width: 768px) {
+            .achievement-item {
+                padding: 3px;
+                gap: 2px;
+                border-radius: 2px;
+                border: 0.5px solid #FFD700;
+                aspect-ratio: auto;
+                min-height: auto;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
         }
 
         .achievement-item:hover {
@@ -2394,6 +2477,14 @@ button:disabled:hover {
             font-size: 2rem;
             text-align: center;
             flex-shrink: 0;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .achievement-emoji {
+                font-size: 1.1rem;
+                margin: 0;
+            }
         }
 
         .achievement-name-only {
@@ -2402,6 +2493,19 @@ button:disabled:hover {
             font-size: 0.9rem;
             text-align: center;
             line-height: 1.3;
+            margin: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        @media (max-width: 768px) {
+            .achievement-name-only {
+                font-size: 0.5rem;
+                line-height: 0.95;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                margin: 0;
+            }
         }
 
         .achievement-locked .achievement-name-only {
@@ -3142,6 +3246,77 @@ button:disabled:hover {
             .upgrade-list {
                 max-height: 400px !important;
                 flex: 0 0 400px !important;
+            }
+        }
+
+        /* Mobile permanent multiplier button sizing */
+        @media (max-width: 932px) {
+            #btc-global-multiplier-btn,
+            #eth-global-multiplier-btn,
+            #doge-global-multiplier-btn {
+                padding: 8px 6px !important;
+                gap: 4px !important;
+                flex-wrap: wrap !important;
+            }
+
+            #btc-global-multiplier-btn span:first-child,
+            #eth-global-multiplier-btn span:first-child,
+            #doge-global-multiplier-btn span:first-child {
+                font-size: 0.75rem !important;
+                letter-spacing: 0.5px !important;
+                flex: 1 1 100% !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+
+            #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
+                font-size: 0.55rem !important;
+                flex: 0 1 auto !important;
+            }
+
+            #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
+                font-size: 0.5rem !important;
+                min-width: 50px !important;
+                flex: 0 1 auto !important;
+            }
+        }
+
+        /* Extra small screens: 448px and below */
+        @media (max-width: 448px) {
+            #btc-global-multiplier-btn,
+            #eth-global-multiplier-btn,
+            #doge-global-multiplier-btn {
+                padding: 8px 6px !important;
+                gap: 4px !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                align-items: flex-start !important;
+                justify-content: space-between !important;
+            }
+
+            #btc-global-multiplier-btn span:first-child,
+            #eth-global-multiplier-btn span:first-child,
+            #doge-global-multiplier-btn span:first-child {
+                font-size: 0.6rem !important;
+                letter-spacing: 0px !important;
+                flex: 1 1 100% !important;
+                order: 1 !important;
+                margin-bottom: 4px !important;
+            }
+
+            #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
+                font-size: 0.45rem !important;
+                flex: 0 1 auto !important;
+                order: 2 !important;
+                text-align: left !important;
+            }
+
+            #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
+                font-size: 0.45rem !important;
+                min-width: auto !important;
+                flex: 0 1 auto !important;
+                order: 3 !important;
+                text-align: right !important;
             }
         }
 

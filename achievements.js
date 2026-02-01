@@ -52,14 +52,14 @@ const achievementDefinitions = {
     first_1vig: { id: 'first_1vig', name: 'Your First $1 Vigintillion', description: 'Lifetime earnings hit $1 Vigintillion', emoji: '♾️', category: 'earnings', threshold: 1e63 },
     first_googol: { id: 'first_googol', name: 'Your First $1 Googol', description: 'Lifetime earnings hit $1 Googol', emoji: '👑', category: 'earnings', threshold: 1e100 },
     first_centillion: { id: 'first_centillion', name: 'Your First $1 Centillion', description: 'Lifetime earnings hit $1 Centillion', emoji: '🏆', category: 'earnings', threshold: 1e303 },
-    first_1e150: { id: 'first_1e150', name: 'Your First 10^150', description: 'Lifetime earnings hit 10^150', emoji: '🌌', category: 'earnings', threshold: 1e150 },
-    first_1e200: { id: 'first_1e200', name: 'Your First 10^200', description: 'Lifetime earnings hit 10^200', emoji: '🔭', category: 'earnings', threshold: 1e200 },
-    first_1e250: { id: 'first_1e250', name: 'Your First 10^250', description: 'Lifetime earnings hit 10^250', emoji: '⚡', category: 'earnings', threshold: 1e250 },
-    first_1e300: { id: 'first_1e300', name: 'Your First 10^300', description: 'Lifetime earnings hit 10^300', emoji: '🌠', category: 'earnings', threshold: 1e300 },
-    first_1e350: { id: 'first_1e350', name: 'Your First 10^350', description: 'Lifetime earnings hit 10^350', emoji: '🚀', category: 'earnings', threshold: 1e350 },
-    first_1e400: { id: 'first_1e400', name: 'Your First 10^400', description: 'Lifetime earnings hit 10^400', emoji: '🛸', category: 'earnings', threshold: 1e400 },
-    first_1e450: { id: 'first_1e450', name: 'Your First 10^450', description: 'Lifetime earnings hit 10^450', emoji: '🌟', category: 'earnings', threshold: 1e450 },
-    first_1e500: { id: 'first_1e500', name: 'Your First 10^500 - INFINITE WEALTH', description: 'Lifetime earnings hit 10^500 - Ultimate achievement!', emoji: '✨', category: 'earnings', threshold: 1e500 },
+    first_1e150: { id: 'first_1e150', name: 'Your First 10^150', description: 'Lifetime earnings hit 10^150 - Deep Millenia', emoji: '🌌', category: 'earnings', threshold: 1e150 },
+    first_1e200: { id: 'first_1e200', name: 'Your First 10^200', description: 'Lifetime earnings hit 10^200 - Extreme Abundance', emoji: '🔭', category: 'earnings', threshold: 1e200 },
+    first_1e250: { id: 'first_1e250', name: 'Your First 10^250', description: 'Lifetime earnings hit 10^250 - Cosmic Wealth', emoji: '⚡', category: 'earnings', threshold: 1e250 },
+    first_1e300: { id: 'first_1e300', name: 'Your First Centillion', description: 'Lifetime earnings hit Centillion (10^300)', emoji: '🌠', category: 'earnings', threshold: 1e300 },
+    first_1e350: { id: 'first_1e350', name: 'Your First 10^350', description: 'Lifetime earnings hit 10^350 - Beyond Centillion', emoji: '🚀', category: 'earnings', threshold: 1e350 },
+    first_1e400: { id: 'first_1e400', name: 'Your First Quadringentillion', description: 'Lifetime earnings hit Quadringentillion (10^1203)', emoji: '🛸', category: 'earnings', threshold: 1e400 },
+    first_1e450: { id: 'first_1e450', name: 'Your First 10^450', description: 'Lifetime earnings hit 10^450 - Ultimate Power', emoji: '🌟', category: 'earnings', threshold: 1e450 },
+    first_1e500: { id: 'first_1e500', name: 'Your First Quingentillion', description: 'Lifetime earnings hit Quingentillion (10^1503) - INFINITE WEALTH', emoji: '✨', category: 'earnings', threshold: 1e500 },
 };
 
 // Generate equipment achievements for all miners (15 miners x 3 cryptos x 7 levels = 315 achievements)
@@ -212,6 +212,35 @@ Object.assign(achievementDefinitions, {
     power_1ew: { id: 'power_1ew', name: 'Galactic Force', description: 'Reach 1 EW of power consumption', emoji: '🌌', category: 'power', threshold: 1000000000000000000 },
     power_1zw: { id: 'power_1zw', name: 'Universal Power', description: 'Reach 1 ZW of power consumption', emoji: '🪐', category: 'power', threshold: 1000000000000000000000 },
     power_1yw: { id: 'power_1yw', name: 'Omnipotent', description: 'Reach 1 YW of power consumption', emoji: '✨', category: 'power', threshold: 1000000000000000000000000 },
+
+    // ============ POWER USD SPENT ============
+    power_usd_1k: { id: 'power_usd_1k', name: 'Power Investment Beginner', description: 'Spend Thousand on power equipment', emoji: '💰', category: 'power_usd', type: 'power_usd', threshold: 1e3 },
+    power_usd_1m: { id: 'power_usd_1m', name: 'Power Investment Starter', description: 'Spend Million on power equipment', emoji: '💵', category: 'power_usd', type: 'power_usd', threshold: 1e6 },
+    power_usd_1b: { id: 'power_usd_1b', name: 'Power Investment Enthusiast', description: 'Spend Billion on power equipment', emoji: '🏦', category: 'power_usd', type: 'power_usd', threshold: 1e9 },
+    power_usd_1t: { id: 'power_usd_1t', name: 'Power Investment Veteran', description: 'Spend Trillion on power equipment', emoji: '🏢', category: 'power_usd', type: 'power_usd', threshold: 1e12 },
+    power_usd_1qa: { id: 'power_usd_1qa', name: 'Power Investment Billionaire', description: 'Spend Quadrillion on power equipment', emoji: '🏛️', category: 'power_usd', type: 'power_usd', threshold: 1e15 },
+    power_usd_1sx: { id: 'power_usd_1sx', name: 'Power Investment Mega-Corp', description: 'Spend Quintillion on power equipment', emoji: '🌍', category: 'power_usd', type: 'power_usd', threshold: 1e18 },
+    power_usd_1se: { id: 'power_usd_1se', name: 'Power Investment Sextillion', description: 'Spend Sextillion on power equipment', emoji: '💎', category: 'power_usd', type: 'power_usd', threshold: 1e21 },
+    power_usd_1oc: { id: 'power_usd_1oc', name: 'Power Investment Septillion', description: 'Spend Septillion on power equipment', emoji: '👑', category: 'power_usd', type: 'power_usd', threshold: 1e24 },
+    power_usd_1no: { id: 'power_usd_1no', name: 'Power Investment Octillion', description: 'Spend Octillion on power equipment', emoji: '🏆', category: 'power_usd', type: 'power_usd', threshold: 1e27 },
+    power_usd_1de: { id: 'power_usd_1de', name: 'Power Investment Nonillion', description: 'Spend Nonillion on power equipment', emoji: '✨', category: 'power_usd', type: 'power_usd', threshold: 1e30 },
+    power_usd_1tr: { id: 'power_usd_1tr', name: 'Power Investment Decillion', description: 'Spend Decillion on power equipment', emoji: '🌟', category: 'power_usd', type: 'power_usd', threshold: 1e33 },
+    power_usd_1qr: { id: 'power_usd_1qr', name: 'Power Investment Undecillion', description: 'Spend Undecillion on power equipment', emoji: '💫', category: 'power_usd', type: 'power_usd', threshold: 1e36 },
+    power_usd_1qn: { id: 'power_usd_1qn', name: 'Power Investment Duodecillion', description: 'Spend Duodecillion on power equipment', emoji: '🌌', category: 'power_usd', type: 'power_usd', threshold: 1e39 },
+    power_usd_1cd: { id: 'power_usd_1cd', name: 'Power Investment Tredecillion', description: 'Spend Tredecillion on power equipment', emoji: '🪐', category: 'power_usd', type: 'power_usd', threshold: 1e42 },
+    power_usd_1ud: { id: 'power_usd_1ud', name: 'Power Investment Quattuordecillion', description: 'Spend Quattuordecillion on power equipment', emoji: '⭐', category: 'power_usd', type: 'power_usd', threshold: 1e45 },
+    power_usd_1dz: { id: 'power_usd_1dz', name: 'Power Investment Quindecillion', description: 'Spend Quindecillion on power equipment', emoji: '🔮', category: 'power_usd', type: 'power_usd', threshold: 1e48 },
+    power_usd_1vi: { id: 'power_usd_1vi', name: 'Power Investment Sexdecillion', description: 'Spend Sexdecillion on power equipment', emoji: '💝', category: 'power_usd', type: 'power_usd', threshold: 1e51 },
+    power_usd_1ti: { id: 'power_usd_1ti', name: 'Power Investment Septendecillion', description: 'Spend Septendecillion on power equipment', emoji: '🎆', category: 'power_usd', type: 'power_usd', threshold: 1e54 },
+    power_usd_1ov: { id: 'power_usd_1ov', name: 'Power Investment Octodecillion', description: 'Spend Octodecillion on power equipment', emoji: '🌠', category: 'power_usd', type: 'power_usd', threshold: 1e57 },
+    power_usd_1th: { id: 'power_usd_1th', name: 'Power Investment Novemdecillion', description: 'Spend Novemdecillion on power equipment', emoji: '💥', category: 'power_usd', type: 'power_usd', threshold: 1e60 },
+    power_usd_1ggl: { id: 'power_usd_1ggl', name: 'Power Investment Vigintillion', description: 'Spend Vigintillion on power equipment', emoji: '🔥', category: 'power_usd', type: 'power_usd', threshold: 1e63 },
+    power_usd_1ggg: { id: 'power_usd_1ggg', name: 'Power Investment Googol', description: 'Spend Googol on power equipment', emoji: '⚡', category: 'power_usd', type: 'power_usd', threshold: 1e100 },
+    power_usd_1c: { id: 'power_usd_1c', name: 'Power Investment Centillion', description: 'Spend Centillion on power equipment', emoji: '🌪️', category: 'power_usd', type: 'power_usd', threshold: 1e303 },
+    power_usd_1cc: { id: 'power_usd_1cc', name: 'Power Investment Ducentillion', description: 'Spend Ducentillion on power equipment', emoji: '🌊', category: 'power_usd', type: 'power_usd', threshold: 1e603 },
+    power_usd_1ccc: { id: 'power_usd_1ccc', name: 'Power Investment Trecentillion', description: 'Spend Trecentillion on power equipment', emoji: '🏔️', category: 'power_usd', type: 'power_usd', threshold: 1e903 },
+    power_usd_1m4: { id: 'power_usd_1m4', name: 'Power Investment Quadringentillion', description: 'Spend Quadringentillion on power equipment', emoji: '🌋', category: 'power_usd', type: 'power_usd', threshold: 1e1203 },
+    power_usd_1m5: { id: 'power_usd_1m5', name: 'Power Investment Quingentillion', description: 'Spend Quingentillion on power equipment', emoji: '∞', category: 'power_usd', type: 'power_usd', threshold: 1e1503 },
 
     // ============ CRYPTO HOLDINGS ============
     own_1_btc: { id: 'own_1_btc', name: 'Bitcoin Holder', description: 'Own 1 BTC', emoji: '₿', category: 'holdings', threshold: 1, type: 'btc' },
@@ -392,6 +421,13 @@ function checkAchievements(powerUsed = 0) {
         // ========== POWER ==========
         else if (achievement.category === 'power' && achievement.threshold) {
             if (totalPowerUsed >= achievement.threshold) {
+                unlocked = true;
+            }
+        }
+
+        // ========== POWER USD SPENT ==========
+        else if (achievement.category === 'power_usd' && achievement.type === 'power_usd' && achievement.threshold) {
+            if (typeof totalPowerUSD !== 'undefined' && totalPowerUSD >= achievement.threshold) {
                 unlocked = true;
             }
         }
