@@ -175,6 +175,22 @@
                 padding: 8px 12px !important;
                 flex-direction: column !important;
             }
+
+            /* Desktop RUGPULL button - slightly bigger with minimal spacing */
+            #desktop-rugpull-section {
+                margin-bottom: 2px !important;
+                margin-top: 2px !important;
+            }
+
+            #rugpull-btn-desktop {
+                padding: 8px 15px !important;
+                font-size: 0.7rem !important;
+                min-height: 38px !important;
+            }
+
+            #rugpull-btn-desktop span {
+                font-size: 0.75rem !important;
+            }
         }
 
         .panel { background: rgba(17, 17, 17, 0.85); border: 1px solid rgba(34, 34, 34, 0.8); border-radius: 12px; display: flex; flex-direction: column; padding: 24px; position: relative; overflow-y: auto; overflow-x: hidden; max-width: 100%; width: 100%; box-sizing: border-box; }
@@ -415,8 +431,10 @@
         @media (max-width: 932px) {
             body { padding: 0; margin: 0; height: auto; overflow-y: scroll; }
             #main-layout { grid-template-columns: 1fr !important; gap: 0; display: flex !important; flex-direction: column !important; height: auto; margin: 0; padding: 0; width: 100%; box-sizing: border-box; }
-            .panel { padding: 12px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; border: none; background: transparent; }
-            .panel:first-child { overflow: visible; flex: 0 0 auto; padding-top: 60px; }
+            .panel { padding: 0; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; border: none; background: transparent; }
+            .panel:first-child { overflow: visible; flex: 0 0 auto; padding-top: 0; }
+            #main-layout > div:first-child { border: none !important; }
+            #main-layout > div:last-child { border: none !important; }
             /* Reduce cash balance box height on mobile */
             div[style*="padding: 12px 16px"][style*="background: rgba(0, 255, 136, 0.1)"] {
                 padding: 8px 12px !important;
@@ -499,7 +517,7 @@
             #hashrate-display .stat-box span { font-size: 0.55rem !important; }
             #hashrate-display .stat-box b { font-size: 0.8rem !important; }
 
-            .chart-wrapper { min-height: 140px !important; height: 140px !important; flex: 0 0 140px !important; padding: 0; margin: 6px 0; overflow: hidden; position: relative; }
+            .chart-wrapper { min-height: 140px !important; height: 140px !important; flex: 0 0 140px !important; padding: 0; margin: 6px 0 0 0; overflow: hidden; position: relative; }
 
             /* Keep crypto prices in a 3-column row on mobile */
             #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 12px 0 !important; width: 100% !important; max-width: 100% !important; align-items: center !important; padding: 0 10px 10px 10px !important; box-sizing: border-box !important; }
@@ -671,9 +689,9 @@
 
         /* Extra optimizations for smallest phones: 360px - 448px (Galaxy S24, iPhone 15, Galaxy S24 Ultra) */
         @media (max-width: 448px) {
-            body { padding: 5px 5px 13px 5px; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { gap: 5px; display: flex; flex-direction: column; height: auto; }
-            .panel { padding: 6px; margin: 0; display: flex; flex-direction: column; padding-bottom: 35px !important; }
+            body { padding: 0; margin: 0; height: auto; overflow-y: scroll; }
+            #main-layout { gap: 0; display: flex; flex-direction: column; height: auto; }
+            .panel { padding: 0; margin: 0; display: flex; flex-direction: column; padding-bottom: 35px !important; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; }
             .panel:last-child { overflow: visible; flex: 0 0 auto; }
             .upgrade-list { overflow-y: auto !important; }
@@ -681,7 +699,7 @@
             div[style*="order: -1"] { margin-bottom: 0 !important; }
             .nw-amount { font-size: clamp(3.75rem, 11.25vw, 4.5rem); margin: 0 0 0 0; }
             .stat-val { font-size: 0.7rem !important; }
-            .chart-wrapper { min-height: 130px !important; height: 130px !important; flex: 0 0 130px !important; margin-top: 2px; padding: 2px; overflow: hidden; position: relative; }
+            .chart-wrapper { min-height: 130px !important; height: 130px !important; flex: 0 0 130px !important; margin-top: 0; padding: 2px; overflow: hidden; position: relative; }
             #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 130px !important; }
             /* Keep crypto prices in 3-column row on small phones */
             #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 4px !important; overflow: visible !important; margin-bottom: 6px !important; width: 100% !important; max-width: 100% !important; }
@@ -1287,7 +1305,7 @@
             border-radius: 8px;
             border: 1px solid #1a1a1a;
             position: relative;
-            margin-top: 2px;
+            margin-top: 0;
             padding: 2px;
             overflow: hidden;
             clip: auto;
@@ -2715,11 +2733,11 @@ button:disabled:hover {
             }
             .panel { padding-top: 65px !important; }
 
-            /* Hardware Equity box - 86x48 on 449+ */
+            /* Hardware Equity box - much smaller on 449-932 */
             div[style*="position: absolute"][style*="right: 10px"] {
-                width: 86px !important;
-                height: 48px !important;
-                padding: 2px 3px !important;
+                width: 50px !important;
+                height: 28px !important;
+                padding: 1px 2px !important;
                 top: 1px !important;
                 right: 1px !important;
                 overflow: hidden !important;
@@ -2727,6 +2745,22 @@ button:disabled:hover {
                 flex-direction: column !important;
                 justify-content: center !important;
                 align-items: center !important;
+            }
+
+            /* Smaller font for Hardware Equity on medium resolutions */
+            .stat-box-hardware {
+                width: 50px !important;
+                height: 28px !important;
+                font-size: 0.18rem !important;
+                padding: 1px 1px !important;
+            }
+
+            .stat-box-hardware span {
+                font-size: 0.15rem !important;
+            }
+
+            .stat-box-hardware b {
+                font-size: 0.22rem !important;
             }
         }
 
@@ -2787,11 +2821,12 @@ button:disabled:hover {
                 order: 2 !important;
                 display: flex !important;
                 width: 100% !important;
+                border: none !important;
             }
 
             /* Optimize panel padding on mobile */
             .panel {
-                padding: 10px !important;
+                padding: 0 !important;
                 border: none !important;
                 border-radius: 0 !important;
                 background: transparent !important;
@@ -3061,8 +3096,10 @@ button:disabled:hover {
             #main-layout > div:last-child {
                 flex-direction: column !important;
                 gap: 6px !important;
-                padding: 10px !important;
+                padding: 0 !important;
+                margin: 0 !important;
                 min-height: auto !important;
+                border: none !important;
             }
 
             .mine-btn {
@@ -3090,15 +3127,38 @@ button:disabled:hover {
             }
 
             #mobile-rugpull-section {
-                gap: 4px !important;
-                margin-bottom: 6px !important;
-                margin-top: 0 !important;
+                gap: 0 !important;
+                margin-bottom: -12px !important;
+                margin-top: -12px !important;
+                padding: 0 !important;
+                margin-left: -20px !important;
+                margin-right: -20px !important;
+                width: calc(100% + 40px) !important;
+                box-sizing: border-box !important;
+                align-items: stretch !important;
             }
 
             #rugpull-btn-mobile,
             #rugpull-store-btn-mobile-main {
                 font-size: 0.65rem !important;
-                padding: 6px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                height: 100% !important;
+                min-height: 100% !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 1 !important;
+            }
+
+            #mobile-rugpull-section .btn-action {
+                padding: 0 !important;
+                margin: 0 !important;
+                height: 100% !important;
+                min-height: 100% !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
             }
 
             /* Power status bar */
@@ -3151,7 +3211,7 @@ button:disabled:hover {
         /* Small phones: 360px - 448px - Extra optimization */
         @media (max-width: 448px) {
             .panel {
-                padding: 8px !important;
+                padding: 0 !important;
             }
 
             #utility-buttons-container {

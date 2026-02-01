@@ -396,7 +396,7 @@
     let lastMilestoneCheckTime = 0; // Track when milestone check was last called (throttle to 2000ms)
     let lastAchievementCheckTime = 0; // Track when achievements were last checked (throttle to 1000ms)
     let rugpullMilestoneAnnounced = false; // Flag to stop checking once goal is hit and announced
-    let chartYAxisScaleMultiplier = 5; // User-controlled Y-axis scale multiplier (1x to 10x)
+    let chartYAxisScaleMultiplier = 10; // User-controlled Y-axis scale multiplier (0-10 = auto-zoom, 11-100 = manual zoom)
     let userControllingZoom = false; // Flag to prevent auto-scaling during active slider interaction
     let userHasSetZoom = false; // Flag that user has manually set zoom - disables zoom-out permanently (until refresh)
     let userLockedChartMax = null; // Stores the Y-axis max value user locked in (prevents chart from moving after zoom set)
@@ -8544,6 +8544,7 @@ dogeUpgrades.forEach(u => {
                                     const maxValue = allValues.length > 0 ? Math.max(...allValues) : 100;
                                     return maxValue;
                                 })(),
+                                grace: 0,
                                 grid: {
                                     color: 'rgba(255, 255, 255, 0.05)',
                                     drawBorder: false
@@ -8707,24 +8708,48 @@ dogeUpgrades.forEach(u => {
 
                 chartYAxisScaleMultiplier = sliderValue;
                 userControllingZoom = true;
-                userHasSetZoom = true; // User has manually set zoom - disable zoom-out permanently
 
-                // Display the zoom percentage as-is (0% = no zoom, 100% = full zoom)
-                const zoomPercentage = Math.round(sliderValue);
-                yAxisScaleValue.innerText = zoomPercentage + '%';
-
-                // Lock in the Y-axis max at user's chosen level
-                userLockedChartMax = calculatedMax;
-
-                // Trigger chart update by calling update on the chart
-                if (nwChart) {
-                    nwChart.options.scales.y.max = calculatedMax;
-                    nwChart.options.scales.y.min = 0;
-                    nwChart.update();
+                // Only lock zoom if slider is above 10%
+                // At 0-10%, enable auto-zoom to follow highest line
+                if (sliderValue <= 10) {
+                    userHasSetZoom = false;
+                    userLockedChartMax = null;
+                } else {
+                    userHasSetZoom = true; // User has manually set zoom - disable zoom-out
+                    userLockedChartMax = calculatedMax;
                 }
 
-                // Keep userControllingZoom true while user is actively adjusting slider
-                // Don't reset it after letting go - the zoom stays locked at the user's chosen level
+                // Display zoom level: 1-10% shows as "FIXED", 0% and 11-100% show percentage
+                if (sliderValue > 0 && sliderValue <= 10) {
+                    yAxisScaleValue.innerText = 'FIXED';
+                } else {
+                    const zoomPercentage = Math.round(sliderValue);
+                    yAxisScaleValue.innerText = zoomPercentage + '%';
+                }
+
+                // Update chart during drag for real-time feedback
+                if (nwChart) {
+                    if (sliderValue <= 10) {
+                        // At 0-10% zoom, remove the locked max and let it auto-scale
+                        nwChart.options.scales.y.max = undefined;
+                    } else {
+                        // Above 10% zoom, set the calculated max
+                        nwChart.options.scales.y.max = calculatedMax;
+                    }
+                    nwChart.options.scales.y.min = 0;
+                    nwChart.update('none');
+                }
+            });
+
+            // Maintain zoom when user releases the slider
+            yAxisScaleSlider.addEventListener('change', () => {
+                userControllingZoom = false;
+                // Ensure the locked value persists
+                if (nwChart && userHasSetZoom && userLockedChartMax !== null) {
+                    nwChart.options.scales.y.min = 0;
+                    nwChart.options.scales.y.max = userLockedChartMax;
+                    nwChart.update('none');
+                }
             });
         }
 
@@ -8914,8 +8939,16 @@ dogeUpgrades.forEach(u => {
                 nwChart.data.datasets[2].data = [...dogeChartHistory];
                 nwChart.data.datasets[3].data = [...cashChartHistory];
 
+                // Force preserve zoom settings if user has set zoom
+                // Do this BEFORE updating chart data to prevent Chart.js auto-scaling
+                if (userHasSetZoom && userLockedChartMax !== null) {
+                    nwChart.options.scales.y.min = 0;
+                    nwChart.options.scales.y.max = userLockedChartMax;
+                }
+
                 // Smart Y-axis scaling: only recalculate when data exceeds current max (not every 500ms)
-                if (btcChartHistory.length > 0 || ethChartHistory.length > 0 || dogeChartHistory.length > 0 || cashChartHistory.length > 0) {
+                // Skip scaling updates if user is actively controlling the zoom
+                if (!userControllingZoom && (btcChartHistory.length > 0 || ethChartHistory.length > 0 || dogeChartHistory.length > 0 || cashChartHistory.length > 0)) {
                     // Find current max value (just the latest values, not the entire history)
                     let currentMax = 0;
                     if (btcChartHistory.length > 0) currentMax = Math.max(currentMax, btcChartHistory[btcChartHistory.length - 1]);
@@ -8926,21 +8959,25 @@ dogeUpgrades.forEach(u => {
                     // Only recalculate scale if current value exceeds 90% of current max (data is growing into limit)
                     const currentScale = nwChart.options.scales.y.max || 1;
 
-                    if (userHasSetZoom) {
-                        // User has manually set zoom: lock chart at their chosen level, don't move
-                        if (userLockedChartMax !== null) {
-                            nwChart.options.scales.y.min = 0;
-                            nwChart.options.scales.y.max = userLockedChartMax;
+                    if (userHasSetZoom && userLockedChartMax !== null) {
+                        // User has manually set zoom: keep zoom level completely fixed
+                        // Data can go off-screen if it exceeds the zoom level - that's intentional
+                        // No expansion, no adjustment, just hold the line
+                    } else if (!userHasSetZoom) {
+                        // Auto-scaling when user hasn't manually set zoom (slider at 0-10%)
+                        // At 0%, highest line touches top; at 10%, still auto-zoom but with slight padding
+                        let yAxisMax;
+                        if (chartYAxisScaleMultiplier === 0) {
+                            // At exactly 0%, line touches the top
+                            yAxisMax = currentMax;
+                        } else {
+                            // At 1-10%, add small padding as you zoom in
+                            const paddingPercent = (10 - chartYAxisScaleMultiplier) / 100; // Less padding as zoom increases
+                            yAxisMax = currentMax * (1 + paddingPercent);
                         }
-                    } else if (!userControllingZoom) {
-                        // Normal auto-scaling when user hasn't manually set zoom
-                        if (currentMax > currentScale * 0.9) {
-                            const padding = currentMax < 1 ? currentMax * 0.2 : currentMax * 0.05;
-                            const paddingAmount = Math.max(padding, currentMax * 0.1);
 
-                            nwChart.options.scales.y.min = 0;
-                            nwChart.options.scales.y.max = currentMax + paddingAmount;
-                        }
+                        nwChart.options.scales.y.min = 0;
+                        nwChart.options.scales.y.max = yAxisMax;
                     }
                 }
 
