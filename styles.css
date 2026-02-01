@@ -380,6 +380,14 @@
                 padding: 2px 4px !important;
                 min-width: 35px;
             }
+            /* Keep Current Speed text on one line on very narrow screens */
+            div[id^="yield-"], div[id^="eth-yield-"], div[id^="doge-yield-"],
+            div[id^="pow-current-"] {
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                font-size: 0.85rem !important;
+            }
         }
 
         /* Larger phones: 449px - 932px (iPhone 15 Pro, Pixel 8, iPhone 15 Pro Max, Pixel 8 Pro) */
@@ -501,6 +509,7 @@
 
             .stat-box span { font-size: 0.55rem !important; line-height: 1.1 !important; margin-bottom: 2px !important; color: #888; text-transform: uppercase; font-weight: 700; }
             .stat-box b { font-size: 0.85rem !important; line-height: 1.2 !important; }
+            #ascension-info { margin-bottom: 0px !important; }
 
             /* Hashrate boxes in 1 row of 3 - full width */
             #hashrate-display {
@@ -682,9 +691,11 @@
             /* Power section styling for mobile */
             #power-section { padding: 8px !important; margin-bottom: 6px !important; }
             #power-status { font-size: 0.6rem !important; margin-bottom: 4px !important; }
+            #power-status-section { margin-bottom: 0px !important; }
             #upgrade-power-btn { padding: 8px 12px !important; font-size: 0.65rem !important; width: 100% !important; }
             #power-upgrade-btn { padding: 6px 10px !important; font-size: 0.65rem !important; flex: 1 !important; }
-            .tab-buttons { gap: 6px !important; }
+            #auto-sell-section { margin-bottom: 0px !important; }
+            .tab-buttons { gap: 4px !important; margin-bottom: 0px !important; }
             .tab-btn { padding: 10px 8px !important; font-size: 0.75rem !important; }
         }
 
@@ -835,13 +846,16 @@
             /* Power section styling for very small phones */
             #power-section { padding: 6px !important; margin-bottom: 5px !important; }
             #power-status { font-size: 0.55rem !important; margin-bottom: 3px !important; }
+            #power-status-section { margin-bottom: 0px !important; }
             #upgrade-power-btn { padding: 6px 10px !important; font-size: 0.6rem !important; width: 100% !important; }
             #power-upgrade-btn { padding: 5px 8px !important; font-size: 0.6rem !important; flex: 1 !important; }
-            .tab-buttons { gap: 4px !important; }
+            #auto-sell-section { margin-bottom: 0px !important; }
+            #ascension-info { margin-bottom: 0px !important; }
+            .tab-buttons { gap: 4px !important; margin-bottom: 0px !important; }
             .tab-btn { padding: 8px 6px !important; font-size: 0.7rem !important; }
         }
 
-        .u-item { padding: 10px; margin-bottom: 8px; }
+        .u-item { padding: 10px; margin-bottom: 4px; }
         
         .nw-label { font-size: 1.5rem; color: #555; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; margin-top: 0 !important; padding-top: 0 !important; margin-bottom: 8px; }
         .nw-amount {
@@ -1327,7 +1341,7 @@
             position: relative;
         }
 
-        .tab-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
+        .tab-buttons { display: flex; gap: 4px; margin-bottom: 4px; }
         .tab-btn { flex: 1; padding: 8px; background: #333; border: 2px solid #444; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.2s; box-sizing: border-box; box-shadow: none !important; }
 
         /* Only apply color fill on devices that support true hover (desktop/mouse) */
@@ -1342,6 +1356,96 @@
             #power-upgrade-btn { background: #333 !important; }
             #power-upgrade-btn:hover { background: linear-gradient(135deg, rgba(0, 255, 136, 0.5) 0%, rgba(51, 255, 170, 0.5) 100%) !important; box-shadow: none !important; }
             #autoclicker-btn:hover { background: linear-gradient(135deg, rgba(100, 100, 100, 0.5) 0%, rgba(150, 150, 150, 0.5) 100%) !important; box-shadow: none !important; }
+        }
+
+        /* Disable persistent hover effects on touch devices */
+        @media (hover: none) and (pointer: coarse) {
+            button { outline: none !important; -webkit-tap-highlight-color: transparent !important; box-shadow: none !important; }
+            button:active { outline: none !important; box-shadow: none !important; }
+            button:focus { outline: none !important; box-shadow: none !important; }
+            button:focus-visible { outline: none !important; box-shadow: none !important; filter: none !important; }
+            button::-webkit-outer-spin-button,
+            button::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+            /* Force default colors for all button states on touch - no hover effect */
+            .btn-primary { -webkit-tap-highlight-color: transparent !important; }
+            /* Manual hash buttons keep their colors, shop items (.u-item) stay dark */
+            .mine-btn.btn-primary-btc { background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important; -webkit-tap-highlight-color: transparent !important; }
+            .mine-btn.btn-primary-eth { background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important; -webkit-tap-highlight-color: transparent !important; }
+            .mine-btn.btn-primary-doge { background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important; -webkit-tap-highlight-color: transparent !important; }
+            .u-item { background: linear-gradient(135deg, #222 0%, #181818 100%) !important; -webkit-tap-highlight-color: transparent !important; -webkit-focus-ring-color: transparent !important; outline: none !important; border-color: #333 !important; color: #fff !important; box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+            .u-item:focus, .u-item:active, .u-item:focus-visible { -webkit-focus-ring-color: transparent !important; box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+
+            /* Override hover/focus/active states for mobile shop items - stay dark */
+            .u-item.btn-primary-btc,
+            .u-item.btn-primary-btc:hover,
+            .u-item.btn-primary-btc:focus,
+            .u-item.btn-primary-btc:active {
+                background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
+                border-color: #333 !important;
+                outline: none !important;
+            }
+            .u-item.btn-primary-eth,
+            .u-item.btn-primary-eth:hover,
+            .u-item.btn-primary-eth:focus,
+            .u-item.btn-primary-eth:active {
+                background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
+                border-color: #333 !important;
+                outline: none !important;
+            }
+            .u-item.btn-primary-doge,
+            .u-item.btn-primary-doge:hover,
+            .u-item.btn-primary-doge:focus,
+            .u-item.btn-primary-doge:active {
+                background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
+
+            /* Manual hash buttons stay colorful */
+            .mine-btn.btn-primary-btc,
+            .mine-btn.btn-primary-btc:hover,
+            .mine-btn.btn-primary-btc:focus,
+            .mine-btn.btn-primary-btc:active {
+                background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+                border-color: #f7931a !important;
+                outline: none !important;
+            }
+            .mine-btn.btn-primary-eth,
+            .mine-btn.btn-primary-eth:hover,
+            .mine-btn.btn-primary-eth:focus,
+            .mine-btn.btn-primary-eth:active {
+                background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
+                border-color: #627eea !important;
+                outline: none !important;
+            }
+            .mine-btn.btn-primary-doge,
+            .mine-btn.btn-primary-doge:hover,
+            .mine-btn.btn-primary-doge:focus,
+            .mine-btn.btn-primary-doge:active {
+                background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
+                border-color: #c2a633 !important;
+                outline: none !important;
+            }
+
+            /* Specific override for permanent upgrade buttons on touch - always show dark color */
+            #btc-global-multiplier-btn.u-item,
+            #eth-global-multiplier-btn.u-item,
+            #doge-global-multiplier-btn.u-item {
+                background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
+            }
+
+            #btc-global-multiplier-btn.u-item:focus,
+            #btc-global-multiplier-btn.u-item:active,
+            #eth-global-multiplier-btn.u-item:focus,
+            #eth-global-multiplier-btn.u-item:active,
+            #doge-global-multiplier-btn.u-item:focus,
+            #doge-global-multiplier-btn.u-item:active {
+                background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
+            }
+
+            /* Disable active state effects on mobile for u-item buttons */
+            .u-item:active:not(:disabled) {
+                transform: none !important;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+            }
         }
 
         /* Remove any persistent hover on touch devices */
@@ -1384,6 +1488,7 @@
             align-items: center !important;
             justify-content: center !important;
             min-height: 32px !important;
+            margin-bottom: 0 !important;
         }
         .qty-toggle:focus {
             box-shadow: none !important;
@@ -1464,7 +1569,7 @@
             border: 2px solid #333 !important;
             border-radius: 6px !important;
             padding: 15px !important;
-            margin-bottom: 8px !important;
+            margin-bottom: 4px !important;
             display: flex !important;
             justify-content: space-between !important;
             align-items: flex-start !important;
@@ -1484,6 +1589,40 @@
         .u-item.btn-primary:hover:not(:disabled) {
             /* No transform - keep button in place */
             /* Color change is handled by btn-primary:hover */
+        }
+
+        /* Override u-item background for permanent upgrade buttons */
+        #btc-global-multiplier-btn.u-item {
+            background: linear-gradient(135deg, #9a5208 0%, #c26a0f 100%) !important;
+            border-color: #9a5208 !important;
+            color: #fff !important;
+        }
+
+        #btc-global-multiplier-btn.u-item:hover:not(:disabled) {
+            background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%) !important;
+            border-color: #f7931a !important;
+        }
+
+        #eth-global-multiplier-btn.u-item {
+            background: linear-gradient(135deg, #334fa8 0%, #445fc8 100%) !important;
+            border-color: #334fa8 !important;
+            color: #fff !important;
+        }
+
+        #eth-global-multiplier-btn.u-item:hover:not(:disabled) {
+            background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
+            border-color: #627eea !important;
+        }
+
+        #doge-global-multiplier-btn.u-item {
+            background: linear-gradient(135deg, #726220 0%, #8a741f 100%) !important;
+            border-color: #726220 !important;
+            color: #fff !important;
+        }
+
+        #doge-global-multiplier-btn.u-item:hover:not(:disabled) {
+            background: linear-gradient(135deg, #c2a633 0%, #d4b644 100%) !important;
+            border-color: #c2a633 !important;
         }
 
         .u-item.btn-primary:active:not(:disabled),
@@ -3129,7 +3268,7 @@ button:disabled:hover {
 
             #mobile-rugpull-section {
                 gap: 0 !important;
-                margin-bottom: -12px !important;
+                margin-bottom: -8px !important;
                 margin-top: -12px !important;
                 padding: 0 !important;
                 margin-left: -20px !important;
@@ -3153,6 +3292,7 @@ button:disabled:hover {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
+                flex-direction: column !important;
             }
 
             #mobile-rugpull-section .btn-action {
@@ -3238,6 +3378,14 @@ button:disabled:hover {
 
             #mobile-rugpull-section {
                 margin-bottom: 0 !important;
+                height: 48px !important;
+                align-items: stretch !important;
+            }
+
+            #rugpull-btn-mobile,
+            #rugpull-store-btn-mobile-main {
+                height: 100% !important;
+                min-height: 100% !important;
             }
 
             #utility-buttons-container button {
@@ -3292,7 +3440,7 @@ button:disabled:hover {
             /* Make upgrade buttons bigger and more exciting on mobile */
             .u-item {
                 padding: 12px 14px !important;
-                margin-bottom: 8px !important;
+                margin-bottom: 4px !important;
                 min-height: auto !important;
                 height: auto !important;
                 border-radius: 8px !important;

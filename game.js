@@ -2705,6 +2705,26 @@ function loadGame() {
 
         container.appendChild(btn);
 
+        // Blur button after tap/click to remove focus state on mobile (reverts hover color)
+        btn.addEventListener('touchend', () => {
+            btn.blur();
+            // Prevent focus from returning
+            setTimeout(() => {
+                if (document.activeElement === btn) {
+                    btn.blur();
+                }
+            }, 0);
+        });
+        btn.addEventListener('click', () => {
+            btn.blur();
+            // Prevent focus from returning
+            setTimeout(() => {
+                if (document.activeElement === btn) {
+                    btn.blur();
+                }
+            }, 0);
+        });
+
         // Doubling buttons will be created dynamically by updateDoublingButtons()
         // No pre-creation needed
         });
@@ -2732,6 +2752,24 @@ function loadGame() {
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="pow-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
+
+            // Blur button after tap/click to remove focus state on mobile (reverts hover color)
+            btn.addEventListener('touchend', () => {
+                btn.blur();
+                setTimeout(() => {
+                    if (document.activeElement === btn) {
+                        btn.blur();
+                    }
+                }, 0);
+            });
+            btn.addEventListener('click', () => {
+                btn.blur();
+                setTimeout(() => {
+                    if (document.activeElement === btn) {
+                        btn.blur();
+                    }
+                }, 0);
+            });
         });
     }
 
@@ -2775,6 +2813,24 @@ function loadGame() {
             }
 
             container.appendChild(btn);
+
+            // Blur button after tap/click to remove focus state on mobile (reverts hover color)
+            btn.addEventListener('touchend', () => {
+                btn.blur();
+                setTimeout(() => {
+                    if (document.activeElement === btn) {
+                        btn.blur();
+                    }
+                }, 0);
+            });
+            btn.addEventListener('click', () => {
+                btn.blur();
+                setTimeout(() => {
+                    if (document.activeElement === btn) {
+                        btn.blur();
+                    }
+                }, 0);
+            });
 
             // Doubling buttons will be created dynamically by updateDoublingButtons()
             // No pre-creation needed
@@ -2820,6 +2876,24 @@ function loadGame() {
             }
 
             container.appendChild(btn);
+
+            // Blur button after tap/click to remove focus state on mobile (reverts hover color)
+            btn.addEventListener('touchend', () => {
+                btn.blur();
+                setTimeout(() => {
+                    if (document.activeElement === btn) {
+                        btn.blur();
+                    }
+                }, 0);
+            });
+            btn.addEventListener('click', () => {
+                btn.blur();
+                setTimeout(() => {
+                    if (document.activeElement === btn) {
+                        btn.blur();
+                    }
+                }, 0);
+            });
 
             // Doubling buttons will be created dynamically by updateDoublingButtons()
             // No pre-creation needed
@@ -6177,8 +6251,17 @@ function updateGlobalMultiplierButtons() {
         const btcCanAfford = dollarBalance >= btcNextCost;
         const btcMultiplier = Math.pow(2, btcMultiplierLevel);
 
-        document.getElementById('btc-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(btcNextCost)}`;
-        document.getElementById('btc-multiplier-level').innerHTML = `Multiplier: ${btcMultiplier}x`;
+        const btcCostEl = document.getElementById('btc-multiplier-cost');
+        const btcCostText = `Cost: $${formatNumberForDisplay(btcNextCost)}`;
+        if (btcCostEl && btcCostEl.textContent !== btcCostText) {
+            btcCostEl.textContent = btcCostText;
+        }
+
+        const btcLevelEl = document.getElementById('btc-multiplier-level');
+        const btcLevelText = `Multiplier: ${btcMultiplier}x`;
+        if (btcLevelEl && btcLevelEl.textContent !== btcLevelText) {
+            btcLevelEl.textContent = btcLevelText;
+        }
 
         // Darken button if can't afford
         if (!btcCanAfford) {
@@ -6197,8 +6280,17 @@ function updateGlobalMultiplierButtons() {
         const ethCanAfford = dollarBalance >= ethNextCost;
         const ethMultiplier = Math.pow(2, ethMultiplierLevel);
 
-        document.getElementById('eth-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(ethNextCost)}`;
-        document.getElementById('eth-multiplier-level').innerHTML = `Multiplier: ${ethMultiplier}x`;
+        const ethCostEl = document.getElementById('eth-multiplier-cost');
+        const ethCostText = `Cost: $${formatNumberForDisplay(ethNextCost)}`;
+        if (ethCostEl && ethCostEl.textContent !== ethCostText) {
+            ethCostEl.textContent = ethCostText;
+        }
+
+        const ethLevelEl = document.getElementById('eth-multiplier-level');
+        const ethLevelText = `Multiplier: ${ethMultiplier}x`;
+        if (ethLevelEl && ethLevelEl.textContent !== ethLevelText) {
+            ethLevelEl.textContent = ethLevelText;
+        }
 
         // Darken button if can't afford
         if (!ethCanAfford) {
@@ -6217,8 +6309,17 @@ function updateGlobalMultiplierButtons() {
         const dogeCanAfford = dollarBalance >= dogeNextCost;
         const dogeMultiplier = Math.pow(2, dogeMultiplierLevel);
 
-        document.getElementById('doge-multiplier-cost').innerHTML = `Cost: $${formatNumberForDisplay(dogeNextCost)}`;
-        document.getElementById('doge-multiplier-level').innerHTML = `Multiplier: ${dogeMultiplier}x`;
+        const dogeCostEl = document.getElementById('doge-multiplier-cost');
+        const dogeCostText = `Cost: $${formatNumberForDisplay(dogeNextCost)}`;
+        if (dogeCostEl && dogeCostEl.textContent !== dogeCostText) {
+            dogeCostEl.textContent = dogeCostText;
+        }
+
+        const dogeLevelEl = document.getElementById('doge-multiplier-level');
+        const dogeLevelText = `Multiplier: ${dogeMultiplier}x`;
+        if (dogeLevelEl && dogeLevelEl.textContent !== dogeLevelText) {
+            dogeLevelEl.textContent = dogeLevelText;
+        }
 
         // Darken button if can't afford
         if (!dogeCanAfford) {
@@ -7152,7 +7253,7 @@ function updateManualHashRateButtons() {
         } else if (typeof dollarBalance === 'number' && !isFinite(dollarBalance)) {
             displayBalance = '∞';
         }
-        const dollarText = "$" + formatNumberForDisplay(displayBalance);
+        const dollarText = "$" + abbreviateNumber(displayBalance, 2);
         const dollarBalanceEl = document.getElementById('dollar-balance');
         if (dollarBalanceEl) dollarBalanceEl.innerText = dollarText;
         const dollarBalanceBtcEl = document.getElementById('dollar-balance-btc');
@@ -8475,10 +8576,10 @@ dogeUpgrades.forEach(u => {
                                 align: 'center',
                                 labels: {
                                     color: '#999',
-                                    font: { size: window.innerWidth <= 448 ? 6 : (window.innerWidth <= 932 ? 8 : 12) },
-                                    boxWidth: 18,
-                                    boxHeight: 13,
-                                    padding: 6
+                                    font: { size: window.innerWidth <= 448 ? 7 : (window.innerWidth <= 932 ? 8 : 12) },
+                                    boxWidth: 12,
+                                    boxHeight: 10,
+                                    padding: 3
                                 }
                             },
                             tooltip: {
@@ -8555,7 +8656,7 @@ dogeUpgrades.forEach(u => {
                                         size: 11
                                     },
                                     callback: function(value) {
-                                        return formatCurrencyAbbreviated(value, 1);
+                                        return '$' + abbreviateNumber(value, 1);
                                     }
                                 }
                             }
@@ -10018,7 +10119,43 @@ dogeUpgrades.forEach(u => {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             initializeGame();
+            // Remove hover state after touch on mobile devices
+            document.addEventListener('touchstart', function(e) {
+                if (e.target) {
+                    const btn = e.target.closest('button');
+                    if (btn) btn.style.WebkitTapHighlightColor = 'transparent';
+                }
+            });
+            document.addEventListener('touchend', function(e) {
+                // Blur the tapped button to remove active/hover state
+                if (e.target) {
+                    const el = e.target.closest('button');
+                    if (el) {
+                        el.blur();
+                        // Force remove focus state by focusing body
+                        document.body.focus();
+                    }
+                }
+            });
         });
     } else {
         initializeGame();
+        // Remove hover state after touch on mobile devices
+        document.addEventListener('touchstart', function(e) {
+            if (e.target) {
+                const btn = e.target.closest('button');
+                if (btn) btn.style.WebkitTapHighlightColor = 'transparent';
+            }
+        });
+        document.addEventListener('touchend', function(e) {
+            // Blur the tapped button to remove active/hover state
+            if (e.target) {
+                const el = e.target.closest('button');
+                if (el) {
+                    el.blur();
+                    // Force remove focus state by focusing body
+                    document.body.focus();
+                }
+            }
+        });
     }

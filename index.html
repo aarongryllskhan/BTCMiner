@@ -434,7 +434,7 @@
             </div>
 
             <!-- Power Status Bar -->
-            <div style="padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222; margin-bottom: 0;">
+            <div id="power-status-section" style="padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #222; margin-bottom: 0;">
                 <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
                     <div style="flex: 1;">
                         <span style="font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 2px;">Power Status</span>
@@ -448,7 +448,7 @@
             </div>
 
             <!-- Auto-Sell Toggle Button -->
-            <div style="margin-bottom: 8px;">
+            <div id="auto-sell-section" style="margin-bottom: 8px;">
                 <button id="auto-sell-toggle-btn" class="btn-secondary btn-wide" onclick="toggleAutoSellButton()" title="Purchase 'Auto-Sell Crypto to USD' upgrade to enable" disabled>
                     🔒 Auto-Sell: <span id="auto-sell-status">LOCKED</span>
                 </button>
@@ -468,14 +468,14 @@
             <!-- BTC Mining Tab -->
             <div id="btc-mining-tab" class="tab-content active" style="flex-direction: column; min-height: 0; flex: 1;">
                 <!-- Buy Quantity Toggle with Cash Balance -->
-                <div style="margin-bottom: 10px;">
+                <div style="margin-bottom: 4px;">
                     <!-- Cash Balance Box - Full Width -->
                     <div style="padding: 7px 11px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
                         <div style="font-size: 0.35rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Cash</div>
                         <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 0.98rem;" id="dollar-balance-btc">$0</div>
                     </div>
                     <!-- Quantity Buttons - Below -->
-                    <div style="display: flex; gap: 4px; margin-top: 8px; margin-bottom: 2px;">
+                    <div style="display: flex; gap: 4px; margin-top: 8px; margin-bottom: 0px;">
                         <button id="qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
                         <button id="qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
                         <button id="qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
@@ -483,7 +483,7 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="btc-global-multiplier-btn" class="btn-primary btn-primary-btc u-item" onclick="purchaseGlobalBTCMultiplier()" style="margin-bottom: 10px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                <button id="btc-global-multiplier-btn" class="btn-primary btn-primary-btc u-item" onclick="purchaseGlobalBTCMultiplier()" style="margin-bottom: 4px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
                     <span style="display: block; color: #fff; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900;">PERMANENT +100% BTC HASH RATE</span>
                     <span id="btc-multiplier-cost" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
                     <span id="btc-multiplier-level" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
@@ -494,14 +494,14 @@
             <!-- ETH Mining Tab -->
             <div id="eth-mining-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
                 <!-- Buy Quantity Toggle with Cash Balance -->
-                <div style="margin-bottom: 10px;">
+                <div style="margin-bottom: 4px;">
                     <!-- Cash Balance Box - Full Width -->
                     <div style="padding: 7px 11px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
                         <div style="font-size: 0.35rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Cash</div>
                         <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 0.98rem;" id="dollar-balance-eth">$0</div>
                     </div>
                     <!-- Quantity Buttons - Below -->
-                    <div style="display: flex; gap: 4px; margin-top: 8px; margin-bottom: 2px;">
+                    <div style="display: flex; gap: 4px; margin-top: 8px; margin-bottom: 0px;">
                         <button id="eth-qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
                         <button id="eth-qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
                         <button id="eth-qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
@@ -509,7 +509,7 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="eth-global-multiplier-btn" class="btn-primary btn-primary-eth u-item" onclick="purchaseGlobalETHMultiplier()" style="margin-bottom: 10px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                <button id="eth-global-multiplier-btn" class="btn-primary btn-primary-eth u-item" onclick="purchaseGlobalETHMultiplier()" style="margin-bottom: 4px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
                     <span style="display: block; color: #fff; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900;">PERMANENT +100% ETH HASH RATE</span>
                     <span id="eth-multiplier-cost" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
                     <span id="eth-multiplier-level" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
@@ -520,14 +520,14 @@
             <!-- DOGE Mining Tab -->
             <div id="doge-mining-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
                 <!-- Buy Quantity Toggle with Cash Balance -->
-                <div style="margin-bottom: 10px;">
+                <div style="margin-bottom: 4px;">
                     <!-- Cash Balance Box - Full Width -->
                     <div style="padding: 7px 11px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
                         <div style="font-size: 0.35rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Cash</div>
                         <div style="color: #00ff88; font-family: monospace; font-weight: 900; font-size: 0.98rem;" id="dollar-balance-doge">$0</div>
                     </div>
                     <!-- Quantity Buttons - Below -->
-                    <div style="display: flex; gap: 4px; margin-top: 8px; margin-bottom: 2px;">
+                    <div style="display: flex; gap: 4px; margin-top: 8px; margin-bottom: 0px;">
                         <button id="doge-qty-toggle-1" class="qty-toggle active" onclick="setBuyQuantity(1)" style="border-color: #888; color: #888;">1x</button>
                         <button id="doge-qty-toggle-2" class="qty-toggle" onclick="setBuyQuantity(2)" style="border-color: #888; color: #888;">2x</button>
                         <button id="doge-qty-toggle-5" class="qty-toggle" onclick="setBuyQuantity(5)" style="border-color: #888; color: #888;">5x</button>
@@ -535,7 +535,7 @@
                     </div>
                 </div>
                 <!-- Global 2x Multiplier Button -->
-                <button id="doge-global-multiplier-btn" class="btn-primary btn-primary-doge u-item" onclick="purchaseGlobalDogeMultiplier()" style="margin-bottom: 10px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
+                <button id="doge-global-multiplier-btn" class="btn-primary btn-primary-doge u-item" onclick="purchaseGlobalDogeMultiplier()" style="margin-bottom: 4px; width: 100%; padding: 12px 15px; font-size: 0.9rem; flex-direction: row; align-items: center; gap: 10px; justify-content: space-between;">
                     <span style="display: block; color: #fff; letter-spacing: 1px; text-transform: uppercase; flex: 0 1 auto; text-align: left; font-size: 0.9rem; font-weight: 900;">PERMANENT +100% DOGE HASH RATE</span>
                     <span id="doge-multiplier-cost" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: center; flex-shrink: 0;">Cost: $1.00Q</span>
                     <span id="doge-multiplier-level" style="display: block; font-size: 0.9rem; color: #fff; font-weight: 900; text-align: right; min-width: 85px; flex-shrink: 0;">Multiplier: 1x</span>
@@ -546,7 +546,7 @@
             <!-- Power Tab -->
             <div id="power-tab" class="tab-content" style="flex-direction: column; min-height: 0; flex: 1;">
                 <!-- Buy Quantity Toggle -->
-                <div style="margin-bottom: 10px;">
+                <div style="margin-bottom: 4px;">
                     <!-- Cash Balance Box - Full Width -->
                     <div style="padding: 7px 11px; background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; margin-bottom: 4px; width: 100%; box-sizing: border-box;">
                         <div style="font-size: 0.35rem; color: #00ff88; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Cash</div>
