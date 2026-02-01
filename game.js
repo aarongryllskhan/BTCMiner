@@ -396,6 +396,11 @@
     let lastMilestoneCheckTime = 0; // Track when milestone check was last called (throttle to 2000ms)
     let lastAchievementCheckTime = 0; // Track when achievements were last checked (throttle to 1000ms)
     let rugpullMilestoneAnnounced = false; // Flag to stop checking once goal is hit and announced
+    let chartYAxisScaleMultiplier = 5; // User-controlled Y-axis scale multiplier (1x to 10x)
+    let userControllingZoom = false; // Flag to prevent auto-scaling during active slider interaction
+    let userHasSetZoom = false; // Flag that user has manually set zoom - disables zoom-out permanently (until refresh)
+    let userLockedChartMax = null; // Stores the Y-axis max value user locked in (prevents chart from moving after zoom set)
+    let zoomResetTimeout = null; // Timeout for resetting zoom flag after user stops interacting
 
     // Hacking Minigame State
     let hackingGameActive = false;
@@ -1146,18 +1151,30 @@ function loadGame() {
         btcBalance = state.btcBalance || 0;
         btcLifetime = state.btcLifetime || 0;
         btcClickValue = state.btcClickValue || 0.00000250;
+        // Sanity check: if btcClickValue is suspiciously small (less than 0.000001), reset it
+        if (btcClickValue < 0.000001 && btcClickValue > 0) {
+            btcClickValue = 0.00000250;
+        }
         btcPrice = state.btcPrice || 100000;
 
         // Load Ethereum data
         ethBalance = state.ethBalance || 0;
         ethLifetime = state.ethLifetime || 0;
         ethClickValue = state.ethClickValue || 0.00007143;
+        // Sanity check: if ethClickValue is suspiciously small (less than 0.00001), reset it
+        if (ethClickValue < 0.00001 && ethClickValue > 0) {
+            ethClickValue = 0.00007143;
+        }
         ethPrice = state.ethPrice || 3500;
 
         // Load Dogecoin data
         dogeBalance = state.dogeBalance || 0;
         dogeLifetime = state.dogeLifetime || 0;
         dogeClickValue = state.dogeClickValue || 1.00000000;
+        // Sanity check: if dogeClickValue is suspiciously small (less than 0.1), reset it
+        if (dogeClickValue < 0.1 && dogeClickValue > 0) {
+            dogeClickValue = 1.00000000;
+        }
         dogePrice = state.dogePrice || 0.25;
 
         // Load global multiplier levels
@@ -5737,7 +5754,7 @@ function buyLevel(i) {
             u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
 
             // Update the main orange button text to show new click value
-            document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
+            document.getElementById('btc-hash-value').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         } else {
             // ALL OTHER MINERS: Use milestone doubling multiplier
             u.currentYield = calculateMinerYield(u);
@@ -5794,7 +5811,7 @@ function buyLevelMultiple(i, quantity) {
 
     if (purchased > 0) {
         if (u.id === 0 || u.isClickUpgrade) {
-            document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
+            document.getElementById('btc-hash-value').innerText = `+${btcClickValue.toFixed(8)} ₿`;
         }
         btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
 
@@ -6016,9 +6033,9 @@ function purchaseBTCManualHashRate() {
         btcUpgrade.clickIncrease *= 1.1;  // Apply 10% boost
         btcClickValue = btcUpgrade.clickIncrease;
         // Update button display
-        const btcBtn = document.getElementById('manual-hash-btc-btn');
-        if (btcBtn) {
-            btcBtn.querySelector('span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
+        const btcHashSpan = document.getElementById('btc-hash-value');
+        if (btcHashSpan) {
+            btcHashSpan.innerText = `+${btcClickValue.toFixed(8)} ₿`;
         }
     }
 
@@ -6067,9 +6084,9 @@ function purchaseETHManualHashRate() {
         ethUpgrade.clickIncrease *= 1.1;  // Apply 10% boost
         ethClickValue = ethUpgrade.clickIncrease;
         // Update button display
-        const ethBtn = document.getElementById('manual-hash-eth-btn');
-        if (ethBtn) {
-            ethBtn.querySelector('span').innerText = `+${ethClickValue.toFixed(8)} Ξ`;
+        const ethHashSpan = document.getElementById('eth-hash-value');
+        if (ethHashSpan) {
+            ethHashSpan.innerText = `+${ethClickValue.toFixed(8)} Ξ`;
         }
     }
 
@@ -6118,9 +6135,9 @@ function purchaseDOGEManualHashRate() {
         dogeUpgrade.clickIncrease *= 1.1;  // Apply 10% boost
         dogeClickValue = dogeUpgrade.clickIncrease;
         // Update button display
-        const dogeBtn = document.getElementById('manual-hash-doge-btn');
-        if (dogeBtn) {
-            dogeBtn.querySelector('span').innerText = `+${dogeClickValue.toFixed(8)} Ð`;
+        const dogeHashSpan = document.getElementById('doge-hash-value');
+        if (dogeHashSpan) {
+            dogeHashSpan.innerText = `+${dogeClickValue.toFixed(8)} Ð`;
         }
     }
 
@@ -6323,7 +6340,7 @@ function updateManualHashRateButtons() {
                 ethClickValue *= 1.12;
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
                 // Update the ETH button text to show new click value
-                document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
+                document.getElementById('eth-hash-value').innerText = `+${ethClickValue.toFixed(8)} Ξ`;
             } else {
                 u.currentYield = calculateMinerYield(u);
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
@@ -6382,7 +6399,7 @@ function updateManualHashRateButtons() {
                 dogeClickValue *= 1.12;
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
                 // Update the DOGE button text to show new click value
-                document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
+                document.getElementById('doge-hash-value').innerText = `+${dogeClickValue.toFixed(8)} Ð`;
             } else {
                 u.currentYield = calculateMinerYield(u);
                 u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.15, u.level));
@@ -6980,21 +6997,21 @@ function updateManualHashRateButtons() {
             });
         }
 
-        const mineBtnSpan = document.querySelector('.mine-btn span');
+        const mineBtnSpan = document.getElementById('btc-hash-value');
         if (mineBtnSpan) {
             const totalBtcClick = btcClickValue * clickMultiplier * ascensionClickMultiplier;
             const hashRateAddition = btcPerSec * (clickHashRateBonus / 100);
             const totalWithHashRate = totalBtcClick + hashRateAddition;
             mineBtnSpan.innerText = `+${totalWithHashRate.toFixed(8)} ₿`;
         }
-        const ethMineBtnSpan = document.querySelectorAll('.mine-btn span')[1];
+        const ethMineBtnSpan = document.getElementById('eth-hash-value');
         if (ethMineBtnSpan) {
             const totalEthClick = ethClickValue * clickMultiplier * ascensionClickMultiplier;
             const hashRateAddition = ethPerSec * (clickHashRateBonus / 100);
             const totalWithHashRate = totalEthClick + hashRateAddition;
             ethMineBtnSpan.innerText = `+${totalWithHashRate.toFixed(8)} Ξ`;
         }
-        const dogeMineBtnSpan = document.querySelectorAll('.mine-btn span')[2];
+        const dogeMineBtnSpan = document.getElementById('doge-hash-value');
         if (dogeMineBtnSpan) {
             const totalDogeClick = dogeClickValue * clickMultiplier * ascensionClickMultiplier;
             const hashRateAddition = dogePerSec * (clickHashRateBonus / 100);
@@ -8518,9 +8535,14 @@ dogeUpgrades.forEach(u => {
                                 position: 'left',
                                 min: 0,
                                 max: (() => {
+                                    // If user has locked zoom, use that value
+                                    if (userLockedChartMax !== null) {
+                                        return userLockedChartMax;
+                                    }
+                                    // Otherwise calculate from current data (defaults to current max value = 0% zoom)
                                     const allValues = [...btcChartHistory, ...ethChartHistory, ...dogeChartHistory, ...cashChartHistory].filter(v => v !== undefined && v !== null);
                                     const maxValue = allValues.length > 0 ? Math.max(...allValues) : 100;
-                                    return maxValue * 1.1; // Add 10% padding at top
+                                    return maxValue;
                                 })(),
                                 grid: {
                                     color: 'rgba(255, 255, 255, 0.05)',
@@ -8561,17 +8583,18 @@ dogeUpgrades.forEach(u => {
                 chartInitialized = true;
                 console.log('Chart successfully initialized');
 
-                // Initialize chart with starting data point if empty AND it's a fresh game (no balances)
-                if (chartHistory.length === 0 && btcBalance === 0 && ethBalance === 0 && dogeBalance === 0 && dollarBalance === 0) {
+                // Initialize chart with starting data point if empty
+                if (chartHistory.length === 0) {
                     const now = Date.now();
-                    chartHistory.push(0);
-                    btcChartHistory.push(0);
-                    ethChartHistory.push(0);
-                    dogeChartHistory.push(0);
-                    cashChartHistory.push(0);
-                    chartTimestamps.push({ time: now, value: 0, cash: 0, btc: 0, eth: 0, doge: 0 });
+                    const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + dollarBalance;
+                    chartHistory.push(currentNetWorth);
+                    btcChartHistory.push(btcBalance * btcPrice);
+                    ethChartHistory.push(ethBalance * ethPrice);
+                    dogeChartHistory.push(dogeBalance * dogePrice);
+                    cashChartHistory.push(dollarBalance);
+                    chartTimestamps.push({ time: now, value: currentNetWorth, cash: dollarBalance, btc: btcBalance * btcPrice, eth: ethBalance * ethPrice, doge: dogeBalance * dogePrice });
                     chartStartTime = now;
-                    console.log('Chart initialized with starting data point (fresh game)');
+                    console.log('Chart initialized with current data point');
                 }
 
                 // Update the date tracker on initialization
@@ -8658,6 +8681,52 @@ dogeUpgrades.forEach(u => {
                 }
             }, 300);
         });
+
+        // Y-Axis Scale Slider Event Listener
+        const yAxisScaleSlider = document.getElementById('y-axis-scale-slider');
+        const yAxisScaleValue = document.getElementById('y-axis-scale-value');
+        if (yAxisScaleSlider) {
+            yAxisScaleSlider.addEventListener('input', (e) => {
+                const sliderValue = parseFloat(e.target.value);
+
+                // Get the current max value in chart
+                const allValues = [...btcChartHistory, ...ethChartHistory, ...dogeChartHistory, ...cashChartHistory].filter(v => v !== undefined && v !== null);
+                const maxValue = allValues.length > 0 ? Math.max(...allValues) : 100;
+
+                // Slider range (0-100): 0 = no zoom (current max value), 100 = full zoom ($10)
+                const minZoom = 10;
+                const maxZoom = maxValue;
+
+                // Normalize slider value (0 to 1)
+                const normalizedSlider = sliderValue / 100;
+
+                // Exponential interpolation: at 0% = maxZoom, at 100% = minZoom
+                // This is backwards from usual, so we reverse it
+                const reversedNormalized = 1 - normalizedSlider; // 0 slider = 1, 100 slider = 0
+                const calculatedMax = minZoom * Math.pow(maxZoom / minZoom, reversedNormalized);
+
+                chartYAxisScaleMultiplier = sliderValue;
+                userControllingZoom = true;
+                userHasSetZoom = true; // User has manually set zoom - disable zoom-out permanently
+
+                // Display the zoom percentage as-is (0% = no zoom, 100% = full zoom)
+                const zoomPercentage = Math.round(sliderValue);
+                yAxisScaleValue.innerText = zoomPercentage + '%';
+
+                // Lock in the Y-axis max at user's chosen level
+                userLockedChartMax = calculatedMax;
+
+                // Trigger chart update by calling update on the chart
+                if (nwChart) {
+                    nwChart.options.scales.y.max = calculatedMax;
+                    nwChart.options.scales.y.min = 0;
+                    nwChart.update();
+                }
+
+                // Keep userControllingZoom true while user is actively adjusting slider
+                // Don't reset it after letting go - the zoom stays locked at the user's chosen level
+            });
+        }
 
         // Master chart update loop - renders every 500ms, collects new data every 1500ms with interpolation
         let updateCount = 0;
@@ -8813,7 +8882,8 @@ dogeUpgrades.forEach(u => {
                 }
             }
 
-            // Collect chart data every loop (loop runs every 500ms)
+            // Collect chart data every loop (loop runs every 1000ms)
+            const wasEmpty = chartHistory.length === 0; // Track if this is first data point
             chartHistory.push(netWorth);
             btcChartHistory.push(btcBalance * btcPrice);
             ethChartHistory.push(ethBalance * ethPrice);
@@ -8827,9 +8897,9 @@ dogeUpgrades.forEach(u => {
             // Update net worth chart - show ALL stored data (already trimmed for performance)
             // Chart always shows from $0 (start of game) to current
             // Storage arrays are trimmed progressively to keep ~5k points max, preventing lag
-            // Only update chart rendering every 1000ms to prevent flickering on far right
+            // Update immediately on first data point, then every 1000ms to prevent flickering on far right
             const timeSinceLastChartUpdate = now - lastChartUpdateTime;
-            if (timeSinceLastChartUpdate >= 1000 && nwChart && chartTimestamps.length > 0) {
+            if ((wasEmpty || timeSinceLastChartUpdate >= 1000) && nwChart && chartTimestamps.length > 0) {
                 lastChartUpdateTime = now;
 
                 // Display all data we have (storage arrays are already managed for performance)
@@ -8855,12 +8925,22 @@ dogeUpgrades.forEach(u => {
 
                     // Only recalculate scale if current value exceeds 90% of current max (data is growing into limit)
                     const currentScale = nwChart.options.scales.y.max || 1;
-                    if (currentMax > currentScale * 0.9) {
-                        const padding = currentMax < 1 ? currentMax * 0.2 : currentMax * 0.05;
-                        const paddingAmount = Math.max(padding, currentMax * 0.1);
 
-                        nwChart.options.scales.y.min = 0;
-                        nwChart.options.scales.y.max = currentMax + paddingAmount;
+                    if (userHasSetZoom) {
+                        // User has manually set zoom: lock chart at their chosen level, don't move
+                        if (userLockedChartMax !== null) {
+                            nwChart.options.scales.y.min = 0;
+                            nwChart.options.scales.y.max = userLockedChartMax;
+                        }
+                    } else if (!userControllingZoom) {
+                        // Normal auto-scaling when user hasn't manually set zoom
+                        if (currentMax > currentScale * 0.9) {
+                            const padding = currentMax < 1 ? currentMax * 0.2 : currentMax * 0.05;
+                            const paddingAmount = Math.max(padding, currentMax * 0.1);
+
+                            nwChart.options.scales.y.min = 0;
+                            nwChart.options.scales.y.max = currentMax + paddingAmount;
+                        }
                     }
                 }
 

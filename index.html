@@ -307,6 +307,12 @@
                     <button id="chart-btn-1d" class="chart-interval-btn" data-interval="1440" style="padding: 4px 8px; margin: 0 2px; background: rgba(100,100,100,0.2); border: 1px solid #666; color: #999; cursor: pointer; font-size: 0.75rem; border-radius: 3px;">1d</button>
                     <span id="chart-time-label" style="color: #00ff88; font-size: 0.85rem; font-weight: 600; margin-left: 15px; display: inline-block;">Auto decimation</span>
                 </div>
+                <!-- Y-Axis Scale Slider (Horizontal - Mobile Compatible) -->
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px;">
+                    <label style="font-size: 0.7rem; color: #999; font-weight: 700; white-space: nowrap;">ZOOM:</label>
+                    <input id="y-axis-scale-slider" type="range" min="0" max="100" step="1" value="100" style="flex: 1; min-width: 100px; cursor: pointer;">
+                    <span id="y-axis-scale-value" style="font-size: 0.8rem; color: #00ff88; font-weight: 900; min-width: 40px; text-align: right;">100%</span>
+                </div>
                 <!-- Net Worth Chart -->
                 <div id="nw-chart-container" class="chart-wrapper" style="position: relative; width: 100%; flex: 1.86; display: block; box-sizing: border-box;">
                     <!-- Portfolio Valuation Title (overlaid on chart) -->
@@ -337,15 +343,18 @@
             <div style="display: flex; gap: 0; margin-bottom: 6px; flex-direction: column; row-gap: 6px;">
                 <!-- Row 1: BTC Manual Hash with Upgrade Button -->
                 <div style="display: flex; gap: 2px; align-items: stretch; height: 80px; background: #000000;">
-                    <button id="btc-manual-hash-rate-btn" onclick="purchaseBTCManualHashRate()" class="btn-primary btn-primary-btc btn-small" style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; min-width: 0; font-size: 0.7rem; padding: 8px; flex: 0 0 84px; border-radius: 0; line-height: 1.15; margin-right: 0; height: 100%; border: 2px solid #f7931a; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.5);">
-                        <div style="font-size: 0.7rem; font-weight: 700; text-align: center;">+10% BTC</div>
-                        <div style="font-size: 0.63rem; font-weight: 600; text-align: center;">Cost: <span id="btc-mhr-cost">$10K</span></div>
-                        <span id="btc-mhr-multi" style="font-size: 0.63rem; font-weight: 900;">1.0x</span>
+                    <button id="btc-manual-hash-rate-btn" onclick="purchaseBTCManualHashRate()" class="mine-btn btn-primary btn-primary-btc" style="padding: 4px; line-height: 1.1; display: flex; align-items: center; justify-content: center; flex: 0 0 84px; border-radius: 0; margin: 0 !important; height: 80px !important; margin-right: 0; flex-direction: column; overflow: hidden; min-width: 0; position: relative; z-index: 0; max-width: 84px;">
+                        <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; width: 84px; max-width: 84px; min-width: 0; overflow: hidden;">
+                            <div style="font-weight: 700; font-size: 0.8rem; line-height: 1;">+10% BTC</div>
+                            <div style="font-size: 0.7rem; font-weight: 600; opacity: 0.95; display: block; line-height: 1.1;">Cost:</div>
+                            <div style="font-size: 0.7rem; font-weight: 600; opacity: 0.95; line-height: 1.1;"><span id="btc-mhr-cost">$10K</span></div>
+                            <span id="btc-mhr-multi" style="font-size: 0.8rem; font-weight: 900; line-height: 1;">1.0x</span>
+                        </div>
                     </button>
-                    <button id="manual-hash-btc-btn" class="mine-btn btn-primary btn-primary-btc" style="padding: 8px; line-height: 1.3; display: flex; align-items: center; justify-content: center; gap: 16px; flex: 1; border-radius: 0; margin: 0 !important; height: 80px !important; border-left: none; margin-left: 0;">
+                    <button id="manual-hash-btc-btn" class="mine-btn btn-primary btn-primary-btc" style="padding: 8px; line-height: 1.3; display: flex; align-items: center; justify-content: center; gap: 16px; flex: 1; border-radius: 0; margin: 0 !important; height: 80px !important; border-left: none; margin-left: 0; overflow: hidden; position: relative; z-index: 1;">
                         <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                             <div style="font-weight: 700; font-size: 0.9rem;">MANUAL BTC HASH</div>
-                            <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+0.00000250 ₿</span>
+                            <span id="btc-hash-value" class="btc-hash-value" style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+0.00000250 ₿</span>
                         </div>
                         <img src="bitcointoken.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="BTC">
                     </button>
@@ -353,15 +362,18 @@
 
                 <!-- Row 2: ETH Manual Hash with Upgrade Button -->
                 <div style="display: flex; gap: 2px; align-items: stretch; height: 80px; background: #000000;">
-                    <button id="eth-manual-hash-rate-btn" onclick="purchaseETHManualHashRate()" class="btn-primary btn-primary-eth btn-small" style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; min-width: 0; font-size: 0.7rem; padding: 8px; flex: 0 0 84px; border-radius: 0; line-height: 1.15; margin-right: 0; height: 100%; border: 2px solid #627eea; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.5);">
-                        <div style="font-size: 0.7rem; font-weight: 700; text-align: center;">+10% ETH</div>
-                        <div style="font-size: 0.63rem; font-weight: 600; text-align: center;">Cost: <span id="eth-mhr-cost">$10K</span></div>
-                        <span id="eth-mhr-multi" style="font-size: 0.63rem; font-weight: 900;">1.0x</span>
+                    <button id="eth-manual-hash-rate-btn" onclick="purchaseETHManualHashRate()" class="mine-btn btn-primary btn-primary-eth" style="padding: 4px; line-height: 1.1; display: flex; align-items: center; justify-content: center; flex: 0 0 84px; border-radius: 0; margin: 0 !important; height: 80px !important; margin-right: 0; flex-direction: column; overflow: hidden; min-width: 0; position: relative; z-index: 0; max-width: 84px;">
+                        <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; width: 84px; max-width: 84px; min-width: 0; overflow: hidden;">
+                            <div style="font-weight: 700; font-size: 0.8rem; line-height: 1;">+10% ETH</div>
+                            <div style="font-size: 0.7rem; font-weight: 600; opacity: 0.95; display: block; line-height: 1.1;">Cost:</div>
+                            <div style="font-size: 0.7rem; font-weight: 600; opacity: 0.95; line-height: 1.1;"><span id="eth-mhr-cost">$10K</span></div>
+                            <span id="eth-mhr-multi" style="font-size: 0.8rem; font-weight: 900; line-height: 1;">1.0x</span>
+                        </div>
                     </button>
-                    <button id="manual-hash-eth-btn" class="mine-btn btn-primary btn-primary-eth" style="padding: 8px; line-height: 1.3; display: flex; align-items: center; justify-content: center; gap: 16px; flex: 1; border-radius: 0; margin: 0 !important; height: 80px !important; border-left: none; margin-left: 0;">
+                    <button id="manual-hash-eth-btn" class="mine-btn btn-primary btn-primary-eth" style="padding: 8px; line-height: 1.3; display: flex; align-items: center; justify-content: center; gap: 16px; flex: 1; border-radius: 0; margin: 0 !important; height: 80px !important; border-left: none; margin-left: 0; overflow: hidden; position: relative; z-index: 1;">
                         <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                             <div style="font-weight: 700; font-size: 0.9rem;">MANUAL ETH HASH</div>
-                            <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+0.00007143 Ξ</span>
+                            <span id="eth-hash-value" class="eth-hash-value" style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+0.00007143 Ξ</span>
                         </div>
                         <img src="ethcoin.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="ETH">
                     </button>
@@ -369,15 +381,18 @@
 
                 <!-- Row 3: DOGE Manual Hash with Upgrade Button -->
                 <div style="display: flex; gap: 2px; align-items: stretch; height: 80px; background: #000000;">
-                    <button id="doge-manual-hash-rate-btn" onclick="purchaseDOGEManualHashRate()" class="btn-primary btn-primary-doge btn-small" style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; min-width: 0; font-size: 0.7rem; padding: 8px; flex: 0 0 84px; border-radius: 0; line-height: 1.15; margin-right: 0; height: 100%; border: 2px solid #c2a633; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.5);">
-                        <div style="font-size: 0.7rem; font-weight: 700; text-align: center;">+10% DOGE</div>
-                        <div style="font-size: 0.63rem; font-weight: 600; text-align: center;">Cost: <span id="doge-mhr-cost">$10K</span></div>
-                        <span id="doge-mhr-multi" style="font-size: 0.63rem; font-weight: 900;">1.0x</span>
+                    <button id="doge-manual-hash-rate-btn" onclick="purchaseDOGEManualHashRate()" class="mine-btn btn-primary btn-primary-doge" style="padding: 4px; line-height: 1.1; display: flex; align-items: center; justify-content: center; flex: 0 0 84px; border-radius: 0; margin: 0 !important; height: 80px !important; margin-right: 0; flex-direction: column; overflow: hidden; min-width: 0; position: relative; z-index: 0; max-width: 84px;">
+                        <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; width: 84px; max-width: 84px; min-width: 0; overflow: hidden;">
+                            <div style="font-weight: 700; font-size: 0.8rem; line-height: 1;">+10% DOGE</div>
+                            <div style="font-size: 0.7rem; font-weight: 600; opacity: 0.95; display: block; line-height: 1.1;">Cost:</div>
+                            <div style="font-size: 0.7rem; font-weight: 600; opacity: 0.95; line-height: 1.1;"><span id="doge-mhr-cost">$10K</span></div>
+                            <span id="doge-mhr-multi" style="font-size: 0.8rem; font-weight: 900; line-height: 1;">1.0x</span>
+                        </div>
                     </button>
-                    <button id="manual-hash-doge-btn" class="mine-btn btn-primary btn-primary-doge" style="padding: 8px; line-height: 1.3; display: flex; align-items: center; justify-content: center; gap: 16px; flex: 1; border-radius: 0; margin: 0 !important; height: 80px !important; border-left: none; margin-left: 0;">
+                    <button id="manual-hash-doge-btn" class="mine-btn btn-primary btn-primary-doge" style="padding: 8px; line-height: 1.3; display: flex; align-items: center; justify-content: center; gap: 16px; flex: 1; border-radius: 0; margin: 0 !important; height: 80px !important; border-left: none; margin-left: 0; overflow: hidden; position: relative; z-index: 1;">
                         <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                             <div style="font-weight: 700; font-size: 0.9rem;">MANUAL DOGE HASH</div>
-                            <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+1.00000000 Ð</span>
+                            <span id="doge-hash-value" class="doge-hash-value" style="font-size: 0.8rem; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">+1.00000000 Ð</span>
                         </div>
                         <img src="dogecoin.png" style="width: 56px; height: 56px; flex: 0 0 56px;" alt="DOGE">
                     </button>
