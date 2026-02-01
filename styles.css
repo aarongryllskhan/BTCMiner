@@ -138,12 +138,17 @@
         #dollar-balance-doge,
         #dollar-balance-power,
         #dollar-balance-exchange {
-            font-size: 1.8rem !important;
+            font-size: 2.0rem !important;
         }
 
         /* Cash label above amounts */
         div[style*="font-size: 0.5rem"][style*="color: #00ff88"][style*="text-transform: uppercase"] {
             font-size: 0.7rem !important;
+        }
+
+        /* Cash label in shop tabs (0.35rem → 0.5rem) */
+        div[style*="font-size: 0.35rem"][style*="color: #00ff88"][style*="text-transform: uppercase"] {
+            font-size: 0.5rem !important;
         }
 
         /* Remove border-radius from manual hash buttons */
@@ -463,10 +468,10 @@
                 font-size: 0.95rem !important;
             }
             #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
-                font-size: 0.95rem !important;
+                font-size: 1.05rem !important;
             }
             #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
-                font-size: 0.85rem !important;
+                font-size: 1.0rem !important;
             }
         }
 
@@ -571,7 +576,7 @@
             #hashrate-display .stat-box span { font-size: 0.55rem !important; }
             #hashrate-display .stat-box b { font-size: 0.8rem !important; }
 
-            .chart-wrapper { min-height: 140px !important; height: 140px !important; flex: 0 0 140px !important; padding: 0; margin: 6px 0 0 0; overflow: hidden; position: relative; }
+            .chart-wrapper { min-height: 140px !important; height: 140px !important; flex: 0 0 140px !important; padding: 0; margin: 6px 0 0 0; overflow: visible; position: relative; }
 
             /* Keep crypto prices in a 3-column row on mobile */
             #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; overflow: visible !important; margin: 12px 0 !important; width: 100% !important; max-width: 100% !important; align-items: center !important; padding: 0 10px 10px 10px !important; box-sizing: border-box !important; }
@@ -755,7 +760,7 @@
             div[style*="order: -1"] { margin-bottom: 0 !important; }
             .nw-amount { font-size: clamp(3.75rem, 11.25vw, 4.5rem); margin: 0 0 0 0; }
             .stat-val { font-size: 0.7rem !important; }
-            .chart-wrapper { min-height: 130px !important; height: 130px !important; flex: 0 0 130px !important; margin-top: 0; padding: 2px; overflow: hidden; position: relative; }
+            .chart-wrapper { min-height: 130px !important; height: 130px !important; flex: 0 0 130px !important; margin-top: 0; padding: 2px; overflow: visible; position: relative; }
             #nwChart { width: 100% !important; height: 100% !important; display: block !important; min-height: 130px !important; }
             /* Keep crypto prices in 3-column row on small phones */
             #crypto-prices-flex { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 4px !important; overflow: visible !important; margin-bottom: 6px !important; width: 100% !important; max-width: 100% !important; }
@@ -1388,8 +1393,8 @@
             border: 1px solid #1a1a1a;
             position: relative;
             margin-top: 0;
-            padding: 2px;
-            overflow: hidden;
+            padding: 8px 2px 2px 2px;
+            overflow: visible;
             clip: auto;
         }
 
@@ -1618,19 +1623,48 @@
         }
 
         /* Manual hash button specific animation handling */
-        #manual-hash-btc-btn.active,
-        #manual-hash-eth-btn.active,
+        #manual-hash-btc-btn.active {
+            animation: manualHashPressBTC 0.15s ease-out !important;
+        }
+
+        #manual-hash-eth-btn.active {
+            animation: manualHashPressETH 0.15s ease-out !important;
+        }
+
         #manual-hash-doge-btn.active {
-            filter: none;
-            transform: scale(0.96) translateY(2px);
+            animation: manualHashPressDOGE 0.15s ease-out !important;
+        }
+
+        /* Manual hash click button press animations */
+        @keyframes manualHashPressBTC {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(247, 147, 26, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes manualHashPressETH {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(98, 126, 234, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes manualHashPressDOGE {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(194, 166, 51, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
         }
 
         /* Manual hash rate button (+10%) specific animation handling */
-        #btc-manual-hash-rate-btn.active,
-        #eth-manual-hash-rate-btn.active,
+        #btc-manual-hash-rate-btn.active {
+            animation: buttonPressBTC 0.2s ease-out !important;
+        }
+
+        #eth-manual-hash-rate-btn.active {
+            animation: buttonPressETH 0.2s ease-out !important;
+        }
+
         #doge-manual-hash-rate-btn.active {
-            filter: none;
-            transform: scale(0.975) translateY(0px);
+            animation: buttonPressDOGE 0.2s ease-out !important;
         }
 
         .upgrade-list { flex: 1; overflow-y: auto; padding-right: 5px; }
@@ -1638,6 +1672,9 @@
             background: linear-gradient(135deg, #222 0%, #181818 100%) !important;
             border: 2px solid #333 !important;
             border-radius: 6px !important;
+            touch-action: manipulation !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
             padding: 15px !important;
             margin-bottom: 4px !important;
             display: flex !important;
@@ -1648,6 +1685,81 @@
             color: #fff !important;
             font-weight: 700 !important;
             transition: all 0.15s ease !important;
+        }
+
+        /* Miner button press animations */
+        .u-item.button-pressed {
+            animation: minerButtonPress 0.2s ease-out !important;
+        }
+
+        .u-item.btn-primary-btc.button-pressed {
+            animation: minerButtonPressBTC 0.2s ease-out !important;
+        }
+
+        .u-item.btn-primary-eth.button-pressed {
+            animation: minerButtonPressETH 0.2s ease-out !important;
+        }
+
+        .u-item.btn-primary-doge.button-pressed {
+            animation: minerButtonPressDOGE 0.2s ease-out !important;
+        }
+
+        @keyframes minerButtonPress {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.15); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes minerButtonPressBTC {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.2); box-shadow: 0 0 12px rgba(247, 147, 26, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.3); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes minerButtonPressETH {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.2); box-shadow: 0 0 12px rgba(98, 126, 234, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.3); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes minerButtonPressDOGE {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.2); box-shadow: 0 0 12px rgba(194, 166, 51, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.3); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        /* Global multiplier buttons press animations */
+        #btc-global-multiplier-btn.button-pressed {
+            animation: globalMultiplierPressBTC 0.2s ease-out !important;
+        }
+
+        #eth-global-multiplier-btn.button-pressed {
+            animation: globalMultiplierPressETH 0.2s ease-out !important;
+        }
+
+        #doge-global-multiplier-btn.button-pressed {
+            animation: globalMultiplierPressDOGE 0.2s ease-out !important;
+        }
+
+        @keyframes globalMultiplierPressBTC {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.2); box-shadow: 0 0 12px rgba(247, 147, 26, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.3); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes globalMultiplierPressETH {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.2); box-shadow: 0 0 12px rgba(98, 126, 234, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.3); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes globalMultiplierPressDOGE {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.2); box-shadow: 0 0 12px rgba(194, 166, 51, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.3); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        .btn-tab {
             box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1) !important;
             position: relative !important;
             font-size: 0.9rem !important;
@@ -3559,12 +3671,12 @@ button:disabled:hover {
             }
 
             #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
-                font-size: 0.55rem !important;
+                font-size: 0.85rem !important;
                 flex: 0 1 auto !important;
             }
 
             #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
-                font-size: 0.5rem !important;
+                font-size: 0.8rem !important;
                 min-width: 50px !important;
                 flex: 0 1 auto !important;
             }
@@ -3594,14 +3706,14 @@ button:disabled:hover {
             }
 
             #btc-multiplier-cost, #eth-multiplier-cost, #doge-multiplier-cost {
-                font-size: 0.45rem !important;
+                font-size: 0.75rem !important;
                 flex: 0 1 auto !important;
                 order: 2 !important;
                 text-align: left !important;
             }
 
             #btc-multiplier-level, #eth-multiplier-level, #doge-multiplier-level {
-                font-size: 0.45rem !important;
+                font-size: 0.75rem !important;
                 min-width: auto !important;
                 flex: 0 1 auto !important;
                 order: 3 !important;

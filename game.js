@@ -2707,6 +2707,17 @@ function loadGame() {
 
         container.appendChild(btn);
 
+        // Add touch feedback animation
+        let pressTimeout = null;
+        btn.addEventListener('touchstart', (e) => {
+            if (pressTimeout) clearTimeout(pressTimeout);
+            btn.classList.add('button-pressed');
+            pressTimeout = setTimeout(() => {
+                btn.classList.remove('button-pressed');
+                pressTimeout = null;
+            }, 200);
+        });
+
         // Blur button after tap/click to remove focus state on mobile (reverts hover color)
         btn.addEventListener('touchend', () => {
             btn.blur();
@@ -2754,6 +2765,17 @@ function loadGame() {
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="pow-afford-${u.id}">x0</span>
                 </div>`;
             container.appendChild(btn);
+
+            // Add touch feedback animation
+            let pressTimeout = null;
+            btn.addEventListener('touchstart', (e) => {
+                if (pressTimeout) clearTimeout(pressTimeout);
+                btn.classList.add('button-pressed');
+                pressTimeout = setTimeout(() => {
+                    btn.classList.remove('button-pressed');
+                    pressTimeout = null;
+                }, 200);
+            });
 
             // Blur button after tap/click to remove focus state on mobile (reverts hover color)
             btn.addEventListener('touchend', () => {
@@ -2817,6 +2839,17 @@ function loadGame() {
             }
 
             container.appendChild(btn);
+
+            // Add touch feedback animation
+            let pressTimeout = null;
+            btn.addEventListener('touchstart', (e) => {
+                if (pressTimeout) clearTimeout(pressTimeout);
+                btn.classList.add('button-pressed');
+                pressTimeout = setTimeout(() => {
+                    btn.classList.remove('button-pressed');
+                    pressTimeout = null;
+                }, 200);
+            });
 
             // Blur button after tap/click to remove focus state on mobile (reverts hover color)
             btn.addEventListener('touchend', () => {
@@ -2882,6 +2915,17 @@ function loadGame() {
             }
 
             container.appendChild(btn);
+
+            // Add touch feedback animation
+            let pressTimeout = null;
+            btn.addEventListener('touchstart', (e) => {
+                if (pressTimeout) clearTimeout(pressTimeout);
+                btn.classList.add('button-pressed');
+                pressTimeout = setTimeout(() => {
+                    btn.classList.remove('button-pressed');
+                    pressTimeout = null;
+                }, 200);
+            });
 
             // Blur button after tap/click to remove focus state on mobile (reverts hover color)
             btn.addEventListener('touchend', () => {
@@ -8294,13 +8338,13 @@ dogeUpgrades.forEach(u => {
             const triggerBtcAnimation = () => {
                 // Clear any pending timeout to prevent glitching on rapid clicks
                 if (btcAnimTimeout) clearTimeout(btcAnimTimeout);
-                // Add active state class
+                // Add active state class for animation
                 manualBtcBtn.classList.add('active');
-                // Schedule removal - shorter timeout for faster bounce
+                // Schedule removal - animation is 150ms
                 btcAnimTimeout = setTimeout(() => {
                     manualBtcBtn.classList.remove('active');
                     btcAnimTimeout = null;
-                }, 50);
+                }, 150);
             };
             manualBtcBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -8330,7 +8374,7 @@ dogeUpgrades.forEach(u => {
                 ethAnimTimeout = setTimeout(() => {
                     manualEthBtn.classList.remove('active');
                     ethAnimTimeout = null;
-                }, 50);
+                }, 150);
             };
             manualEthBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -8360,7 +8404,7 @@ dogeUpgrades.forEach(u => {
                 dogeAnimTimeout = setTimeout(() => {
                     manualDogeBtn.classList.remove('active');
                     dogeAnimTimeout = null;
-                }, 50);
+                }, 150);
             };
             manualDogeBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -8385,6 +8429,41 @@ dogeUpgrades.forEach(u => {
         ];
 
         mhrButtons.forEach(btnInfo => {
+            const btn = document.getElementById(btnInfo.id);
+            if (btn) {
+                let pressTimeout = null;
+                btn.addEventListener('touchstart', (e) => {
+                    // Clear any pending timeout
+                    if (pressTimeout) clearTimeout(pressTimeout);
+                    // Add pressed animation
+                    btn.classList.add('button-pressed');
+                    // Schedule class removal after animation completes
+                    pressTimeout = setTimeout(() => {
+                        btn.classList.remove('button-pressed');
+                        pressTimeout = null;
+                    }, 200);
+                });
+                btn.addEventListener('touchend', (e) => {
+                    // Ensure animation completes even if touch ends early
+                    if (pressTimeout) {
+                        clearTimeout(pressTimeout);
+                        pressTimeout = setTimeout(() => {
+                            btn.classList.remove('button-pressed');
+                            pressTimeout = null;
+                        }, 50);
+                    }
+                });
+            }
+        });
+
+        // Add touch feedback to permanent global multiplier buttons
+        const globalMultiplierButtons = [
+            { id: 'btc-global-multiplier-btn', name: 'BTC' },
+            { id: 'eth-global-multiplier-btn', name: 'ETH' },
+            { id: 'doge-global-multiplier-btn', name: 'DOGE' }
+        ];
+
+        globalMultiplierButtons.forEach(btnInfo => {
             const btn = document.getElementById(btnInfo.id);
             if (btn) {
                 let pressTimeout = null;
@@ -8545,6 +8624,7 @@ dogeUpgrades.forEach(u => {
                             borderWidth: 2.5,
                             fill: false,
                             tension: 0,
+                            spanGaps: true,
                             pointRadius: 0,
                             pointBackgroundColor: '#f7931a',
                             pointBorderColor: 'transparent',
@@ -8561,6 +8641,7 @@ dogeUpgrades.forEach(u => {
                             borderWidth: 2.5,
                             fill: false,
                             tension: 0,
+                            spanGaps: true,
                             pointRadius: 0,
                             pointBackgroundColor: '#627eea',
                             pointBorderColor: 'transparent',
@@ -8577,6 +8658,7 @@ dogeUpgrades.forEach(u => {
                             borderWidth: 2.5,
                             fill: false,
                             tension: 0,
+                            spanGaps: true,
                             pointRadius: 0,
                             pointBackgroundColor: '#c2a633',
                             pointBorderColor: 'transparent',
@@ -8593,6 +8675,7 @@ dogeUpgrades.forEach(u => {
                             borderWidth: 2.5,
                             fill: false,
                             tension: 0,
+                            spanGaps: true,
                             pointRadius: 0,
                             pointBackgroundColor: '#00ff88',
                             pointBorderColor: 'transparent',
@@ -8617,11 +8700,12 @@ dogeUpgrades.forEach(u => {
                                 align: 'center',
                                 labels: {
                                     color: '#999',
-                                    font: { size: window.innerWidth <= 448 ? 7 : (window.innerWidth <= 932 ? 8 : 12) },
-                                    boxWidth: 12,
-                                    boxHeight: 10,
-                                    padding: 3
-                                }
+                                    font: { size: window.innerWidth <= 448 ? 10 : (window.innerWidth <= 932 ? 12 : 16) },
+                                    boxWidth: 14,
+                                    boxHeight: 12,
+                                    padding: 8
+                                },
+                                padding: { top: 10, bottom: 5 }
                             },
                             tooltip: {
                                 enabled: true,
@@ -9091,12 +9175,12 @@ dogeUpgrades.forEach(u => {
                 // Smart Y-axis scaling: only recalculate when data exceeds current max (not every 500ms)
                 // Skip scaling updates if user is actively controlling the zoom
                 if (!userControllingZoom && (btcChartHistory.length > 0 || ethChartHistory.length > 0 || dogeChartHistory.length > 0 || cashChartHistory.length > 0)) {
-                    // Find current max value (just the latest values, not the entire history)
+                    // Find the HIGHEST value across ALL visible data (not just the latest)
                     let currentMax = 0;
-                    if (btcChartHistory.length > 0) currentMax = Math.max(currentMax, btcChartHistory[btcChartHistory.length - 1]);
-                    if (ethChartHistory.length > 0) currentMax = Math.max(currentMax, ethChartHistory[ethChartHistory.length - 1]);
-                    if (dogeChartHistory.length > 0) currentMax = Math.max(currentMax, dogeChartHistory[dogeChartHistory.length - 1]);
-                    if (cashChartHistory.length > 0) currentMax = Math.max(currentMax, cashChartHistory[cashChartHistory.length - 1]);
+                    if (btcChartHistory.length > 0) currentMax = Math.max(currentMax, Math.max(...btcChartHistory));
+                    if (ethChartHistory.length > 0) currentMax = Math.max(currentMax, Math.max(...ethChartHistory));
+                    if (dogeChartHistory.length > 0) currentMax = Math.max(currentMax, Math.max(...dogeChartHistory));
+                    if (cashChartHistory.length > 0) currentMax = Math.max(currentMax, Math.max(...cashChartHistory));
 
                     // Only recalculate scale if current value exceeds 90% of current max (data is growing into limit)
                     const currentScale = nwChart.options.scales.y.max || 1;
