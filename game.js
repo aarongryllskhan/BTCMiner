@@ -14,7 +14,7 @@
 
     // Calculate cost for manual hash rate upgrade (starts at 10k, scales more aggressively)
     function getManualHashRateCost(level) {
-        const baseCosts = [10000, 100000, 1000000, 10000000, 100000000]; // 10k, 100k, 1m, 10m, 100m
+        const baseCosts = [100000, 1000000, 10000000, 100000000, 1000000000]; // 100k, 1m, 10m, 100m, 1b
         if (level < baseCosts.length) {
             return baseCosts[level];
         }
@@ -1030,6 +1030,10 @@
             btcMultiplierLevel,
             ethMultiplierLevel,
             dogeMultiplierLevel,
+            // Manual hash rate upgrade levels
+            btcManualHashRateLevel,
+            ethManualHashRateLevel,
+            dogeManualHashRateLevel,
             // General data
             dollarBalance,
             hardwareEquity,
@@ -1188,6 +1192,11 @@ function loadGame() {
         btcMultiplierLevel = state.btcMultiplierLevel || 0;
         ethMultiplierLevel = state.ethMultiplierLevel || 0;
         dogeMultiplierLevel = state.dogeMultiplierLevel || 0;
+
+        // Load manual hash rate upgrade levels
+        btcManualHashRateLevel = state.btcManualHashRateLevel || 0;
+        ethManualHashRateLevel = state.ethManualHashRateLevel || 0;
+        dogeManualHashRateLevel = state.dogeManualHashRateLevel || 0;
 
         // Load general data
         dollarBalance = parseFloat(state.dollarBalance) || 0;
@@ -2460,6 +2469,10 @@ function loadGame() {
             btcMultiplierLevel = 0;
             ethMultiplierLevel = 0;
             dogeMultiplierLevel = 0;
+            // Reset manual hash rate upgrade levels
+            btcManualHashRateLevel = 0;
+            ethManualHashRateLevel = 0;
+            dogeManualHashRateLevel = 0;
             // Reset skill tree (if skill tree system exists)
             if (typeof resetSkillTree === 'function') {
                 resetSkillTree();
@@ -6315,15 +6328,15 @@ function purchaseBTCManualHashRate() {
     btcManualHashRateLevel++;
 
     // Update manual hash rate for BTC
+    btcClickValue *= 10;  // Apply 900% boost to click value
     const btcUpgrade = upgrades.find(u => u.name === "Manual Hash Rate");
     if (btcUpgrade) {
-        btcUpgrade.clickIncrease *= 1.1;  // Apply 10% boost
-        btcClickValue = btcUpgrade.clickIncrease;
-        // Update button display
-        const btcHashSpan = document.getElementById('btc-hash-value');
-        if (btcHashSpan) {
-            btcHashSpan.innerText = `+${btcClickValue.toFixed(8)} ₿`;
-        }
+        btcUpgrade.clickIncrease = btcClickValue;  // Sync upgrade object with new value
+    }
+    // Update button display
+    const btcHashSpan = document.getElementById('btc-hash-value');
+    if (btcHashSpan) {
+        btcHashSpan.innerText = `+${btcClickValue.toFixed(8)} ₿`;
     }
 
     // Only update the BTC manual hash rate button, not all buttons
@@ -6331,17 +6344,16 @@ function purchaseBTCManualHashRate() {
     if (btcMHRBtn) {
         const btcMHRCost = getManualHashRateCost(btcManualHashRateLevel);
         const btcMHRCanAfford = dollarBalance >= btcMHRCost;
-        const btcMHRMultiplier = Math.pow(1.1, btcManualHashRateLevel);
+        const btcMHRMultiplier = 1 + (btcManualHashRateLevel * 0.5);
 
         document.getElementById('btc-mhr-cost').innerHTML = `$${formatNumberForDisplay(btcMHRCost)}`;
         document.getElementById('btc-mhr-multi').innerHTML = `${btcMHRMultiplier.toFixed(1)}x`;
 
         if (!btcMHRCanAfford) {
-            btcMHRBtn.style.opacity = '0.45';
-            btcMHRBtn.style.cursor = 'not-allowed';
+            btcMHRBtn.style.setProperty('display', 'none', 'important');
             btcMHRBtn.disabled = true;
         } else {
-            btcMHRBtn.style.opacity = '1';
+            btcMHRBtn.style.setProperty('display', 'flex', 'important');
             btcMHRBtn.style.cursor = 'pointer';
             btcMHRBtn.disabled = false;
         }
@@ -6366,15 +6378,15 @@ function purchaseETHManualHashRate() {
     ethManualHashRateLevel++;
 
     // Update manual hash rate for ETH
+    ethClickValue *= 10;  // Apply 900% boost to click value
     const ethUpgrade = ethUpgrades.find(u => u.name === "Manual Hash Rate");
     if (ethUpgrade) {
-        ethUpgrade.clickIncrease *= 1.1;  // Apply 10% boost
-        ethClickValue = ethUpgrade.clickIncrease;
-        // Update button display
-        const ethHashSpan = document.getElementById('eth-hash-value');
-        if (ethHashSpan) {
-            ethHashSpan.innerText = `+${ethClickValue.toFixed(8)} Ξ`;
-        }
+        ethUpgrade.clickIncrease = ethClickValue;  // Sync upgrade object with new value
+    }
+    // Update button display
+    const ethHashSpan = document.getElementById('eth-hash-value');
+    if (ethHashSpan) {
+        ethHashSpan.innerText = `+${ethClickValue.toFixed(8)} Ξ`;
     }
 
     // Only update the ETH manual hash rate button, not all buttons
@@ -6382,17 +6394,16 @@ function purchaseETHManualHashRate() {
     if (ethMHRBtn) {
         const ethMHRCost = getManualHashRateCost(ethManualHashRateLevel);
         const ethMHRCanAfford = dollarBalance >= ethMHRCost;
-        const ethMHRMultiplier = Math.pow(1.1, ethManualHashRateLevel);
+        const ethMHRMultiplier = 1 + (ethManualHashRateLevel * 0.5);
 
         document.getElementById('eth-mhr-cost').innerHTML = `$${formatNumberForDisplay(ethMHRCost)}`;
         document.getElementById('eth-mhr-multi').innerHTML = `${ethMHRMultiplier.toFixed(1)}x`;
 
         if (!ethMHRCanAfford) {
-            ethMHRBtn.style.opacity = '0.45';
-            ethMHRBtn.style.cursor = 'not-allowed';
+            ethMHRBtn.style.setProperty('display', 'none', 'important');
             ethMHRBtn.disabled = true;
         } else {
-            ethMHRBtn.style.opacity = '1';
+            ethMHRBtn.style.setProperty('display', 'flex', 'important');
             ethMHRBtn.style.cursor = 'pointer';
             ethMHRBtn.disabled = false;
         }
@@ -6417,15 +6428,15 @@ function purchaseDOGEManualHashRate() {
     dogeManualHashRateLevel++;
 
     // Update manual hash rate for DOGE
+    dogeClickValue *= 10;  // Apply 900% boost to click value
     const dogeUpgrade = dogeUpgrades.find(u => u.name === "Manual Hash Rate");
     if (dogeUpgrade) {
-        dogeUpgrade.clickIncrease *= 1.1;  // Apply 10% boost
-        dogeClickValue = dogeUpgrade.clickIncrease;
-        // Update button display
-        const dogeHashSpan = document.getElementById('doge-hash-value');
-        if (dogeHashSpan) {
-            dogeHashSpan.innerText = `+${dogeClickValue.toFixed(8)} Ð`;
-        }
+        dogeUpgrade.clickIncrease = dogeClickValue;  // Sync upgrade object with new value
+    }
+    // Update button display
+    const dogeHashSpan = document.getElementById('doge-hash-value');
+    if (dogeHashSpan) {
+        dogeHashSpan.innerText = `+${dogeClickValue.toFixed(8)} Ð`;
     }
 
     // Only update the DOGE manual hash rate button, not all buttons
@@ -6433,17 +6444,16 @@ function purchaseDOGEManualHashRate() {
     if (dogeMHRBtn) {
         const dogeMHRCost = getManualHashRateCost(dogeManualHashRateLevel);
         const dogeMHRCanAfford = dollarBalance >= dogeMHRCost;
-        const dogeMHRMultiplier = Math.pow(1.1, dogeManualHashRateLevel);
+        const dogeMHRMultiplier = 1 + (dogeManualHashRateLevel * 0.5);
 
         document.getElementById('doge-mhr-cost').innerHTML = `$${formatNumberForDisplay(dogeMHRCost)}`;
         document.getElementById('doge-mhr-multi').innerHTML = `${dogeMHRMultiplier.toFixed(1)}x`;
 
         if (!dogeMHRCanAfford) {
-            dogeMHRBtn.style.opacity = '0.45';
-            dogeMHRBtn.style.cursor = 'not-allowed';
+            dogeMHRBtn.style.setProperty('display', 'none', 'important');
             dogeMHRBtn.disabled = true;
         } else {
-            dogeMHRBtn.style.opacity = '1';
+            dogeMHRBtn.style.setProperty('display', 'flex', 'important');
             dogeMHRBtn.style.cursor = 'pointer';
             dogeMHRBtn.disabled = false;
         }
@@ -6560,17 +6570,16 @@ function updateManualHashRateButtons() {
     if (btcMHRBtn) {
         const btcMHRCost = getManualHashRateCost(btcManualHashRateLevel);
         const btcMHRCanAfford = dollarBalance >= btcMHRCost;
-        const btcMHRMultiplier = Math.pow(1.1, btcManualHashRateLevel);
+        const btcMHRMultiplier = 1 + (btcManualHashRateLevel * 0.5);
 
         document.getElementById('btc-mhr-cost').innerHTML = `$${formatNumberForDisplay(btcMHRCost)}`;
         document.getElementById('btc-mhr-multi').innerHTML = `${btcMHRMultiplier.toFixed(1)}x`;
 
         if (!btcMHRCanAfford) {
-            btcMHRBtn.style.opacity = '0.45';
-            btcMHRBtn.style.cursor = 'not-allowed';
+            btcMHRBtn.style.setProperty('display', 'none', 'important');
             btcMHRBtn.disabled = true;
         } else {
-            btcMHRBtn.style.opacity = '1';
+            btcMHRBtn.style.setProperty('display', 'flex', 'important');
             btcMHRBtn.style.cursor = 'pointer';
             btcMHRBtn.disabled = false;
         }
@@ -6581,17 +6590,16 @@ function updateManualHashRateButtons() {
     if (ethMHRBtn) {
         const ethMHRCost = getManualHashRateCost(ethManualHashRateLevel);
         const ethMHRCanAfford = dollarBalance >= ethMHRCost;
-        const ethMHRMultiplier = Math.pow(1.1, ethManualHashRateLevel);
+        const ethMHRMultiplier = 1 + (ethManualHashRateLevel * 0.5);
 
         document.getElementById('eth-mhr-cost').innerHTML = `$${formatNumberForDisplay(ethMHRCost)}`;
         document.getElementById('eth-mhr-multi').innerHTML = `${ethMHRMultiplier.toFixed(1)}x`;
 
         if (!ethMHRCanAfford) {
-            ethMHRBtn.style.opacity = '0.45';
-            ethMHRBtn.style.cursor = 'not-allowed';
+            ethMHRBtn.style.setProperty('display', 'none', 'important');
             ethMHRBtn.disabled = true;
         } else {
-            ethMHRBtn.style.opacity = '1';
+            ethMHRBtn.style.setProperty('display', 'flex', 'important');
             ethMHRBtn.style.cursor = 'pointer';
             ethMHRBtn.disabled = false;
         }
@@ -6602,17 +6610,16 @@ function updateManualHashRateButtons() {
     if (dogeMHRBtn) {
         const dogeMHRCost = getManualHashRateCost(dogeManualHashRateLevel);
         const dogeMHRCanAfford = dollarBalance >= dogeMHRCost;
-        const dogeMHRMultiplier = Math.pow(1.1, dogeManualHashRateLevel);
+        const dogeMHRMultiplier = 1 + (dogeManualHashRateLevel * 0.5);
 
         document.getElementById('doge-mhr-cost').innerHTML = `$${formatNumberForDisplay(dogeMHRCost)}`;
         document.getElementById('doge-mhr-multi').innerHTML = `${dogeMHRMultiplier.toFixed(1)}x`;
 
         if (!dogeMHRCanAfford) {
-            dogeMHRBtn.style.opacity = '0.45';
-            dogeMHRBtn.style.cursor = 'not-allowed';
+            dogeMHRBtn.style.setProperty('display', 'none', 'important');
             dogeMHRBtn.disabled = true;
         } else {
-            dogeMHRBtn.style.opacity = '1';
+            dogeMHRBtn.style.setProperty('display', 'flex', 'important');
             dogeMHRBtn.style.cursor = 'pointer';
             dogeMHRBtn.disabled = false;
         }
