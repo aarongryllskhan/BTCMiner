@@ -8376,15 +8376,7 @@ dogeUpgrades.forEach(u => {
                                     },
                                     label: function(context) {
                                         const value = context.parsed.y;
-                                        let formatted = '$' + value.toFixed(2);
-                                        if (value >= 1000000000) {
-                                            formatted = '$' + (value / 1000000000).toFixed(2) + 'B';
-                                        } else if (value >= 1000000) {
-                                            formatted = '$' + (value / 1000000).toFixed(2) + 'M';
-                                        } else if (value >= 1000) {
-                                            formatted = '$' + (value / 1000).toFixed(2) + 'k';
-                                        }
-                                        return context.dataset.label + ': ' + formatted;
+                                        return context.dataset.label + ': $' + abbreviateNumber(value, 2);
                                     }
                                 }
                             }
@@ -8408,7 +8400,11 @@ dogeUpgrades.forEach(u => {
                                 display: true,
                                 position: 'left',
                                 min: 0,
-                                max: 10,
+                                max: (() => {
+                                    const allValues = [...btcChartHistory, ...ethChartHistory, ...dogeChartHistory, ...cashChartHistory].filter(v => v !== undefined && v !== null);
+                                    const maxValue = allValues.length > 0 ? Math.max(...allValues) : 100;
+                                    return maxValue * 1.1; // Add 10% padding at top
+                                })(),
                                 grid: {
                                     color: 'rgba(255, 255, 255, 0.05)',
                                     drawBorder: false

@@ -1275,7 +1275,7 @@
             display: block !important;
             image-rendering: crisp-edges;
             background: transparent !important;
-            clip-path: inset(0);
+            clip-path: inset(4px 0 0 0);
         }
 
         .chart-container {
