@@ -1,0 +1,46 @@
+MINIFICATION SUMMARY
+====================
+
+JavaScript Files:
+-----------------
+game.js              476KB → 189KB  (60% reduction)
+achievements.js       71KB →  52KB  (27% reduction)
+rugpull.js           134KB →  77KB  (43% reduction)
+tutorial.js           61KB →  36KB  (41% reduction)
+packet-interceptor.js 27KB →  16KB  (41% reduction)
+coin-rain.js          17KB → 6.8KB  (60% reduction)
+staking.js          12.8KB → 5.2KB  (59% reduction)
+
+CSS Files:
+----------
+styles.css           ~93KB →  84KB  (~10% reduction)
+
+HTML Files:
+-----------
+index.html           165KB → 131KB  (21% reduction)
+
+USAGE INSTRUCTIONS
+==================
+
+1. Update index.html to reference minified files:
+   
+   <link rel="stylesheet" href="styles.min.css">
+   
+   <script src="game.min.js"></script>
+   <script src="achievements.min.js"></script>
+   <script src="rugpull.min.js"></script>
+   <script src="staking.min.js"></script>
+   <script src="tutorial.min.js"></script>
+   <script src="packet-interceptor.min.js"></script>
+   <script src="coin-rain.min.js"></script>
+
+2. Use index.min.html as your production HTML file
+
+3. Keep original unminified files for development/debugging
+
+TOTAL SIZE REDUCTION
+====================
+Before: ~840KB (all assets)
+After:  ~491KB (minified)
+Savings: ~349KB (41% total reduction)
+

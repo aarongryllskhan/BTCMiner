@@ -17,7 +17,17 @@ let packetGameState = {
     spawnRate: 2, // symbols per second
     caughtParticles: [],
     gameActive: true,
-    manuallyClosed: false // Track if user manually closed the game
+    manuallyClosed: false, // Track if user manually closed the game
+    // Cached mining values to avoid expensive window lookups
+    cachedBtcPerSec: 0,
+    cachedEthPerSec: 0,
+    cachedDogePerSec: 0,
+    cachedBtcPrice: 100000,
+    cachedEthPrice: 3500,
+    cachedDogePrice: 0.25,
+    cachedTotalMultiplier: 1,
+    lastCacheUpdate: 0,
+    frameCount: 0
 };
 
 const CRYPTO_TYPES = [
@@ -259,31 +269,24 @@ function spawnCryptoSymbol() {
     // Random crypto type
     const cryptoType = CRYPTO_TYPES[Math.floor(Math.random() * CRYPTO_TYPES.length)];
 
-    // Calculate value based on current hash rate (what player would mine per second)
-    // Packet value = current mining rate per second in USD
-    // This means the higher your hash rate, the more valuable packets become!
+    // Use cached values (updated every 500ms in game loop)
     let usdValue = 0;
+    const btcPerSec = packetGameState.cachedBtcPerSec;
+    const ethPerSec = packetGameState.cachedEthPerSec;
+    const dogePerSec = packetGameState.cachedDogePerSec;
+    const btcPrice = packetGameState.cachedBtcPrice;
+    const ethPrice = packetGameState.cachedEthPrice;
+    const dogePrice = packetGameState.cachedDogePrice;
+    const totalMultiplier = packetGameState.cachedTotalMultiplier;
 
-    // First try to get values from window (set by game.js), fallback to local scope
-    const currentBtcPerSec = window.btcPerSec ?? btcPerSec ?? 0;
-    const currentEthPerSec = window.ethPerSec ?? ethPerSec ?? 0;
-    const currentDogePerSec = window.dogePerSec ?? dogePerSec ?? 0;
-    const currentBtcPrice = window.btcPrice ?? btcPrice ?? 100000;
-    const currentEthPrice = window.ethPrice ?? ethPrice ?? 3500;
-    const currentDogePrice = window.dogePrice ?? dogePrice ?? 0.25;
-    const currentTotalMultiplier = window.totalMiningMultiplier ?? totalMiningMultiplier ?? 1;
-
-    if (currentBtcPerSec > 0 || currentEthPerSec > 0 || currentDogePerSec > 0) {
+    if (btcPerSec > 0 || ethPerSec > 0 || dogePerSec > 0) {
         // Use actual mining rates converted to USD per second
         if (cryptoType.name === 'BTC') {
-            // BTC packet worth = BTC/s × price in USD (1 second of mining)
-            usdValue = (currentBtcPerSec * currentTotalMultiplier) * currentBtcPrice;
+            usdValue = (btcPerSec * totalMultiplier) * btcPrice;
         } else if (cryptoType.name === 'ETH') {
-            // ETH packet worth = ETH/s × price in USD (1 second of mining)
-            usdValue = (currentEthPerSec * currentTotalMultiplier) * currentEthPrice;
+            usdValue = (ethPerSec * totalMultiplier) * ethPrice;
         } else if (cryptoType.name === 'DOGE') {
-            // DOGE packet worth = DOGE/s × price in USD (1 second of mining)
-            usdValue = (currentDogePerSec * currentTotalMultiplier) * currentDogePrice;
+            usdValue = (dogePerSec * totalMultiplier) * dogePrice;
         }
     } else {
         // Fallback if rates/prices aren't available yet
@@ -322,11 +325,25 @@ function gameLoopPacketInterceptor() {
     const elapsedSeconds = (now - packetGameState.gameStartTime) / 1000;
     packetGameState.gameTime = elapsedSeconds;
 
-    // Cache canvas rect to avoid expensive getBoundingClientRect calls on every click
-    if (!packetGameState.canvasRect || now % 100 < 16.67) {  // Update rect every ~100ms
+    // Cache canvas rect - update less frequently
+    if (!packetGameState.canvasRect || now - packetGameState.lastRectUpdate > 200) {
         if (packetGameState.canvas) {
             packetGameState.canvasRect = packetGameState.canvas.getBoundingClientRect();
+            packetGameState.lastRectUpdate = now;
         }
+    }
+
+    // Cache mining values every 30 frames (~500ms at 60fps) instead of every spawn
+    packetGameState.frameCount++;
+    if (packetGameState.frameCount >= 30) {
+        packetGameState.cachedBtcPerSec = window.btcPerSec ?? 0;
+        packetGameState.cachedEthPerSec = window.ethPerSec ?? 0;
+        packetGameState.cachedDogePerSec = window.dogePerSec ?? 0;
+        packetGameState.cachedBtcPrice = window.btcPrice ?? 100000;
+        packetGameState.cachedEthPrice = window.ethPrice ?? 3500;
+        packetGameState.cachedDogePrice = window.dogePrice ?? 0.25;
+        packetGameState.cachedTotalMultiplier = window.totalMiningMultiplier ?? 1;
+        packetGameState.frameCount = 0;
     }
 
     // Check if game should end
@@ -375,42 +392,13 @@ function gameLoopPacketInterceptor() {
     // Draw game
     drawPacketInterceptorGame();
 
-    requestAnimationFrame(gameLoopPacketInterceptor);
+    requestAnimationFrame(() => gameLoopPacketInterceptor());
 }
 
 function drawBlockchainBackground(ctx, canvas) {
-    // Simple fast background
+    // Solid background - no grid for performance
     ctx.fillStyle = '#0a0a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw simple grid lines for visual interest
-    ctx.strokeStyle = 'rgba(100, 150, 255, 0.08)';
-    ctx.lineWidth = 1;
-
-    // Vertical lines
-    for (let x = 0; x < canvas.width; x += 100) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-    }
-
-    // Horizontal lines
-    for (let y = 0; y < canvas.height; y += 100) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-    }
-
-    // Add a couple glowing nodes
-    ctx.fillStyle = 'rgba(100, 200, 255, 0.1)';
-    ctx.beginPath();
-    ctx.arc(canvas.width / 3, canvas.height / 3, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(canvas.width * 0.7, canvas.height * 0.7, 2, 0, Math.PI * 2);
-    ctx.fill();
 }
 
 function drawHexagon(ctx, x, y, size) {
@@ -441,17 +429,15 @@ function drawPacketInterceptorGame() {
         ctx.translate(symbol.x, symbol.y);
         ctx.rotate(symbol.rotation);
 
-        // Draw glow effect
-        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, symbol.size);
-        gradient.addColorStop(0, symbol.color + '40');
-        gradient.addColorStop(1, symbol.color + '00');
-
-        ctx.fillStyle = gradient;
-        ctx.fillRect(-symbol.size, -symbol.size, symbol.size * 2, symbol.size * 2);
+        // Simplified glow - just a colored semi-transparent circle
+        ctx.fillStyle = symbol.color + '20';
+        ctx.beginPath();
+        ctx.arc(0, 0, symbol.size * 1.3, 0, Math.PI * 2);
+        ctx.fill();
 
         // Draw outer circle (bright border)
         ctx.strokeStyle = symbol.color;
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(0, 0, symbol.size * 0.9, 0, Math.PI * 2);
         ctx.stroke();
@@ -459,25 +445,8 @@ function drawPacketInterceptorGame() {
         // Draw crypto image
         const img = cryptoImages[symbol.type];
         if (img && img.complete) {
-            // Normalize image size to match the symbol size regardless of original dimensions
-            let displaySize = symbol.size * 1.7;
-
-            // Apply size multiplier for specific coins (e.g., ETH is slightly bigger)
-            displaySize *= symbol.sizeMultiplier;
-
-            // Calculate aspect ratio correction to maintain square display
-            const aspectRatio = img.width / img.height;
-            let drawWidth = displaySize;
-            let drawHeight = displaySize;
-
-            // If image is not square, adjust to fit in square without distortion
-            if (aspectRatio > 1) {
-                drawHeight = displaySize / aspectRatio;
-            } else if (aspectRatio < 1) {
-                drawWidth = displaySize * aspectRatio;
-            }
-
-            ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+            const displaySize = symbol.size * 1.7 * symbol.sizeMultiplier;
+            ctx.drawImage(img, -displaySize / 2, -displaySize / 2, displaySize, displaySize);
         } else {
             // Fallback to circle if image not loaded
             ctx.fillStyle = symbol.color + 'cc';
@@ -496,17 +465,15 @@ function drawPacketInterceptorGame() {
         ctx.restore();
     }
 
-    // Draw caught particles (floating value indicators)
+    // Draw caught particles (floating value indicators) - simplified
     for (let particle of packetGameState.caughtParticles) {
         const alpha = 1 - (particle.age / particle.maxAge);
         const floatY = particle.y - (particle.age * 60);
 
         ctx.fillStyle = `rgba(255, 255, 0, ${alpha})`;
-        ctx.font = 'bold 24px Arial';
+        ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.shadowColor = particle.color;
-        ctx.shadowBlur = 10;
         ctx.fillText('+$' + abbreviateNumber(particle.value), particle.x, floatY);
     }
 
