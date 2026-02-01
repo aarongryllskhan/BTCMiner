@@ -367,6 +367,19 @@
     let cashChartHistory = []; // Track individual CASH values
     let lastChartUpdateTime = Date.now();
     let chartStartTime = Date.now();
+
+    // Trim chart arrays to prevent memory bloat (keep only last 600 points)
+    function trimChartData() {
+        const MAX_CHART_POINTS = 600;
+        if (chartHistory.length > MAX_CHART_POINTS) {
+            chartHistory = chartHistory.slice(-MAX_CHART_POINTS);
+            chartTimestamps = chartTimestamps.slice(-MAX_CHART_POINTS);
+            btcChartHistory = btcChartHistory.slice(-MAX_CHART_POINTS);
+            ethChartHistory = ethChartHistory.slice(-MAX_CHART_POINTS);
+            dogeChartHistory = dogeChartHistory.slice(-MAX_CHART_POINTS);
+            cashChartHistory = cashChartHistory.slice(-MAX_CHART_POINTS);
+        }
+    }
     let chartMarkers = []; // Fixed markers every 60 seconds: { index, time, value }
     let lastMarkerTime = Date.now();
     let chartIntervalMinutes = 10; // Current chart interval in minutes (1, 5, 10, 30, 60, 240, 1440)
@@ -995,17 +1008,17 @@
             return;
         }
 
-        // Keep all chart history - LTTB decimation handles display optimization
-        // No trimming of data, let Chart.js render 600 samples from full history
-        const trimmedChartHistory = chartHistory;
-        const trimmedChartTimestamps = chartTimestamps;
-        const trimmedBtcChartHistory = btcChartHistory;
-        const trimmedEthChartHistory = ethChartHistory;
-        const trimmedDogeChartHistory = dogeChartHistory;
-        const trimmedCashChartHistory = cashChartHistory;
-        const trimmedPowerChartHistory = powerChartHistory;
-        const trimmedPowerChartColors = powerChartColors;
-        const trimmedHashRateChartTimestamps = hashRateChartTimestamps;
+        // Trim chart history to last 600 points to prevent memory bloat on old saves
+        const MAX_CHART_POINTS = 600;
+        const trimmedChartHistory = chartHistory.length > MAX_CHART_POINTS ? chartHistory.slice(-MAX_CHART_POINTS) : chartHistory;
+        const trimmedChartTimestamps = chartTimestamps.length > MAX_CHART_POINTS ? chartTimestamps.slice(-MAX_CHART_POINTS) : chartTimestamps;
+        const trimmedBtcChartHistory = btcChartHistory.length > MAX_CHART_POINTS ? btcChartHistory.slice(-MAX_CHART_POINTS) : btcChartHistory;
+        const trimmedEthChartHistory = ethChartHistory.length > MAX_CHART_POINTS ? ethChartHistory.slice(-MAX_CHART_POINTS) : ethChartHistory;
+        const trimmedDogeChartHistory = dogeChartHistory.length > MAX_CHART_POINTS ? dogeChartHistory.slice(-MAX_CHART_POINTS) : dogeChartHistory;
+        const trimmedCashChartHistory = cashChartHistory.length > MAX_CHART_POINTS ? cashChartHistory.slice(-MAX_CHART_POINTS) : cashChartHistory;
+        const trimmedPowerChartHistory = powerChartHistory.length > MAX_CHART_POINTS ? powerChartHistory.slice(-MAX_CHART_POINTS) : powerChartHistory;
+        const trimmedPowerChartColors = powerChartColors.length > MAX_CHART_POINTS ? powerChartColors.slice(-MAX_CHART_POINTS) : powerChartColors;
+        const trimmedHashRateChartTimestamps = hashRateChartTimestamps.length > MAX_CHART_POINTS ? hashRateChartTimestamps.slice(-MAX_CHART_POINTS) : hashRateChartTimestamps;
 
         const gameState = {
             // Bitcoin data
@@ -1666,17 +1679,17 @@ function loadGame() {
      * Get the current game state for export (reuses saveGame structure)
      */
     function getExportableGameState() {
-        // Keep all chart history - LTTB decimation handles display optimization
-        // No trimming of data, let Chart.js render 600 samples from full history
-        const trimmedChartHistory = chartHistory;
-        const trimmedChartTimestamps = chartTimestamps;
-        const trimmedBtcChartHistory = btcChartHistory;
-        const trimmedEthChartHistory = ethChartHistory;
-        const trimmedDogeChartHistory = dogeChartHistory;
-        const trimmedCashChartHistory = cashChartHistory;
-        const trimmedPowerChartHistory = powerChartHistory;
-        const trimmedPowerChartColors = powerChartColors;
-        const trimmedHashRateChartTimestamps = hashRateChartTimestamps;
+        // Trim chart history to last 600 points to prevent memory bloat on old saves
+        const MAX_CHART_POINTS = 600;
+        const trimmedChartHistory = chartHistory.length > MAX_CHART_POINTS ? chartHistory.slice(-MAX_CHART_POINTS) : chartHistory;
+        const trimmedChartTimestamps = chartTimestamps.length > MAX_CHART_POINTS ? chartTimestamps.slice(-MAX_CHART_POINTS) : chartTimestamps;
+        const trimmedBtcChartHistory = btcChartHistory.length > MAX_CHART_POINTS ? btcChartHistory.slice(-MAX_CHART_POINTS) : btcChartHistory;
+        const trimmedEthChartHistory = ethChartHistory.length > MAX_CHART_POINTS ? ethChartHistory.slice(-MAX_CHART_POINTS) : ethChartHistory;
+        const trimmedDogeChartHistory = dogeChartHistory.length > MAX_CHART_POINTS ? dogeChartHistory.slice(-MAX_CHART_POINTS) : dogeChartHistory;
+        const trimmedCashChartHistory = cashChartHistory.length > MAX_CHART_POINTS ? cashChartHistory.slice(-MAX_CHART_POINTS) : cashChartHistory;
+        const trimmedPowerChartHistory = powerChartHistory.length > MAX_CHART_POINTS ? powerChartHistory.slice(-MAX_CHART_POINTS) : powerChartHistory;
+        const trimmedPowerChartColors = powerChartColors.length > MAX_CHART_POINTS ? powerChartColors.slice(-MAX_CHART_POINTS) : powerChartColors;
+        const trimmedHashRateChartTimestamps = hashRateChartTimestamps.length > MAX_CHART_POINTS ? hashRateChartTimestamps.slice(-MAX_CHART_POINTS) : hashRateChartTimestamps;
 
         return {
             // Game version for compatibility checks
@@ -9017,6 +9030,7 @@ dogeUpgrades.forEach(u => {
                     cashChartHistory.push(dollarBalance);
                     chartTimestamps.push({ time: now, value: currentNetWorth, cash: dollarBalance, btc: btcBalance * btcPrice, eth: ethBalance * ethPrice, doge: dogeBalance * dogePrice });
                     chartStartTime = now;
+                    trimChartData(); // Trim to 600 points
                     console.log('Chart initialized with current data point');
                 }
 
