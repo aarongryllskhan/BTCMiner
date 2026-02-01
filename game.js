@@ -2781,6 +2781,15 @@ function loadGame() {
                 }
             }, 50);
         }
+
+        // Track tutorial tab clicks
+        if (tab === 'btc-mining') {
+            trackBTCTabClick();
+        } else if (tab === 'eth-mining') {
+            trackETHTabClick();
+        } else if (tab === 'doge-mining') {
+            trackDOGETabClick();
+        }
     }
 
     function setBuyQuantity(qty) {
@@ -6240,6 +6249,12 @@ function updateManualHashRateButtons() {
             const ascensionBonus = (typeof getAscensionMiningBonus === 'function') ? getAscensionMiningBonus() : 0;
             ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0) * (1 + ascensionBonus);
             window.ethPerSec = ethPerSec; // Make globally accessible for minigames
+
+            // Track GPU Rig purchase for tutorial
+            if (u.id === 1 && typeof trackGPURigPurchase === 'function') {
+                trackGPURigPurchase();
+            }
+
             // Force immediate UI update by resetting the throttle timer
             lastUIUpdateTime = 0;
             updateUI();
@@ -6298,6 +6313,11 @@ function updateManualHashRateButtons() {
             updateUI();
             saveGame();
             playUpgradeSound();
+
+            // Track Scrypt Miner purchase for tutorial
+            if (u.id === 1 && typeof trackScryptMinerPurchase === 'function') {
+                trackScryptMinerPurchase();
+            }
         }
     }
 

@@ -99,6 +99,17 @@ let tutorialData = {
                 if (ethEl) ethEl.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8)';
                 if (dogeEl) dogeEl.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8)';
 
+                // Also highlight the cash balance display
+                const cashEl = document.getElementById('player-cash-display');
+                if (cashEl) {
+                    cashEl.style.cssText = `
+                        border: 3px dashed #FFD700 !important;
+                        box-shadow: 0 0 30px rgba(255, 215, 0, 0.9) !important;
+                        padding: 8px !important;
+                        border-radius: 6px !important;
+                    `;
+                }
+
                 // Also highlight all SELL ALL buttons with flashing animation
                 document.querySelectorAll('button').forEach(btn => {
                     if (btn.textContent.includes('SELL ALL')) {
@@ -347,41 +358,29 @@ let tutorialData = {
             id: 'hashrate_display',
             title: 'Monitor Your Hashrate',
             description: 'These bars display your current HASHRATE in $/sec for each cryptocurrency. This shows how much value you\'re earning per second from your miners!',
-            targets: ['hashrate-btc', 'hashrate-eth', 'hashrate-doge'],
+            targets: [],
             trigger: 'manual',
             nextCondition: () => true,
             highlightClass: 'tutorial-highlight',
             customHighlight: () => {
-                // Scroll to show the hashrate bars on mobile
-                if (window.innerWidth <= 768) {
-                    setTimeout(() => {
-                        const hashrateBtc = document.getElementById('hashrate-btc');
-                        if (hashrateBtc) {
-                            hashrateBtc.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    }, 300);
-                }
+                // Scroll to show the hashrate bars
+                setTimeout(() => {
+                    const hashrateBtc = document.getElementById('btc-hashrate-bar');
+                    if (hashrateBtc) {
+                        // Scroll to show the entire hashrate section with labels and bars
+                        hashrateBtc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
             }
         },
         {
             id: 'crypto_distribution',
             title: 'Cryptocurrency Distribution',
             description: 'These colored bars show your current distribution of BTC, ETH, and DOGE. As you mine more cryptocurrencies, the proportions will shift based on which miners you own!',
-            targets: ['crypto-dist-btc', 'crypto-dist-eth', 'crypto-dist-doge'],
+            targets: [],
             trigger: 'manual',
             nextCondition: () => true,
-            highlightClass: 'tutorial-highlight',
-            customHighlight: () => {
-                // Scroll to show the crypto distribution bars on mobile
-                if (window.innerWidth <= 768) {
-                    setTimeout(() => {
-                        const cryptoDistBtc = document.getElementById('crypto-dist-btc');
-                        if (cryptoDistBtc) {
-                            cryptoDistBtc.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    }, 300);
-                }
-            }
+            highlightClass: 'tutorial-highlight'
         },
         {
             id: 'portfolio_chart',
@@ -514,8 +513,9 @@ function showTutorialStep() {
         background: transparent;
         z-index: 9990;
         display: flex;
-        align-items: ${isMobile ? 'flex-end' : 'center'};
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        justify-content: ${isMobile ? 'flex-end' : 'center'};
         pointer-events: none;
         ${isMobile ? 'overflow-y: auto;' : ''}
     `;
@@ -536,7 +536,7 @@ function showTutorialStep() {
         pointer-events: auto;
         position: relative;
         z-index: 9991;
-        ${isMobile ? 'margin-bottom: 15px; margin-top: auto; max-height: 45vh; overflow-y: auto;' : ''}
+        ${isMobile ? 'margin-bottom: 15px; max-height: 45vh; overflow-y: auto;' : ''}
     `;
 
     // Check if "Got It!" button should be disabled
@@ -588,7 +588,6 @@ function showTutorialStep() {
             <button onclick="skipTutorial()" style="background: rgba(100,100,100,0.5); color: #999; border: 2px solid #666; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 700;">Skip Tutorial</button>
             ${!shouldHideButton ? `<button id="tutorial-got-it-btn" onclick="nextTutorialStep(); return false;" style="${buttonStyle}" ${shouldDisableButton ? 'disabled' : ''}}>Got It! →</button>` : ''}
         </div>
-        <div style="margin-top: 15px; font-size: 0.8rem; color: #888;">Step ${tutorialData.currentStep + 1} of ${tutorialData.steps.length}</div>
     `;
 
     overlay.appendChild(card);
@@ -650,6 +649,15 @@ function showTutorialStep() {
                 window.scrollTo({ top: scrollPos, behavior: 'smooth' });
             }, 600);
         }
+    } else if (step.id === 'hashrate_display') {
+        // Scroll to show hashrate bars on all screen sizes
+        setTimeout(() => {
+            const hashrateBtc = document.getElementById('btc-hashrate-bar');
+            if (hashrateBtc) {
+                hashrateBtc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                console.log('🎓 Hashrate display step scroll triggered');
+            }
+        }, 600);
     } else if (step.id === 'tutorial_complete' && window.innerWidth <= 768) {
         setTimeout(() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -731,6 +739,58 @@ function removeOldTutorialOverlay() {
             usbMinerBtn.style.position = '';
         }
     }
+
+    // Remove GPU Rig highlighting if not on that step
+    const isCurrentStepGPURig = step && step.id === 'buy_gpu_rig';
+    if (!isCurrentStepGPURig) {
+        // Try multiple possible selectors for GPU Rig button
+        const possibleSelectors = ['up-1-eth', 'ue-1', 'eth-upgrade-1'];
+        possibleSelectors.forEach(selector => {
+            const gpuRigBtn = document.getElementById(selector);
+            if (gpuRigBtn) {
+                gpuRigBtn.style.cssText = '';
+                gpuRigBtn.removeAttribute('style');
+            }
+        });
+
+        // Also search by text content as fallback
+        document.querySelectorAll('button.u-item').forEach(btn => {
+            if (btn.textContent.includes('Single GPU Rig')) {
+                btn.style.cssText = '';
+                btn.removeAttribute('style');
+            }
+        });
+    }
+
+    // Remove Scrypt Miner highlighting if not on that step
+    const isCurrentStepScryptMiner = step && step.id === 'buy_scrypt_miner';
+    if (!isCurrentStepScryptMiner) {
+        // Try multiple possible selectors for Scrypt Miner button
+        const possibleSelectors = ['up-1-doge', 'ud-1', 'doge-upgrade-1'];
+        possibleSelectors.forEach(selector => {
+            const scryptBtn = document.getElementById(selector);
+            if (scryptBtn) {
+                scryptBtn.style.cssText = '';
+                scryptBtn.removeAttribute('style');
+            }
+        });
+
+        // Also search by text content as fallback
+        document.querySelectorAll('button.u-item').forEach(btn => {
+            if (btn.textContent.includes('Basic Scrypt Miner')) {
+                btn.style.cssText = '';
+                btn.removeAttribute('style');
+            }
+        });
+    }
+
+    // Remove hashrate display highlighting if not on that step
+    const isCurrentStepHashrate = step && step.id === 'hashrate_display';
+    if (!isCurrentStepHashrate) {
+        // Don't clear hashrate bars as they need their width styles to display properly
+        // The bars are updated dynamically by game.js
+    }
+
 }
 
 // Next tutorial step
@@ -874,6 +934,32 @@ function checkTutorialProgress() {
                 gotItButton.setAttribute('style', 'background: rgba(100,100,100,0.3); color: #666; border: none; padding: 10px 20px; border-radius: 6px; cursor: not-allowed; font-weight: 700; opacity: 0.5;');
             }
         }
+    } else if (step.id === 'buy_eth_miner') {
+        // Step 7: Auto-advance when ETH tab is clicked
+        if (tutorialData.ethTabClicked) {
+            console.log('🎓 Step 7: ETH tab clicked! Auto-advancing.');
+            nextTutorialStep();
+        }
+    } else if (step.id === 'buy_gpu_rig') {
+        // Step 8: Auto-advance when GPU Rig is purchased (level > 0)
+        const hasGPURig = typeof ethUpgrades !== 'undefined' && ethUpgrades[1] && ethUpgrades[1].level > 0;
+        if (hasGPURig) {
+            console.log('🎓 Step 8: Single GPU Rig purchased! Auto-advancing.');
+            nextTutorialStep();
+        }
+    } else if (step.id === 'buy_doge_miner') {
+        // Step 9: Auto-advance when DOGE tab is clicked
+        if (tutorialData.dogeTabClicked) {
+            console.log('🎓 Step 9: DOGE tab clicked! Auto-advancing.');
+            nextTutorialStep();
+        }
+    } else if (step.id === 'buy_scrypt_miner') {
+        // Step 10: Auto-advance when Scrypt Miner is purchased (level > 0)
+        const hasScryptMiner = typeof dogeUpgrades !== 'undefined' && dogeUpgrades[1] && dogeUpgrades[1].level > 0;
+        if (hasScryptMiner) {
+            console.log('🎓 Step 10: Basic Scrypt Miner purchased! Auto-advancing.');
+            nextTutorialStep();
+        }
     }
 }
 
@@ -957,6 +1043,25 @@ function trackGPURigPurchase() {
     // If we're on Step 8 (buy_gpu_rig), advance to next step
     if (!tutorialData.completed && tutorialData.currentStep === 7 && tutorialData.steps[7].id === 'buy_gpu_rig') {
         console.log('🎓 Single GPU Rig purchased! Advancing tutorial.');
+
+        // Clear GPU Rig highlighting immediately - try multiple selectors
+        const possibleSelectors = ['up-1-eth', 'ue-1', 'eth-upgrade-1'];
+        possibleSelectors.forEach(selector => {
+            const gpuRigBtn = document.getElementById(selector);
+            if (gpuRigBtn) {
+                gpuRigBtn.style.cssText = '';
+                gpuRigBtn.removeAttribute('style');
+            }
+        });
+
+        // Also try searching by text content as fallback
+        document.querySelectorAll('button.u-item').forEach(btn => {
+            if (btn.textContent.includes('Single GPU Rig')) {
+                btn.style.cssText = '';
+                btn.removeAttribute('style');
+            }
+        });
+
         nextTutorialStep();
     }
 }
@@ -966,6 +1071,25 @@ function trackScryptMinerPurchase() {
     // If we're on Step 10 (buy_scrypt_miner), advance to next step
     if (!tutorialData.completed && tutorialData.currentStep === 9 && tutorialData.steps[9].id === 'buy_scrypt_miner') {
         console.log('🎓 Basic Scrypt Miner purchased! Advancing tutorial.');
+
+        // Clear Scrypt Miner highlighting immediately - try multiple selectors
+        const possibleSelectors = ['up-1-doge', 'ud-1', 'doge-upgrade-1'];
+        possibleSelectors.forEach(selector => {
+            const scryptBtn = document.getElementById(selector);
+            if (scryptBtn) {
+                scryptBtn.style.cssText = '';
+                scryptBtn.removeAttribute('style');
+            }
+        });
+
+        // Also try searching by text content as fallback
+        document.querySelectorAll('button.u-item').forEach(btn => {
+            if (btn.textContent.includes('Basic Scrypt Miner')) {
+                btn.style.cssText = '';
+                btn.removeAttribute('style');
+            }
+        });
+
         nextTutorialStep();
     }
 }
