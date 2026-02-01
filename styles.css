@@ -87,6 +87,48 @@
         }
         #dollar-balance { font-size: 1.5rem; }
 
+        /* Increase cash display text sizes */
+        #dollar-balance-btc,
+        #dollar-balance-eth,
+        #dollar-balance-doge,
+        #dollar-balance-power,
+        #dollar-balance-exchange {
+            font-size: 1.8rem !important;
+        }
+
+        /* Cash label above amounts */
+        div[style*="font-size: 0.5rem"][style*="color: #00ff88"][style*="text-transform: uppercase"] {
+            font-size: 0.7rem !important;
+        }
+
+        /* Remove border-radius from manual hash buttons */
+        #btc-manual-hash-rate-btn,
+        #eth-manual-hash-rate-btn,
+        #doge-manual-hash-rate-btn,
+        #manual-hash-btc-btn,
+        #manual-hash-eth-btn,
+        #manual-hash-doge-btn {
+            border-radius: 0 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5) !important;
+        }
+
+        #btc-manual-hash-rate-btn,
+        #eth-manual-hash-rate-btn,
+        #doge-manual-hash-rate-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #btc-manual-hash-rate-btn span,
+        #eth-manual-hash-rate-btn span,
+        #doge-manual-hash-rate-btn span,
+        #btc-manual-hash-rate-btn div,
+        #eth-manual-hash-rate-btn div,
+        #doge-manual-hash-rate-btn div {
+            position: relative;
+            z-index: 2;
+        }
+
         /* Coin Rain Animation */
         #coin-rain-canvas { image-rendering: crisp-edges; image-rendering: pixelated; }
 
@@ -363,6 +405,10 @@
             #main-layout { grid-template-columns: 1fr !important; gap: 0; display: flex !important; flex-direction: column !important; height: auto; margin: 0; padding: 0; width: 100%; box-sizing: border-box; }
             .panel { padding: 12px; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; border: none; background: transparent; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; padding-top: 60px; }
+            /* Reduce cash balance box height on mobile */
+            div[style*="padding: 12px 16px"][style*="background: rgba(0, 255, 136, 0.1)"] {
+                padding: 8px 12px !important;
+            }
             .panel:last-child { display: none !important; }
             .desktop-button-layout { overflow: visible !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 100 !important; width: 100% !important; padding: 6px !important; background: rgba(0,0,0,0.9) !important; }
             .upgrade-list { overflow-y: auto !important; max-height: 600px; }
@@ -847,8 +893,8 @@
         }
 
         .btn-primary-btc:hover:not(:disabled) {
-            background: linear-gradient(135deg, #ff9500 0%, #ffaa1a 100%) !important;
-            border-color: #ffaa1a !important;
+            background: linear-gradient(135deg, #9a5208 0%, #c26a0f 100%) !important;
+            border-color: #9a5208 !important;
         }
 
         /* ETH Primary Variant */
@@ -859,8 +905,8 @@
         }
 
         .btn-primary-eth:hover:not(:disabled) {
-            background: linear-gradient(135deg, #7c8fff 0%, #9099ff 100%) !important;
-            border-color: #9099ff !important;
+            background: linear-gradient(135deg, #334fa8 0%, #445fc8 100%) !important;
+            border-color: #334fa8 !important;
         }
 
         .btn-primary-eth:hover:disabled {
@@ -876,8 +922,8 @@
         }
 
         .btn-primary-doge:hover:not(:disabled) {
-            background: linear-gradient(135deg, #d4b644 0%, #e0c857 100%) !important;
-            border-color: #e0c857 !important;
+            background: linear-gradient(135deg, #726220 0%, #8a741f 100%) !important;
+            border-color: #726220 !important;
         }
 
         .btn-primary-doge:hover:disabled {
