@@ -2670,12 +2670,14 @@ function loadGame() {
         container.innerHTML = '';
 
         btcUpgrades.forEach((u, i) => {
+            // Skip click upgrades (manual hash rate) from showing in the store
+            if (u.isClickUpgrade) {
+                return;
+            }
+
             const btn = document.createElement('button');
             btn.className = 'u-item btn-primary btn-primary-btc';
             btn.id = `up-${u.id}`;
-            if (u.isClickUpgrade) {
-                btn.classList.add('click-upgrade');
-            }
 
             btn.onclick = () => buyLevelMultiple(i, buyQuantity);
 
@@ -2778,12 +2780,14 @@ function loadGame() {
         container.innerHTML = '';
 
         ethUpgrades.forEach((u, i) => {
+            // Skip click upgrades (manual hash rate) from showing in the store
+            if (u.isClickUpgrade) {
+                return;
+            }
+
             const btn = document.createElement('button');
             btn.className = 'u-item btn-primary btn-primary-eth';
             btn.id = `eth-up-${u.id}`;
-            if (u.isClickUpgrade) {
-                btn.classList.add('click-upgrade');
-            }
 
             btn.onclick = () => buyEthLevel(i, buyQuantity);
 
@@ -2842,12 +2846,14 @@ function loadGame() {
         container.innerHTML = '';
 
         dogeUpgrades.forEach((u, i) => {
+            // Skip click upgrades (manual hash rate) from showing in the store
+            if (u.isClickUpgrade) {
+                return;
+            }
+
             const btn = document.createElement('button');
             btn.className = 'u-item btn-primary btn-primary-doge';
             btn.id = `doge-up-${u.id}`;
-            if (u.isClickUpgrade) {
-                btn.classList.add('click-upgrade');
-            }
 
             btn.onclick = () => buyDogeLevel(i, buyQuantity);
 
@@ -8370,6 +8376,41 @@ dogeUpgrades.forEach(u => {
                 dogeTouched = false;
             });
         }
+
+        // Add touch feedback to +10% upgrade buttons
+        const mhrButtons = [
+            { id: 'btc-manual-hash-rate-btn', name: 'BTC' },
+            { id: 'eth-manual-hash-rate-btn', name: 'ETH' },
+            { id: 'doge-manual-hash-rate-btn', name: 'DOGE' }
+        ];
+
+        mhrButtons.forEach(btnInfo => {
+            const btn = document.getElementById(btnInfo.id);
+            if (btn) {
+                let pressTimeout = null;
+                btn.addEventListener('touchstart', (e) => {
+                    // Clear any pending timeout
+                    if (pressTimeout) clearTimeout(pressTimeout);
+                    // Add pressed animation
+                    btn.classList.add('button-pressed');
+                    // Schedule class removal after animation completes
+                    pressTimeout = setTimeout(() => {
+                        btn.classList.remove('button-pressed');
+                        pressTimeout = null;
+                    }, 200);
+                });
+                btn.addEventListener('touchend', (e) => {
+                    // Ensure animation completes even if touch ends early
+                    if (pressTimeout) {
+                        clearTimeout(pressTimeout);
+                        pressTimeout = setTimeout(() => {
+                            btn.classList.remove('button-pressed');
+                            pressTimeout = null;
+                        }, 50);
+                    }
+                });
+            }
+        });
 
         // Show instructions modal if not dismissed and player hasn't ascended yet
         // BUT: don't show if tutorial is active for new players or if tutorial was completed

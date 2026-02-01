@@ -41,6 +41,50 @@
             animation: barFlash 0.5s ease-out;
         }
 
+        /* Touch feedback animation for buttons */
+        @keyframes buttonPress {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); box-shadow: none; }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(247, 147, 26, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); box-shadow: none; }
+        }
+
+        /* Active class for touch feedback on buttons */
+        .button-pressed {
+            animation: buttonPress 0.2s ease-out !important;
+        }
+
+        /* Enhanced active state for color variants when using button-pressed */
+        .btn-primary-btc.button-pressed {
+            animation: buttonPressBTC 0.2s ease-out !important;
+        }
+
+        .btn-primary-eth.button-pressed {
+            animation: buttonPressETH 0.2s ease-out !important;
+        }
+
+        .btn-primary-doge.button-pressed {
+            animation: buttonPressDOGE 0.2s ease-out !important;
+        }
+
+        /* Color-specific press animations */
+        @keyframes buttonPressBTC {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(247, 147, 26, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes buttonPressETH {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(98, 126, 234, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
+        @keyframes buttonPressDOGE {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            50% { transform: scale(0.94) translateY(3px); filter: brightness(1.3); box-shadow: 0 0 16px rgba(194, 166, 51, 1), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+
         /* Grey background to match panels */
         body::before {
             content: '';
@@ -914,6 +958,9 @@
             font-weight: 900 !important;
             border-radius: 6px !important;
             cursor: pointer !important;
+            touch-action: manipulation !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
         }
 
         .btn-primary:hover:not(:disabled) {
@@ -928,6 +975,8 @@
 
         .btn-primary:active:not(:disabled) {
             transform: scale(0.96) translateY(2px) !important;
+            filter: brightness(1.2) !important;
+            box-shadow: 0 0 12px rgba(255, 165, 0, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.3) !important;
         }
 
         /* BTC Primary Variant */
@@ -942,6 +991,12 @@
             border-color: #9a5208 !important;
         }
 
+        .btn-primary-btc:active:not(:disabled) {
+            transform: scale(0.94) translateY(3px) !important;
+            filter: brightness(1.3) !important;
+            box-shadow: 0 0 16px rgba(247, 147, 26, 1), inset 0 0 10px rgba(255, 255, 255, 0.4) !important;
+        }
+
         /* ETH Primary Variant */
         .btn-primary-eth {
             background: linear-gradient(135deg, #627eea 0%, #7c8fff 100%) !important;
@@ -952,6 +1007,12 @@
         .btn-primary-eth:hover:not(:disabled) {
             background: linear-gradient(135deg, #334fa8 0%, #445fc8 100%) !important;
             border-color: #334fa8 !important;
+        }
+
+        .btn-primary-eth:active:not(:disabled) {
+            transform: scale(0.94) translateY(3px) !important;
+            filter: brightness(1.3) !important;
+            box-shadow: 0 0 16px rgba(98, 126, 234, 1), inset 0 0 10px rgba(255, 255, 255, 0.4) !important;
         }
 
         .btn-primary-eth:hover:disabled {
@@ -969,6 +1030,12 @@
         .btn-primary-doge:hover:not(:disabled) {
             background: linear-gradient(135deg, #726220 0%, #8a741f 100%) !important;
             border-color: #726220 !important;
+        }
+
+        .btn-primary-doge:active:not(:disabled) {
+            transform: scale(0.94) translateY(3px) !important;
+            filter: brightness(1.3) !important;
+            box-shadow: 0 0 16px rgba(194, 166, 51, 1), inset 0 0 10px rgba(255, 255, 255, 0.4) !important;
         }
 
         .btn-primary-doge:hover:disabled {
