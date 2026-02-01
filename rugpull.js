@@ -11,6 +11,12 @@ console.log('🔴 RUGPULL.JS LOADING - START');
 let ascensionLevel = 0;                      // Total number of times the player has ascended
 let rugpullCurrency = 0;                     // "Corrupt Tokens" - earned through ascension
 let lastShownMilestoneEarnings = 0;          // Track which $1M milestone popup was shown
+
+// IMPORTANT EARNINGS TRACKING NOTE:
+// - game.js::lifetimeEarnings = Cumulative earnings across ALL rugpulls (never resets, only ever increases)
+// - rugpull.js::lifetimeEarningsThisRugpull = Earnings since last rugpull (RESETS to 0 after each rugpull)
+// - The rugpull button displays: lifetimeEarningsThisRugpull / requirement
+// - After a rugpull completes, lifetimeEarningsThisRugpull is reset to 0
 let lifetimeEarningsThisRugpull = 0;         // Earnings since last rugpull (for rugpull eligibility tracking) - RESETS each rugpull
 let lifetimeEarningsDisplay = 0;             // Total lifetime earnings to DISPLAY to player (persists across rugpulls)
 let rugpullButtonListenersAttached = false;  // Flag to prevent duplicate event listeners
@@ -1966,10 +1972,12 @@ function updateMetaUpgradesUI() {
  * Get ascension data for saving/loading
  */
 function getAscensionData() {
+    console.log('[RUGPULL-SAVE] Saving lifetimeEarningsThisRugpull:', lifetimeEarningsThisRugpull);
     return {
         ascensionLevel,
         rugpullCurrency,
         lastShownMilestoneEarnings,
+        lifetimeEarningsThisRugpull,  // Save earnings progress toward next rugpull
         ascensionStats,
         metaUpgrades,
         unlockedSystems,
@@ -1991,6 +1999,8 @@ function loadAscensionData(data) {
     ascensionLevel = data.ascensionLevel || 0;
     rugpullCurrency = parseFloat(data.rugpullCurrency) || 0;
     lastShownMilestoneEarnings = data.lastShownMilestoneEarnings || 0;
+    lifetimeEarningsThisRugpull = data.lifetimeEarningsThisRugpull || 0;  // Restore earnings progress
+    console.log('[RUGPULL-LOAD] Loaded lifetimeEarningsThisRugpull:', lifetimeEarningsThisRugpull, 'from data:', data.lifetimeEarningsThisRugpull);
     ascensionStats = data.ascensionStats || {
         totalRunsCompleted: 0,
         currencyEarned: 0,
@@ -2320,6 +2330,7 @@ function updateAscensionUI() {
         requirementLabel = formatLargeNumber(requirement);
 
         earningsLabel = formatLargeNumber(lifetimeEarningsThisRugpull);
+        console.log('[RUGPULL-UI] Updating display - lifetimeEarningsThisRugpull:', lifetimeEarningsThisRugpull, 'formatted:', earningsLabel);
 
         // Update mobile version
         if (progressTextMobile) {

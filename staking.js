@@ -111,6 +111,14 @@ function processStakingEarnings() {
         lifetimeEarnings += totalEarnings; // Track staking rewards in lifetime earnings
         sessionEarnings += totalEarnings; // Track staking rewards in session earnings
 
+        // Update rugpull earnings tracker
+        if (typeof window.rugpullAddEarnings === 'function') {
+            console.log('[STAKING] Adding to rugpull tracker:', totalEarnings);
+            window.rugpullAddEarnings(totalEarnings);
+        } else {
+            console.log('[STAKING] ✗ rugpullAddEarnings NOT available');
+        }
+
         // Add to lifetime crypto totals for skill tree milestones
         if (btcEarned > 0) {
             btcLifetime += btcEarned;

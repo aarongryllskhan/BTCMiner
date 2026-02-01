@@ -908,7 +908,7 @@
             font-weight: 700 !important;
             font-size: 0.85rem !important;
             padding: 8px !important;
-            box-shadow: none !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1) !important;
             flex: 1 !important;
             box-sizing: border-box !important;
             border-radius: 6px !important;

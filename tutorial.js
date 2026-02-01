@@ -367,6 +367,28 @@ let tutorialData = {
                 setTimeout(() => {
                     const hashrateBtc = document.getElementById('btc-hashrate-bar');
                     if (hashrateBtc) {
+                        // Find the flex container that directly holds all three hashrate boxes
+                        // btc-hashrate-bar -> parent (bar container) -> parent (single crypto box) -> parent (flex container with all three)
+                        const hashrateContainer = hashrateBtc.parentElement?.parentElement?.parentElement;
+
+                        if (hashrateContainer) {
+                            // Apply yellow dashed highlight to the entire hashrate display
+                            hashrateContainer.style.cssText = `
+                                border: 3px dashed #FFD700 !important;
+                                box-shadow: 0 0 30px rgba(255, 215, 0, 0.8) !important;
+                                padding: 8px !important;
+                                border-radius: 8px !important;
+                                position: relative !important;
+                                width: 100% !important;
+                                display: flex !important;
+                                justify-content: center !important;
+                                gap: 8px !important;
+                                flex-wrap: nowrap !important;
+                                box-sizing: border-box !important;
+                            `;
+                            console.log('🎓 Hashrate display highlighted with yellow dashed border');
+                        }
+
                         // Scroll to show the entire hashrate section with labels and bars
                         hashrateBtc.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
@@ -380,26 +402,67 @@ let tutorialData = {
             targets: [],
             trigger: 'manual',
             nextCondition: () => true,
-            highlightClass: 'tutorial-highlight'
+            highlightClass: 'tutorial-highlight',
+            customHighlight: () => {
+                // Scroll to show the distribution bars
+                setTimeout(() => {
+                    const btcBar = document.getElementById('btc-bar');
+                    if (btcBar) {
+                        // Find the flex container that directly holds all three distribution boxes
+                        // btc-bar -> parent (bar container) -> parent (single crypto box) -> parent (flex container with all three)
+                        const distributionContainer = btcBar.parentElement?.parentElement?.parentElement;
+
+                        if (distributionContainer) {
+                            // Apply yellow dashed highlight to the entire distribution display
+                            distributionContainer.style.cssText = `
+                                border: 3px dashed #FFD700 !important;
+                                box-shadow: 0 0 30px rgba(255, 215, 0, 0.8) !important;
+                                padding: 8px !important;
+                                border-radius: 8px !important;
+                                position: relative !important;
+                                width: 100% !important;
+                                display: flex !important;
+                                justify-content: center !important;
+                                gap: clamp(16px, 5vw, 48px) !important;
+                                flex-wrap: nowrap !important;
+                                box-sizing: border-box !important;
+                            `;
+                            console.log('🎓 Crypto distribution display highlighted with yellow dashed border');
+                        }
+
+                        // Scroll to show the entire distribution section
+                        btcBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
+            }
         },
         {
             id: 'portfolio_chart',
             title: 'Track Your Portfolio',
             description: 'This chart displays your total net worth over time, including your cash balance and all cryptocurrency holdings. Watch it grow as you expand your mining operation!',
-            targets: ['portfolio-chart-container'],
+            targets: ['nw-chart-container'],
             trigger: 'manual',
             nextCondition: () => true,
             highlightClass: 'tutorial-highlight',
             customHighlight: () => {
-                // Scroll to show the portfolio chart on mobile
-                if (window.innerWidth <= 768) {
-                    setTimeout(() => {
-                        const chartContainer = document.getElementById('portfolio-chart-container');
-                        if (chartContainer) {
-                            chartContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    }, 300);
-                }
+                // Highlight the portfolio chart container
+                setTimeout(() => {
+                    const chartContainer = document.getElementById('nw-chart-container');
+                    if (chartContainer) {
+                        // Apply yellow dashed highlight to the chart with box-sizing to preserve dimensions
+                        chartContainer.style.cssText = `
+                            border: 2px dashed #FFD700 !important;
+                            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8) !important;
+                            border-radius: 6px !important;
+                            position: relative !important;
+                            box-sizing: border-box !important;
+                        `;
+                        console.log('🎓 Portfolio chart highlighted with yellow dashed border');
+
+                        // Scroll to show the portfolio chart
+                        chartContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
             }
         },
         {
@@ -411,6 +474,7 @@ let tutorialData = {
             nextCondition: () => true,
             highlightClass: 'tutorial-highlight',
             autoAdvance: true,
+            hideGotItButton: true,
             customHighlight: () => {
                 // Scroll to show the minigames tab on mobile
                 if (window.innerWidth <= 768) {
@@ -426,7 +490,7 @@ let tutorialData = {
         {
             id: 'tutorial_complete',
             title: 'You\'re Ready!',
-            description: 'Excellent! You\'ve learned the core mechanics. As you progress, visit the RUGPULL tab to sacrifice your progress and earn Corrupt Tokens—powerful upgrades that boost your earnings and apply to future playthroughs! Keep buying miners and upgrading power to grow your empire. Good luck!',
+            description: 'Excellent! You\'ve learned the core mechanics. As you mine, you will see your progress towards RUGPULL filling up. Once the goal has been achieved, press the button to be prompted to sacrifice your progress and earn Corrupt Tokens—powerful upgrades that boost your earnings and apply to future playthroughs! Keep buying miners and upgrading power to grow your empire. Good luck!',
             targets: [],
             trigger: 'manual',
             nextCondition: () => true,
@@ -787,8 +851,50 @@ function removeOldTutorialOverlay() {
     // Remove hashrate display highlighting if not on that step
     const isCurrentStepHashrate = step && step.id === 'hashrate_display';
     if (!isCurrentStepHashrate) {
-        // Don't clear hashrate bars as they need their width styles to display properly
-        // The bars are updated dynamically by game.js
+        // Clear only the highlight styles, preserve original layout
+        const hashrateBtc = document.getElementById('btc-hashrate-bar');
+        if (hashrateBtc) {
+            const hashrateContainer = hashrateBtc.parentElement?.parentElement?.parentElement;
+
+            if (hashrateContainer) {
+                hashrateContainer.style.border = '';
+                hashrateContainer.style.boxShadow = '';
+                hashrateContainer.style.padding = '';
+                hashrateContainer.style.borderRadius = '';
+                hashrateContainer.style.position = '';
+            }
+        }
+    }
+
+    // Remove crypto distribution highlighting if not on that step
+    const isCurrentStepDistribution = step && step.id === 'crypto_distribution';
+    if (!isCurrentStepDistribution) {
+        // Clear only the highlight styles, preserve original layout
+        const btcBar = document.getElementById('btc-bar');
+        if (btcBar) {
+            const distributionContainer = btcBar.parentElement?.parentElement?.parentElement;
+
+            if (distributionContainer) {
+                distributionContainer.style.border = '';
+                distributionContainer.style.boxShadow = '';
+                distributionContainer.style.padding = '';
+                distributionContainer.style.borderRadius = '';
+                distributionContainer.style.position = '';
+            }
+        }
+    }
+
+    // Remove portfolio chart highlighting if not on that step
+    const isCurrentStepChart = step && step.id === 'portfolio_chart';
+    if (!isCurrentStepChart) {
+        // Clear chart highlight
+        const chartContainer = document.getElementById('nw-chart-container');
+        if (chartContainer) {
+            chartContainer.style.border = '';
+            chartContainer.style.boxShadow = '';
+            chartContainer.style.borderRadius = '';
+            chartContainer.style.position = '';
+        }
     }
 
 }
@@ -1025,6 +1131,15 @@ function trackDOGETabClick() {
     // If we're on Step 9 (buy_doge_miner), advance to next step
     if (!tutorialData.completed && tutorialData.currentStep === 8 && tutorialData.steps[8].id === 'buy_doge_miner') {
         console.log('🎓 DOGE tab clicked! Advancing tutorial.');
+        nextTutorialStep();
+    }
+}
+
+// Track minigames tab click
+function trackMinigamesTabClick() {
+    // If we're on the explore_minigames step, advance to next step
+    if (!tutorialData.completed && tutorialData.currentStep === 13 && tutorialData.steps[13].id === 'explore_minigames') {
+        console.log('🎓 Minigames tab clicked! Auto-advancing tutorial.');
         nextTutorialStep();
     }
 }

@@ -80,6 +80,7 @@
     let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
     let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
     let earningsThisRun = 0; // Earnings since last rugpull - resets when rugpull happens (tracked by rugpull.js)
+    let lastSyncedSessionEarnings = 0; // Track last amount we synced to rugpull to avoid double-counting
     // lifetimeEarningsThisRugpull is now managed by rugpull.js - do not declare it here
 
     // Master abbreviation system for all number formatting
@@ -1222,6 +1223,14 @@ function loadGame() {
         // Load ascension data
         if (state.ascensionData && typeof loadAscensionData === 'function') {
             loadAscensionData(state.ascensionData);
+            // Sync rugpull earnings tracker to game's lifetime earnings
+            // If lifetimeEarningsThisRugpull is 0 (old save), initialize it with lifetimeEarnings
+            if (typeof window.lifetimeEarningsThisRugpull !== 'undefined') {
+                if (window.lifetimeEarningsThisRugpull === 0 && lifetimeEarnings > 0) {
+                    window.lifetimeEarningsThisRugpull = lifetimeEarnings;
+                    console.log('[LOAD] Synced lifetimeEarningsThisRugpull to:', lifetimeEarnings);
+                }
+            }
             // Update UI to show/hide rugpull store button based on loaded currency
             if (typeof updateAscensionUI === 'function') {
                 updateAscensionUI();
@@ -1386,6 +1395,13 @@ function loadGame() {
             const btcUsdValue = offlineBtcEarnings * btcPrice;
             lifetimeEarnings += btcUsdValue;
             sessionEarnings += btcUsdValue; // Offline earnings count toward session
+            // Update rugpull tracker for offline crypto earnings
+            if (typeof window.rugpullAddEarnings === 'function') {
+                console.log('[OFFLINE] Adding BTC earnings to rugpull:', btcUsdValue);
+                window.rugpullAddEarnings(btcUsdValue);
+            } else {
+                console.log('[OFFLINE] ✗ rugpullAddEarnings NOT available for BTC');
+            }
         }
         if (offlineEthEarnings > 0) {
             ethBalance += offlineEthEarnings;
@@ -1393,6 +1409,10 @@ function loadGame() {
             const ethUsdValue = offlineEthEarnings * ethPrice;
             lifetimeEarnings += ethUsdValue;
             sessionEarnings += ethUsdValue; // Offline earnings count toward session
+            // Update rugpull tracker for offline crypto earnings
+            if (typeof window.rugpullAddEarnings === 'function') {
+                window.rugpullAddEarnings(ethUsdValue);
+            }
         }
         if (offlineDogeEarnings > 0) {
             dogeBalance += offlineDogeEarnings;
@@ -1400,6 +1420,10 @@ function loadGame() {
             const dogeUsdValue = offlineDogeEarnings * dogePrice;
             lifetimeEarnings += dogeUsdValue;
             sessionEarnings += dogeUsdValue; // Offline earnings count toward session
+            // Update rugpull tracker for offline crypto earnings
+            if (typeof window.rugpullAddEarnings === 'function') {
+                window.rugpullAddEarnings(dogeUsdValue);
+            }
         }
 
         // Always show offline earnings if we've been away (even if earnings are 0)
@@ -6666,8 +6690,14 @@ function updateManualHashRateButtons() {
     }
 
     function updateRugpullProgressDisplay() {
-        // Get earnings since last rugpull (from rugpull.js tracking)
-        let earningsThisSession = (typeof window.lifetimeEarningsThisRugpull !== 'undefined') ? window.lifetimeEarningsThisRugpull : 0;
+        // Get earnings since last rugpull - try multiple ways to access it
+        let earningsThisSession = 0;
+
+        if (typeof lifetimeEarningsThisRugpull !== 'undefined') {
+            earningsThisSession = lifetimeEarningsThisRugpull;
+        } else if (typeof window.lifetimeEarningsThisRugpull !== 'undefined') {
+            earningsThisSession = window.lifetimeEarningsThisRugpull;
+        }
 
         // Calculate rugpull requirement (Rugpull 0 = $1M, Rugpull 1 = $8M, etc)
         let ascensionLvl = (typeof ascensionLevel !== 'undefined') ? ascensionLevel : 0;
@@ -6676,9 +6706,9 @@ function updateManualHashRateButtons() {
 
         // Format numbers for display
         const formatNum = (num) => {
-            if (num >= 1e9) return '$' + (num / 1e9).toFixed(0) + 'B';
-            if (num >= 1e6) return '$' + (num / 1e6).toFixed(0) + 'M';
-            if (num >= 1e3) return '$' + (num / 1e3).toFixed(0) + 'K';
+            if (num >= 1e9) return '$' + (num / 1e9).toFixed(1) + 'B';
+            if (num >= 1e6) return '$' + (num / 1e6).toFixed(1) + 'M';
+            if (num >= 1e3) return '$' + (num / 1e3).toFixed(1) + 'K';
             return '$' + Math.floor(num).toLocaleString();
         };
 
@@ -6686,7 +6716,10 @@ function updateManualHashRateButtons() {
         const requirementLabel = formatNum(requirement);
         const displayText = earningsLabel + ' / ' + requirementLabel;
 
-        // Update all three rugpull progress display elements
+        // Calculate progress percentage (capped at 100%)
+        const progressPercent = Math.min(100, (earningsThisSession / requirement) * 100);
+
+        // Update all rugpull progress display elements
         const displayElements = [
             document.getElementById('rugpull-progress-text'),
             document.getElementById('rugpull-progress-text-mobile'),
@@ -6696,6 +6729,18 @@ function updateManualHashRateButtons() {
         displayElements.forEach(el => {
             if (el) {
                 el.textContent = displayText;
+            }
+        });
+
+        // Update progress bar fills (button background fill)
+        const progressBars = [
+            document.getElementById('rugpull-progress-fill-mobile'),
+            document.getElementById('rugpull-progress-fill-desktop')
+        ];
+
+        progressBars.forEach(bar => {
+            if (bar) {
+                bar.style.width = progressPercent + '%';
             }
         });
     }
@@ -6727,6 +6772,14 @@ function updateManualHashRateButtons() {
             } catch (e) {
                 console.error('Error updating doubling buttons:', e);
             }
+        }
+
+        // Sync new session earnings to rugpull tracker
+        // This ensures all earnings paths (mining, staking, minigames, etc.) are tracked
+        const newSessionEarnings = sessionEarnings - lastSyncedSessionEarnings;
+        if (newSessionEarnings > 0 && typeof window.rugpullAddEarnings === 'function') {
+            window.rugpullAddEarnings(newSessionEarnings);
+            lastSyncedSessionEarnings = sessionEarnings;
         }
 
         // Update rugpull progress display and UI (calls rugpull.js function)
@@ -8661,7 +8714,7 @@ dogeUpgrades.forEach(u => {
             // Chart always shows from $0 (start of game) to current
             // Storage arrays are trimmed progressively to keep ~5k points max, preventing lag
             // Render chart every 500ms to balance smoothness with performance
-            if (chartTimestamps.length > 0 && now - lastChartUpdateTime >= 500) {
+            if (nwChart && chartTimestamps.length > 0 && now - lastChartUpdateTime >= 500) {
                 lastChartUpdateTime = now;
                 // Display all data we have (storage arrays are already managed for performance)
                 const displayTimestamps = chartTimestamps.map(ts => ts.time);

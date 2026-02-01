@@ -389,9 +389,11 @@
             <!-- Desktop RUGPULL Section - Side by side (shown on non-mobile) -->
             <div id="desktop-rugpull-section" style="display: none; gap: 0; margin-bottom: 6px; flex-direction: row; align-items: stretch;">
                 <!-- RUGPULL Button -->
-                <button id="rugpull-btn-desktop" class="btn-action" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
-                    <span>RUGPULL</span>
-                    <span id="rugpull-progress-text-desktop" style="color: #ffeb3b; font-size: 0.6rem; font-weight: bold;">$0 / $1B</span>
+                <button id="rugpull-btn-desktop" class="btn-action" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; min-width: 0; position: relative; overflow: hidden;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0;">
+                        <span>RUGPULL</span>
+                        <span id="rugpull-progress-text-desktop" style="color: #ffeb3b; font-size: 0.6rem; font-weight: bold;">$0 / $1B</span>
+                    </div>
                     <div id="rugpull-tooltip-desktop" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
                         <span>Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
                     </div>
@@ -403,9 +405,11 @@
             <!-- Mobile RUGPULL Section - Side by side -->
             <div id="mobile-rugpull-section" style="display: none; gap: 0; margin-bottom: 0; flex-direction: row; align-items: stretch;">
                 <!-- RUGPULL Button with counter inside -->
-                <button id="rugpull-btn-mobile" class="btn-action" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
-                    <span>RUGPULL</span>
-                    <span id="rugpull-progress-text-mobile" style="color: #ffeb3b; font-size: 0.6rem; font-weight: bold;">$0 / $1B</span>
+                <button id="rugpull-btn-mobile" class="btn-action" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; min-width: 0; position: relative; overflow: hidden;" onclick="handleRugpullButtonClick()" onmouseenter="showRugpullTooltip()" onmouseleave="hideRugpullTooltip()">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0;">
+                        <span>RUGPULL</span>
+                        <span id="rugpull-progress-text-mobile" style="color: #ffeb3b; font-size: 0.6rem; font-weight: bold;">$0 / $1B</span>
+                    </div>
                     <div id="rugpull-tooltip-mobile" style="visibility: hidden; background-color: #333; color: #ffeb3b; text-align: center; padding: 8px 10px; border-radius: 4px; position: absolute; z-index: 1000; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; white-space: normal; width: 140px; font-size: 0.6rem; border: 2px solid #ffeb3b; font-weight: bold; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;">
                         <span>Reset progress for<br>permanent bonuses &<br>Corrupt Tokens</span>
                     </div>
@@ -443,7 +447,7 @@
             </div>
             <div class="tab-buttons">
                 <button id="crypto-exchange-btn" class="btn-tab btn-tab-exchange" onclick="switchTab('market')">CRYPTO EXCHANGE</button>
-                <button id="minigames-tab-btn" class="btn-tab btn-tab-minigames" onclick="switchTab('minigames')">MINIGAMES</button>
+                <button id="minigames-tab-btn" class="btn-tab btn-tab-minigames" onclick="switchTab('minigames'); trackMinigamesTabClick();">MINIGAMES</button>
             </div>
 
             <!-- BTC Mining Tab -->
@@ -2035,14 +2039,14 @@ function handleRugpullButtonClick() {
 <script src="game.js?v=2.5.4"></script>
 <script src="packet-interceptor.js?v=1.0.0"></script>
 
-<!-- Load staking system after main game variables are defined -->
+<!-- Load rugpull/ascension system after main game variables are defined, BEFORE staking (staking needs rugpullAddEarnings) -->
+<script src="rugpull.js?v=2.0.1"></script>
+
+<!-- Load staking system after rugpull (needs window.rugpullAddEarnings to be available) -->
 <script src="staking.js?v=1.1.0"></script>
 
 <!-- Load achievements system after main game variables are defined -->
 <script src="achievements.js?v=1.1.0"></script>
-
-<!-- Load rugpull/ascension system after main game variables are defined -->
-<script src="rugpull.js?v=2.0.1"></script>
 
 <!-- Footer - Fixed at bottom -->
 <footer style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.9); color: #666; padding: 8px 20px; text-align: center; border-top: 1px solid #333; font-size: 0.65rem; z-index: 100; backdrop-filter: blur(10px); line-height: 1.3;">
