@@ -1,4 +1,5 @@
         :root { --btc: #f7931a; --bg: #050505; --panel: #111; --green: #00ff88; --red: #ff3344; --border: #222; }
+        * { box-sizing: border-box; }
         html { touch-action: manipulation; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
         body {
             font-family: 'Inter', -apple-system, sans-serif;
@@ -429,9 +430,9 @@
 
         /* Phones and tablets: 360px - 932px (all phones up to largest iPhone/Pixel) */
         @media (max-width: 932px) {
-            body { padding: 0; margin: 0; height: auto; overflow-y: scroll; }
-            #main-layout { grid-template-columns: 1fr !important; gap: 0; display: flex !important; flex-direction: column !important; height: auto; margin: 0; padding: 0; width: 100%; box-sizing: border-box; }
-            .panel { padding: 0; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; border: none; background: transparent; }
+            body { padding: 0; margin: 0; height: auto; overflow-y: scroll; overflow-x: hidden; width: 100vw; }
+            #main-layout { grid-template-columns: 1fr !important; gap: 0; display: flex !important; flex-direction: column !important; height: auto; margin: 0; padding: 0; width: 100%; box-sizing: border-box; max-width: 100vw; overflow-x: hidden; }
+            .panel { padding: 0; margin: 0; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; border: none; background: transparent; max-width: 100vw; overflow-x: hidden; }
             .panel:first-child { overflow: visible; flex: 0 0 auto; padding-top: 0; }
             #main-layout > div:first-child { border: none !important; }
             #main-layout > div:last-child { border: none !important; }
@@ -440,7 +441,7 @@
                 padding: 8px 12px !important;
             }
             .panel:last-child { display: none !important; }
-            .desktop-button-layout { overflow: visible !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 100 !important; width: 100% !important; padding: 6px !important; background: rgba(0,0,0,0.9) !important; }
+            .desktop-button-layout { overflow: visible !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; z-index: 100 !important; width: 100% !important; padding: 6px !important; background: rgba(0,0,0,0.9) !important; box-sizing: border-box !important; }
             .upgrade-list { overflow-y: auto !important; max-height: 600px; }
 
             /* Net worth and pie chart side by side */
