@@ -1,3832 +1,740 @@
-(function() {
-    console.log('🚀 GAME.JS IIFE STARTED');
-    // Bitcoin
-    let btcPrice = 100000; // Set manually each day - everyone starts at 100k
-    let btcBalance = 0;
-    let btcLifetime = 0;
-    let btcPerSec = 0;
-    let btcClickValue = 0.00000250;
-    const BTC_MIN_PRICE = 50000;
-    const BTC_MAX_PRICE = 200000;
-
-    // Ethereum
-    let ethPrice = 3500; // Starting ETH price
-    let ethBalance = 0;
-    let ethLifetime = 0;
-    let ethPerSec = 0;
-    let ethClickValue = 0.00007143; // $0.25 worth at $3500/ETH
-    const ETH_MIN_PRICE = 1500;
-    const ETH_MAX_PRICE = 8000;
-
-    // Dogecoin
-    let dogePrice = 0.25; // Starting DOGE price
-    let dogeBalance = 0;
-    let dogeLifetime = 0;
-    let dogePerSec = 0;
-    let dogeClickValue = 1.00000000; // $0.25 worth at $0.25/DOGE
-    const DOGE_MIN_PRICE = 0.05;
-    const DOGE_MAX_PRICE = 2.00;
-
-    let hardwareEquity = 0;
-    let dollarBalance = 0; // USD balance from selling crypto
-    let lastTickTime = Date.now();
-    let lastPriceUpdateTime = 0; // Track when price was last updated
-    let lastSaveTime = Date.now(); // Track when game was last saved (for offline earnings)
-    let manualHashClickTime = 0;
-    let manualHashCooldownEnd = 0;
-    let clickTimestamps = [];
-    let priceSwingsStarted = false; // Flag to prevent starting price swings multiple times
-
-    // Session tracking
-    let sessionStartTime = Date.now();
-    let sessionStartBalance = 0;
-    let sessionStartNetWorth = 0;
-    let sessionEarnings = 0; // Tracks USD value of all crypto earned this session (mining + staking)
-    let lifetimeEarnings = 0; // Lifetime total - only ever increases, tracks USD value of all mined/staked crypto
-    let totalPlayTime = 0; // Total accumulated play time in seconds
-
-    // Buy quantity setting
-    let buyQuantity = 1;
-
-    // Chart history tracking
-    let chartHistory = [];
-    let chartTimestamps = []; // Track when each data point was added
-    let lastChartUpdateTime = Date.now();
-    let chartStartTime = Date.now();
-
-    // Power system - Rebalanced for strategic gameplay
-    let totalPowerAvailable = 0; // Total watts available
-    let totalPowerUsed = 0; // Total watts being used
-    const powerUpgrades = [
-        { id: 0, name: "Basic Power Strip", baseUsd: 25, basePower: 10 },
-        { id: 1, name: "Regulated PSU", baseUsd: 350, basePower: 100 },
-        { id: 2, name: "High-Efficiency PSU", baseUsd: 2100, basePower: 500 },
-        { id: 3, name: "Server-Grade PSU", baseUsd: 12000, basePower: 2500 },
-        { id: 4, name: "Mining Power Distribution Unit", baseUsd: 60000, basePower: 12000 },
-        { id: 5, name: "Modular Data Center Power System", baseUsd: 320000, basePower: 60000 },
-        { id: 6, name: "Dedicated Substation Power Unit", baseUsd: 1600000, basePower: 280000 }
-    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentPower: 0 }));
-
-    // Power requirements for mining equipment (in watts)
-    const equipmentPowerReqs = {
-        0: 0, // Manual hash uses no power
-        1: 2.5, // USB Miner
-        2: 75, // GTX 1660
-        3: 450, // RTX 5090
-        4: 1200, // ASIC
-        5: 3500, // Liquid ASIC
-        6: 12000, // Container
-        7: 45000, // Geothermal Farm
-        8: 300000, // Data Center
-        9: 1500000, // Orbital
-        10: 5000000 // Quantum
-    };
-
-    // Show price change notification
-    // Track timeout IDs for each crypto to clear previous timers
-    let indicatorTimeouts = { btc: null, eth: null, doge: null };
-
-    function updatePriceIndicator(crypto, oldPrice, newPrice) {
-        const change = newPrice - oldPrice;
-        const changePercent = ((change / oldPrice) * 100).toFixed(2);
-        const isUp = change >= 0;
-        const indicatorId = crypto + '-indicator';
-        const changeId = crypto + '-change';
-        const indicator = document.getElementById(indicatorId);
-        const changeDisplay = document.getElementById(changeId);
-
-        // Clear previous timeout if exists
-        if (indicatorTimeouts[crypto]) {
-            clearTimeout(indicatorTimeouts[crypto]);
-        }
-
-        if (indicator && changeDisplay) {
-            indicator.textContent = isUp ? '▲' : '▼';
-            indicator.style.color = isUp ? '#00ff88' : '#ff3344';
-            changeDisplay.textContent = (isUp ? '+' : '') + changePercent + '%';
-            changeDisplay.style.color = isUp ? '#00ff88' : '#ff3344';
-
-            // Set timeout to clear both after 0.8 seconds
-            indicatorTimeouts[crypto] = setTimeout(() => {
-                indicator.textContent = '';
-                changeDisplay.textContent = '';
-                indicatorTimeouts[crypto] = null;
-            }, 800);
-        }
-    }
-
-    // BTC tiny swings: ±0.05%-0.1% every 2 seconds with mean reversion
-    function btcTinySwing() {
-        setTimeout(() => {
-            let oldBtcPrice = btcPrice;
-            const btcTarget = 100000;
-            const distanceFromTarget = Math.abs(btcPrice - btcTarget);
-            const maxDistance = Math.abs(BTC_MAX_PRICE - btcTarget);
-            const distancePercent = distanceFromTarget / maxDistance;
-
-            let movePercent = (Math.random() * 0.0005) + 0.0005;
-            let direction;
-
-            if (Math.random() < (0.3 + distancePercent * 0.4)) {
-                direction = btcPrice > btcTarget ? -1 : 1;
-            } else {
-                direction = Math.random() > 0.5 ? 1 : -1;
-            }
-
-            let newBtcPrice = oldBtcPrice * (1 + (direction * movePercent));
-            btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, newBtcPrice));
-            updatePriceIndicator('btc', oldBtcPrice, btcPrice);
-            updateUI();
-            btcTinySwing();
-        }, 2000);
-    }
-
-    // BTC frequent swings: ±0.1%-1% every 2-60 seconds randomly with mean reversion
-    function btcFrequentSwing() {
-        let randomInterval = (Math.random() * (60000 - 2000)) + 2000; // 2-60 seconds
-        setTimeout(() => {
-            let movePercent = (Math.random() * 0.009) + 0.001; // 0.1% to 1%
-            let oldBtcPrice = btcPrice;
-            const btcTarget = 100000;
-            const distanceFromTarget = Math.abs(btcPrice - btcTarget);
-            const maxDistance = Math.abs(BTC_MAX_PRICE - btcTarget);
-            const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
-
-            // 60% + up to 30% more chance to revert when far from target
-            let newBtcPrice = oldBtcPrice * (1 + movePercent);
-            if (Math.random() < (0.6 + distancePercent * 0.3)) {
-                const targetPrice = 100000;
-                const diff = targetPrice - oldBtcPrice;
-                newBtcPrice = oldBtcPrice + (diff * 0.02);
-            } else {
-                let direction = Math.random() > 0.5 ? 1 : -1;
-                newBtcPrice = oldBtcPrice * (1 + (direction * movePercent));
-            }
-            btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, newBtcPrice));
-            updatePriceIndicator('btc', oldBtcPrice, btcPrice);
-            updateUI();
-            btcFrequentSwing();
-        }, randomInterval);
-    }
-
-    // ETH tiny swings: ±0.05%-0.1% every 2.3 seconds with mean reversion
-    function ethTinySwing() {
-        setTimeout(() => {
-            let oldEthPrice = ethPrice;
-            const ethTarget = 3500;
-            const distanceFromTarget = Math.abs(ethPrice - ethTarget);
-            const maxDistance = Math.abs(ETH_MAX_PRICE - ethTarget);
-            const distancePercent = distanceFromTarget / maxDistance;
-
-            let movePercent = (Math.random() * 0.0005) + 0.0005;
-            let direction;
-
-            if (Math.random() < (0.3 + distancePercent * 0.4)) {
-                direction = ethPrice > ethTarget ? -1 : 1;
-            } else {
-                direction = Math.random() > 0.5 ? 1 : -1;
-            }
-
-            let newEthPrice = oldEthPrice * (1 + (direction * movePercent));
-            ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, newEthPrice));
-            updatePriceIndicator('eth', oldEthPrice, ethPrice);
-            updateUI();
-            ethTinySwing();
-        }, 2300);
-    }
-
-    // ETH frequent swings: ±0.1%-1.2% every 3-75 seconds randomly with mean reversion
-    function ethFrequentSwing() {
-        let randomInterval = (Math.random() * (75000 - 3000)) + 3000; // 3-75 seconds
-        setTimeout(() => {
-            let movePercent = (Math.random() * 0.011) + 0.001; // 0.1% to 1.2%
-            let oldEthPrice = ethPrice;
-            const ethTarget = 3500;
-            const distanceFromTarget = Math.abs(ethPrice - ethTarget);
-            const maxDistance = Math.abs(ETH_MAX_PRICE - ethTarget);
-            const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
-
-            let newEthPrice = oldEthPrice * (1 + movePercent);
-            if (Math.random() < (0.6 + distancePercent * 0.3)) {
-                const targetPrice = 3500;
-                const diff = targetPrice - oldEthPrice;
-                newEthPrice = oldEthPrice + (diff * 0.02);
-            } else {
-                let direction = Math.random() > 0.5 ? 1 : -1;
-                newEthPrice = oldEthPrice * (1 + (direction * movePercent));
-            }
-            ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, newEthPrice));
-            updatePriceIndicator('eth', oldEthPrice, ethPrice);
-            updateUI();
-            ethFrequentSwing();
-        }, randomInterval);
-    }
-
-    // DOGE tiny swings: ±0.05%-0.15% every 2.7 seconds with mean reversion (more volatile)
-    function dogeTinySwing() {
-        setTimeout(() => {
-            let oldDogePrice = dogePrice;
-            const dogeTarget = 0.25;
-            const distanceFromTarget = Math.abs(dogePrice - dogeTarget);
-            const maxDistance = Math.abs(DOGE_MAX_PRICE - dogeTarget);
-            const distancePercent = distanceFromTarget / maxDistance;
-
-            let movePercent = (Math.random() * 0.001) + 0.0005;
-            let direction;
-
-            if (Math.random() < (0.3 + distancePercent * 0.4)) {
-                direction = dogePrice > dogeTarget ? -1 : 1;
-            } else {
-                direction = Math.random() > 0.5 ? 1 : -1;
-            }
-
-            let newDogePrice = oldDogePrice * (1 + (direction * movePercent * 1.5));
-            dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, newDogePrice));
-            updatePriceIndicator('doge', oldDogePrice, dogePrice);
-            updateUI();
-            dogeTinySwing();
-        }, 2700);
-    }
-
-    // DOGE frequent swings: ±0.15%-1.8% every 2-45 seconds randomly (more volatile) with mean reversion
-    function dogeFrequentSwing() {
-        let randomInterval = (Math.random() * (45000 - 2000)) + 2000; // 2-45 seconds
-        setTimeout(() => {
-            let movePercent = (Math.random() * 0.0165) + 0.0015; // 0.15% to 1.8%
-            let oldDogePrice = dogePrice;
-            const dogeTarget = 0.25;
-            const distanceFromTarget = Math.abs(dogePrice - dogeTarget);
-            const maxDistance = Math.abs(DOGE_MAX_PRICE - dogeTarget);
-            const distancePercent = distanceFromTarget / maxDistance; // 0 to 1
-
-            let newDogePrice = oldDogePrice * (1 + movePercent * 1.5);
-            if (Math.random() < (0.6 + distancePercent * 0.3)) {
-                const targetPrice = 0.25;
-                const diff = targetPrice - oldDogePrice;
-                newDogePrice = oldDogePrice + (diff * 0.02);
-            } else {
-                let direction = Math.random() > 0.5 ? 1 : -1;
-                newDogePrice = oldDogePrice * (1 + (direction * movePercent * 1.5));
-            }
-            dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, newDogePrice));
-            updatePriceIndicator('doge', oldDogePrice, dogePrice);
-            updateUI();
-            dogeFrequentSwing();
-        }, randomInterval);
-    }
-
-    // BTC occasional big swings: ±2.5%-10% every 5 to 10 minutes
-    function btcBigSwing() {
-        let nextBigSwing = (Math.random() * (600000 - 300000)) + 300000;
-        setTimeout(() => {
-            let movePercent = (Math.random() * 0.075) + 0.025;
-            let direction = Math.random() > 0.5 ? 1 : -1;
-            let move = direction * movePercent;
-            let oldBtcPrice = btcPrice;
-            btcPrice = Math.max(BTC_MIN_PRICE, Math.min(BTC_MAX_PRICE, btcPrice * (1 + move)));
-            updatePriceIndicator('btc', oldBtcPrice, btcPrice);
-            updateUI();
-            btcBigSwing();
-        }, nextBigSwing);
-    }
-
-    // ETH occasional big swings: ±2.5%-12% every 4 to 12 minutes (more volatile than BTC)
-    function ethBigSwing() {
-        let nextBigSwing = (Math.random() * (720000 - 240000)) + 240000;
-        setTimeout(() => {
-            let movePercent = (Math.random() * 0.095) + 0.025; // Slightly more volatile
-            let direction = Math.random() > 0.5 ? 1 : -1;
-            let move = direction * movePercent;
-            let oldEthPrice = ethPrice;
-            ethPrice = Math.max(ETH_MIN_PRICE, Math.min(ETH_MAX_PRICE, ethPrice * (1 + move)));
-            updatePriceIndicator('eth', oldEthPrice, ethPrice);
-            updateUI();
-            ethBigSwing();
-        }, nextBigSwing);
-    }
-
-    // DOGE occasional big swings: ±3%-18% every 3 to 8 minutes (much more volatile)
-    function dogeBigSwing() {
-        let nextBigSwing = (Math.random() * (480000 - 180000)) + 180000;
-        setTimeout(() => {
-            let movePercent = (Math.random() * 0.15) + 0.03; // 3% to 18%
-            let direction = Math.random() > 0.5 ? 1 : -1;
-            let move = direction * movePercent;
-            let oldDogePrice = dogePrice;
-            dogePrice = Math.max(DOGE_MIN_PRICE, Math.min(DOGE_MAX_PRICE, dogePrice * (1 + move * 1.8)));
-            updatePriceIndicator('doge', oldDogePrice, dogePrice);
-            updateUI();
-            dogeBigSwing();
-        }, nextBigSwing);
-    }
-
-    // Sound effects using Web Audio API
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-    function playClickSound() {
-        if (isMuted) return;
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-        osc.type = 'sine';
-
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-
-        osc.start(now);
-        osc.stop(now + 0.1);
-    }
-
-    function playUpgradeSound() {
-        if (isMuted) return;
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-
-        osc.frequency.setValueAtTime(500, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
-        osc.type = 'square';
-
-        gain.gain.setValueAtTime(0.04, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-
-        osc.start(now);
-        osc.stop(now + 0.2);
-    }
-
-    // Bitcoin mining upgrades
-    const btcUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00000050 },
-        { id: 1, name: "USB Miner", baseUsd: 5, baseYield: 0.000000115 },
-        { id: 2, name: "GTX 1660 Super", baseUsd: 100, baseYield: 0.0000007 },
-        { id: 3, name: "RTX 5090 Rig", baseUsd: 3000, baseYield: 0.000015 },
-        { id: 4, name: "ASIC Mining Unit", baseUsd: 7500, baseYield: 0.000085 },
-        { id: 5, name: "Liquid ASIC Rig", baseUsd: 28000, baseYield: 0.00045 },
-        { id: 6, name: "Mobile Mining Container", baseUsd: 110000, baseYield: 0.0032 },
-        { id: 7, name: "Geothermal Mining Farm", baseUsd: 680000, baseYield: 0.045 },
-        { id: 8, name: "Data Center Facility", baseUsd: 5200000, baseYield: 0.62 },
-        { id: 9, name: "Orbital Data Relay", baseUsd: 35000000, baseYield: 5.8 },
-        { id: 10, name: "Quantum Computer", baseUsd: 500000000, baseYield: 125.0 }
-    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
-
-    // Ethereum mining upgrades
-    const ethUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 5, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.00010000 },
-        { id: 1, name: "Single GPU Rig", baseUsd: 8, baseYield: 0.00002500 },
-        { id: 2, name: "RTX 4090 Miner", baseUsd: 150, baseYield: 0.00015000 },
-        { id: 3, name: "8-GPU Mining Rig", baseUsd: 4500, baseYield: 0.00325000 },
-        { id: 4, name: "Professional ETH Farm", baseUsd: 12000, baseYield: 0.01800000 },
-        { id: 5, name: "Staking Validator Node", baseUsd: 40000, baseYield: 0.09500000 },
-        { id: 6, name: "Multi-Validator Farm", baseUsd: 175000, baseYield: 0.68000000 },
-        { id: 7, name: "ETH Mining Complex", baseUsd: 950000, baseYield: 9.50000000 },
-        { id: 8, name: "Enterprise Staking Pool", baseUsd: 7500000, baseYield: 132.00000000 },
-        { id: 9, name: "Layer 2 Validation Network", baseUsd: 52000000, baseYield: 1230.00000000 },
-        { id: 10, name: "Ethereum Foundation Node", baseUsd: 700000000, baseYield: 26500.00000000 }
-    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
-
-    // Dogecoin mining upgrades
-    const dogeUpgrades = [
-	{ id: 0, name: "Manual Hash Rate", baseUsd: 3, baseYield: 0, isClickUpgrade: true, clickIncrease: 0.80 },
-        { id: 1, name: "Basic Scrypt Miner", baseUsd: 3, baseYield: 0.0038 },
-        { id: 2, name: "L3+ ASIC Miner", baseUsd: 60, baseYield: 0.021 },
-        { id: 3, name: "Mini DOGE Farm", baseUsd: 1800, baseYield: 0.45 },
-        { id: 4, name: "Scrypt Mining Pool", baseUsd: 4500, baseYield: 2.55 },
-        { id: 5, name: "Industrial DOGE Facility", baseUsd: 18000, baseYield: 13.5 },
-        { id: 6, name: "DOGE Megafarm", baseUsd: 72000, baseYield: 95 },
-        { id: 7, name: "WOW Mining Complex", baseUsd: 450000, baseYield: 1350 },
-        { id: 8, name: "Moon Mining Station", baseUsd: 3400000, baseYield: 18600 },
-        { id: 9, name: "Interplanetary DOGE Network", baseUsd: 23000000, baseYield: 174000 },
-        { id: 10, name: "To The Moon Supercomputer", baseUsd: 320000000, baseYield: 3750000 }
-    ].map(u => ({ ...u, level: 0, currentUsd: u.baseUsd, currentYield: 0, boostCost: u.baseUsd * 0.5, boostLevel: 0 }));
-
-    // Keep reference to btcUpgrades as upgrades for backward compatibility
-    let upgrades = btcUpgrades;
-
-    // --- DEBOUNCED CLOUD SAVE ---
-    let cloudSaveTimeout = null;
-    let hasPendingCloudSave = false;
-
-    function scheduleDebouncedCloudSave() {
-        // Mark that we have changes to save
-        hasPendingCloudSave = true;
-
-        // Clear any existing timeout
-        if (cloudSaveTimeout) {
-            clearTimeout(cloudSaveTimeout);
-        }
-
-        // Schedule cloud save for 3 seconds from now
-        // If user makes another purchase, this resets the timer
-        cloudSaveTimeout = setTimeout(() => {
-            if (hasPendingCloudSave && typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('💾 Debounced cloud save executing...');
-                window.saveGameToCloud(false).then(() => {
-                    console.log('✅ Debounced cloud save complete');
-                    hasPendingCloudSave = false;
-                }).catch(err => {
-                    console.warn('⚠️ Debounced cloud save failed:', err);
-                    // Keep flag true so we retry later
-                });
-            }
-        }, 3000); // 3 second debounce
-    }
-
-    // --- SAVE SYSTEM START ---
-    function saveGame() {
-        // Check if safeStorage is available
-        if (!window.safeStorage) {
-            console.error('❌ CRITICAL: window.safeStorage is not available!');
-            return;
-        }
-
-        // Update lastSaveTime whenever we save
-        lastSaveTime = Date.now();
-
-        const gameState = {
-            // User tracking (to prevent loading wrong user's data)
-            userId: (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null,
-            // Bitcoin data
-            btcBalance,
-            btcLifetime,
-            btcClickValue,
-            btcPerSec,
-            btcPrice,
-            // Ethereum data
-            ethBalance,
-            ethLifetime,
-            ethClickValue,
-            ethPerSec,
-            ethPrice,
-            // Dogecoin data
-            dogeBalance,
-            dogeLifetime,
-            dogeClickValue,
-            dogePerSec,
-            dogePrice,
-            // General data
-            dollarBalance,
-            hardwareEquity,
-            lastSaveTime,
-            autoClickerCooldownEnd,
-            lifetimeEarnings,
-            sessionEarnings,
-            sessionStartTime,
-            chartHistory: chartHistory,
-            chartTimestamps: chartTimestamps,
-            chartStartTime: chartStartTime,
-            totalPowerAvailable,
-            // Staking data
-            staking: getStakingData(),
-            // Skill tree data
-            skillTree: getSkillTreeData(),
-            powerUpgrades: powerUpgrades.map(u => ({
-                id: u.id,
-                level: u.level,
-                currentUsd: u.currentUsd,
-                currentPower: u.currentPower
-            })),
-            btcUpgrades: btcUpgrades.map(u => ({
-                id: u.id,
-                level: u.level,
-                currentUsd: u.currentUsd,
-                currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
-            })),
-            ethUpgrades: ethUpgrades.map(u => ({
-                id: u.id,
-                level: u.level,
-                currentUsd: u.currentUsd,
-                currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
-            })),
-            dogeUpgrades: dogeUpgrades.map(u => ({
-                id: u.id,
-                level: u.level,
-                currentUsd: u.currentUsd,
-                currentYield: u.currentYield,
-                boostCost: u.boostCost,
-                boostLevel: u.boostLevel
-            }))
-        };
-
-        try {
-            const saveString = JSON.stringify(gameState);
-            console.log('=== ATTEMPTING SAVE ===');
-            console.log('BTC Balance:', btcBalance);
-            console.log('Dollar Balance:', dollarBalance);
-            console.log('Save string length:', saveString.length, 'bytes');
-            console.log('safeStorage._isAvailable:', window.safeStorage._isAvailable);
-
-            // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
-            window.safeStorage.setItem('satoshiTerminalSave', saveString);
-
-            // Verify save worked
-            const testLoad = window.safeStorage.getItem('satoshiTerminalSave');
-            if (testLoad && testLoad.length > 0) {
-                console.log('✓ SAVE SUCCESSFUL - Verified in safeStorage (Length: ' + testLoad.length + ')');
-            } else {
-                console.error('✗ SAVE FAILED - Could not verify in safeStorage');
-            }
-
-            // Sync to cloud if user is logged in (async - don't block game)
-            // Fire off cloud save asynchronously to ensure purchases aren't lost on immediate refresh
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                // Use Promise.resolve().then() to ensure this runs asynchronously without blocking game
-                Promise.resolve().then(() => {
-                    window.saveGameToCloud(false).catch(err => {
-                        console.warn('⚠️ Cloud save failed (non-critical, local save is safe):', err);
-                    });
-                });
-            }
-        } catch (error) {
-            console.error('✗ ERROR saving game to storage:', error);
-            alert('Failed to save game! Your progress may not be saved. Error: ' + error.message);
-        }
-    }
-
-function loadGame() {
-    console.log('=== LOAD GAME CALLED ===');
-    try {
-        // Verify safeStorage is available
-        if (!window.safeStorage) {
-            console.error('❌ CRITICAL: window.safeStorage is not available!');
-            return;
-        }
-
-        console.log('✓ safeStorage available, _isAvailable:', window.safeStorage._isAvailable);
-
-        // Use safeStorage instead of localStorage directly to support incognito/private mode and guest sessions
-        const savedData = window.safeStorage.getItem('satoshiTerminalSave');
-        console.log('safeStorage.getItem returned:', savedData ? 'DATA FOUND (length: ' + savedData.length + ')' : 'NULL/UNDEFINED');
-
-        if (!savedData) {
-            console.log('✗ No saved game found, starting fresh');
-            console.log('ℹ️ This is the first time playing or localStorage was cleared');
-            // Initialize lastSaveTime for future saves
-            lastSaveTime = Date.now();
-            // Still need to call updateUI() to initialize the display
-            updateUI();
-            return;
-        }
-
-        console.log('✓ Loading game... Save data size:', savedData.length, 'bytes');
-        const state = JSON.parse(savedData);
-        console.log('✓ Save data parsed successfully');
-
-        // Check if this save belongs to the current user
-        const currentUserId = (typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.uid : null;
-        const savedUserId = state.userId || null;
-
-        console.log('🔍 CHECKING SAVE OWNERSHIP:');
-        console.log('  currentUserId:', currentUserId);
-        console.log('  savedUserId:', savedUserId);
-
-        if (currentUserId && savedUserId && currentUserId !== savedUserId) {
-            console.warn('⚠️ LOCAL SAVE BELONGS TO DIFFERENT USER - skipping load');
-            console.warn('   This save will be overwritten by cloud data');
-            return; // Don't load mismatched data
-        }
-
-        console.log('✅ Save ownership verified, proceeding with load');
-        console.log('Loaded BTC balance:', state.btcBalance);
-        console.log('Loaded dollar balance:', state.dollarBalance);
-        console.log('Loaded lastSaveTime from file:', state.lastSaveTime ? new Date(state.lastSaveTime) : 'NOT FOUND');
-        console.log('Loaded btcPerSec from file:', state.btcPerSec);
-
-        // Load Bitcoin data
-        btcBalance = state.btcBalance || 0;
-        btcLifetime = state.btcLifetime || 0;
-        btcClickValue = state.btcClickValue || 0.00000250;
-        btcPrice = state.btcPrice || 100000;
-
-        // Load Ethereum data
-        ethBalance = state.ethBalance || 0;
-        ethLifetime = state.ethLifetime || 0;
-        ethClickValue = state.ethClickValue || 0.00007143;
-        ethPrice = state.ethPrice || 3500;
-
-        // Load Dogecoin data
-        dogeBalance = state.dogeBalance || 0;
-        dogeLifetime = state.dogeLifetime || 0;
-        dogeClickValue = state.dogeClickValue || 1.00000000;
-        dogePrice = state.dogePrice || 0.25;
-
-        // Load general data
-        dollarBalance = state.dollarBalance || 0;
-        hardwareEquity = state.hardwareEquity || 0;
-        lifetimeEarnings = state.lifetimeEarnings || 0;
-
-        console.log('✅ LOADED FROM LOCAL STORAGE:');
-        console.log('  BTC Balance:', btcBalance);
-        console.log('  Dollar Balance:', dollarBalance);
-        console.log('  Lifetime Earnings:', lifetimeEarnings);
-
-        // Reset session on every page load/refresh
-        sessionEarnings = 0;
-        sessionStartTime = Date.now();
-
-        // Load the last save time for offline earnings calculation
-        lastSaveTime = state.lastSaveTime || Date.now();
-        console.log('  ⏱️ Last Save Time loaded:', new Date(lastSaveTime), 'timestamp:', lastSaveTime);
-
-        // Load staking data
-        if (state.staking) {
-            loadStakingData(state.staking);
-        }
-
-        // Load skill tree data
-        if (state.skillTree) {
-            loadSkillTreeData(state.skillTree);
-        }
-
-        sessionStartBalance = btcBalance;
-        sessionStartNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice) + hardwareEquity + dollarBalance;
-        chartStartTime = state.chartStartTime || Date.now();
-
-        // Load power upgrades
-        if (state.powerUpgrades) {
-            state.powerUpgrades.forEach((savedU) => {
-                const powerUpgradeToUpdate = powerUpgrades.find(u => u.id === savedU.id);
-                if (powerUpgradeToUpdate) {
-                    powerUpgradeToUpdate.level = savedU.level || 0;
-                    powerUpgradeToUpdate.currentUsd = savedU.currentUsd || powerUpgradeToUpdate.baseUsd;
-                    powerUpgradeToUpdate.currentPower = savedU.currentPower || 0;
-                }
-            });
-        }
-        totalPowerAvailable = state.totalPowerAvailable || 0;
-
-        // Load BTC upgrades
-        console.log('📥 LOADING BTC UPGRADES FROM SAVE...');
-        if (state.btcUpgrades) {
-            state.btcUpgrades.forEach((savedU) => {
-                const upgradeToUpdate = btcUpgrades.find(u => u.id === savedU.id);
-                if (upgradeToUpdate) {
-                    console.log('   Loading upgrade ID', savedU.id, '-', upgradeToUpdate.name, '- From level', upgradeToUpdate.level, 'to', savedU.level);
-                    upgradeToUpdate.level = savedU.level || 0;
-                    upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
-                    upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
-                }
-            });
-        } else if (state.upgrades) {
-            // Backward compatibility: load old saves
-            state.upgrades.forEach((savedU, index) => {
-                let upgradeToUpdate;
-                if (savedU.id !== undefined) {
-                    upgradeToUpdate = btcUpgrades.find(u => u.id === savedU.id);
-                } else {
-                    upgradeToUpdate = btcUpgrades[index];
-                }
-                if (upgradeToUpdate) {
-                    upgradeToUpdate.level = savedU.level || 0;
-                    upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
-                    upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
-                }
-            });
-        }
-
-        // Load ETH upgrades
-        if (state.ethUpgrades) {
-            state.ethUpgrades.forEach((savedU) => {
-                const upgradeToUpdate = ethUpgrades.find(u => u.id === savedU.id);
-                if (upgradeToUpdate) {
-                    upgradeToUpdate.level = savedU.level || 0;
-                    upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
-                    upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
-                }
-            });
-        }
-
-        // Load DOGE upgrades
-        if (state.dogeUpgrades) {
-            state.dogeUpgrades.forEach((savedU) => {
-                const upgradeToUpdate = dogeUpgrades.find(u => u.id === savedU.id);
-                if (upgradeToUpdate) {
-                    upgradeToUpdate.level = savedU.level || 0;
-                    upgradeToUpdate.currentUsd = savedU.currentUsd || upgradeToUpdate.baseUsd;
-                    upgradeToUpdate.currentYield = savedU.currentYield || 0;
-                    upgradeToUpdate.boostCost = savedU.boostCost || upgradeToUpdate.baseUsd * 0.5;
-                    upgradeToUpdate.boostLevel = savedU.boostLevel || 0;
-                }
-            });
-        }
-
-        // Recalculate click values from manual hash upgrade levels
-        const btcManualHashUpgrade = btcUpgrades.find(u => u.id === 0);
-        if (btcManualHashUpgrade && btcManualHashUpgrade.level > 0) {
-            btcClickValue = 0.00000250 * Math.pow(1.10, btcManualHashUpgrade.level);
-        }
-
-        const ethManualHashUpgrade = ethUpgrades.find(u => u.id === 0);
-        if (ethManualHashUpgrade && ethManualHashUpgrade.level > 0) {
-            ethClickValue = 0.00007143 * Math.pow(1.10, ethManualHashUpgrade.level);
-        }
-
-        const dogeManualHashUpgrade = dogeUpgrades.find(u => u.id === 0);
-        if (dogeManualHashUpgrade && dogeManualHashUpgrade.level > 0) {
-            dogeClickValue = 1.00000000 * Math.pow(1.10, dogeManualHashUpgrade.level);
-        }
-
-        // Calculate total power used
-        calculateTotalPowerUsed();
-
-        // Recalculate totals for all cryptos FROM LOADED UPGRADES
-        btcPerSec = btcUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-
-        console.log('📊 CALCULATED PER-SECOND RATES FROM UPGRADES:');
-        console.log('  BTC/sec:', btcPerSec, '(from', btcUpgrades.length, 'upgrades)');
-        console.log('  ETH/sec:', ethPerSec, '(from', ethUpgrades.length, 'upgrades)');
-        console.log('  DOGE/sec:', dogePerSec, '(from', dogeUpgrades.length, 'upgrades)');
-
-        // Restore autoclicker cooldown
-        autoClickerCooldownEnd = state.autoClickerCooldownEnd || 0;
-
-        // Calculate offline earnings using the dedicated function
-        calculateOfflineEarnings(state.lastSaveTime || Date.now(), state.staking);
-
-        // Check if there are pending offline earnings from a previous page load that weren't displayed
-        // This handles the case where the page refreshes before the modal is shown
-        try {
-            const pendingEarnings = window.safeStorage.getItem('pendingOfflineEarnings');
-            if (pendingEarnings) {
-                const parsed = JSON.parse(pendingEarnings);
-                console.log('📦 Found pending offline earnings from previous load:', parsed);
-                // Use the pending earnings instead of recalculating (avoids double-counting)
-                window.offlineEarningsToShow = parsed;
-                // Don't delete yet - wait until modal is actually shown
-            }
-        } catch (e) {
-            console.warn('⚠️ Failed to load pending offline earnings:', e);
-        }
-
-        updateUI();
-
-        // Restore chart history from save, starting from 0
-        if (state.chartHistory && state.chartHistory.length > 0) {
-            chartHistory = state.chartHistory;
-            chartTimestamps = state.chartTimestamps || [];
-            console.log('Chart data restored:', chartHistory.length, 'data points');
-        } else {
-            // Start fresh if no saved chart data
-            chartHistory = [];
-            chartTimestamps = [];
-            console.log('No saved chart data, starting fresh');
-        }
-
-        // Debug log
-        console.log('✓ LOAD COMPLETE');
-        console.log('Final balances:', { btcBalance, ethBalance, dogeBalance, dollarBalance, hardwareEquity });
-        console.log('Chart history length:', chartHistory.length);
-    } catch (error) {
-        console.error('✗ ERROR loading game from localStorage:', error);
-        console.error('Error stack:', error.stack);
-        // Silently start fresh without showing alert
-    }
-}
-    // --- SAVE SYSTEM END ---
-
-    function calculateTotalPowerUsed() {
-        let rawPowerUsed = 0;
-        // Calculate BTC equipment power
-        upgrades.forEach(u => {
-            if (u.level > 0 && equipmentPowerReqs[u.id] !== undefined) {
-                rawPowerUsed += equipmentPowerReqs[u.id] * u.level;
-            }
-        });
-        // Calculate ETH equipment power
-        ethUpgrades.forEach(u => {
-            if (u.level > 0 && equipmentPowerReqs[u.id] !== undefined) {
-                rawPowerUsed += equipmentPowerReqs[u.id] * u.level;
-            }
-        });
-        // Calculate DOGE equipment power
-        dogeUpgrades.forEach(u => {
-            if (u.level > 0 && equipmentPowerReqs[u.id] !== undefined) {
-                rawPowerUsed += equipmentPowerReqs[u.id] * u.level;
-            }
-        });
-
-        // Apply power efficiency skill bonus (reduces consumption)
-        const powerEfficiency = typeof getPowerEfficiency === 'function' ? getPowerEfficiency() : 0;
-        totalPowerUsed = rawPowerUsed * (1 - powerEfficiency);
-    }
-
-    function getTotalPowerAvailableWithBonus() {
-        // Apply power boost skill bonus (increases available power)
-        try {
-            const powerBoost = typeof getPowerBoost === 'function' ? getPowerBoost() : 0;
-            return totalPowerAvailable * (1 + powerBoost);
-        } catch (e) {
-            return totalPowerAvailable; // Return base if error
-        }
-    }
-
-    function getEffectivePowerRequirement(powerReq) {
-        // Apply power efficiency skill bonus (reduces consumption)
-        // Safe fallback for when functions aren't available yet
-        if (!powerReq || powerReq <= 0) return powerReq;
-        try {
-            if (typeof getPowerEfficiency === 'function') {
-                const powerEfficiency = getPowerEfficiency();
-                return Math.max(0, powerReq * (1 - powerEfficiency));
-            }
-            return powerReq;
-        } catch (e) {
-            return powerReq; // Return base requirement if functions unavailable
-        }
-    }
-
-    function dismissInstructions() {
-        const instructionsEl = document.getElementById('game-instructions');
-        if (instructionsEl) {
-            instructionsEl.classList.remove('show');
-            window.safeStorage.setItem('instructionsDismissed', 'true');
-        }
-    }
-
-    function resetEarningsStats() {
-        if (confirm('Reset lifetime and session earnings to $0? This will not affect your crypto or upgrades.')) {
-            lifetimeEarnings = 0;
-            sessionEarnings = 0;
-            sessionStartTime = Date.now();
-            saveGame();
-            updateUI();
-            alert('Earnings stats have been reset!');
-        }
-    }
-
-    function resetGame() {
-        if (confirm('Are you sure you want to reset your entire save? This cannot be undone!')) {
-            window.safeStorage.removeItem('satoshiTerminalSave');
-            window.safeStorage.removeItem('instructionsDismissed');
-            // Set flag to prevent loading cloud save on next refresh
-            localStorage.setItem('skipCloudLoadOnRefresh', 'true');
-            console.log('🚫 Set flag to skip cloud load on refresh');
-            // Reset all variables to defaults
-            btcBalance = 0;
-            btcLifetime = 0;
-            btcPerSec = 0;
-            btcClickValue = 0.00000250;
-            ethBalance = 0;
-            ethLifetime = 0;
-            ethPerSec = 0;
-            ethClickValue = 0.00007143;
-            dogeBalance = 0;
-            dogeLifetime = 0;
-            dogePerSec = 0;
-            dogeClickValue = 1.00000000;
-            dollarBalance = 0;
-            hardwareEquity = 0;
-            autoClickerCooldownEnd = 0;
-            // Reset session stats
-            sessionStartTime = Date.now();
-            sessionStartBTC = 0;
-            sessionStartETH = 0;
-            sessionStartDOGE = 0;
-            sessionStartBalance = 0;
-            sessionStartNetWorth = 0;
-            sessionEarnings = 0;
-            lifetimeEarnings = 0;
-            // Reset chart history
-            chartHistory = [];
-            chartTimestamps = [];
-            chartStartTime = Date.now();
-            // Reset power system
-            totalPowerAvailable = 0;
-            totalPowerUsed = 0;
-            powerUpgrades.forEach(u => {
-                u.level = 0;
-                u.currentUsd = u.baseUsd;
-                u.currentPower = 0;
-            });
-            // Reset all upgrades
-            btcUpgrades.forEach(u => {
-                u.level = 0;
-                u.currentUsd = u.baseUsd;
-                u.currentYield = 0;
-                u.boostCost = u.baseCost || u.currentUsd;
-                u.boostLevel = 0;
-            });
-            ethUpgrades.forEach(u => {
-                u.level = 0;
-                u.currentUsd = u.baseUsd;
-                u.currentYield = 0;
-                u.boostCost = u.baseCost || u.currentUsd;
-                u.boostLevel = 0;
-            });
-            dogeUpgrades.forEach(u => {
-                u.level = 0;
-                u.currentUsd = u.baseUsd;
-                u.currentYield = 0;
-                u.boostCost = u.baseCost || u.currentUsd;
-                u.boostLevel = 0;
-            });
-            // Reset staked crypto amounts
-            stakedBTC = 0;
-            stakedETH = 0;
-            stakedDOGE = 0;
-            // Reset skill tree
-            resetSkillTree();
-            saveGame();
-            updateUI();
-            updateStakingUI(); // Update staking display
-
-            // Clear browser cache to fix chart display issues (especially on mobile Chrome)
-            if ('caches' in window) {
-                caches.keys().then(function(names) {
-                    for (let name of names) {
-                        caches.delete(name);
-                    }
-                });
-            }
-
-            alert('Game reset! Starting fresh. Page will reload to clear cache.')
-            // Reload page to ensure clean state
-            window.location.reload(true);
-        }
-    }
-
-    function showOfflineEarningsModal(btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds) {
-        console.log('showOfflineEarningsModal called with:', btcEarned, ethEarned, dogeEarned, stakingCash, secondsOffline, wasCapped, cappedSeconds);
-
-        // Prevent duplicate modals
-        if (document.querySelector('.offline-modal-overlay') || document.querySelector('.offline-modal')) {
-            console.log('⚠️ Offline earnings modal already visible - skipping duplicate');
-            return;
-        }
-
-        // Also check if we've shown the modal recently (within 2 seconds)
-        const lastModalTime = window._lastOfflineModalTime || 0;
-        if (Date.now() - lastModalTime < 2000) {
-            console.log('⚠️ Offline earnings modal shown recently - debouncing');
-            return;
-        }
-        window._lastOfflineModalTime = Date.now();
-
-        const overlay = document.createElement('div');
-        overlay.className = 'offline-modal-overlay';
-
-        const modal = document.createElement('div');
-        modal.className = 'offline-modal';
-
-        // Format time away
-        const hours = Math.floor(secondsOffline / 3600);
-        const minutes = Math.floor((secondsOffline % 3600) / 60);
-        const seconds = Math.floor(secondsOffline % 60);
-
-        let timeStr = '';
-        if (hours > 0) timeStr += hours + 'h ';
-        if (minutes > 0) timeStr += minutes + 'm ';
-        if (seconds > 0) timeStr += seconds + 's';
-        if (!timeStr) timeStr = '< 1s';
-
-        // Format earnings - just show crypto amounts and staking cash
-        let earningsHtml = '';
-
-        if (btcEarned > 0) {
-            earningsHtml += `<div class="earnings" style="color: #f7931a;">₿ ${btcEarned.toFixed(8)}</div>`;
-        }
-        if (ethEarned > 0) {
-            earningsHtml += `<div class="earnings" style="color: #627eea;">Ξ ${ethEarned.toFixed(8)}</div>`;
-        }
-        if (dogeEarned > 0) {
-            earningsHtml += `<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`;
-        }
-        if (stakingCash > 0) {
-            let cashDisplay;
-            if (stakingCash >= 1e9) {
-                cashDisplay = '$' + (stakingCash / 1e9).toFixed(2) + 'b';
-            } else if (stakingCash >= 1e6) {
-                cashDisplay = '$' + (stakingCash / 1e6).toFixed(2) + 'm';
-            } else if (stakingCash >= 1e3) {
-                cashDisplay = '$' + (stakingCash / 1e3).toFixed(2) + 'k';
-            } else {
-                cashDisplay = '$' + stakingCash.toFixed(2);
-            }
-            earningsHtml += `<div class="earnings" style="color: #4caf50;">💰 ${cashDisplay}</div>`;
-        }
-
-        // If no earnings, show a message
-        if (!earningsHtml) {
-            earningsHtml = `<div class="earnings" style="color: #888; font-size: 1.2rem;">$0.00</div>
-                           <div style="color: #666; font-size: 0.9rem; margin-top: 10px;">Purchase miners to earn while offline!</div>`;
-        }
-
-        // Add cap notice if time was capped
-        let capNotice = '';
-        if (wasCapped) {
-            capNotice = `<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at 6 hours</div>`;
-        }
-
-        modal.innerHTML = `
+function getNextMultiplierCost(level){const baseCosts=[1500000,15000000,150000000,1500000000];if(level<baseCosts.length){return baseCosts[level]}
+let cost=baseCosts[baseCosts.length-1];for(let i=baseCosts.length;i<=level;i++){cost*=1000}
+return cost}
+function getManualHashRateCost(level){const baseCosts=[100000,1000000,10000000,100000000,1000000000];if(level<baseCosts.length){return baseCosts[level]}
+let cost=baseCosts[baseCosts.length-1];for(let i=baseCosts.length;i<=level;i++){cost*=10}
+return cost}
+let btcPrice=100000;let btcBalance=0;let btcLifetime=0;let btcPerSec=0;let btcClickValue=0.00000250;const BTC_MIN_PRICE=50000;const BTC_MAX_PRICE=200000;let ethPrice=3500;let ethBalance=0;let ethLifetime=0;let ethPerSec=0;let ethClickValue=0.00007143;const ETH_MIN_PRICE=1500;const ETH_MAX_PRICE=8000;let dogePrice=0.25;let dogeBalance=0;let dogeLifetime=0;let dogePerSec=0;let dogeClickValue=1.00000000;const DOGE_MIN_PRICE=0.05;const DOGE_MAX_PRICE=2.00;let btcMultiplierLevel=0;let ethMultiplierLevel=0;let dogeMultiplierLevel=0;const MULTIPLIER_COSTS=[10000,100000,1000000,1000000000];let btcManualHashRateLevel=0;let ethManualHashRateLevel=0;let dogeManualHashRateLevel=0;let hardwareEquity=0;class BigNumber{constructor(mantissa=0,exponent=0){if(mantissa!==0){while(mantissa>=1000&&exponent<2000){mantissa/=1000;exponent+=3}
+while(mantissa<1&&mantissa!==0&&exponent>-2000){mantissa*=1000;exponent-=3}}
+this.mantissa=mantissa;this.exponent=exponent}
+toNumber(){if(this.mantissa===0)return 0;return this.mantissa*Math.pow(10,this.exponent)}
+add(other){if(this.mantissa===0)return new BigNumber(other.mantissa,other.exponent);if(other.mantissa===0)return new BigNumber(this.mantissa,this.exponent);if(Math.abs(this.exponent-other.exponent)>3){return this.exponent>other.exponent?new BigNumber(this.mantissa,this.exponent):new BigNumber(other.mantissa,other.exponent)}
+if(this.exponent===other.exponent){return new BigNumber(this.mantissa+other.mantissa,this.exponent)}else if(this.exponent>other.exponent){const diff=this.exponent-other.exponent;const otherMantissa=other.mantissa/Math.pow(10,diff);return new BigNumber(this.mantissa+otherMantissa,this.exponent)}else{const diff=other.exponent-this.exponent;const thisMantissa=this.mantissa/Math.pow(10,diff);return new BigNumber(other.mantissa+thisMantissa,other.exponent)}}
+multiply(other){if(this.mantissa===0||other.mantissa===0)return new BigNumber(0,0);return new BigNumber(this.mantissa*other.mantissa,this.exponent+other.exponent)}
+divide(other){if(other.mantissa===0)return new BigNumber(0,0);if(this.mantissa===0)return new BigNumber(0,0);return new BigNumber(this.mantissa/other.mantissa,this.exponent-other.exponent)}
+compare(other){if(this.exponent!==other.exponent){return this.exponent>other.exponent?1:-1}
+if(this.mantissa>other.mantissa)return 1;if(this.mantissa<other.mantissa)return-1;return 0}
+static fromNumber(num){if(num===0)return new BigNumber(0,0);const exp=Math.floor(Math.log10(Math.abs(num)));const mantissa=num/Math.pow(10,exp);return new BigNumber(mantissa,exp)}}
+let dollarBalance=0;let lastTickTime=Date.now();let lastPriceUpdateTime=0;let manualHashClickTime=0;let manualHashCooldownEnd=0;let clickTimestamps=[];let lastCoinSpawnTime=0;let priceSwingsStarted=!1;let sessionStartTime=Date.now();let sessionStartBalance=0;let sessionStartNetWorth=0;let sessionEarnings=0;let lifetimeEarnings=0;let earningsThisRun=0;let lastSyncedSessionEarnings=0;const ABBREVIATIONS=[{threshold:1e500,suffix:'Qng'},{threshold:1e497,suffix:'Qg'},{threshold:1e494,suffix:'Dg'},{threshold:1e491,suffix:'Tg'},{threshold:1e488,suffix:'Qag'},{threshold:1e485,suffix:'Qig'},{threshold:1e482,suffix:'Sxg'},{threshold:1e479,suffix:'Spg'},{threshold:1e476,suffix:'Ocg'},{threshold:1e473,suffix:'Nog'},{threshold:1e470,suffix:'Ung'},{threshold:1e467,suffix:'Dung'},{threshold:1e464,suffix:'Tung'},{threshold:1e461,suffix:'Qaung'},{threshold:1e458,suffix:'Qiung'},{threshold:1e455,suffix:'Sxung'},{threshold:1e452,suffix:'Spung'},{threshold:1e449,suffix:'Ocung'},{threshold:1e446,suffix:'Noung'},{threshold:1e443,suffix:'Unng'},{threshold:1e440,suffix:'Dunng'},{threshold:1e437,suffix:'Tunng'},{threshold:1e434,suffix:'Qaung'},{threshold:1e431,suffix:'Qiung'},{threshold:1e428,suffix:'Sxun'},{threshold:1e425,suffix:'Spun'},{threshold:1e422,suffix:'Ocun'},{threshold:1e419,suffix:'Noun'},{threshold:1e416,suffix:'Unt'},{threshold:1e413,suffix:'Dunt'},{threshold:1e410,suffix:'Tunt'},{threshold:1e407,suffix:'Qaunt'},{threshold:1e404,suffix:'Qiunt'},{threshold:1e401,suffix:'Sxunt'},{threshold:1e398,suffix:'Spunt'},{threshold:1e395,suffix:'Ocunt'},{threshold:1e392,suffix:'Nount'},{threshold:1e389,suffix:'Unqua'},{threshold:1e386,suffix:'Dunqua'},{threshold:1e383,suffix:'Tunqua'},{threshold:1e380,suffix:'Qaqua'},{threshold:1e377,suffix:'Qiqua'},{threshold:1e374,suffix:'Sxqua'},{threshold:1e371,suffix:'Spqua'},{threshold:1e368,suffix:'Ocqua'},{threshold:1e365,suffix:'Noqua'},{threshold:1e363,suffix:'VgCe'},{threshold:1e360,suffix:'UDcCe'},{threshold:1e357,suffix:'DcCe'},{threshold:1e354,suffix:'NCe'},{threshold:1e351,suffix:'OCe'},{threshold:1e348,suffix:'SpCe'},{threshold:1e345,suffix:'SxCe'},{threshold:1e342,suffix:'QiCe'},{threshold:1e339,suffix:'QaCe'},{threshold:1e336,suffix:'TCe'},{threshold:1e333,suffix:'DCe'},{threshold:1e330,suffix:'UCe'},{threshold:1e327,suffix:'NCe'},{threshold:1e324,suffix:'OCe'},{threshold:1e321,suffix:'SpCe'},{threshold:1e318,suffix:'SxCe'},{threshold:1e315,suffix:'QiCe'},{threshold:1e312,suffix:'QaCe'},{threshold:1e309,suffix:'TCe'},{threshold:1e306,suffix:'UCe'},{threshold:1e303,suffix:'Ce'},{threshold:1e300,suffix:'NoN'},{threshold:1e297,suffix:'OcN'},{threshold:1e294,suffix:'SpN'},{threshold:1e291,suffix:'SxN'},{threshold:1e288,suffix:'QiNg'},{threshold:1e285,suffix:'QNg'},{threshold:1e282,suffix:'TNg'},{threshold:1e279,suffix:'DNg'},{threshold:1e276,suffix:'UNg'},{threshold:1e273,suffix:'Ng'},{threshold:1e270,suffix:'NoO'},{threshold:1e267,suffix:'OcO'},{threshold:1e264,suffix:'SpO'},{threshold:1e261,suffix:'SxO'},{threshold:1e258,suffix:'QiO'},{threshold:1e255,suffix:'QOg'},{threshold:1e252,suffix:'TOg'},{threshold:1e249,suffix:'DOg'},{threshold:1e246,suffix:'UOg'},{threshold:1e243,suffix:'Og'},{threshold:1e240,suffix:'NoSp'},{threshold:1e237,suffix:'OcSp'},{threshold:1e234,suffix:'SpSp'},{threshold:1e231,suffix:'SxSp'},{threshold:1e228,suffix:'QiSp'},{threshold:1e225,suffix:'QSp'},{threshold:1e222,suffix:'TSp'},{threshold:1e219,suffix:'DSp'},{threshold:1e216,suffix:'USp'},{threshold:1e213,suffix:'Spt'},{threshold:1e210,suffix:'NoS'},{threshold:1e207,suffix:'OcS'},{threshold:1e204,suffix:'SpS'},{threshold:1e201,suffix:'SxS'},{threshold:1e198,suffix:'QiS'},{threshold:1e195,suffix:'QSg'},{threshold:1e192,suffix:'TSg'},{threshold:1e189,suffix:'DSg'},{threshold:1e186,suffix:'USg'},{threshold:1e183,suffix:'Sg'},{threshold:1e180,suffix:'NoQi'},{threshold:1e177,suffix:'OcQi'},{threshold:1e174,suffix:'SpQi'},{threshold:1e171,suffix:'SxQi'},{threshold:1e168,suffix:'QiQi'},{threshold:1e165,suffix:'QQi'},{threshold:1e162,suffix:'TQi'},{threshold:1e159,suffix:'DQi'},{threshold:1e156,suffix:'UQi'},{threshold:1e153,suffix:'Qui'},{threshold:1e150,suffix:'NoQ'},{threshold:1e147,suffix:'OcQ'},{threshold:1e144,suffix:'SpQ'},{threshold:1e141,suffix:'SxQ'},{threshold:1e138,suffix:'QiQ'},{threshold:1e135,suffix:'QQu'},{threshold:1e132,suffix:'TQu'},{threshold:1e129,suffix:'DQu'},{threshold:1e126,suffix:'UQu'},{threshold:1e123,suffix:'Qua'},{threshold:1e120,suffix:'NoT'},{threshold:1e117,suffix:'OcT'},{threshold:1e114,suffix:'SpT'},{threshold:1e111,suffix:'SxT'},{threshold:1e108,suffix:'QiT'},{threshold:1e105,suffix:'QaT'},{threshold:1e102,suffix:'TTr'},{threshold:1e99,suffix:'DTr'},{threshold:1e96,suffix:'UTr'},{threshold:1e93,suffix:'Tr'},{threshold:1e90,suffix:'NoV'},{threshold:1e87,suffix:'OcV'},{threshold:1e84,suffix:'SpV'},{threshold:1e81,suffix:'SxV'},{threshold:1e78,suffix:'QiV'},{threshold:1e75,suffix:'QaV'},{threshold:1e72,suffix:'TVi'},{threshold:1e69,suffix:'DVi'},{threshold:1e66,suffix:'UVi'},{threshold:1e63,suffix:'Vi'},{threshold:1e60,suffix:'NoD'},{threshold:1e57,suffix:'OcD'},{threshold:1e54,suffix:'SpD'},{threshold:1e51,suffix:'SxD'},{threshold:1e48,suffix:'QiD'},{threshold:1e45,suffix:'QaD'},{threshold:1e42,suffix:'TVi'},{threshold:1e39,suffix:'DDe'},{threshold:1e36,suffix:'UDe'},{threshold:1e33,suffix:'De'},{threshold:1e30,suffix:'No'},{threshold:1e27,suffix:'Oc'},{threshold:1e24,suffix:'Sp'},{threshold:1e21,suffix:'Sx'},{threshold:1e18,suffix:'Qi'},{threshold:1e15,suffix:'Qa'},{threshold:1e12,suffix:'T'},{threshold:1e9,suffix:'B'},{threshold:1e6,suffix:'M'},{threshold:1e3,suffix:'K'}];if(!window.gameState){window.gameState={lifetimeEarnings:0,dollarBalance:0}}
+window.btcPerSec=btcPerSec;window.ethPerSec=ethPerSec;window.dogePerSec=dogePerSec;window.btcPrice=btcPrice;window.ethPrice=ethPrice;window.dogePrice=dogePrice;window.totalMiningMultiplier=1;let buyQuantity=1;let chartHistory=[];let chartTimestamps=[];let btcChartHistory=[];let ethChartHistory=[];let dogeChartHistory=[];let cashChartHistory=[];let lastChartUpdateTime=Date.now();let chartStartTime=Date.now();function trimChartData(){const MAX_CHART_POINTS=600;if(chartHistory.length>MAX_CHART_POINTS){chartHistory=chartHistory.slice(-MAX_CHART_POINTS);chartTimestamps=chartTimestamps.slice(-MAX_CHART_POINTS);btcChartHistory=btcChartHistory.slice(-MAX_CHART_POINTS);ethChartHistory=ethChartHistory.slice(-MAX_CHART_POINTS);dogeChartHistory=dogeChartHistory.slice(-MAX_CHART_POINTS);cashChartHistory=cashChartHistory.slice(-MAX_CHART_POINTS)}}
+let chartMarkers=[];let lastMarkerTime=Date.now();let chartIntervalMinutes=10;let hashRateChartHistory=[];let powerChartHistory=[];let currentPowerValues=[];let powerChartColors=[];let cumulativePowerUsed=0;let maxPowerCapacity=1;let ethHashRateChartHistory=[];let dogeHashRateChartHistory=[];let hashRateChartTimestamps=[];let lastHashRateChartUpdateTime=Date.now();let currentChartView='networth';let hashRateChartInstance=null;let powerChartInstance=null;let currentHashrateView='hashrate';let lastUIUpdateTime=0;let lastChartDataCollectionTime=0;let lastPowerChartUpdateTime=0;let lastShopReinitTime=0;let lastStatsUpdateTime=0;let lastChartScaleCalcTime=0;let lastChartDataLength=0;let lastAscensionUIUpdateTime=0;let lastMilestoneCheckTime=0;let lastAchievementCheckTime=0;let rugpullMilestoneAnnounced=!1;let chartYAxisScaleMultiplier=10;let userControllingZoom=!1;let userHasSetZoom=!1;let userLockedChartMax=null;let zoomResetTimeout=null;let cachedChartMax=0;let lastCachedChartLength=0;let cachedChartLabels=[];let lastCachedLabelCount=0;let hackingGameActive=!1;let hackingGameDifficulty='EASY';let hackingVulnerabilitiesToFind=[];let hackingVulnerabilitiesFound=[];let hackingGameStartTime=0;let hackingGameTimeLimit=30000;let hackingLivesRemaining=0;let hackingMaxLives=0;let speedBoostActive=!1;let speedBoostEndTime=0;let speedBoostMultiplier=1.0;let hackingGamesPlayed=0;let hackingGamesWon=0;let hackingGamesWonByDifficulty={EASY:0,MEDIUM:0,HARD:0};let hackingConsecutiveWins=0;let hackingNextNotificationTime=0;let hackingTotalRewardsEarned=0;let hackingLastRewards={btc:0,eth:0,doge:0,usd:0,totalUsd:0};let hackingCooldowns={'EASY':0,'MEDIUM':0,'HARD':0};let whackGameActive=!1;let whackGameManuallyClosed=!1;let whackGameDifficulty='EASY';let whackGameStartTime=0;let whackGameTimeLimit=30000;let whackGameScore=0;let whackGameBlocksHit=0;let whackGameLivesRemaining=0;let whackGameMaxLives=0;let whackGameGamesPlayed=0;let whackGameGamesWon=0;let whackGameTotalRewardsEarned=0;let whackLastRewards={btc:0,eth:0,doge:0,usd:0,totalUsd:0};let whackCooldowns={'EASY':0,'MEDIUM':0,'HARD':0};let whackActiveBlock=null;let whackActiveBlocks=new Set();let whackSpawnInterval=null;let whackGameInterval=null;let networkGameActive=!1;let networkGameDifficulty='EASY';let networkGameStartTime=0;let networkGameTimeLimit=10000;let networkGameMaxHP=50000;let networkGameCurrentHP=50000;let networkGameTotalDamage=0;let networkGameClickDamageTotal=0;let networkGameClickDamage=20;let networkGameGamesPlayed=0;let networkGameGamesWon=0;let networkGameWonThisRound=!1;let networkGameTotalRewardsEarned=0;let networkLastRewards={btc:0,eth:0,doge:0,usd:0,totalUsd:0};let networkGameInterval=null;let packetGameGamesPlayed=0;let packetGameGamesWon=0;let packetGameTotalRewardsEarned=0;let packetLastRewards={btc:0,eth:0,doge:0,usd:0,totalUsd:0};let packetCooldowns={'EASY':0,'MEDIUM':0,'HARD':0};let totalPowerAvailable=0;let totalPowerUsed=0;let totalPowerUSD=0;const powerUpgrades=[{id:0,name:"Basic Power Strip",baseUsd:10,basePower:25},{id:1,name:"Regulated PSU",baseUsd:100,basePower:750},{id:2,name:"High-Efficiency PSU",baseUsd:1100,basePower:4500},{id:3,name:"Server-Grade PSU",baseUsd:12000,basePower:12000},{id:4,name:"Mining Power Distribution Unit",baseUsd:132000,basePower:35000},{id:5,name:"Modular Data Center Power System",baseUsd:1452000,basePower:120000},{id:6,name:"Dedicated Substation Power Unit",baseUsd:16000000,basePower:450000},{id:7,name:"Industrial Grid Connection",baseUsd:176000000,basePower:3000000},{id:8,name:"Hydroelectric Power Station",baseUsd:1940000000,basePower:15000000},{id:9,name:"Nuclear Reactor Array",baseUsd:21400000000,basePower:50000000},{id:10,name:"Fusion Energy Complex",baseUsd:235000000000,basePower:250000000},{id:11,name:"Dyson Sphere Power Collector",baseUsd:2580000000000,basePower:1200000000},{id:12,name:"Stellar Energy Tapestry",baseUsd:28400000000000,basePower:5000000000}].map(u=>({...u,level:0,currentUsd:u.baseUsd,currentPower:0}));const equipmentPowerReqs={0:0,1:2.5,2:75,3:450,4:1200,5:3500,6:12000,7:45000,8:300000,9:1500000,10:5000000,11:25000000,12:120000000,13:650000000,14:3500000000,15:18000000000};let indicatorTimeouts={btc:null,eth:null,doge:null};function updatePriceIndicator(crypto,oldPrice,newPrice){const change=newPrice-oldPrice;const changePercent=((change/oldPrice)*100).toFixed(2);const isUp=change>=0;const indicatorId=crypto+'-indicator';const changeId=crypto+'-change';const indicator=document.getElementById(indicatorId);const changeDisplay=document.getElementById(changeId);if(indicatorTimeouts[crypto]){clearTimeout(indicatorTimeouts[crypto])}
+if(indicator&&changeDisplay){indicator.textContent=isUp?'▲':'▼';indicator.style.color=isUp?'#00ff88':'#ff3344';changeDisplay.textContent=(isUp?'+':'')+changePercent+'%';changeDisplay.style.color=isUp?'#00ff88':'#ff3344';indicatorTimeouts[crypto]=setTimeout(()=>{indicator.textContent='';changeDisplay.textContent='';indicatorTimeouts[crypto]=null},800)}}
+function btcTinySwing(){setTimeout(()=>{let oldBtcPrice=btcPrice;const btcTarget=100000;const distanceFromTarget=Math.abs(btcPrice-btcTarget);const maxDistance=Math.abs(BTC_MAX_PRICE-btcTarget);const distancePercent=distanceFromTarget/maxDistance;let movePercent=(Math.random()*0.0005)+0.0005;let direction;if(Math.random()<(0.5+distancePercent*0.45)){direction=btcPrice>btcTarget?-1:1}else{direction=Math.random()>0.5?1:-1}
+let newBtcPrice=oldBtcPrice*(1+(direction*movePercent));btcPrice=Math.max(BTC_MIN_PRICE,Math.min(BTC_MAX_PRICE,newBtcPrice));updatePriceIndicator('btc',oldBtcPrice,btcPrice);updateUI();btcTinySwing()},2000)}
+function btcFrequentSwing(){let randomInterval=(Math.random()*(60000-2000))+2000;setTimeout(()=>{let movePercent=(Math.random()*0.009)+0.001;let oldBtcPrice=btcPrice;const btcTarget=100000;const distanceFromTarget=Math.abs(btcPrice-btcTarget);const maxDistance=Math.abs(BTC_MAX_PRICE-btcTarget);const distancePercent=distanceFromTarget/maxDistance;let newBtcPrice=oldBtcPrice*(1+movePercent);if(Math.random()<(0.75+distancePercent*0.25)){const targetPrice=100000;const diff=targetPrice-oldBtcPrice;newBtcPrice=oldBtcPrice+(diff*0.03)}else{let direction=Math.random()>0.5?1:-1;newBtcPrice=oldBtcPrice*(1+(direction*movePercent))}
+btcPrice=Math.max(BTC_MIN_PRICE,Math.min(BTC_MAX_PRICE,newBtcPrice));updatePriceIndicator('btc',oldBtcPrice,btcPrice);updateUI();btcFrequentSwing()},randomInterval)}
+function ethTinySwing(){setTimeout(()=>{let oldEthPrice=ethPrice;const ethTarget=3500;const distanceFromTarget=Math.abs(ethPrice-ethTarget);const maxDistance=Math.abs(ETH_MAX_PRICE-ethTarget);const distancePercent=distanceFromTarget/maxDistance;let movePercent=(Math.random()*0.0005)+0.0005;let direction;if(Math.random()<(0.5+distancePercent*0.45)){direction=ethPrice>ethTarget?-1:1}else{direction=Math.random()>0.5?1:-1}
+let newEthPrice=oldEthPrice*(1+(direction*movePercent));ethPrice=Math.max(ETH_MIN_PRICE,Math.min(ETH_MAX_PRICE,newEthPrice));updatePriceIndicator('eth',oldEthPrice,ethPrice);updateUI();ethTinySwing()},2300)}
+function ethFrequentSwing(){let randomInterval=(Math.random()*(75000-3000))+3000;setTimeout(()=>{let movePercent=(Math.random()*0.011)+0.001;let oldEthPrice=ethPrice;const ethTarget=3500;const distanceFromTarget=Math.abs(ethPrice-ethTarget);const maxDistance=Math.abs(ETH_MAX_PRICE-ethTarget);const distancePercent=distanceFromTarget/maxDistance;let newEthPrice=oldEthPrice*(1+movePercent);if(Math.random()<(0.75+distancePercent*0.25)){const targetPrice=3500;const diff=targetPrice-oldEthPrice;newEthPrice=oldEthPrice+(diff*0.03)}else{let direction=Math.random()>0.5?1:-1;newEthPrice=oldEthPrice*(1+(direction*movePercent))}
+ethPrice=Math.max(ETH_MIN_PRICE,Math.min(ETH_MAX_PRICE,newEthPrice));updatePriceIndicator('eth',oldEthPrice,ethPrice);updateUI();ethFrequentSwing()},randomInterval)}
+function dogeTinySwing(){setTimeout(()=>{let oldDogePrice=dogePrice;const dogeTarget=0.25;const distanceFromTarget=Math.abs(dogePrice-dogeTarget);const maxDistance=Math.abs(DOGE_MAX_PRICE-dogeTarget);const distancePercent=distanceFromTarget/maxDistance;let movePercent=(Math.random()*0.001)+0.0005;let direction;if(Math.random()<(0.5+distancePercent*0.45)){direction=dogePrice>dogeTarget?-1:1}else{direction=Math.random()>0.5?1:-1}
+let newDogePrice=oldDogePrice*(1+(direction*movePercent*1.5));dogePrice=Math.max(DOGE_MIN_PRICE,Math.min(DOGE_MAX_PRICE,newDogePrice));updatePriceIndicator('doge',oldDogePrice,dogePrice);updateUI();dogeTinySwing()},2700)}
+function dogeFrequentSwing(){let randomInterval=(Math.random()*(45000-2000))+2000;setTimeout(()=>{let movePercent=(Math.random()*0.0165)+0.0015;let oldDogePrice=dogePrice;const dogeTarget=0.25;const distanceFromTarget=Math.abs(dogePrice-dogeTarget);const maxDistance=Math.abs(DOGE_MAX_PRICE-dogeTarget);const distancePercent=distanceFromTarget/maxDistance;let newDogePrice=oldDogePrice*(1+movePercent*1.5);if(Math.random()<(0.75+distancePercent*0.25)){const targetPrice=0.25;const diff=targetPrice-oldDogePrice;newDogePrice=oldDogePrice+(diff*0.03)}else{let direction=Math.random()>0.5?1:-1;newDogePrice=oldDogePrice*(1+(direction*movePercent*1.5))}
+dogePrice=Math.max(DOGE_MIN_PRICE,Math.min(DOGE_MAX_PRICE,newDogePrice));updatePriceIndicator('doge',oldDogePrice,dogePrice);updateUI();dogeFrequentSwing()},randomInterval)}
+function btcBigSwing(){let nextBigSwing=(Math.random()*(600000-300000))+300000;setTimeout(()=>{let movePercent=(Math.random()*0.075)+0.025;let direction=Math.random()>0.5?1:-1;let move=direction*movePercent;let oldBtcPrice=btcPrice;btcPrice=Math.max(BTC_MIN_PRICE,Math.min(BTC_MAX_PRICE,btcPrice*(1+move)));updatePriceIndicator('btc',oldBtcPrice,btcPrice);const changePercent=((btcPrice-oldBtcPrice)/oldBtcPrice)*100;if(typeof window.showNewsPopup==='function'){window.showNewsPopup('btc',changePercent,changePercent>=0)}else{console.warn('⚠️ showNewsPopup not available yet, retrying...')}
+updateUI();btcBigSwing()},nextBigSwing)}
+function ethBigSwing(){let nextBigSwing=(Math.random()*(720000-240000))+240000;setTimeout(()=>{let movePercent=(Math.random()*0.095)+0.025;let direction=Math.random()>0.5?1:-1;let move=direction*movePercent;let oldEthPrice=ethPrice;ethPrice=Math.max(ETH_MIN_PRICE,Math.min(ETH_MAX_PRICE,ethPrice*(1+move)));updatePriceIndicator('eth',oldEthPrice,ethPrice);const changePercent=((ethPrice-oldEthPrice)/oldEthPrice)*100;if(typeof window.showNewsPopup==='function'){window.showNewsPopup('eth',changePercent,changePercent>=0)}else{console.warn('⚠️ showNewsPopup not available yet, retrying...')}
+updateUI();ethBigSwing()},nextBigSwing)}
+function dogeBigSwing(){let nextBigSwing=(Math.random()*(480000-180000))+180000;setTimeout(()=>{let movePercent=(Math.random()*0.15)+0.03;let direction=Math.random()>0.5?1:-1;let move=direction*movePercent;let oldDogePrice=dogePrice;dogePrice=Math.max(DOGE_MIN_PRICE,Math.min(DOGE_MAX_PRICE,dogePrice*(1+move*1.8)));updatePriceIndicator('doge',oldDogePrice,dogePrice);const changePercent=((dogePrice-oldDogePrice)/oldDogePrice)*100;if(typeof window.showNewsPopup==='function'){window.showNewsPopup('doge',changePercent,changePercent>=0)}else{console.warn('⚠️ showNewsPopup not available yet, retrying...')}
+updateUI();dogeBigSwing()},nextBigSwing)}
+let audioContext;try{audioContext=new(window.AudioContext||window.webkitAudioContext)()}catch(error){console.error('Could not create audio context:',error);audioContext=null}
+function playClickSound(){if(isMuted||!audioContext)return;try{const now=audioContext.currentTime;const osc=audioContext.createOscillator();const gain=audioContext.createGain();osc.connect(gain);gain.connect(audioContext.destination);osc.frequency.setValueAtTime(800,now);osc.frequency.exponentialRampToValueAtTime(600,now+0.1);osc.type='sine';gain.gain.setValueAtTime(0.05,now);gain.gain.exponentialRampToValueAtTime(0.001,now+0.1);osc.start(now);osc.stop(now+0.1)}catch(error){console.error('Error playing click sound:',error)}}
+function playUpgradeSound(){if(isMuted||!audioContext)return;try{const now=audioContext.currentTime;const osc=audioContext.createOscillator();const gain=audioContext.createGain();osc.connect(gain);gain.connect(audioContext.destination);osc.frequency.setValueAtTime(500,now);osc.frequency.exponentialRampToValueAtTime(1200,now+0.2);osc.type='square';gain.gain.setValueAtTime(0.04,now);gain.gain.exponentialRampToValueAtTime(0.001,now+0.2);osc.start(now);osc.stop(now+0.2)}catch(error){console.error('Error playing upgrade sound:',error)}}
+function isMilestoneLevel(level){if(level===5||level===10||level===25||level===50){return!0}
+if(level>=100&&(level-100)%50===0){return!0}
+return!1}
+function getNextMilestoneAfter(level){if(level<5)return 5;if(level<10)return 10;if(level<25)return 25;if(level<50)return 50;const nextBase=Math.ceil((level+1)/50)*50;return nextBase>=100?nextBase:100}
+function generateMilestones(maxLevel=10000){const milestones=[5,10,25,50];for(let level=100;level<=maxLevel;level+=50){milestones.push(level)}
+return milestones}
+const MILESTONE_LEVELS=generateMilestones(10000);function calculateMilestoneDoublingCost(upgrade){return upgrade.baseUsd*20}
+const btcUpgrades=[{id:0,name:"Manual Hash Rate",baseUsd:100,baseYield:0,isClickUpgrade:!0,clickIncrease:0.000000250},{id:1,name:"USB Miner",baseUsd:5,baseYield:0.00002500},{id:2,name:"GTX 1660 Super",baseUsd:50,baseYield:0.00025000},{id:3,name:"RTX 5090 Rig",baseUsd:550,baseYield:0.00200000},{id:4,name:"ASIC Mining Unit",baseUsd:6000,baseYield:0.01200000},{id:5,name:"Liquid ASIC Rig",baseUsd:66000,baseYield:0.06600000},{id:6,name:"Mobile Mining Container",baseUsd:726000,baseYield:0.35640000},{id:7,name:"Geothermal Mining Farm",baseUsd:8000000,baseYield:1.99584000},{id:8,name:"Data Center Facility",baseUsd:88000000,baseYield:11.17670400},{id:9,name:"Orbital Data Relay",baseUsd:970000000,baseYield:65.94255360},{id:10,name:"Quantum Computer",baseUsd:10700000000,baseYield:402.24957696},{id:11,name:"Advanced Quantum Rig",baseUsd:117000000000,baseYield:2514.05985600},{id:12,name:"Superintelligent AI Network",baseUsd:1290000000000,baseYield:15712.87410000},{id:13,name:"Dimensional Mining Array",baseUsd:14200000000000,baseYield:98205.46312500},{id:14,name:"Multiversal Hash Grid",baseUsd:156000000000000,baseYield:613784.14453125},{id:15,name:"Infinite Energy Extractor",baseUsd:1720000000000000,baseYield:3836150.90332031}].map(u=>({...u,level:0,currentUsd:u.baseUsd,currentYield:0,milestoneDoublings:MILESTONE_LEVELS.reduce((acc,level)=>{acc[level]=!1;return acc},{}),doubleMultiplier:1}));const ethUpgrades=[{id:0,name:"Manual Hash Rate",baseUsd:100,baseYield:0,isClickUpgrade:!0,clickIncrease:0.00007143},{id:1,name:"Single GPU Rig",baseUsd:5,baseYield:0.00071429},{id:2,name:"RTX 4090 Miner",baseUsd:50,baseYield:0.00714286},{id:3,name:"8-GPU Mining Rig",baseUsd:550,baseYield:0.05714286},{id:4,name:"Professional ETH Farm",baseUsd:6000,baseYield:0.34285714},{id:5,name:"Staking Validator Node",baseUsd:66000,baseYield:1.88571429},{id:6,name:"Multi-Validator Farm",baseUsd:726000,baseYield:10.18285714},{id:7,name:"ETH Mining Complex",baseUsd:8000000,baseYield:57.02400000},{id:8,name:"Enterprise Staking Pool",baseUsd:88000000,baseYield:319.33440000},{id:9,name:"Layer 2 Validation Network",baseUsd:970000000,baseYield:1884.07296000},{id:10,name:"Ethereum Foundation Node",baseUsd:10700000000,baseYield:11492.84505600},{id:11,name:"Global Validator Consortium",baseUsd:117000000000,baseYield:71830.28160000},{id:12,name:"Sharding Supernetwork",baseUsd:1290000000000,baseYield:448939.26000000},{id:13,name:"Zero-Knowledge Proof Farm",baseUsd:14200000000000,baseYield:2805870.37500000},{id:14,name:"Interchain Bridge Network",baseUsd:156000000000000,baseYield:17536689.84375000},{id:15,name:"Ethereum 3.0 Genesis Node",baseUsd:1720000000000000,baseYield:109604311.52343747}].map(u=>({...u,level:0,currentUsd:u.baseUsd,currentYield:0,milestoneDoublings:MILESTONE_LEVELS.reduce((acc,level)=>{acc[level]=!1;return acc},{}),doubleMultiplier:1}));const dogeUpgrades=[{id:0,name:"Manual Hash Rate",baseUsd:100,baseYield:0,isClickUpgrade:!0,clickIncrease:0.01},{id:1,name:"Basic Scrypt Miner",baseUsd:5,baseYield:10.00},{id:2,name:"L3+ ASIC Miner",baseUsd:50,baseYield:100.00},{id:3,name:"Mini DOGE Farm",baseUsd:550,baseYield:800.00},{id:4,name:"Scrypt Mining Pool",baseUsd:6000,baseYield:4800.00},{id:5,name:"Industrial DOGE Facility",baseUsd:66000,baseYield:26400.00},{id:6,name:"DOGE Megafarm",baseUsd:726000,baseYield:142560.00},{id:7,name:"WOW Mining Complex",baseUsd:8000000,baseYield:798336.00},{id:8,name:"Moon Mining Station",baseUsd:88000000,baseYield:4470681.60},{id:9,name:"Interplanetary DOGE Network",baseUsd:970000000,baseYield:26377021.44},{id:10,name:"To The Moon Supercomputer",baseUsd:10700000000,baseYield:160899830.78},{id:11,name:"Mars Colony Mining Base",baseUsd:117000000000,baseYield:1005623942.40},{id:12,name:"Asteroid Belt DOGE Harvester",baseUsd:1290000000000,baseYield:6285149640.00},{id:13,name:"Jovian Satellite Network",baseUsd:14200000000000,baseYield:39282185250.00},{id:14,name:"Solar System DOGE Grid",baseUsd:156000000000000,baseYield:245513657812.50},{id:15,name:"Intergalactic SHIBE Matrix",baseUsd:1720000000000000,baseYield:1534460361328.12}].map(u=>({...u,level:0,currentUsd:u.baseUsd,currentYield:0,milestoneDoublings:MILESTONE_LEVELS.reduce((acc,level)=>{acc[level]=!1;return acc},{}),doubleMultiplier:1}));const upgrades=btcUpgrades;let importInProgress=!1;function saveGame(){if(importInProgress){console.log('Save blocked - import in progress');return}
+const MAX_CHART_POINTS=600;const trimmedChartHistory=chartHistory.length>MAX_CHART_POINTS?chartHistory.slice(-MAX_CHART_POINTS):chartHistory;const trimmedChartTimestamps=chartTimestamps.length>MAX_CHART_POINTS?chartTimestamps.slice(-MAX_CHART_POINTS):chartTimestamps;const trimmedBtcChartHistory=btcChartHistory.length>MAX_CHART_POINTS?btcChartHistory.slice(-MAX_CHART_POINTS):btcChartHistory;const trimmedEthChartHistory=ethChartHistory.length>MAX_CHART_POINTS?ethChartHistory.slice(-MAX_CHART_POINTS):ethChartHistory;const trimmedDogeChartHistory=dogeChartHistory.length>MAX_CHART_POINTS?dogeChartHistory.slice(-MAX_CHART_POINTS):dogeChartHistory;const trimmedCashChartHistory=cashChartHistory.length>MAX_CHART_POINTS?cashChartHistory.slice(-MAX_CHART_POINTS):cashChartHistory;const trimmedPowerChartHistory=powerChartHistory.length>MAX_CHART_POINTS?powerChartHistory.slice(-MAX_CHART_POINTS):powerChartHistory;const trimmedPowerChartColors=powerChartColors.length>MAX_CHART_POINTS?powerChartColors.slice(-MAX_CHART_POINTS):powerChartColors;const trimmedHashRateChartTimestamps=hashRateChartTimestamps.length>MAX_CHART_POINTS?hashRateChartTimestamps.slice(-MAX_CHART_POINTS):hashRateChartTimestamps;const gameState={btcBalance,btcLifetime,btcClickValue,btcPerSec,btcPrice,ethBalance,ethLifetime,ethClickValue,ethPerSec,ethPrice,dogeBalance,dogeLifetime,dogeClickValue,dogePerSec,dogePrice,btcMultiplierLevel,ethMultiplierLevel,dogeMultiplierLevel,btcManualHashRateLevel,ethManualHashRateLevel,dogeManualHashRateLevel,dollarBalance,hardwareEquity,lastSaveTime:Date.now(),autoClickerCooldownEnd,lifetimeEarnings,sessionEarnings,sessionStartTime,lifetimeEarningsDisplay:typeof window.rugpullState!=='undefined'?window.rugpullState.lifetimeEarningsDisplay:0,chartHistory:trimmedChartHistory,chartTimestamps:trimmedChartTimestamps,btcChartHistory:trimmedBtcChartHistory,ethChartHistory:trimmedEthChartHistory,dogeChartHistory:trimmedDogeChartHistory,cashChartHistory:trimmedCashChartHistory,chartStartTime:chartStartTime,powerChartHistory:trimmedPowerChartHistory,powerChartColors:trimmedPowerChartColors,hashRateChartTimestamps:trimmedHashRateChartTimestamps,totalPowerAvailable,totalPowerUSD,staking:getStakingData(),powerUpgrades:powerUpgrades.map(u=>({id:u.id,level:u.level,currentUsd:u.currentUsd,currentPower:u.currentPower})),btcUpgrades:btcUpgrades.map(u=>({id:u.id,level:u.level,currentUsd:u.currentUsd,currentYield:u.currentYield,milestoneDoublings:u.milestoneDoublings,doubleMultiplier:u.doubleMultiplier})),ethUpgrades:ethUpgrades.map(u=>({id:u.id,level:u.level,currentUsd:u.currentUsd,currentYield:u.currentYield,milestoneDoublings:u.milestoneDoublings,doubleMultiplier:u.doubleMultiplier})),dogeUpgrades:dogeUpgrades.map(u=>({id:u.id,level:u.level,currentUsd:u.currentUsd,currentYield:u.currentYield,milestoneDoublings:u.milestoneDoublings,doubleMultiplier:u.doubleMultiplier})),ascensionData:(typeof getAscensionData==='function')?getAscensionData():{},achievements:(typeof achievementsData!=='undefined')?achievementsData.achievements:{},hackingData:{gamesPlayed:hackingGamesPlayed,gamesWon:hackingGamesWon,gamesWonByDifficulty:hackingGamesWonByDifficulty,consecutiveWins:hackingConsecutiveWins,totalRewardsEarned:hackingTotalRewardsEarned,speedBoostEndTime:speedBoostActive?speedBoostEndTime:0,speedBoostMultiplier:speedBoostActive?speedBoostMultiplier:1.0,nextNotificationTime:hackingNextNotificationTime,cooldowns:hackingCooldowns},whackData:{gamesPlayed:whackGameGamesPlayed,gamesWon:whackGameGamesWon,totalRewardsEarned:whackGameTotalRewardsEarned,cooldowns:whackCooldowns},networkData:{gamesPlayed:networkGameGamesPlayed,gamesWon:networkGameGamesWon,totalRewardsEarned:networkGameTotalRewardsEarned},packetData:{gamesPlayed:packetGameGamesPlayed,gamesWon:packetGameGamesWon,totalRewardsEarned:packetGameTotalRewardsEarned,cooldowns:packetCooldowns}};try{const saveString=JSON.stringify(gameState);localStorage.setItem('satoshiTerminalSave',saveString);const testLoad=localStorage.getItem('satoshiTerminalSave');if(!testLoad||testLoad.length===0){console.error('✗ SAVE FAILED - Could not verify in localStorage')}}catch(error){console.error('✗ ERROR saving game to localStorage:',error);alert('Failed to save game! Your progress may not be saved. Error: '+error.message)}}
+function loadGame(){try{const savedData=localStorage.getItem('satoshiTerminalSave');if(!savedData){return}
+const state=JSON.parse(savedData);if(state.achievements&&typeof achievementsData!=='undefined'){Object.keys(state.achievements).forEach(id=>{achievementsData.achievements[id]=state.achievements[id]})}
+btcBalance=state.btcBalance||0;btcLifetime=state.btcLifetime||0;btcClickValue=state.btcClickValue||0.00000250;if(btcClickValue<0.000001&&btcClickValue>0){btcClickValue=0.00000250}
+btcPrice=state.btcPrice||100000;ethBalance=state.ethBalance||0;ethLifetime=state.ethLifetime||0;ethClickValue=state.ethClickValue||0.00007143;if(ethClickValue<0.00001&&ethClickValue>0){ethClickValue=0.00007143}
+ethPrice=state.ethPrice||3500;dogeBalance=state.dogeBalance||0;dogeLifetime=state.dogeLifetime||0;dogeClickValue=state.dogeClickValue||1.00000000;if(dogeClickValue<0.1&&dogeClickValue>0){dogeClickValue=1.00000000}
+dogePrice=state.dogePrice||0.25;btcMultiplierLevel=state.btcMultiplierLevel||0;ethMultiplierLevel=state.ethMultiplierLevel||0;dogeMultiplierLevel=state.dogeMultiplierLevel||0;btcManualHashRateLevel=state.btcManualHashRateLevel||0;ethManualHashRateLevel=state.ethManualHashRateLevel||0;dogeManualHashRateLevel=state.dogeManualHashRateLevel||0;dollarBalance=parseFloat(state.dollarBalance)||0;hardwareEquity=parseFloat(state.hardwareEquity)||0;lifetimeEarnings=parseFloat(state.lifetimeEarnings)||0;if(state.lifetimeEarningsDisplay&&typeof window.rugpullState!=='undefined'){window.rugpullState.lifetimeEarningsDisplay=parseFloat(state.lifetimeEarningsDisplay)||0}
+if(window.rugpullState&&window.gameState){window.gameState.lifetimeEarnings=window.rugpullState.lifetimeEarningsDisplay||0}
+sessionEarnings=0;sessionStartTime=Date.now();if(state.staking){loadStakingData(state.staking)}
+sessionStartBalance=btcBalance;sessionStartNetWorth=(btcBalance*btcPrice)+(ethBalance*ethPrice)+(dogeBalance*dogePrice)+hardwareEquity+dollarBalance;chartStartTime=state.chartStartTime||Date.now();if(state.powerUpgrades){state.powerUpgrades.forEach((savedU)=>{const powerUpgradeToUpdate=powerUpgrades.find(u=>u.id===savedU.id);if(powerUpgradeToUpdate){powerUpgradeToUpdate.level=savedU.level||0;powerUpgradeToUpdate.currentUsd=Math.floor(powerUpgradeToUpdate.baseUsd*Math.pow(1.15,powerUpgradeToUpdate.level));powerUpgradeToUpdate.currentPower=savedU.currentPower||0}})}
+totalPowerAvailable=state.totalPowerAvailable||0;totalPowerUSD=state.totalPowerUSD||0;if(state.btcUpgrades){state.btcUpgrades.forEach((savedU)=>{const upgradeToUpdate=btcUpgrades.find(u=>u.id===savedU.id);if(upgradeToUpdate){upgradeToUpdate.level=savedU.level||0;upgradeToUpdate.currentUsd=savedU.currentUsd||upgradeToUpdate.baseUsd;upgradeToUpdate.currentYield=savedU.currentYield||0;if(savedU.milestoneDoublings){upgradeToUpdate.milestoneDoublings=savedU.milestoneDoublings}
+upgradeToUpdate.doubleMultiplier=savedU.doubleMultiplier||1}})}else if(state.upgrades){state.upgrades.forEach((savedU,index)=>{let upgradeToUpdate;if(savedU.id!==undefined){upgradeToUpdate=btcUpgrades.find(u=>u.id===savedU.id)}else{upgradeToUpdate=btcUpgrades[index]}
+if(upgradeToUpdate){upgradeToUpdate.level=savedU.level||0;upgradeToUpdate.currentUsd=savedU.currentUsd||upgradeToUpdate.baseUsd;upgradeToUpdate.currentYield=savedU.currentYield||0;upgradeToUpdate.milestoneDoublings=MILESTONE_LEVELS.reduce((acc,level)=>{acc[level]=!1;return acc},{});upgradeToUpdate.doubleMultiplier=1}})}
+if(state.ethUpgrades){state.ethUpgrades.forEach((savedU)=>{const upgradeToUpdate=ethUpgrades.find(u=>u.id===savedU.id);if(upgradeToUpdate){upgradeToUpdate.level=savedU.level||0;upgradeToUpdate.currentUsd=savedU.currentUsd||upgradeToUpdate.baseUsd;upgradeToUpdate.currentYield=savedU.currentYield||0;if(savedU.milestoneDoublings){upgradeToUpdate.milestoneDoublings=savedU.milestoneDoublings}
+upgradeToUpdate.doubleMultiplier=savedU.doubleMultiplier||1}})}
+if(state.dogeUpgrades){state.dogeUpgrades.forEach((savedU)=>{const upgradeToUpdate=dogeUpgrades.find(u=>u.id===savedU.id);if(upgradeToUpdate){upgradeToUpdate.level=savedU.level||0;upgradeToUpdate.currentUsd=savedU.currentUsd||upgradeToUpdate.baseUsd;upgradeToUpdate.currentYield=savedU.currentYield||0;if(savedU.milestoneDoublings){upgradeToUpdate.milestoneDoublings=savedU.milestoneDoublings}
+upgradeToUpdate.doubleMultiplier=savedU.doubleMultiplier||1}})}
+if(state.ascensionData&&typeof loadAscensionData==='function'){loadAscensionData(state.ascensionData);if(typeof window.lifetimeEarningsThisRugpull!=='undefined'){if(window.lifetimeEarningsThisRugpull===0&&lifetimeEarnings>0){window.lifetimeEarningsThisRugpull=lifetimeEarnings}}
+if(typeof updateAscensionUI==='function'){updateAscensionUI()}}
+if(state.hackingData){hackingGamesPlayed=state.hackingData.gamesPlayed||0;hackingGamesWon=state.hackingData.gamesWon||0;hackingGamesWonByDifficulty=state.hackingData.gamesWonByDifficulty||{EASY:0,MEDIUM:0,HARD:0};hackingConsecutiveWins=state.hackingData.consecutiveWins||0;hackingTotalRewardsEarned=state.hackingData.totalRewardsEarned||0;hackingNextNotificationTime=state.hackingData.nextNotificationTime||0;if(state.hackingData.cooldowns){hackingCooldowns=state.hackingData.cooldowns}
+const savedBoostEnd=state.hackingData.speedBoostEndTime||0;if(savedBoostEnd>Date.now()){speedBoostActive=!0;speedBoostEndTime=savedBoostEnd;speedBoostMultiplier=state.hackingData.speedBoostMultiplier||1.0}else{speedBoostActive=!1;speedBoostMultiplier=1.0}}
+if(state.whackData){whackGameGamesPlayed=state.whackData.gamesPlayed||0;whackGameGamesWon=state.whackData.gamesWon||0;whackGameTotalRewardsEarned=state.whackData.totalRewardsEarned||0;if(state.whackData.cooldowns){whackCooldowns=state.whackData.cooldowns}}
+if(state.networkData){networkGameGamesPlayed=state.networkData.gamesPlayed||0;networkGameGamesWon=state.networkData.gamesWon||0;networkGameTotalRewardsEarned=state.networkData.totalRewardsEarned||0}
+if(state.packetData){packetGameGamesPlayed=state.packetData.gamesPlayed||0;packetGameGamesWon=state.packetData.gamesWon||0;packetGameTotalRewardsEarned=state.packetData.totalRewardsEarned||0;if(state.packetData.cooldowns){packetCooldowns=state.packetData.cooldowns}}
+calculateTotalPowerUsed();restorePermanentMilestoneDoublings();const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;btcPerSec=btcUpgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);ethPerSec=ethUpgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);dogePerSec=dogeUpgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);window.btcPerSec=btcPerSec;window.ethPerSec=ethPerSec;window.dogePerSec=dogePerSec;autoClickerCooldownEnd=state.autoClickerCooldownEnd||0;const lastSaveTime=state.lastSaveTime||Date.now();const currentTime=Date.now();let offlineSeconds=(currentTime-lastSaveTime)/1000;const maxOfflineSeconds=14400;if(offlineSeconds>maxOfflineSeconds)offlineSeconds=maxOfflineSeconds;const BASE_OFFLINE_CAP=14400;const MAX_OFFLINE_SECONDS=(typeof getOfflineCap==='function')?getOfflineCap():BASE_OFFLINE_CAP;const cappedOfflineSeconds=Math.min(offlineSeconds,MAX_OFFLINE_SECONDS);const wasTimeCaped=offlineSeconds>MAX_OFFLINE_SECONDS;const offlineBoostMultiplier=(typeof getOfflineBoost==='function')?(1+getOfflineBoost()):1;const tokenGenerationRate=(typeof getTokenGenerationRate==='function')?getTokenGenerationRate():0;const offlineCorruptTokens=tokenGenerationRate*cappedOfflineSeconds;const offlineBtcEarnings=btcPerSec*cappedOfflineSeconds*offlineBoostMultiplier;const offlineEthEarnings=ethPerSec*cappedOfflineSeconds*offlineBoostMultiplier;const offlineDogeEarnings=dogePerSec*cappedOfflineSeconds*offlineBoostMultiplier;let APR_RATE=0.0001;if(typeof getSkillBonus==='function'){const stakingAPRBonus=getSkillBonus('staking_apy')||0;APR_RATE=APR_RATE*(1+stakingAPRBonus/100)}
+const stakingIntervals=cappedOfflineSeconds/2;let offlineStakingCash=0;const earningsBoostBonus=(typeof getSkillBonus==='function')?getSkillBonus('earnings_boost'):0;const stakingMultiplier=1+earningsBoostBonus;if(state.staking){const stakedBTC=state.staking.stakedBTC||0;const stakedETH=state.staking.stakedETH||0;const stakedDOGE=state.staking.stakedDOGE||0;if(stakedBTC>0){const btcStakingEarnings=stakedBTC*APR_RATE*stakingIntervals;offlineStakingCash+=btcStakingEarnings*btcPrice*stakingMultiplier}
+if(stakedETH>0){const ethStakingEarnings=stakedETH*APR_RATE*stakingIntervals;offlineStakingCash+=ethStakingEarnings*ethPrice*stakingMultiplier}
+if(stakedDOGE>0){const dogeStakingEarnings=stakedDOGE*APR_RATE*stakingIntervals;offlineStakingCash+=dogeStakingEarnings*dogePrice*stakingMultiplier}
+if(offlineStakingCash>0){addEarnings(offlineStakingCash);lifetimeEarnings+=offlineStakingCash;sessionEarnings+=offlineStakingCash}}
+if(offlineCorruptTokens>0){if(typeof rugpullCurrency!=='undefined'){rugpullCurrency+=offlineCorruptTokens}}
+if(offlineBtcEarnings>0){btcBalance+=offlineBtcEarnings;btcLifetime+=offlineBtcEarnings;const btcUsdValue=offlineBtcEarnings*btcPrice;lifetimeEarnings+=btcUsdValue;sessionEarnings+=btcUsdValue;if(typeof window.rugpullAddEarnings==='function'){window.rugpullAddEarnings(btcUsdValue)}}
+if(offlineEthEarnings>0){ethBalance+=offlineEthEarnings;ethLifetime+=offlineEthEarnings;const ethUsdValue=offlineEthEarnings*ethPrice;lifetimeEarnings+=ethUsdValue;sessionEarnings+=ethUsdValue;if(typeof window.rugpullAddEarnings==='function'){window.rugpullAddEarnings(ethUsdValue)}}
+if(offlineDogeEarnings>0){dogeBalance+=offlineDogeEarnings;dogeLifetime+=offlineDogeEarnings;const dogeUsdValue=offlineDogeEarnings*dogePrice;lifetimeEarnings+=dogeUsdValue;sessionEarnings+=dogeUsdValue;if(typeof window.rugpullAddEarnings==='function'){window.rugpullAddEarnings(dogeUsdValue)}}
+if(offlineSeconds>=5){window.offlineEarningsToShow={btc:offlineBtcEarnings,eth:offlineEthEarnings,doge:offlineDogeEarnings,stakingCash:offlineStakingCash,corruptTokens:offlineCorruptTokens,seconds:offlineSeconds,wasCapped:wasTimeCaped,cappedSeconds:cappedOfflineSeconds}}
+updateUI();if(state.chartHistory&&state.chartHistory.length>0){chartHistory=state.chartHistory;chartTimestamps=state.chartTimestamps||[];if(state.btcChartHistory)btcChartHistory=state.btcChartHistory;if(state.ethChartHistory)ethChartHistory=state.ethChartHistory;if(state.dogeChartHistory)dogeChartHistory=state.dogeChartHistory;if(state.cashChartHistory)cashChartHistory=state.cashChartHistory;const targetLoadPoints=null;if(targetLoadPoints!==null&&chartHistory.length>targetLoadPoints){const originalLength=chartHistory.length;const decimationFactor=Math.ceil(chartHistory.length/targetLoadPoints);let newChartHistory=[];let newChartTimestamps=[];let newBtcHistory=[];let newEthHistory=[];let newDogeHistory=[];let newCashHistory=[];for(let i=0;i<chartHistory.length;i+=decimationFactor){newChartHistory.push(chartHistory[i]);newChartTimestamps.push(chartTimestamps[i]);newBtcHistory.push(btcChartHistory[i]);newEthHistory.push(ethChartHistory[i]);newDogeHistory.push(dogeChartHistory[i]);newCashHistory.push(cashChartHistory[i])}
+if(newChartHistory[newChartHistory.length-1]!==chartHistory[chartHistory.length-1]){newChartHistory.push(chartHistory[chartHistory.length-1]);newChartTimestamps.push(chartTimestamps[chartTimestamps.length-1]);newBtcHistory.push(btcChartHistory[btcChartHistory.length-1]);newEthHistory.push(ethChartHistory[ethChartHistory.length-1]);newDogeHistory.push(dogeChartHistory[dogeChartHistory.length-1]);newCashHistory.push(cashChartHistory[cashChartHistory.length-1])}
+chartHistory=newChartHistory;chartTimestamps=newChartTimestamps;btcChartHistory=newBtcHistory;ethChartHistory=newEthHistory;dogeChartHistory=newDogeHistory;cashChartHistory=newCashHistory;let flatlineFiltered=[];let flatlineTimestamps=[];let flatlineBTC=[];let flatlineETH=[];let flatlineDOGE=[];let flatlineCASH=[];for(let i=0;i<chartTimestamps.length;i++){if(i===0||i===chartTimestamps.length-1){flatlineTimestamps.push(chartTimestamps[i]);flatlineFiltered.push(chartHistory[i]);flatlineBTC.push(btcChartHistory[i]);flatlineETH.push(ethChartHistory[i]);flatlineDOGE.push(dogeChartHistory[i]);flatlineCASH.push(cashChartHistory[i])}else{const prevIdx=i-1;const anyChanged=chartHistory[i]!==chartHistory[prevIdx]||btcChartHistory[i]!==btcChartHistory[prevIdx]||ethChartHistory[i]!==ethChartHistory[prevIdx]||dogeChartHistory[i]!==dogeChartHistory[prevIdx]||cashChartHistory[i]!==cashChartHistory[prevIdx];if(anyChanged){flatlineTimestamps.push(chartTimestamps[i]);flatlineFiltered.push(chartHistory[i]);flatlineBTC.push(btcChartHistory[i]);flatlineETH.push(ethChartHistory[i]);flatlineDOGE.push(dogeChartHistory[i]);flatlineCASH.push(cashChartHistory[i])}}}
+chartHistory=flatlineFiltered;chartTimestamps=flatlineTimestamps;btcChartHistory=flatlineBTC;ethChartHistory=flatlineETH;dogeChartHistory=flatlineDOGE;cashChartHistory=flatlineCASH;console.log('Auto-decimated chart data from',originalLength,'to',chartHistory.length,'points on load (factor:',decimationFactor,')')}
+if(chartHistory.length>0&&chartHistory[0]!==0){const firstTimestamp=chartTimestamps.length>0?chartTimestamps[0].time:Date.now()-1000;chartHistory.unshift(0);btcChartHistory.unshift(0);ethChartHistory.unshift(0);dogeChartHistory.unshift(0);cashChartHistory.unshift(0);chartTimestamps.unshift({time:firstTimestamp-1000,value:0,cash:0,btc:0,eth:0,doge:0})}}else{chartHistory=[];chartTimestamps=[];btcChartHistory=[];ethChartHistory=[];dogeChartHistory=[];cashChartHistory=[]}
+if(state.powerChartHistory&&state.powerChartHistory.length>0){powerChartHistory=state.powerChartHistory;powerChartColors=state.powerChartColors||[];hashRateChartTimestamps=[]}else{powerChartHistory=[];powerChartColors=[];hashRateChartTimestamps=[]}}catch(error){console.error('✗ ERROR loading game from localStorage:',error);console.error('Error stack:',error.stack)}}
+function getExportableGameState(){const MAX_CHART_POINTS=600;const trimmedChartHistory=chartHistory.length>MAX_CHART_POINTS?chartHistory.slice(-MAX_CHART_POINTS):chartHistory;const trimmedChartTimestamps=chartTimestamps.length>MAX_CHART_POINTS?chartTimestamps.slice(-MAX_CHART_POINTS):chartTimestamps;const trimmedBtcChartHistory=btcChartHistory.length>MAX_CHART_POINTS?btcChartHistory.slice(-MAX_CHART_POINTS):btcChartHistory;const trimmedEthChartHistory=ethChartHistory.length>MAX_CHART_POINTS?ethChartHistory.slice(-MAX_CHART_POINTS):ethChartHistory;const trimmedDogeChartHistory=dogeChartHistory.length>MAX_CHART_POINTS?dogeChartHistory.slice(-MAX_CHART_POINTS):dogeChartHistory;const trimmedCashChartHistory=cashChartHistory.length>MAX_CHART_POINTS?cashChartHistory.slice(-MAX_CHART_POINTS):cashChartHistory;const trimmedPowerChartHistory=powerChartHistory.length>MAX_CHART_POINTS?powerChartHistory.slice(-MAX_CHART_POINTS):powerChartHistory;const trimmedPowerChartColors=powerChartColors.length>MAX_CHART_POINTS?powerChartColors.slice(-MAX_CHART_POINTS):powerChartColors;const trimmedHashRateChartTimestamps=hashRateChartTimestamps.length>MAX_CHART_POINTS?hashRateChartTimestamps.slice(-MAX_CHART_POINTS):hashRateChartTimestamps;return{version:'1.1.0',exportDate:Date.now(),btcBalance,btcLifetime,btcClickValue,btcPerSec,btcPrice,ethBalance,ethLifetime,ethClickValue,ethPerSec,ethPrice,dogeBalance,dogeLifetime,dogeClickValue,dogePerSec,dogePrice,dollarBalance,hardwareEquity,lastSaveTime:Date.now(),autoClickerCooldownEnd,lifetimeEarnings,sessionEarnings,sessionStartTime,lifetimeEarningsDisplay:typeof window.rugpullState!=='undefined'?window.rugpullState.lifetimeEarningsDisplay:0,chartHistory:trimmedChartHistory,chartTimestamps:trimmedChartTimestamps,btcChartHistory:trimmedBtcChartHistory,ethChartHistory:trimmedEthChartHistory,dogeChartHistory:trimmedDogeChartHistory,cashChartHistory:trimmedCashChartHistory,chartStartTime:chartStartTime,powerChartHistory:trimmedPowerChartHistory,powerChartColors:trimmedPowerChartColors,hashRateChartTimestamps:trimmedHashRateChartTimestamps,totalPowerAvailable,totalPowerUSD,staking:getStakingData(),powerUpgrades:powerUpgrades.map(u=>({id:u.id,level:u.level,currentUsd:u.currentUsd,currentPower:u.currentPower})),btcUpgrades:btcUpgrades.map(u=>({id:u.id,level:u.level,currentUsd:u.currentUsd,currentYield:u.currentYield,milestoneDoublings:u.milestoneDoublings,doubleMultiplier:u.doubleMultiplier})),ethUpgrades:ethUpgrades.map(u=>({id:u.id,level:u.level,currentUsd:u.currentUsd,currentYield:u.currentYield,milestoneDoublings:u.milestoneDoublings,doubleMultiplier:u.doubleMultiplier})),dogeUpgrades:dogeUpgrades.map(u=>({id:u.id,level:u.level,currentUsd:u.currentUsd,currentYield:u.currentYield,milestoneDoublings:u.milestoneDoublings,doubleMultiplier:u.doubleMultiplier})),ascensionData:(typeof getAscensionData==='function')?getAscensionData():{},achievements:(typeof achievementsData!=='undefined')?achievementsData.achievements:{},hackingData:{gamesPlayed:hackingGamesPlayed,gamesWon:hackingGamesWon,consecutiveWins:hackingConsecutiveWins,totalRewardsEarned:hackingTotalRewardsEarned,speedBoostEndTime:speedBoostActive?speedBoostEndTime:0,speedBoostMultiplier:speedBoostActive?speedBoostMultiplier:1.0,nextNotificationTime:hackingNextNotificationTime,cooldowns:hackingCooldowns}}}
+function encodeGameState(gameState){try{const jsonString=JSON.stringify(gameState,(key,value)=>{if(typeof value==='number'&&Math.abs(value)>Number.MAX_SAFE_INTEGER){return value.toString()}
+return value});const base64=btoa(unescape(encodeURIComponent(jsonString)));return base64}catch(error){console.error('Error encoding game state:',error);return null}}
+function decodeGameState(base64String){try{const cleanBase64=base64String.trim().replace(/\s/g,'');const jsonString=decodeURIComponent(escape(atob(cleanBase64)));return JSON.parse(jsonString,(key,value)=>{if(typeof value==='string'&&!isNaN(value)&&value!==''){const num=parseFloat(value);if(num>Number.MAX_SAFE_INTEGER||num<-Number.MAX_SAFE_INTEGER){return num}}
+return value})}catch(error){console.error('Error decoding game state:',error);return null}}
+function openExportImportModal(){const modal=document.getElementById('export-import-modal');if(modal){modal.style.display='flex';const exportStatus=document.getElementById('export-status');const importStatus=document.getElementById('import-status');if(exportStatus)exportStatus.style.display='none';if(importStatus)importStatus.style.display='none';const textarea=document.getElementById('import-save-textarea');if(textarea)textarea.value=''}}
+function closeExportImportModal(){const modal=document.getElementById('export-import-modal');if(modal){modal.style.display='none'}}
+function exportSaveToClipboard(){try{const gameState=getExportableGameState();if(!gameState){showExportStatus('Failed to get game state!',!1);console.error('getExportableGameState returned null or undefined');return}
+const encoded=encodeGameState(gameState);if(!encoded){showExportStatus('Failed to encode save data!',!1);console.error('encodeGameState returned null or undefined');return}
+console.log('Encoded save string, length:',encoded.length);if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(encoded).then(()=>{showExportStatus('Save copied to clipboard!',!0);console.log('Save exported to clipboard via clipboard API, length:',encoded.length,'characters')}).catch(err=>{console.warn('Clipboard API failed, trying fallback:',err);copyToClipboardFallback(encoded)})}else{console.log('Clipboard API not available, using fallback');copyToClipboardFallback(encoded)}}catch(error){console.error('Error in exportSaveToClipboard:',error);showExportStatus('Error exporting save!',!1)}}
+function copyToClipboardFallback(text){try{const textarea=document.createElement('textarea');textarea.value=text;textarea.style.position='fixed';textarea.style.left='-999999px';textarea.style.top='-999999px';document.body.appendChild(textarea);textarea.select();const success=document.execCommand('copy');document.body.removeChild(textarea);if(success){showExportStatus('Save copied to clipboard!',!0);console.log('Save exported to clipboard via fallback, length:',text.length,'characters')}else{showExportStatus('Failed to copy to clipboard!',!1);console.error('execCommand("copy") returned false')}}catch(e){console.error('Fallback clipboard copy failed:',e);showExportStatus('Failed to copy to clipboard!',!1)}}
+function exportSaveToFile(){try{const gameState=getExportableGameState();if(!gameState){showExportStatus('Failed to get game state!',!1);console.error('getExportableGameState returned null or undefined');return}
+const encoded=encodeGameState(gameState);if(!encoded){showExportStatus('Failed to encode save data!',!1);console.error('encodeGameState returned null or undefined');return}
+console.log('Encoded save string, length:',encoded.length);const date=new Date();const timestamp=date.toISOString().slice(0,10).replace(/-/g,'');const filename=`IdleBTCMiner_${timestamp}.txt`;const blob=new Blob([encoded],{type:'text/plain'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);setTimeout(()=>{a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showExportStatus(`Save downloaded as ${filename}`,!0);console.log('Save exported to file:',filename)},100)}catch(error){console.error('Error in exportSaveToFile:',error);showExportStatus('Error exporting save!',!1)}}
+function importSaveFromText(){try{console.log('=== IMPORT SAVE STARTED ===');const textarea=document.getElementById('import-save-textarea');if(!textarea||!textarea.value.trim()){showImportStatus('Please paste a save string first!',!1);return}
+console.log('Textarea value length:',textarea.value.trim().length);const importedState=decodeGameState(textarea.value);if(!importedState){showImportStatus('Invalid save data! Could not decode.',!1);return}
+console.log('Decoded state successfully');console.log('BTC Balance in import:',importedState.btcBalance);console.log('Dollar Balance in import:',importedState.dollarBalance);if(!validateImportedState(importedState)){showImportStatus('Invalid save data! Missing required fields.',!1);return}
+console.log('Validation passed');if(!confirm('This will overwrite your current save. Are you sure you want to continue?')){console.log('User cancelled import');return}
+console.log('User confirmed, blocking auto-save and applying import...');importInProgress=!0;applyImportedState(importedState);console.log('Import applied to localStorage');showImportStatus('Save imported! Reloading...',!0);closeExportImportModal();console.log('Forcing page reload NOW');window.location.href=window.location.href.split('?')[0]+'?imported='+Date.now()}catch(error){console.error('IMPORT ERROR:',error);importInProgress=!1;showImportStatus('Import failed: '+error.message,!1)}}
+function importSaveFromFile(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){const content=e.target.result;const textarea=document.getElementById('import-save-textarea');if(textarea){textarea.value=content}
+const importedState=decodeGameState(content);if(!importedState){showImportStatus('Invalid save file! Could not decode.',!1);return}
+if(!validateImportedState(importedState)){showImportStatus('Invalid save file! Missing required fields.',!1);return}
+if(!confirm('This will overwrite your current save. Are you sure you want to continue?')){event.target.value='';return}
+importInProgress=!0;applyImportedState(importedState);showImportStatus('Save imported! Reloading...',!0);closeExportImportModal();window.location.href=window.location.href.split('?')[0]+'?imported='+Date.now()};reader.onerror=function(){showImportStatus('Failed to read file!',!1)};reader.readAsText(file)}
+function validateImportedState(state){const requiredFields=['btcBalance','dollarBalance','btcUpgrades'];for(const field of requiredFields){if(state[field]===undefined){console.error('Missing required field:',field);return!1}}
+if(!Array.isArray(state.btcUpgrades)){console.error('btcUpgrades is not an array');return!1}
+return!0}
+function applyImportedState(state){try{const saveData={...state,lastSaveTime:Date.now()};const saveString=JSON.stringify(saveData);console.log('=== IMPORT DEBUG ===');console.log('Importing BTC balance:',state.btcBalance);console.log('Importing ETH balance:',state.ethBalance);console.log('Importing DOGE balance:',state.dogeBalance);console.log('Importing dollar balance:',state.dollarBalance);console.log('Importing hardware equity:',state.hardwareEquity);console.log('Importing lifetime earnings:',state.lifetimeEarnings);console.log('Save string length:',saveString.length);localStorage.setItem('satoshiTerminalSave',saveString);const verifyData=localStorage.getItem('satoshiTerminalSave');if(verifyData&&verifyData.length===saveString.length){console.log('IMPORT SUCCESS - Data verified in localStorage')}else{console.error('IMPORT WARNING - Data verification failed')}}catch(error){console.error('Error applying imported state:',error);throw error}}
+function showExportStatus(message,success){const status=document.getElementById('export-status');if(status){status.textContent=message;status.style.color=success?'#00ff88':'#ff3344';status.style.display='block';setTimeout(()=>{status.style.display='none'},3000)}}
+function showImportStatus(message,success){const status=document.getElementById('import-status');if(status){status.textContent=message;status.style.color=success?'#00ff88':'#ff3344';status.style.display='block'}}
+function calculateTotalPowerUsed(){let rawPowerUsed=0;upgrades.forEach(u=>{if(u.level>0&&equipmentPowerReqs[u.id]!==undefined){rawPowerUsed+=equipmentPowerReqs[u.id]*u.level}});ethUpgrades.forEach(u=>{if(u.level>0&&equipmentPowerReqs[u.id]!==undefined){rawPowerUsed+=equipmentPowerReqs[u.id]*u.level}});dogeUpgrades.forEach(u=>{if(u.level>0&&equipmentPowerReqs[u.id]!==undefined){rawPowerUsed+=equipmentPowerReqs[u.id]*u.level}});let powerEfficiency=0;if(typeof getSkillBonus==='function'){powerEfficiency=getSkillBonus('miner_efficiency')||0}
+totalPowerUsed=rawPowerUsed*(1-powerEfficiency)}
+function getTotalPowerAvailableWithBonus(){try{const powerBoost=typeof getPowerBoost==='function'?getPowerBoost():0;return totalPowerAvailable*(1+powerBoost)}catch(e){return totalPowerAvailable}}
+function getEffectivePowerRequirement(powerReq){if(!powerReq||powerReq<=0)return powerReq;try{if(typeof getSkillBonus==='function'){const minerEfficiency=getSkillBonus('miner_efficiency')||0;const powerEfficiency=getSkillBonus('power_efficiency')||0;const totalReduction=Math.min(minerEfficiency+powerEfficiency,0.99);return Math.max(0,powerReq*(1-totalReduction))}
+return powerReq}catch(e){return powerReq}}
+function getEffectiveCryptoPrice(basePrice){const cryptoPriceBonus=(typeof getSkillBonus==='function')?getSkillBonus('crypto_price'):0;return basePrice*(1+cryptoPriceBonus)}
+function getCashMultiplier(){const cashBonus=(typeof getSkillBonus==='function')?getSkillBonus('cash_multiplier'):0;const cryptoDoubler=(typeof getSkillBonus==='function')?getSkillBonus('crypto_doubler'):0;return 1+cashBonus+cryptoDoubler}
+function addEarnings(amount){dollarBalance+=amount;earningsThisRun+=amount;if(typeof window.rugpullAddEarnings==='function'){window.rugpullAddEarnings(amount)}}
+function tryAutoSellCrypto(cryptoType,amount){const metaUpgradesData=typeof window.metaUpgrades!=='undefined'?window.metaUpgrades:null;const toggleState=typeof window.upgradeToggleState!=='undefined'?window.upgradeToggleState:null;if(!metaUpgradesData||!toggleState){return!1}
+const hasUpgrade=metaUpgradesData.auto_sell&&metaUpgradesData.auto_sell.purchased;const isEnabled=toggleState.auto_sell===!0;const autoSellEnabled=hasUpgrade&&isEnabled;if(!autoSellEnabled){return!1}
+const cashMultiplier=getCashMultiplier();if(cryptoType==='btc'){const effectivePrice=getEffectiveCryptoPrice(btcPrice);const cashValue=amount*effectivePrice*0.75*cashMultiplier;addEarnings(cashValue);return!0}else if(cryptoType==='eth'){const effectivePrice=getEffectiveCryptoPrice(ethPrice);const cashValue=amount*effectivePrice*0.75*cashMultiplier;addEarnings(cashValue);return!0}else if(cryptoType==='doge'){const effectivePrice=getEffectiveCryptoPrice(dogePrice);const cashValue=amount*effectivePrice*0.75*cashMultiplier;addEarnings(cashValue);return!0}
+return!1}
+function dismissInstructions(){const instructionsEl=document.getElementById('game-instructions');if(instructionsEl){instructionsEl.style.display='none';localStorage.setItem('instructionsDismissed','true')}}
+function resetEarningsStats(){const modal=document.getElementById('reset-earnings-modal');if(modal){modal.style.display='flex'}}
+window.confirmResetEarnings=function(){lifetimeEarnings=0;sessionEarnings=0;earningsThisRun=0;if(typeof window.rugpullState!=='undefined'){window.rugpullState.lifetimeEarningsDisplay=0}
+if(typeof window.resetRugpullTracker==='function'){window.resetRugpullTracker()}
+sessionStartTime=Date.now();saveGame();updateUI();showResetEarningsSuccessModal()};window.closeResetEarningsModal=function(){const modal=document.getElementById('reset-earnings-modal');if(modal){modal.style.display='none'}};window.showResetEarningsSuccessModal=function(){const modal=document.getElementById('reset-earnings-success-modal');if(modal){modal.style.display='flex'}};window.closeResetEarningsSuccessModal=function(){const modal=document.getElementById('reset-earnings-success-modal');if(modal){modal.style.display='none'}};window.resetRugpullMilestoneFlag=function(){rugpullMilestoneAnnounced=!1;console.log('🔄 Rugpull milestone announcement flag reset - ready to declare next goal')};function resetGame(){const modal=document.getElementById('reset-save-modal');if(modal){modal.style.display='flex'}}
+window.confirmResetGame=function(){localStorage.removeItem('satoshiTerminalSave');localStorage.removeItem('instructionsDismissed');localStorage.removeItem('achievements');btcBalance=0;btcLifetime=0;btcPerSec=0;btcClickValue=0.00000250;ethBalance=0;ethLifetime=0;ethPerSec=0;ethClickValue=0.00007143;dogeBalance=0;dogeLifetime=0;dogePerSec=0;dogeClickValue=1.00000000;dollarBalance=0;hardwareEquity=0;autoClickerCooldownEnd=0;sessionStartTime=Date.now();sessionStartBTC=0;sessionStartETH=0;sessionStartDOGE=0;sessionStartBalance=0;sessionStartNetWorth=0;sessionEarnings=0;lifetimeEarnings=0;earningsThisRun=0;chartHistory=[];chartTimestamps=[];btcChartHistory=[];ethChartHistory=[];dogeChartHistory=[];cashChartHistory=[];hashRateChartHistory=[];ethHashRateChartHistory=[];dogeHashRateChartHistory=[];hashRateChartTimestamps=[];powerChartHistory=[];currentPowerValues=[];powerChartColors=[];chartMarkers=[];chartStartTime=Date.now();lastChartUpdateTime=Date.now();lastChartDataLength=0;totalPowerAvailable=0;totalPowerUsed=0;powerUpgrades.forEach(u=>{u.level=0;u.currentUsd=u.baseUsd;u.currentPower=0});try{const newMilestoneDoublings={};MILESTONE_LEVELS.forEach(level=>{newMilestoneDoublings[level]=!1});btcUpgrades.forEach(u=>{u.level=0;u.currentUsd=u.baseUsd;u.currentYield=0;u.milestoneDoublings={...newMilestoneDoublings};u.doubleMultiplier=1;console.log(`Reset ${u.name}: doubleMultiplier = ${u.doubleMultiplier}`)});ethUpgrades.forEach(u=>{u.level=0;u.currentUsd=u.baseUsd;u.currentYield=0;u.milestoneDoublings={...newMilestoneDoublings};u.doubleMultiplier=1});dogeUpgrades.forEach(u=>{u.level=0;u.currentUsd=u.baseUsd;u.currentYield=0;u.milestoneDoublings={...newMilestoneDoublings};u.doubleMultiplier=1});console.log('✓ Upgrades reset successfully');console.log('BTC USB Miner doubleMultiplier after reset:',btcUpgrades[1].doubleMultiplier)}catch(e){console.error('Error resetting upgrades:',e)}
+stakedBTC=0;stakedETH=0;stakedDOGE=0;btcMultiplierLevel=0;ethMultiplierLevel=0;dogeMultiplierLevel=0;btcManualHashRateLevel=0;ethManualHashRateLevel=0;dogeManualHashRateLevel=0;if(typeof resetSkillTree==='function'){resetSkillTree()}
+if(typeof resetAscensionData==='function'){console.log('Calling resetAscensionData()...');resetAscensionData();console.log('After reset - rugpullCurrency:',typeof rugpullCurrency!=='undefined'?rugpullCurrency:'undefined')}
+if(typeof window.rugpullState!=='undefined'){window.rugpullState.lifetimeEarningsDisplay=0}
+if(typeof window.lifetimeEarningsThisRugpull!=='undefined'){window.lifetimeEarningsThisRugpull=0}
+hackingGameActive=!1;hackingGameDifficulty='EASY';hackingVulnerabilitiesToFind=[];hackingVulnerabilitiesFound=[];hackingGameStartTime=0;hackingGameTimeLimit=30000;hackingLivesRemaining=0;hackingMaxLives=0;speedBoostActive=!1;speedBoostEndTime=0;speedBoostMultiplier=1.0;hackingGamesPlayed=0;hackingGamesWon=0;hackingConsecutiveWins=0;hackingNextNotificationTime=0;hackingTotalRewardsEarned=0;hackingCooldowns={'EASY':0,'MEDIUM':0,'HARD':0};whackGameGamesPlayed=0;whackGameGamesWon=0;whackGameTotalRewardsEarned=0;whackCooldowns={'EASY':0,'MEDIUM':0,'HARD':0};networkGameGamesPlayed=0;networkGameGamesWon=0;networkGameTotalRewardsEarned=0;packetGameGamesPlayed=0;packetGameGamesWon=0;packetGameTotalRewardsEarned=0;packetCooldowns={'EASY':0,'MEDIUM':0,'HARD':0};if(typeof achievementsData!=='undefined'){achievementsData.achievements={};if(typeof initAchievements==='function'){initAchievements()}
+notificationsShownThisSession.clear();console.log('✓ Achievements reset on save reset')}
+console.log('Calling saveGame() after reset...');saveGame();initBtcShop();initEthShop();initDogeShop();initPowerShop();lastUIUpdateTime=0;updateUI();updateStakingUI();if('caches' in window){caches.keys().then(function(names){for(let name of names){caches.delete(name)}})}
+closeResetSaveModal();showResetSaveSuccessModal()};window.closeResetSaveModal=function(){const modal=document.getElementById('reset-save-modal');if(modal){modal.style.display='none'}};window.showResetSaveSuccessModal=function(){const modal=document.getElementById('reset-save-success-modal');if(modal){modal.style.display='flex'}};window.reloadPageForReset=function(){window.location.reload(!0)};window.resetGame=resetGame;function showOfflineEarningsModal(btcEarned,ethEarned,dogeEarned,stakingCash,corruptTokens,secondsOffline,wasCapped,cappedSeconds){console.log('showOfflineEarningsModal called with:',btcEarned,ethEarned,dogeEarned,stakingCash,corruptTokens,secondsOffline,wasCapped,cappedSeconds);const overlay=document.createElement('div');overlay.className='offline-modal-overlay';const modal=document.createElement('div');modal.className='offline-modal';const currentOfflineCap=(typeof getOfflineCap==='function')?getOfflineCap():14400;const currentOfflineCapHours=currentOfflineCap/3600;const hours=Math.floor(secondsOffline/3600);const minutes=Math.floor((secondsOffline%3600)/60);const seconds=Math.floor(secondsOffline%60);let timeStr='';if(hours>0)timeStr+=hours+'h ';if(minutes>0)timeStr+=minutes+'m ';if(seconds>0)timeStr+=seconds+'s';if(!timeStr)timeStr='< 1s';let earningsHtml='';if(btcEarned>0){earningsHtml+=`<div class="earnings" style="color: #f7931a;">₿ ${btcEarned.toFixed(8)}</div>`}
+if(ethEarned>0){earningsHtml+=`<div class="earnings" style="color: #627eea;">Ξ ${ethEarned.toFixed(8)}</div>`}
+if(dogeEarned>0){earningsHtml+=`<div class="earnings" style="color: #c2a633;">Ð ${dogeEarned.toFixed(2)}</div>`}
+if(stakingCash>0){let cashDisplay;if(stakingCash>=1e9){cashDisplay='$'+(stakingCash/1e9).toFixed(2)+'b'}else if(stakingCash>=1e6){cashDisplay='$'+(stakingCash/1e6).toFixed(2)+'m'}else if(stakingCash>=1e3){cashDisplay='$'+(stakingCash/1e3).toFixed(2)+'k'}else{cashDisplay='$'+stakingCash.toFixed(2)}
+earningsHtml+=`<div class="earnings" style="color: #4caf50;">💰 ${cashDisplay}</div>`}
+if(corruptTokens>0){earningsHtml+=`<div class="earnings" style="color: #ffeb3b; font-size: 1.2rem;">🔴 ${corruptTokens.toFixed(3)} Corrupt Tokens</div>`}
+if(!earningsHtml){earningsHtml=`<div class="earnings" style="color: #888; font-size: 1.2rem;">$0.00</div>
+                           <div style="color: #666; font-size: 0.9rem; margin-top: 10px;">Purchase miners to earn while offline!</div>`}
+let capNotice='';if(wasCapped){capNotice=`<div style="color: #ff9800; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.1); border-radius: 4px; border: 1px solid rgba(255,152,0,0.3);">⚠️ Offline earnings capped at ${currentOfflineCapHours} hours</div>`}else{capNotice=`<div style="color: #4caf50; font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(76,175,80,0.1); border-radius: 4px; border: 1px solid rgba(76,175,80,0.3);">ℹ️ Current Offline Earnings Capped at ${currentOfflineCapHours} Hours</div>`}
+modal.innerHTML=`
             <h2>⏰ Welcome Back!</h2>
-            <div class="earnings-label">Mined While Away</div>
+            <div class="earnings-label">Offline Earnings${wasCapped ? `(${currentOfflineCapHours}hour max)` : ''}</div>
             ${earningsHtml}
-            <div class="time-offline">During ${timeStr} offline</div>
+            <div class="time-offline">While you were away for ${timeStr}</div>
             ${capNotice}
-        `;
-
-        document.body.appendChild(overlay);
-        document.body.appendChild(modal);
-
-        // Helper function to dismiss modal and save
-        const dismissModal = () => {
-            console.log('✅ OFFLINE EARNINGS MODAL DISMISSED');
-            overlay.remove();
-            modal.remove();
-
-            // CRITICAL: Clear pending offline earnings from localStorage now that modal is shown
-            try {
-                window.safeStorage.removeItem('pendingOfflineEarnings');
-                console.log('🗑️ Cleared pending offline earnings from localStorage');
-            } catch (e) {
-                console.warn('⚠️ Failed to clear pending offline earnings:', e);
-            }
-
-            // Update UI immediately
-            if (typeof updateUI === 'function') {
-                updateUI();
-            }
-
-            // Save to localStorage
-            if (typeof saveGame === 'function') {
-                saveGame();
-            }
-
-            // Auto-save to cloud
-            if (typeof window.saveGameToCloud === 'function') {
-                console.log('💾 Auto-saving to cloud after modal dismissed...');
-                window.saveGameToCloud(false).catch(err => {
-                    console.warn('⚠️ Cloud auto-save failed:', err);
-                });
-            }
-        };
-
-        // Auto-dismiss modal after 3.5 seconds
-        setTimeout(() => {
-            if (modal && modal.parentNode) {
-                console.log('⏱️ Auto-closing offline earnings modal (2.5 second timeout)');
-                dismissModal();
-            }
-        }, 2500);
-
-        console.log('Modal created and appended (auto-dismiss in 3.5 seconds)');
-
-        // CRITICAL: Clear the cached offline earnings data after showing
-        // This prevents showing stale data on the next refresh
-        window.offlineEarningsToShow = null;
-        console.log('🗑️ Cleared window.offlineEarningsToShow to prevent stale data');
-    }
-
-    // Expose function to window so firebase-save.js can call it
-    window.showOfflineEarningsModal = showOfflineEarningsModal;
-
-    // Sound mute toggle
-    let isMuted = false;
-    function toggleMute() {
-        isMuted = !isMuted;
-        const btn = document.getElementById('mute-btn');
-        if (btn) {
-            btn.innerText = isMuted ? 'SOUND OFF' : 'SOUND ON';
-        }
-    }
-
-    // Auto-clicker state
-    let autoClickerActive = false;
-    let autoClickerCooldownEnd = 0;
-    const AUTO_CLICKER_DURATION = 30000; // 30 seconds
-    const AUTO_CLICKER_COOLDOWN = 300000; // 5 minutes
-
-    function startAutoClicker() {
-        if (autoClickerCooldownEnd > Date.now()) {
-            return; // Still on cooldown
-        }
-
-        autoClickerActive = true;
-        autoClickerCooldownEnd = Date.now() + AUTO_CLICKER_COOLDOWN;
-        let clicksRemaining = AUTO_CLICKER_DURATION / 200; // 5 clicks/sec = 1 click every 200ms
-
-        const clickInterval = setInterval(() => {
-            if (clicksRemaining > 0) {
-                // Click all three crypto types
-                manualHash();      // BTC
-                manualEthHash();   // ETH
-                manualDogeHash();  // DOGE
-                clicksRemaining--;
-            } else {
-                clearInterval(clickInterval);
-                autoClickerActive = false;
-                updateAutoClickerButtonState();
-            }
-        }, 200);
-
-        updateAutoClickerButtonState();
-    }
-
-    function updateAutoClickerButtonState() {
-        const btn = document.getElementById('autoclicker-btn');
-        if (!btn) return;
-
-        const now = Date.now();
-        if (autoClickerCooldownEnd > now) {
-            const cooldownMs = autoClickerCooldownEnd - now;
-            const seconds = Math.ceil(cooldownMs / 1000);
-            btn.disabled = true;
-            btn.innerText = `AUTO CLICKER • COOLDOWN: ${seconds}s`;
-        } else {
-            btn.disabled = false;
-            btn.innerText = 'AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown';
-        }
-    }
-
-    function initBtcShop() {
-        console.log('initBtcShop called');
-        const container = document.getElementById('btc-shop');
-        if (!container) {
-            console.error('ERROR: btc-shop container not found!');
-            return;
-        }
-        console.log('btc-shop container found, btcUpgrades length:', btcUpgrades.length);
-        container.innerHTML = '';
-
-        btcUpgrades.forEach((u, i) => {
-            const btn = document.createElement('button');
-            btn.className = 'u-item';
-            btn.id = `up-${u.id}`;
-        // All upgrades use the same purchase function
-        btn.onclick = () => buyLevelMultiple(i, buyQuantity);
-
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        const effectivePower = getEffectivePowerRequirement(powerReq);
-        const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:var(--btc);font-weight:700;display:block;margin-top:3px" id="power-${u.id}">${effectivePower.toLocaleString()}W Consumed per level</span>` : '';
-
-        btn.innerHTML = `
+            <button id="claim-btn">Claim Rewards</button>
+        `;document.body.appendChild(overlay);document.body.appendChild(modal);document.getElementById('claim-btn').onclick=()=>{overlay.remove();modal.remove()};console.log('Modal created and appended')}
+let isMuted=!1;function toggleMute(){isMuted=!isMuted;const btn=document.getElementById('mute-btn');if(btn){btn.innerText=isMuted?'SOUND OFF':'SOUND ON'}}
+let vfxEnabled=!0;function toggleVFX(){vfxEnabled=!vfxEnabled;const btn=document.getElementById('vfx-btn');if(btn){btn.innerText=vfxEnabled?'VFX ON':'VFX OFF'}}
+function toggleFullscreen(){const elem=document.documentElement;if(!document.fullscreenElement&&!document.webkitFullscreenElement){if(elem.requestFullscreen){elem.requestFullscreen()}else if(elem.webkitRequestFullscreen){elem.webkitRequestFullscreen()}else if(elem.mozRequestFullScreen){elem.mozRequestFullScreen()}else if(elem.msRequestFullscreen){elem.msRequestFullscreen()}}else{if(document.exitFullscreen){document.exitFullscreen()}else if(document.webkitExitFullscreen){document.webkitExitFullscreen()}else if(document.mozCancelFullScreen){document.mozCancelFullScreen()}else if(document.msExitFullscreen){document.msExitFullscreen()}}}
+let autoClickerActive=!1;let autoClickerCooldownEnd=0;const AUTO_CLICKER_DURATION=30000;const AUTO_CLICKER_COOLDOWN=300000;function startAutoClicker(){if(autoClickerCooldownEnd>Date.now()){return}
+autoClickerActive=!0;autoClickerCooldownEnd=Date.now()+AUTO_CLICKER_COOLDOWN;let clicksRemaining=AUTO_CLICKER_DURATION/200;const clickInterval=setInterval(()=>{if(clicksRemaining>0){manualHash();manualEthHash();manualDogeHash();clicksRemaining--}else{clearInterval(clickInterval);autoClickerActive=!1;updateAutoClickerButtonState()}},200);updateAutoClickerButtonState()}
+function updateAutoClickerButtonState(){const btn=document.getElementById('autoclicker-btn');if(!btn)return;const now=Date.now();if(autoClickerCooldownEnd>now){const cooldownMs=autoClickerCooldownEnd-now;const seconds=Math.ceil(cooldownMs/1000);btn.disabled=!0;btn.innerText=`AUTO CLICKER • COOLDOWN: ${seconds}s`}else{btn.disabled=!1;btn.innerText='AUTO CLICKER • 5 clicks/sec • 30s • 5m cooldown'}}
+function initBtcShop(){const container=document.getElementById('btc-shop');container.innerHTML='';btcUpgrades.forEach((u,i)=>{if(u.isClickUpgrade){return}
+const btn=document.createElement('button');btn.className='u-item btn-primary btn-primary-btc';btn.id=`up-${u.id}`;btn.onclick=()=>buyLevelMultiple(i,buyQuantity);const powerReq=equipmentPowerReqs[u.id]||0;const effectivePower=getEffectivePowerRequirement(powerReq);const powerDisplay=powerReq>0?`<span style="font-size:0.9rem;color:var(--btc);font-weight:700;display:block;margin-top:3px" id="power-${u.id}">${formatPower(effectivePower)} Consumed per level</span>`:'';btn.innerHTML=`
             <div style="text-align:left;flex:1">
-                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                <div style="font-size:0.9rem;color:#f7931a;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="mult-${u.id}" style="color:#ff4400;margin-right:4px"></span>${u.name} <span style="color:#888;font-size:0.85rem">${formatLevelTag(u.level)}</span></div>
                 <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="yield-${u.id}">+0 ₿/s - Current Speed</div>
                 <div style="font-size:0.9rem;color:#f7931a;font-weight:700;display:block;margin-top:3px" id="increase-${u.id}">+0 ₿/s per level</div>
                 ${powerDisplay}
             </div>
             <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
-                <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                 <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="afford-${u.id}">x0</span>
-            </div>`;
-        container.appendChild(btn);
-
-        // Add boost button only for non-manual upgrades
-        if (!u.isClickUpgrade) {
-            const boostBtn = document.createElement('button');
-            boostBtn.id = `boost-${u.id}`;
-            boostBtn.style.background = '#ff9500';
-            boostBtn.style.border = 'none';
-            boostBtn.style.borderRadius = '6px';
-            boostBtn.style.padding = '6px 10px';
-            boostBtn.style.fontSize = '0.7rem';
-            boostBtn.style.fontWeight = '700';
-            boostBtn.style.color = '#000';
-            boostBtn.style.cursor = 'pointer';
-            boostBtn.style.marginTop = '2px';
-            boostBtn.style.width = '100%';
-            boostBtn.style.transition = '0.1s';
-            boostBtn.onclick = () => buyBoost(i);
-            boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$0</span>`;
-            boostBtn.disabled = u.level === 0;
-            boostBtn.setAttribute('data-upgrade-name', u.name);
-            container.appendChild(boostBtn);
-        }
-        });
-    }
-
-    function initPowerShop() {
-        const container = document.getElementById('power-shop');
-        container.innerHTML = '';
-
-        powerUpgrades.forEach((u, i) => {
-            const btn = document.createElement('button');
-            btn.className = 'u-item';
-            btn.id = `pow-${u.id}`;
-            btn.onclick = () => buyPowerUpgrade(i);
-
-            const costBtc = u.currentUsd / btcPrice;
-            btn.innerHTML = `
+            </div>`;if(!u.isClickUpgrade&&u.doubleMultiplier>1){btn.setAttribute('data-has-multiplier','true');btn.setAttribute('data-multiplier',u.doubleMultiplier)}
+container.appendChild(btn);let pressTimeout=null;btn.addEventListener('touchstart',(e)=>{if(pressTimeout)clearTimeout(pressTimeout);btn.classList.add('button-pressed');pressTimeout=setTimeout(()=>{btn.classList.remove('button-pressed');pressTimeout=null},200)});btn.addEventListener('touchend',()=>{btn.blur();setTimeout(()=>{if(document.activeElement===btn){btn.blur()}},0)});btn.addEventListener('click',()=>{btn.blur();setTimeout(()=>{if(document.activeElement===btn){btn.blur()}},0)})})}
+function initPowerShop(){const container=document.getElementById('power-shop');container.innerHTML='';powerUpgrades.forEach((u,i)=>{const btn=document.createElement('button');btn.className='u-item';btn.id=`pow-${u.id}`;btn.onclick=()=>buyPowerUpgrade(i);const costBtc=u.currentUsd/btcPrice;btn.innerHTML=`
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#00ff88;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="pow-lvl-txt-${u.id}">[Lvl ${u.level}]</span> ${u.name}</div>
+                    <div style="font-size:0.9rem;color:#00ff88;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px">${u.name} <span style="color:#888;font-size:0.85rem">${formatLevelTag(u.level)}</span></div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="pow-current-${u.id}">+0W - Current Power</div>
                     <div style="font-size:1.1rem;color:#00ff88;font-family:monospace;font-weight:700;display:block" id="pow-power-${u.id}">+0W Produced per level</div>
                 </div>
                 <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
-                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="pow-usd-${u.id}">$${u.currentUsd.toLocaleString()}</span>
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="pow-usd-${u.id}">$${formatNumberForDisplay(u.currentUsd)}</span>
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="pow-afford-${u.id}">x0</span>
-                </div>`;
-            container.appendChild(btn);
-        });
-    }
-
-    function initEthShop() {
-        const container = document.getElementById('eth-shop');
-        container.innerHTML = '';
-
-        ethUpgrades.forEach((u, i) => {
-            const btn = document.createElement('button');
-            btn.className = 'u-item';
-            btn.id = `eth-up-${u.id}`;
-            if (u.isClickUpgrade) {
-                btn.classList.add('click-upgrade');
-            }
-
-            btn.onclick = () => buyEthLevel(i, buyQuantity);
-
-            const powerReq = equipmentPowerReqs[u.id] || 0;
-            const effectivePower = getEffectivePowerRequirement(powerReq);
-            const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-power-${u.id}">${effectivePower.toLocaleString()}W Consumed per level</span>` : '';
-
-            btn.innerHTML = `
+                </div>`;container.appendChild(btn);let pressTimeout=null;btn.addEventListener('touchstart',(e)=>{if(pressTimeout)clearTimeout(pressTimeout);btn.classList.add('button-pressed');pressTimeout=setTimeout(()=>{btn.classList.remove('button-pressed');pressTimeout=null},200)});btn.addEventListener('touchend',()=>{btn.blur();setTimeout(()=>{if(document.activeElement===btn){btn.blur()}},0)});btn.addEventListener('click',()=>{btn.blur();setTimeout(()=>{if(document.activeElement===btn){btn.blur()}},0)})})}
+function initEthShop(){const container=document.getElementById('eth-shop');container.innerHTML='';ethUpgrades.forEach((u,i)=>{if(u.isClickUpgrade){return}
+const btn=document.createElement('button');btn.className='u-item btn-primary btn-primary-eth';btn.id=`eth-up-${u.id}`;btn.onclick=()=>buyEthLevel(i,buyQuantity);const powerReq=equipmentPowerReqs[u.id]||0;const effectivePower=getEffectivePowerRequirement(powerReq);const powerDisplay=powerReq>0?`<span style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-power-${u.id}">${formatPower(effectivePower)} Consumed per level</span>`:'';btn.innerHTML=`
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                    <div style="font-size:0.9rem;color:#627eea;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="eth-mult-${u.id}" style="color:#627eea;margin-right:4px"></span>${u.name} <span style="color:#888;font-size:0.85rem">${formatLevelTag(u.level)}</span></div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="eth-yield-${u.id}">+0 Ξ/s - Current Speed</div>
                     <div style="font-size:0.9rem;color:#627eea;font-weight:700;display:block;margin-top:3px" id="eth-increase-${u.id}">+0 Ξ/s per level</div>
                     ${powerDisplay}
                 </div>
                 <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
-                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="eth-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="eth-usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="eth-afford-${u.id}">x0</span>
-                </div>`;
-            container.appendChild(btn);
-
-            // Add boost button only for non-manual upgrades
-            if (!u.isClickUpgrade) {
-                const boostBtn = document.createElement('button');
-                boostBtn.id = `eth-boost-${u.id}`;
-                boostBtn.style.background = '#ff9500';
-                boostBtn.style.border = 'none';
-                boostBtn.style.borderRadius = '6px';
-                boostBtn.style.padding = '6px 10px';
-                boostBtn.style.fontSize = '0.7rem';
-                boostBtn.style.fontWeight = '700';
-                boostBtn.style.color = '#000';
-                boostBtn.style.cursor = 'pointer';
-                boostBtn.style.marginTop = '2px';
-                boostBtn.style.width = '100%';
-                boostBtn.style.transition = '0.1s';
-                boostBtn.onclick = () => buyEthBoost(i);
-                boostBtn.innerHTML = `+10% HASH RATE | <span id="eth-boost-cost-${u.id}">$0</span>`;
-                boostBtn.disabled = u.level === 0;
-                boostBtn.setAttribute('data-upgrade-name', u.name);
-                container.appendChild(boostBtn);
-            }
-        });
-    }
-
-    function initDogeShop() {
-        const container = document.getElementById('doge-shop');
-        container.innerHTML = '';
-
-        dogeUpgrades.forEach((u, i) => {
-            const btn = document.createElement('button');
-            btn.className = 'u-item';
-            btn.id = `doge-up-${u.id}`;
-            if (u.isClickUpgrade) {
-                btn.classList.add('click-upgrade');
-            }
-
-            btn.onclick = () => buyDogeLevel(i, buyQuantity);
-
-            const powerReq = equipmentPowerReqs[u.id] || 0;
-            const effectivePower = getEffectivePowerRequirement(powerReq);
-            const powerDisplay = powerReq > 0 ? `<span style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-power-${u.id}">${effectivePower.toLocaleString()}W Consumed per level</span>` : '';
-
-            btn.innerHTML = `
+                </div>`;if(!u.isClickUpgrade&&u.doubleMultiplier>1){btn.setAttribute('data-has-multiplier','true');btn.setAttribute('data-multiplier',u.doubleMultiplier)}
+container.appendChild(btn);let pressTimeout=null;btn.addEventListener('touchstart',(e)=>{if(pressTimeout)clearTimeout(pressTimeout);btn.classList.add('button-pressed');pressTimeout=setTimeout(()=>{btn.classList.remove('button-pressed');pressTimeout=null},200)});btn.addEventListener('touchend',()=>{btn.blur();setTimeout(()=>{if(document.activeElement===btn){btn.blur()}},0)});btn.addEventListener('click',()=>{btn.blur();setTimeout(()=>{if(document.activeElement===btn){btn.blur()}},0)})})}
+function initDogeShop(){const container=document.getElementById('doge-shop');container.innerHTML='';dogeUpgrades.forEach((u,i)=>{if(u.isClickUpgrade){return}
+const btn=document.createElement('button');btn.className='u-item btn-primary btn-primary-doge';btn.id=`doge-up-${u.id}`;btn.onclick=()=>buyDogeLevel(i,buyQuantity);const powerReq=equipmentPowerReqs[u.id]||0;const effectivePower=getEffectivePowerRequirement(powerReq);const powerDisplay=powerReq>0?`<span style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-power-${u.id}">${formatPower(effectivePower)} Consumed per level</span>`:'';btn.innerHTML=`
                 <div style="text-align:left;flex:1">
-                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-lvl-txt-${u.id}">[Lvl 0]</span> ${u.name}</div>
+                    <div style="font-size:0.9rem;color:#c2a633;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px"><span id="doge-mult-${u.id}" style="color:#c2a633;margin-right:4px"></span>${u.name} <span style="color:#888;font-size:0.85rem">${formatLevelTag(u.level)}</span></div>
                     <div style="font-size:1.1rem;color:var(--green);font-family:monospace;font-weight:700;display:block;margin-bottom:3px" id="doge-yield-${u.id}">+0 Ð/s - Current Speed</div>
                     <div style="font-size:0.9rem;color:#c2a633;font-weight:700;display:block;margin-top:3px" id="doge-increase-${u.id}">+0 Ð/s per level</div>
                     ${powerDisplay}
                 </div>
                 <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">
-                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="doge-usd-${u.id}">$${u.baseUsd.toLocaleString()}</span>
+                    <span style="font-size:1.3rem;font-weight:900;display:block;color:#fff" id="doge-usd-${u.id}">$${formatNumberForDisplay(u.baseUsd)}</span>
                     <span style="font-size:0.75rem;color:#00ff88;font-family:monospace;font-weight:900;margin-top:2px" id="doge-afford-${u.id}">x0</span>
-                </div>`;
-            container.appendChild(btn);
-
-            // Add boost button only for non-manual upgrades
-            if (!u.isClickUpgrade) {
-                const boostBtn = document.createElement('button');
-                boostBtn.id = `doge-boost-${u.id}`;
-                boostBtn.style.background = '#ff9500';
-                boostBtn.style.border = 'none';
-                boostBtn.style.borderRadius = '6px';
-                boostBtn.style.padding = '6px 10px';
-                boostBtn.style.fontSize = '0.7rem';
-                boostBtn.style.fontWeight = '700';
-                boostBtn.style.color = '#000';
-                boostBtn.style.cursor = 'pointer';
-                boostBtn.style.marginTop = '2px';
-                boostBtn.style.width = '100%';
-                boostBtn.style.transition = '0.1s';
-                boostBtn.onclick = () => buyDogeBoost(i);
-                boostBtn.innerHTML = `+10% HASH RATE | <span id="doge-boost-cost-${u.id}">$0</span>`;
-                boostBtn.disabled = u.level === 0;
-                boostBtn.setAttribute('data-upgrade-name', u.name);
-                container.appendChild(boostBtn);
-            }
-        });
-    }
-
-    function switchTab(tab, event) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-
-        const tabElement = document.getElementById(tab + '-tab');
-        tabElement.classList.add('active');
-        if (event && event.target) {
-            event.target.classList.add('active');
-        }
-
-        // Reset purchase quantity to 1x when switching tabs
-        setBuyQuantity(1);
-
-        // Scroll to the tab content on mobile
-        if (window.innerWidth <= 768) {
-            setTimeout(() => {
-                tabElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-        }
-    }
-
-    function setBuyQuantity(qty) {
-        buyQuantity = qty;
-        // All buttons are grey
-        const defaultColor = '#888';
-
-        document.querySelectorAll('.qty-toggle').forEach(el => {
-            el.classList.remove('active');
-            // Reset to default grey color
-            el.style.borderColor = defaultColor;
-            el.style.color = defaultColor;
-        });
-
-        // Find and highlight the active button in the current tab
-        document.querySelectorAll('.qty-toggle').forEach(el => {
-            if (el.textContent.trim() === `${qty}x`) {
-                el.classList.add('active');
-                el.style.borderColor = '#666';
-                el.style.color = '#fff';
-                el.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.2)';
-            }
-        });
-    }
-
-    // Market sell functions
-    function sellBTC(amount) {
-        if (btcBalance < amount) {
-            alert('Not enough Bitcoin!');
-            return;
-        }
-        btcBalance -= amount;
-        dollarBalance += amount * btcPrice;
-        updateUI();
-        saveGame();
-        playUpgradeSound();
-    }
-
-    function sellAllBTC() {
-        if (btcBalance <= 0) return;
-        const saleValue = btcBalance * btcPrice * 0.95; // 5% fee
-        dollarBalance += saleValue;
-        btcBalance = 0;
-        updateUI();
-        saveGame();
-        playUpgradeSound();
-    }
-
-    function sellETH(amount) {
-        if (ethBalance < amount) {
-            alert('Not enough Ethereum!');
-            return;
-        }
-        ethBalance -= amount;
-        const saleValue = amount * ethPrice * 0.95; // 5% fee
-        dollarBalance += saleValue;
-        updateUI();
-        saveGame();
-        playUpgradeSound();
-    }
-
-    function sellAllETH() {
-        if (ethBalance <= 0) return;
-        const saleValue = ethBalance * ethPrice * 0.95; // 5% fee
-        dollarBalance += saleValue;
-        ethBalance = 0;
-        updateUI();
-        saveGame();
-        playUpgradeSound();
-    }
-
-    function sellDOGE(amount) {
-        // DOGE uses whole numbers
-        if (dogeBalance < amount) {
-            alert('Not enough Dogecoin!');
-            return;
-        }
-        dogeBalance -= amount;
-        const saleValue = amount * dogePrice * 0.95; // 5% fee
-        dollarBalance += saleValue;
-        updateUI();
-        saveGame();
-        playUpgradeSound();
-    }
-
-    function sellAllDOGE() {
-        if (dogeBalance <= 0) return;
-        dollarBalance += dogeBalance * dogePrice;
-        dogeBalance = 0;
-        updateUI();
-        saveGame();
-        playUpgradeSound();
-    }
-
-    function buyPowerUpgrade(i) {
-        const u = powerUpgrades[i];
-        const costUsd = u.currentUsd;
-
-        if (dollarBalance >= costUsd) {
-            dollarBalance -= costUsd;
-            hardwareEquity += u.currentUsd;
-            u.level++;
-            u.currentPower = u.basePower * u.level;
-            totalPowerAvailable += u.basePower;
-
-            // Update price with 1.1x multiplier
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-
-            updateUI();
-            saveGame();
-            playUpgradeSound();
-        }
-    }
-
-    function updatePowerDisplay() {
-        const powerUsedEl = document.getElementById('power-used');
-        if (powerUsedEl) {
-            const availableWithBonus = getTotalPowerAvailableWithBonus();
-            powerUsedEl.innerText = totalPowerUsed.toLocaleString() + 'W / ' + availableWithBonus.toLocaleString() + 'W';
-
-            // Dynamic color for power text based on usage
-            const percentage = availableWithBonus > 0 ? (totalPowerUsed / availableWithBonus * 100) : 0;
-            if (percentage > 100) {
-                powerUsedEl.style.color = '#ff3344'; // Red - over capacity
-            } else if (percentage > 80) {
-                powerUsedEl.style.color = '#ff9500'; // Orange - critical
-            } else if (percentage > 60) {
-                powerUsedEl.style.color = '#ffdd00'; // Yellow - warning
-            } else {
-                powerUsedEl.style.color = '#00ff88'; // Green - safe
-            }
-        }
-
-        const powerBarFill = document.getElementById('power-bar-fill');
-        if (powerBarFill) {
-            const availableWithBonus = getTotalPowerAvailableWithBonus();
-            const percentage = availableWithBonus > 0 ? (totalPowerUsed / availableWithBonus * 100) : 0;
-            powerBarFill.style.width = Math.min(percentage, 100) + '%';
-
-            // Dynamic color for power bar based on usage
-            if (percentage > 100) {
-                powerBarFill.style.background = '#ff3344'; // Red - over capacity
-            } else if (percentage > 80) {
-                powerBarFill.style.background = '#ff9500'; // Orange - critical
-            } else if (percentage > 60) {
-                powerBarFill.style.background = '#ffdd00'; // Yellow - warning
-            } else {
-                powerBarFill.style.background = '#00ff88'; // Green - safe
-            }
-        }
-
-        // Update power upgrades display
-        powerUpgrades.forEach(u => {
-            const costUsd = u.currentUsd;
-            const lvlEl = document.getElementById(`pow-lvl-txt-${u.id}`);
-            if (lvlEl) lvlEl.innerText = `[Lvl ${u.level}]`;
-
-            const currentPowerEl = document.getElementById(`pow-current-${u.id}`);
-            if (currentPowerEl) currentPowerEl.innerText = `+${u.currentPower.toLocaleString()}W - Current Power`;
-
-            const powerEl = document.getElementById(`pow-power-${u.id}`);
-            if (powerEl) powerEl.innerText = `+${u.basePower.toLocaleString()}W Produced per level`;
-
-            const usdEl = document.getElementById(`pow-usd-${u.id}`);
-            if (usdEl) usdEl.innerText = `$${u.currentUsd.toLocaleString()}`;
-
-            // Calculate how many power upgrades can be afforded (accounting for price increases)
-            const affordEl = document.getElementById(`pow-afford-${u.id}`);
-            if (affordEl) {
-                let remaining = dollarBalance;
-                let canAfford = 0;
-                let nextCost = costUsd;
-                let nextLevel = u.level;
-
-                while (remaining >= nextCost) {
-                    remaining -= nextCost;
-                    canAfford++;
-                    nextLevel++;
-                    // Power upgrades: 1.2x multiplier
-                    nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
-                }
-
-                affordEl.innerText = `x${canAfford}`;
-                affordEl.style.color = canAfford > 0 ? '#00ff88' : '#666';
-            }
-
-            const btn = document.getElementById(`pow-${u.id}`);
-            if (btn) btn.disabled = (dollarBalance < costUsd);
-        });
-    }
-
-function manualHash() {
-    console.log('🔨 MANUAL HASH CLICKED - btcClickValue:', btcClickValue, 'btcBalance before:', btcBalance);
-    // Apply skill tree click bonus
-    const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-    const actualClickValue = btcClickValue * clickBonus;
-
-    // This adds your current click power to your spendable balance
-    btcBalance += actualClickValue;
-
-    // This ensures every manual click also increases your Lifetime Total
-    btcLifetime += actualClickValue;
-
-    // Track lifetime and session earnings in USD
-    const usdValue = btcClickValue * btcPrice;
-    lifetimeEarnings += usdValue;
-    sessionEarnings += usdValue;
-
-    // Track clicks for hashrate
-    const now = Date.now();
-    manualHashClickTime = now;
-    manualHashCooldownEnd = now + 1000;
-    clickTimestamps.push(now);
-    if (clickTimestamps.length > 60) clickTimestamps.shift();
-
-    // Play click sound
-    playClickSound();
-
-    // This refreshes the screen so you see the numbers go up
-    console.log('✅ MANUAL HASH COMPLETE - btcBalance after:', btcBalance, 'lifetimeEarnings:', lifetimeEarnings);
-    updateUI();
-}
-
-function manualEthHash() {
-    console.log('🔨 MANUAL ETH HASH CLICKED - ethClickValue:', ethClickValue, 'ethBalance before:', ethBalance);
-    // Apply skill tree click bonus
-    const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-    const actualClickValue = ethClickValue * clickBonus;
-
-    // Add ETH to balance
-    ethBalance += actualClickValue;
-    ethLifetime += actualClickValue;
-
-    // Track lifetime and session earnings in USD
-    const usdValue = actualClickValue * ethPrice;
-    lifetimeEarnings += usdValue;
-    sessionEarnings += usdValue;
-
-    // Track clicks for hashrate
-    const now = Date.now();
-    manualHashClickTime = now;
-    manualHashCooldownEnd = now + 1000;
-    clickTimestamps.push(now);
-    if (clickTimestamps.length > 60) clickTimestamps.shift();
-
-    // Play click sound
-    playClickSound();
-
-    // Refresh the screen
-    console.log('✅ MANUAL ETH HASH COMPLETE - ethBalance after:', ethBalance);
-    updateUI();
-}
-
-function manualDogeHash() {
-    console.log('🔨 MANUAL DOGE HASH CLICKED - dogeClickValue:', dogeClickValue, 'dogeBalance before:', dogeBalance);
-    // Apply skill tree click bonus
-    const clickBonus = (typeof getClickBonus === 'function') ? getClickBonus() : 1;
-    const actualClickValue = dogeClickValue * clickBonus;
-
-    // Add DOGE to balance
-    dogeBalance += actualClickValue;
-    dogeLifetime += actualClickValue;
-
-    // Track lifetime and session earnings in USD
-    const usdValue = actualClickValue * dogePrice;
-    lifetimeEarnings += usdValue;
-    sessionEarnings += usdValue;
-
-    // Track clicks for hashrate
-    const now = Date.now();
-    manualHashClickTime = now;
-    manualHashCooldownEnd = now + 1000;
-    clickTimestamps.push(now);
-    if (clickTimestamps.length > 60) clickTimestamps.shift();
-
-    // Play click sound
-    playClickSound();
-
-    // Refresh the screen
-    console.log('✅ MANUAL DOGE HASH COMPLETE - dogeBalance after:', dogeBalance);
-    updateUI();
-}
-
-function buyLevel(i) {
-    const u = upgrades[i];
-    const costBtc = u.currentUsd / btcPrice;
-
-    if (btcBalance >= costBtc) {
-        // Check power requirements
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        const powerNeeded = totalPowerUsed + powerReq;
-        const availablePower = getTotalPowerAvailableWithBonus();
-
-        if (powerNeeded > availablePower && powerReq > 0) {
-            alert(`Insufficient power! This upgrade requires ${powerReq.toLocaleString()}W per level.\nYou need ${Math.ceil(powerNeeded - availablePower).toLocaleString()}W more power capacity.`);
-            return;
-        }
-
-        btcBalance -= costBtc;
-        hardwareEquity += u.currentUsd;
-        u.level++;
-
-        // Check if this is the Manual Hash upgrade
-        if (u.id === 0 || u.isClickUpgrade) {
-            // Increase click value by 10%
-            btcClickValue *= 1.10;
-
-            // FASTER PRICE SCALE: % increase per level
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-
-            // Update the main orange button text to show new click value
-            document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
-        } else {
-            // ALL OTHER MINERS: Standard 15% increase
-            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-        }
-
-        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        updateUI();
-
-        console.log('🛒 PURCHASE COMPLETED -', u.name);
-        console.log('   New level:', u.level, 'New yield:', u.currentYield);
-
-        // CRITICAL: Save immediately after purchase
-        saveGame();
-
-        // Double-check the save actually worked
-        const verifySave = window.safeStorage.getItem('satoshiTerminalSave');
-        if (verifySave) {
-            const parsed = JSON.parse(verifySave);
-            const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
-            console.log('✅ VERIFIED SAVE - Upgrade level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
-        }
-
-        // Schedule a debounced cloud save (reduces Firebase writes)
-        scheduleDebouncedCloudSave();
-
-        // Play upgrade sound
-        playUpgradeSound();
-    }
-}
-
-function buyLevelMultiple(i, quantity) {
-    const u = upgrades[i];
-    const powerReq = equipmentPowerReqs[u.id] || 0;
-    let purchased = 0;
-
-    console.log('💰 buyLevelMultiple CALLED - Upgrade:', u.name, 'Quantity:', quantity);
-    console.log('   Current level:', u.level, 'Current USD:', dollarBalance, 'Cost:', u.currentUsd);
-
-    for (let q = 0; q < quantity; q++) {
-        const costUsd = u.currentUsd;
-
-        if (dollarBalance < costUsd) {
-            break; // Not enough dollars
-        }
-
-        // Check power requirements
-        if (powerReq > 0) {
-            const powerNeeded = totalPowerUsed + powerReq;
-            const availablePower = getTotalPowerAvailableWithBonus();
-            if (powerNeeded > availablePower) {
-                break; // Not enough power
-            }
-        }
-
-        dollarBalance -= costUsd;
-        hardwareEquity += u.currentUsd;
-        u.level++;
-
-        console.log('   ✓ Purchase', (q+1), '- Level now:', u.level);
-
-        // Update price and yield based on upgrade type
-        if (u.id === 0 || u.isClickUpgrade) {
-            btcClickValue *= 1.10;
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-        } else {
-            u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-        }
-
-        purchased++;
-        calculateTotalPowerUsed();
-    }
-
-    if (purchased > 0) {
-        if (u.id === 0 || u.isClickUpgrade) {
-            document.querySelector('.mine-btn span').innerText = `+${btcClickValue.toFixed(8)} ₿`;
-        }
-        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        updateUI();
-
-        console.log('🛒 PURCHASE COMPLETED - Bought', purchased, 'x', u.name);
-        console.log('   Final level:', u.level, 'Final yield:', u.currentYield);
-        console.log('   Dollar balance now:', dollarBalance);
-        console.log('   Hardware equity now:', hardwareEquity);
-
-        // CRITICAL: Save immediately after purchase
-        console.log('💾 CALLING saveGame() immediately after purchase...');
-        saveGame();
-
-        // Double-check the save actually worked
-        setTimeout(() => {
-            const verifySave = window.safeStorage.getItem('satoshiTerminalSave');
-            if (verifySave) {
-                const parsed = JSON.parse(verifySave);
-                const savedUpgrade = parsed.btcUpgrades.find(su => su.id === u.id);
-                console.log('✅ VERIFIED SAVE - Upgrade level in localStorage:', savedUpgrade ? savedUpgrade.level : 'NOT FOUND');
-                console.log('   Saved dollar balance:', parsed.dollarBalance);
-                console.log('   Saved hardware equity:', parsed.hardwareEquity);
-            } else {
-                console.error('❌ SAVE NOT FOUND in localStorage after purchase!');
-            }
-        }, 100);
-
-        // Schedule a debounced cloud save (reduces Firebase writes)
-        scheduleDebouncedCloudSave();
-
-        playUpgradeSound();
-    } else {
-        console.warn('⚠️ No purchases completed - insufficient funds or power');
-    }
-}
-
-function buyBoost(i) {
-    const u = upgrades[i];
-
-    // Check if upgrade level is 0 (not purchased yet)
-    if (u.level === 0) {
-        return; // Cannot boost if upgrade hasn't been purchased
-    }
-
-    const costUsd = u.boostCost;
-
-    if (dollarBalance >= costUsd) {
-        dollarBalance -= costUsd;
-        hardwareEquity += u.boostCost;
-        u.boostLevel++;
-
-        // Increase yield by 10% permanently
-        u.currentYield *= 1.10;
-
-        // Double the boost cost for next purchase
-        u.boostCost *= 2;
-
-        btcPerSec = upgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        updateUI();
-        saveGame();
-
-        // Play upgrade sound
-        playUpgradeSound();
-    }
-}
-
-function buyEthBoost(i) {
-    const u = ethUpgrades[i];
-
-    // Check if upgrade level is 0 (not purchased yet)
-    if (u.level === 0) {
-        return; // Cannot boost if upgrade hasn't been purchased
-    }
-
-    const costUsd = u.boostCost;
-
-    if (dollarBalance >= costUsd) {
-        dollarBalance -= costUsd;
-        hardwareEquity += u.boostCost;
-        u.boostLevel++;
-
-        // Increase yield by 10% permanently
-        u.currentYield *= 1.10;
-
-        // Double the boost cost for next purchase
-        u.boostCost *= 2;
-
-        ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        updateUI();
-        saveGame();
-
-        // Play upgrade sound
-        playUpgradeSound();
-    }
-}
-
-function buyDogeBoost(i) {
-    const u = dogeUpgrades[i];
-
-    // Check if upgrade level is 0 (not purchased yet)
-    if (u.level === 0) {
-        return; // Cannot boost if upgrade hasn't been purchased
-    }
-
-    const costUsd = u.boostCost;
-
-    if (dollarBalance >= costUsd) {
-        dollarBalance -= costUsd;
-        hardwareEquity += u.boostCost;
-        u.boostLevel++;
-
-        // Increase yield by 10% permanently
-        u.currentYield *= 1.10;
-
-        // Double the boost cost for next purchase
-        u.boostCost *= 2;
-
-        dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-        updateUI();
-        saveGame();
-
-        // Play upgrade sound
-        playUpgradeSound();
-    }
-}
-
-    // Ethereum buy functions
-    function buyEthLevel(i, quantity) {
-        const u = ethUpgrades[i];
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        let purchased = 0;
-
-        for (let q = 0; q < quantity; q++) {
-            const costUsd = u.currentUsd;
-
-            if (dollarBalance < costUsd) {
-                break; // Not enough dollars
-            }
-
-            // Check power requirements
-            if (powerReq > 0) {
-                const powerNeeded = totalPowerUsed + powerReq;
-                const availablePower = getTotalPowerAvailableWithBonus();
-                if (powerNeeded > availablePower) {
-                    break; // Not enough power
-                }
-            }
-
-            dollarBalance -= costUsd;
-            hardwareEquity += u.currentUsd;
-            u.level++;
-
-            // Update price and yield based on upgrade type
-            if (u.id === 0 || u.isClickUpgrade) {
-                ethClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-                // Update the ETH button text to show new click value
-                document.querySelectorAll('.mine-btn span')[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
-            } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-            }
-
-            purchased++;
-            calculateTotalPowerUsed();
-        }
-
-        if (purchased > 0) {
-            ethPerSec = ethUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-            updateUI();
-            saveGame();
-            playUpgradeSound();
-        }
-    }
-
-    // Dogecoin buy functions
-    function buyDogeLevel(i, quantity) {
-        const u = dogeUpgrades[i];
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        let purchased = 0;
-
-        for (let q = 0; q < quantity; q++) {
-            const costUsd = u.currentUsd;
-
-            if (dollarBalance < costUsd) {
-                break; // Not enough dollars
-            }
-
-            // Check power requirements
-            if (powerReq > 0) {
-                const powerNeeded = totalPowerUsed + powerReq;
-                const availablePower = getTotalPowerAvailableWithBonus();
-                if (powerNeeded > availablePower) {
-                    break; // Not enough power
-                }
-            }
-
-            dollarBalance -= costUsd;
-            hardwareEquity += u.currentUsd;
-            u.level++;
-
-            // Update price and yield based on upgrade type
-            if (u.id === 0 || u.isClickUpgrade) {
-                dogeClickValue *= 1.10;
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-                // Update the DOGE button text to show new click value
-                document.querySelectorAll('.mine-btn span')[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
-            } else {
-                u.currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-                u.currentUsd = Math.floor(u.baseUsd * Math.pow(1.1, u.level));
-            }
-
-            purchased++;
-            calculateTotalPowerUsed();
-        }
-
-        if (purchased > 0) {
-            dogePerSec = dogeUpgrades.reduce((sum, item) => sum + (item.currentYield || 0), 0);
-            updateUI();
-            saveGame();
-            playUpgradeSound();
-        }
-    }
-
-    function updateSessionStats() {
-        // Update session time
-        const now = Date.now();
-        const sessionSeconds = Math.floor((now - sessionStartTime) / 1000);
-        const hours = Math.floor(sessionSeconds / 3600);
-        const minutes = Math.floor((sessionSeconds % 3600) / 60);
-        const seconds = sessionSeconds % 60;
-
-        let timeStr = '';
-        if (hours > 0) timeStr += hours + 'h ';
-        if (minutes > 0) timeStr += minutes + 'm ';
-        timeStr += seconds + 's';
-
-        document.getElementById('session-time').innerText = timeStr;
-
-        // Display session earnings (tracked directly from mining/staking)
-        const sessionEarningEl = document.getElementById('session-earning');
-        if (sessionEarningEl) {
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile && sessionEarnings >= 1000) {
-                sessionEarningEl.innerText = '$' + (sessionEarnings / 1e6 >= 1 ? (sessionEarnings / 1e6).toFixed(1) + 'm' : sessionEarnings / 1e3 >= 1 ? (sessionEarnings / 1e3).toFixed(1) + 'k' : sessionEarnings.toFixed(2));
-            } else {
-                sessionEarningEl.innerText = '$' + sessionEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            }
-        }
-
-        // Update lifetime earnings display (earnings are now tracked directly when crypto is mined/staked)
-        const lifetimeEarningEl = document.getElementById('lifetime-earning');
-        if (lifetimeEarningEl) {
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile && lifetimeEarnings >= 1000) {
-                lifetimeEarningEl.innerText = '$' + (lifetimeEarnings / 1e6 >= 1 ? (lifetimeEarnings / 1e6).toFixed(1) + 'm' : lifetimeEarnings / 1e3 >= 1 ? (lifetimeEarnings / 1e3).toFixed(1) + 'k' : lifetimeEarnings.toFixed(2));
-            } else {
-                lifetimeEarningEl.innerText = '$' + lifetimeEarnings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            }
-        }
-    }
-
-    // Helper function to abbreviate large numbers only on mobile
-    function formatNumberForDisplay(num) {
-        // Check if viewport is mobile (max-width: 768px)
-        const isMobile = window.innerWidth <= 768;
-
-        if (!isMobile) {
-            return Math.floor(num).toLocaleString();
-        }
-
-        // Mobile abbreviation: 1k, 1m, 1b, etc
-        const abs = Math.abs(num);
-        if (abs >= 1e9) {
-            return (num / 1e9).toFixed(1) + 'b';
-        } else if (abs >= 1e6) {
-            return (num / 1e6).toFixed(1) + 'm';
-        } else if (abs >= 1e3) {
-            return (num / 1e3).toFixed(1) + 'k';
-        }
-        return Math.floor(num).toLocaleString();
-    }
-
-    function updateUI() {
-        // Crypto portfolio value = value of all crypto holdings only
-        let cryptoPortfolioValue = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-        const isMobileUI = window.innerWidth <= 768;
-        if (isMobileUI && cryptoPortfolioValue >= 1000) {
-            const abbrev = cryptoPortfolioValue / 1e9 >= 1 ? (cryptoPortfolioValue / 1e9).toFixed(1) + 'b' : cryptoPortfolioValue / 1e6 >= 1 ? (cryptoPortfolioValue / 1e6).toFixed(1) + 'm' : (cryptoPortfolioValue / 1e3).toFixed(1) + 'k';
-            document.getElementById('nw-val').innerText = "$" + abbrev;
-        } else {
-            document.getElementById('nw-val').innerText = "$" + cryptoPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2});
-        }
-
-        // Update balances
-        document.getElementById('bal-btc').innerText = btcBalance.toFixed(8);
-        document.getElementById('bal-eth').innerText = ethBalance.toFixed(8);
-        document.getElementById('bal-doge').innerText = dogeBalance.toFixed(8);
-
-        // Update manual hash buttons with current click values
-        try {
-            const mineBtns = document.querySelectorAll('.mine-btn span');
-            if (mineBtns.length >= 1) mineBtns[0].innerText = `+${btcClickValue.toFixed(8)} ₿`;
-            if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
-            if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
-        } catch (e) {
-            console.warn('⚠️ Could not update manual hash buttons:', e);
-        }
-
-        // Update hardware equity
-        let hardwareEquityDisplay = "$" + Math.floor(hardwareEquity).toLocaleString();
-        if (isMobileUI && hardwareEquity >= 1000) {
-            hardwareEquityDisplay = "$" + (hardwareEquity / 1e9 >= 1 ? (hardwareEquity / 1e9).toFixed(1) + 'b' : hardwareEquity / 1e6 >= 1 ? (hardwareEquity / 1e6).toFixed(1) + 'm' : (hardwareEquity / 1e3).toFixed(1) + 'k');
-        }
-        document.getElementById('asset-usd').innerText = hardwareEquityDisplay;
-
-        // Update individual hashrate displays (old location - keep for backwards compatibility)
-        const btcEl = document.getElementById('yield-btc');
-        const ethEl = document.getElementById('yield-eth');
-        const dogeEl = document.getElementById('yield-doge');
-
-        if (btcEl) btcEl.innerText = btcPerSec.toFixed(8) + "/s";
-        if (ethEl) ethEl.innerText = ethPerSec.toFixed(8) + "/s";
-        if (dogeEl) dogeEl.innerText = dogePerSec.toFixed(8) + "/s";
-
-        // Update hashrate displays in new location
-        const btcDisplayEl = document.getElementById('yield-btc-display');
-        const ethDisplayEl = document.getElementById('yield-eth-display');
-        const dogeDisplayEl = document.getElementById('yield-doge-display');
-
-        if (btcDisplayEl) btcDisplayEl.innerText = btcPerSec.toFixed(8) + "/s";
-        if (ethDisplayEl) ethDisplayEl.innerText = ethPerSec.toFixed(8) + "/s";
-        if (dogeDisplayEl) dogeDisplayEl.innerText = dogePerSec.toFixed(8) + "/s";
-
-        // Update prices
-        document.getElementById('btc-price').innerText = "$" + Math.floor(btcPrice).toLocaleString();
-        document.getElementById('eth-price').innerText = "$" + Math.floor(ethPrice).toLocaleString();
-        document.getElementById('doge-price').innerText = "$" + dogePrice.toFixed(4);
-
-        // Update dollar balance
-        const dollarBalanceEl = document.getElementById('dollar-balance');
-        if (dollarBalanceEl) dollarBalanceEl.innerText = "$" + formatNumberForDisplay(dollarBalance);
-
-        // Update market prices
-        const marketBtcPrice = document.getElementById('market-btc-price');
-        const marketEthPrice = document.getElementById('market-eth-price');
-        const marketDogePrice = document.getElementById('market-doge-price');
-        if (marketBtcPrice) marketBtcPrice.innerText = Math.floor(btcPrice).toLocaleString();
-        if (marketEthPrice) marketEthPrice.innerText = Math.floor(ethPrice).toLocaleString();
-        if (marketDogePrice) marketDogePrice.innerText = dogePrice.toFixed(4);
-
-        // Update session stats
-        updateSessionStats();
-
-        // Update power display
-        calculateTotalPowerUsed();
-        updatePowerDisplay();
-
-        btcUpgrades.forEach(u => {
-    const costUsd = u.currentUsd;
-    const yEl = document.getElementById(`yield-${u.id}`);
-
-    if (yEl) {
-        if (u.isClickUpgrade) {
-            yEl.innerText = `+10% MANUAL HASH RATE`;
-        } else {
-            // Show the current speed WITH skill bonuses applied
-            const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
-            const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + btcBonus);
-            yEl.innerText = `+${currentSpeed.toFixed(8)} ₿/s - Current Speed`;
-        }
-    }
-
-    // Update per-level increase
-    const increaseEl = document.getElementById(`increase-${u.id}`);
-    if (increaseEl) {
-        if (u.isClickUpgrade) {
-            increaseEl.style.display = 'none';
-        } else {
-            const btcBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('btc_mining_speed') : 0;
-            const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + btcBonus);
-            increaseEl.innerText = `+${perLevelIncrease.toFixed(8)} ₿/s per level`;
-            increaseEl.style.display = 'block';
-        }
-    }
-
-    const uEl = document.getElementById(`usd-${u.id}`);
-    if(uEl) {
-        // Calculate total cost for the selected quantity
-        let displayCost = 0;
-        let tempLevel = u.level;
-        for (let i = 0; i < buyQuantity; i++) {
-            if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            } else {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            }
-            tempLevel++;
-        }
-        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
-    }
-
-    // Update power display with effective consumption after skills
-    const powerEl = document.getElementById(`power-${u.id}`);
-    if(powerEl) {
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        if (powerReq > 0) {
-            const effectivePower = getEffectivePowerRequirement(powerReq);
-            powerEl.innerText = `${effectivePower.toLocaleString()}W Consumed per level`;
-        }
-    }
-
-    // Calculate how many upgrades can be afforded (accounting for price increases)
-    const affordEl = document.getElementById(`afford-${u.id}`);
-    if(affordEl) {
-        let remaining = dollarBalance;
-        let canAfford = 0;
-        let nextCost = costUsd;
-        let nextLevel = u.level;
-
-        while (remaining >= nextCost) {
-            remaining -= nextCost;
-            canAfford++;
-            nextLevel++;
-
-            // Calculate next cost based on upgrade type
-            if (u.isClickUpgrade) {
-                // Manual hash: 1.75x multiplier
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
-            } else {
-                // Other miners: 1.15x multiplier
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
-            }
-        }
-
-        affordEl.innerText = `x${canAfford}`;
-        affordEl.style.color = canAfford > 0 ? '#00ff88' : '#666';
-    }
-
-    const bEl = document.getElementById(`up-${u.id}`);
-    if(bEl) {
-        // Check both dollar balance and power requirements for the selected quantity
-        // Calculate total cost for buyQuantity items
-        let totalCost = 0;
-        let tempLevel = u.level;
-        for (let i = 0; i < buyQuantity; i++) {
-            if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            } else {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            }
-            tempLevel++;
-        }
-
-        const hasEnoughDollars = dollarBalance >= totalCost;
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        const powerNeeded = totalPowerUsed + (powerReq * buyQuantity);
-        const availablePower = getTotalPowerAvailableWithBonus();
-        const hasEnoughPower = powerNeeded <= availablePower || powerReq === 0;
-        const shouldDisable = !(hasEnoughDollars && hasEnoughPower);
-        bEl.disabled = shouldDisable;
-        if (u.id === 1) console.log(`USB Miner: dollars=${dollarBalance}/${totalCost}, power=${totalPowerUsed}/${availablePower}, needed=${powerNeeded}, qty=${buyQuantity}, disabled=${shouldDisable}`);
-
-        // Change button appearance based on what's missing
-        if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
-            // Need both cash and power - prioritize showing cash need
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-            }
-            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - availablePower).toLocaleString()}W more power`;
-        } else if (!hasEnoughDollars) {
-            // Only need cash
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-            }
-            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
-        } else if (!hasEnoughPower && powerReq > 0) {
-            // Only need power
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE POWER';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE POWER';
-            }
-            bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - availablePower).toLocaleString()}W more power capacity.`;
-        } else {
-            // Can afford - remove overlay
-            let overlay = bEl.querySelector('.power-overlay');
-            if (overlay) overlay.remove();
-            bEl.title = '';
-        }
-    }
-
-    const lEl = document.getElementById(`lvl-txt-${u.id}`);
-    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
-
-    // Update boost button
-    const boostCostBtc = u.boostCost / btcPrice;
-    const boostCostEl = document.getElementById(`boost-cost-${u.id}`);
-    if(boostCostEl) boostCostEl.innerText = `$${Math.floor(u.boostCost).toLocaleString()}`;
-
-    // Format the current yield amount (after all boosts applied)
-    const currentYield = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-    const boostAmtEl = document.getElementById(`boost-amt-${u.id}`);
-    if(boostAmtEl) {
-        if (currentYield >= 1) {
-            boostAmtEl.innerText = currentYield.toFixed(2);
-        } else if (currentYield >= 0.0001) {
-            boostAmtEl.innerText = (currentYield * 1000000).toFixed(0) + 'μ';
-        } else if (currentYield > 0) {
-            boostAmtEl.innerText = (currentYield * 1000000000).toFixed(0);
-        } else {
-            boostAmtEl.innerText = '0';
-        }
-    }
-
-    const boostBtn = document.getElementById(`boost-${u.id}`);
-    if(boostBtn) {
-        boostBtn.disabled = (u.level === 0 || dollarBalance < u.boostCost);
-        if (u.level === 0) {
-            boostBtn.innerHTML = `Purchase ${u.name} first`;
-        } else {
-            boostBtn.innerHTML = `+10% HASH RATE | <span id="boost-cost-${u.id}">$${Math.floor(u.boostCost).toLocaleString()}</span>`;
-        }
-    }
-});
-
-// Update ETH upgrades display
-ethUpgrades.forEach(u => {
-    const costUsd = u.currentUsd;
-    const yEl = document.getElementById(`eth-yield-${u.id}`);
-    if (yEl) {
-        if (u.isClickUpgrade) {
-            yEl.innerText = `+10% MANUAL ETH RATE`;
-        } else {
-            // Show the current speed WITH skill bonuses applied
-            const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
-            const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + ethBonus);
-            yEl.innerText = `+${currentSpeed.toFixed(8)} Ξ/s - Current Speed`;
-        }
-    }
-
-    // Update per-level increase for ETH
-    const ethIncreaseEl = document.getElementById(`eth-increase-${u.id}`);
-    if (ethIncreaseEl) {
-        if (u.isClickUpgrade) {
-            ethIncreaseEl.style.display = 'none';
-        } else {
-            const ethBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('eth_mining_speed') : 0;
-            const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + ethBonus);
-            ethIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ξ/s per level`;
-            ethIncreaseEl.style.display = 'block';
-        }
-    }
-
-    const uEl = document.getElementById(`eth-usd-${u.id}`);
-    if(uEl) {
-        // Calculate total cost for the selected quantity
-        let displayCost = 0;
-        let tempLevel = u.level;
-        for (let i = 0; i < buyQuantity; i++) {
-            if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            } else {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            }
-            tempLevel++;
-        }
-        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
-    }
-
-    // Update power display with effective consumption after skills
-    const ethPowerEl = document.getElementById(`eth-power-${u.id}`);
-    if(ethPowerEl) {
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        if (powerReq > 0) {
-            const effectivePower = getEffectivePowerRequirement(powerReq);
-            ethPowerEl.innerText = `${effectivePower.toLocaleString()}W Consumed per level`;
-        }
-    }
-
-    const affordEl = document.getElementById(`eth-afford-${u.id}`);
-    if(affordEl) {
-        let remaining = dollarBalance;
-        let canAfford = 0;
-        let nextCost = costUsd;
-        let nextLevel = u.level;
-
-        while (remaining >= nextCost) {
-            remaining -= nextCost;
-            canAfford++;
-            nextLevel++;
-            if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
-            } else {
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
-            }
-        }
-
-        affordEl.innerText = `x${canAfford}`;
-        affordEl.style.color = canAfford > 0 ? '#00ff88' : '#666';
-    }
-
-    const bEl = document.getElementById(`eth-up-${u.id}`);
-    if(bEl) {
-        // Check both dollar balance and power requirements for the selected quantity
-        // Calculate total cost for buyQuantity items
-        let totalCost = 0;
-        let tempLevel = u.level;
-        for (let i = 0; i < buyQuantity; i++) {
-            if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            } else {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            }
-            tempLevel++;
-        }
-
-        const hasEnoughDollars = dollarBalance >= totalCost;
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        const powerNeeded = totalPowerUsed + (powerReq * buyQuantity);
-        const ethAvailablePower = getTotalPowerAvailableWithBonus();
-        const hasEnoughPower = powerNeeded <= ethAvailablePower || powerReq === 0;
-        bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
-
-        // Change button appearance based on what's missing
-        if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
-            // Need both cash and power - prioritize showing cash need
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-            }
-            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - ethAvailablePower).toLocaleString()}W more power`;
-        } else if (!hasEnoughDollars) {
-            // Only need cash
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-            }
-            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
-        } else if (!hasEnoughPower && powerReq > 0) {
-            // Only need power
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE POWER';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE POWER';
-            }
-            bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - ethAvailablePower).toLocaleString()}W more power capacity.`;
-        } else {
-            // Can afford - remove overlay
-            let overlay = bEl.querySelector('.power-overlay');
-            if (overlay) overlay.remove();
-            bEl.title = '';
-        }
-    }
-
-    const lEl = document.getElementById(`eth-lvl-txt-${u.id}`);
-    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
-
-    // Update ETH boost button
-    const ethBoostBtn = document.getElementById(`eth-boost-${u.id}`);
-    if(ethBoostBtn) {
-        ethBoostBtn.disabled = (u.level === 0 || dollarBalance < u.boostCost);
-        if (u.level === 0) {
-            ethBoostBtn.innerHTML = `Purchase ${u.name} first`;
-        } else {
-            ethBoostBtn.innerHTML = `+10% HASH RATE | <span id="eth-boost-cost-${u.id}">$${Math.floor(u.boostCost).toLocaleString()}</span>`;
-        }
-    }
-});
-
-// Update DOGE upgrades display
-dogeUpgrades.forEach(u => {
-    const costUsd = u.currentUsd;
-    const yEl = document.getElementById(`doge-yield-${u.id}`);
-    if (yEl) {
-        if (u.isClickUpgrade) {
-            yEl.innerText = `+10% MANUAL DOGE RATE`;
-        } else {
-            // Show the current speed WITH skill bonuses applied
-            const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
-            const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseSpeed = u.baseYield * u.level * Math.pow(1.10, u.boostLevel);
-            const currentSpeed = baseSpeed * (1 + miningBonus + dogeBonus);
-            yEl.innerText = `+${currentSpeed.toFixed(8)} Ð/s - Current Speed`;
-        }
-    }
-
-    // Update per-level increase for DOGE
-    const dogeIncreaseEl = document.getElementById(`doge-increase-${u.id}`);
-    if (dogeIncreaseEl) {
-        if (u.isClickUpgrade) {
-            dogeIncreaseEl.style.display = 'none';
-        } else {
-            const dogeBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('doge_mining_speed') : 0;
-            const miningBonus = (typeof getSkillBonus === 'function') ? getSkillBonus('mining_speed') : 0;
-            const baseIncrease = u.baseYield * Math.pow(1.10, u.boostLevel);
-            const perLevelIncrease = baseIncrease * (1 + miningBonus + dogeBonus);
-            dogeIncreaseEl.innerText = `+${perLevelIncrease.toFixed(8)} Ð/s per level`;
-            dogeIncreaseEl.style.display = 'block';
-        }
-    }
-
-    const uEl = document.getElementById(`doge-usd-${u.id}`);
-    if(uEl) {
-        // Calculate total cost for the selected quantity
-        let displayCost = 0;
-        let tempLevel = u.level;
-        for (let i = 0; i < buyQuantity; i++) {
-            if (u.isClickUpgrade) {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            } else {
-                displayCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            }
-            tempLevel++;
-        }
-        uEl.innerText = `$${Math.floor(displayCost).toLocaleString()}`;
-    }
-
-    // Update power display with effective consumption after skills
-    const dogePowerEl = document.getElementById(`doge-power-${u.id}`);
-    if(dogePowerEl) {
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        if (powerReq > 0) {
-            const effectivePower = getEffectivePowerRequirement(powerReq);
-            dogePowerEl.innerText = `${effectivePower.toLocaleString()}W Consumed per level`;
-        }
-    }
-
-    const affordEl = document.getElementById(`doge-afford-${u.id}`);
-    if(affordEl) {
-        let remaining = dollarBalance;
-        let canAfford = 0;
-        let nextCost = costUsd;
-        let nextLevel = u.level;
-
-        while (remaining >= nextCost) {
-            remaining -= nextCost;
-            canAfford++;
-            nextLevel++;
-            if (u.isClickUpgrade) {
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
-            } else {
-                nextCost = u.baseUsd * Math.pow(1.1, nextLevel);
-            }
-        }
-
-        affordEl.innerText = `x${canAfford}`;
-        affordEl.style.color = canAfford > 0 ? '#00ff88' : '#666';
-    }
-
-    const bEl = document.getElementById(`doge-up-${u.id}`);
-    if(bEl) {
-        // Check both dollar balance and power requirements for the selected quantity
-        // Calculate total cost for buyQuantity items
-        let totalCost = 0;
-        let tempLevel = u.level;
-        for (let i = 0; i < buyQuantity; i++) {
-            if (u.isClickUpgrade) {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            } else {
-                totalCost += u.baseUsd * Math.pow(1.1, tempLevel);
-            }
-            tempLevel++;
-        }
-
-        const hasEnoughDollars = dollarBalance >= totalCost;
-        const powerReq = equipmentPowerReqs[u.id] || 0;
-        const powerNeeded = totalPowerUsed + (powerReq * buyQuantity);
-        const dogeAvailablePower = getTotalPowerAvailableWithBonus();
-        const hasEnoughPower = powerNeeded <= dogeAvailablePower || powerReq === 0;
-        bEl.disabled = !(hasEnoughDollars && hasEnoughPower);
-
-        // Change button appearance based on what's missing
-        if (!hasEnoughDollars && !hasEnoughPower && powerReq > 0) {
-            // Need both cash and power - prioritize showing cash need
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-            }
-            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - dogeAvailablePower).toLocaleString()}W more power`;
-        } else if (!hasEnoughDollars) {
-            // Only need cash
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE CASH';
-            }
-            bEl.title = `Need $${(totalCost - dollarBalance).toLocaleString()} more`;
-        } else if (!hasEnoughPower && powerReq > 0) {
-            // Only need power
-            let overlay = bEl.querySelector('.power-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'power-overlay';
-                overlay.style.position = 'absolute';
-                overlay.style.inset = '0';
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.background = 'rgba(0,0,0,0.8)';
-                overlay.style.borderRadius = '10px';
-                overlay.style.color = '#999';
-                overlay.style.fontWeight = 'bold';
-                overlay.style.fontSize = '1.1rem';
-                overlay.style.textAlign = 'center';
-                overlay.innerHTML = 'YOU NEED MORE POWER';
-                bEl.style.position = 'relative';
-                bEl.appendChild(overlay);
-            } else {
-                overlay.innerHTML = 'YOU NEED MORE POWER';
-            }
-            bEl.title = `Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - dogeAvailablePower).toLocaleString()}W more power capacity.`;
-        } else {
-            // Can afford - remove overlay
-            let overlay = bEl.querySelector('.power-overlay');
-            if (overlay) overlay.remove();
-            bEl.title = '';
-        }
-    }
-
-    const lEl = document.getElementById(`doge-lvl-txt-${u.id}`);
-    if(lEl) lEl.innerText = `[Lvl ${u.level}]`;
-
-    // Update DOGE boost button
-    const dogeBoostBtn = document.getElementById(`doge-boost-${u.id}`);
-    if(dogeBoostBtn) {
-        dogeBoostBtn.disabled = (u.level === 0 || dollarBalance < u.boostCost);
-        if (u.level === 0) {
-            dogeBoostBtn.innerHTML = `Purchase ${u.name} first`;
-        } else {
-            dogeBoostBtn.innerHTML = `+10% HASH RATE | <span id="doge-boost-cost-${u.id}">$${Math.floor(u.boostCost).toLocaleString()}</span>`;
-        }
-    }
-    });
-
-    // Update staking UI
-    if (typeof updateStakingUI === 'function') {
-        updateStakingUI();
-    }
-    }
-
-    setInterval(() => {
-        const now = Date.now();
-        const deltaTime = (now - lastTickTime) / 1000;
-        lastTickTime = now;
-
-        // Get skill tree mining bonus
-        const miningBonus = (typeof getSkillBonus === 'function') ? (1 + getSkillBonus('mining_speed')) : 1;
-
-        // BTC mining gains
-        if (btcPerSec > 0) {
-            let gain = btcPerSec * deltaTime * miningBonus;
-            let usdValue = gain * btcPrice;
-            btcBalance += gain;
-            btcLifetime += gain;
-            lifetimeEarnings += usdValue; // Track USD value of mined BTC
-            sessionEarnings += usdValue; // Track session earnings
-        }
-
-        // ETH mining gains
-        if (ethPerSec > 0) {
-            let gain = ethPerSec * deltaTime * miningBonus;
-            let usdValue = gain * ethPrice;
-            ethBalance += gain;
-            ethLifetime += gain;
-            lifetimeEarnings += usdValue; // Track USD value of mined ETH
-            sessionEarnings += usdValue; // Track session earnings
-        }
-
-        // DOGE mining gains
-        if (dogePerSec > 0) {
-            let gain = dogePerSec * deltaTime * miningBonus;
-            let usdValue = gain * dogePrice;
-            dogeBalance += gain;
-            dogeLifetime += gain;
-            lifetimeEarnings += usdValue; // Track USD value of mined DOGE
-            sessionEarnings += usdValue; // Track session earnings
-        }
-
-        updateUI();
-        updateAutoClickerButtonState();
-    }, 100);
-
-    // Function to calculate and display offline earnings
-    function calculateOfflineEarnings(savedLastSaveTime, savedStakingData) {
-        const currentTime = Date.now();
-        let offlineSeconds = (currentTime - savedLastSaveTime) / 1000;
-
-        // Get capped offline seconds with skill tree bonuses
-        const BASE_OFFLINE_CAP = 21600; // 6 hours
-        const MAX_OFFLINE_SECONDS = (typeof getOfflineCap === 'function') ? getOfflineCap() : BASE_OFFLINE_CAP;
-        const cappedOfflineSeconds = Math.min(offlineSeconds, MAX_OFFLINE_SECONDS);
-        const wasTimeCaped = offlineSeconds > MAX_OFFLINE_SECONDS;
-
-        console.log('=== OFFLINE EARNINGS CALCULATION ===');
-        console.log('Last save time from file:', new Date(savedLastSaveTime), '(', savedLastSaveTime, ')');
-        console.log('Current time:', new Date(currentTime), '(', currentTime, ')');
-        console.log('Offline seconds (raw):', offlineSeconds.toFixed(2), 'seconds');
-        console.log('Capped offline seconds:', cappedOfflineSeconds.toFixed(2), 'seconds');
-        console.log('Per-second rates: BTC=' + btcPerSec + '/s, ETH=' + ethPerSec + '/s, DOGE=' + dogePerSec + '/s');
-
-        // Calculate mining earnings
-        const offlineBtcEarnings = btcPerSec * cappedOfflineSeconds;
-        const offlineEthEarnings = ethPerSec * cappedOfflineSeconds;
-        const offlineDogeEarnings = dogePerSec * cappedOfflineSeconds;
-
-        console.log('Calculated earnings BEFORE adding to balance:');
-        console.log('  offlineBtcEarnings:', offlineBtcEarnings);
-        console.log('  offlineEthEarnings:', offlineEthEarnings);
-        console.log('  offlineDogeEarnings:', offlineDogeEarnings);
-
-        // Add mining earnings to balances immediately
-        if (offlineBtcEarnings > 0) {
-            btcBalance += offlineBtcEarnings;
-            btcLifetime += offlineBtcEarnings;
-            lifetimeEarnings += offlineBtcEarnings * btcPrice;
-        }
-        if (offlineEthEarnings > 0) {
-            ethBalance += offlineEthEarnings;
-            ethLifetime += offlineEthEarnings;
-            lifetimeEarnings += offlineEthEarnings * ethPrice;
-        }
-        if (offlineDogeEarnings > 0) {
-            dogeBalance += offlineDogeEarnings;
-            dogeLifetime += offlineDogeEarnings;
-            lifetimeEarnings += offlineDogeEarnings * dogePrice;
-        }
-
-        // Calculate offline staking earnings (cash from staked crypto)
-        const APR_RATE = 0.001; // 0.1% per 2 seconds
-        const stakingIntervals = cappedOfflineSeconds / 2; // Number of 2-second intervals (capped)
-        let offlineStakingCash = 0;
-
-        if (savedStakingData) {
-            const stakedBTC = savedStakingData.stakedBTC || 0;
-            const stakedETH = savedStakingData.stakedETH || 0;
-            const stakedDOGE = savedStakingData.stakedDOGE || 0;
-
-            if (stakedBTC > 0) {
-                const btcStakingEarnings = stakedBTC * APR_RATE * stakingIntervals;
-                offlineStakingCash += btcStakingEarnings * btcPrice;
-            }
-            if (stakedETH > 0) {
-                const ethStakingEarnings = stakedETH * APR_RATE * stakingIntervals;
-                offlineStakingCash += ethStakingEarnings * ethPrice;
-            }
-            if (stakedDOGE > 0) {
-                const dogeStakingEarnings = stakedDOGE * APR_RATE * stakingIntervals;
-                offlineStakingCash += dogeStakingEarnings * dogePrice;
-            }
-
-            // Add staking cash to dollar balance
-            if (offlineStakingCash > 0) {
-                dollarBalance += offlineStakingCash;
-                lifetimeEarnings += offlineStakingCash;
-            }
-        }
-
-        console.log('✅ OFFLINE EARNINGS APPLIED:');
-        console.log('   BTC:', offlineBtcEarnings, '(', btcPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-        console.log('   ETH:', offlineEthEarnings, '(', ethPerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-        console.log('   DOGE:', offlineDogeEarnings, '(', dogePerSec, '/sec ×', cappedOfflineSeconds, 'sec)');
-        console.log('   Staking:', offlineStakingCash);
-
-        // Show modal for any offline duration (even if 0 seconds)
-        window.offlineEarningsToShow = {
-            btc: offlineBtcEarnings,
-            eth: offlineEthEarnings,
-            doge: offlineDogeEarnings,
-            stakingCash: offlineStakingCash,
-            seconds: offlineSeconds,
-            wasCapped: wasTimeCaped,
-            cappedSeconds: cappedOfflineSeconds
-        };
-
-        // CRITICAL: Save offline earnings to localStorage so they survive page refresh
-        // This prevents loss of calculated earnings if the modal hasn't been shown yet
-        try {
-            window.safeStorage.setItem('pendingOfflineEarnings', JSON.stringify(window.offlineEarningsToShow));
-            console.log('💾 Saved pending offline earnings to localStorage');
-        } catch (e) {
-            console.warn('⚠️ Failed to save offline earnings to localStorage:', e);
-        }
-
-        console.log('✅ Modal will be shown with offline earnings data');
-    }
-
-    // Debug function to test offline earnings calculation
-    window.debugOfflineEarnings = function() {
-        console.log('=== DEBUG OFFLINE EARNINGS ===');
-        console.log('Current btcPerSec:', btcPerSec);
-        console.log('Current ethPerSec:', ethPerSec);
-        console.log('Current dogePerSec:', dogePerSec);
-        console.log('Current lastSaveTime:', new Date(lastSaveTime));
-        console.log('Current Time:', new Date());
-        console.log('Offline seconds (estimated):', (Date.now() - lastSaveTime) / 1000);
-        console.log('window.offlineEarningsToShow:', window.offlineEarningsToShow);
-
-        // Calculate what should be earned
-        const offlineSeconds = (Date.now() - lastSaveTime) / 1000;
-        if (offlineSeconds >= 5) {
-            const btcEarn = btcPerSec * offlineSeconds;
-            const ethEarn = ethPerSec * offlineSeconds;
-            const dogeEarn = dogePerSec * offlineSeconds;
-            console.log('If offline for', offlineSeconds, 'seconds:');
-            console.log('  BTC earnings:', btcEarn);
-            console.log('  ETH earnings:', ethEarn);
-            console.log('  DOGE earnings:', dogeEarn);
-        }
-    };
-
-    // Initialize all shops after DOM is ready
-    function initializeGame() {
-        console.log('🎮 initializeGame() STARTED');
-        // Test localStorage availability
-        try {
-            localStorage.setItem('test', 'test');
-            localStorage.removeItem('test');
-            console.log('localStorage is available and working');
-        } catch (e) {
-            console.error('localStorage is NOT available:', e);
-            alert('WARNING: Browser storage is disabled! Your game progress will not be saved. Please enable cookies/storage in your browser settings.');
-        }
-
-        try {
-            console.log('🛒 Initializing shops...');
-            initBtcShop();
-            console.log('✓ BTC shop done');
-            initEthShop();
-            console.log('✓ ETH shop done');
-            initDogeShop();
-            console.log('✓ DOGE shop done');
-            initPowerShop();
-            console.log('✓ Power shop done');
-        } catch (e) {
-            console.error('Error initializing shops:', e);
-        }
-        console.log('✓ About to call loadGame()');
-        loadGame(); // This calls updateUI() internally and sets window.offlineEarningsToShow
-        console.log('✓ loadGame() completed');
-
-        console.log('✓ About to call updateAutoClickerButtonState()');
-        updateAutoClickerButtonState(); // Update button state immediately after loading
-        console.log('✓ updateAutoClickerButtonState() completed');
-
-        console.log('✓ About to call setBuyQuantity()');
-        setBuyQuantity(1); // Highlight the 1x button on page load
-        console.log('✓ setBuyQuantity() completed');
-
-        // Initialize staking system
-        console.log('✓ About to initialize staking system');
-        initStaking();
-        updateStakingUI();
-        console.log('✓ Staking system initialized');
-
-        // ============================================================
-        // CRITICAL: Auto-save must be started BEFORE any early returns!
-        // ============================================================
-        console.log('🔄 CRITICAL: Setting up AUTO-SAVE INTERVAL (every 1.5 seconds)');
-        const autoSaveIntervalId = setInterval(() => {
-            console.log('⏱️ AUTO-SAVE TICK - calling saveGame()');
-            saveGame();
-        }, 1500);
-        console.log('✅ AUTO-SAVE INTERVAL STARTED - ID:', autoSaveIntervalId);
-        // ============================================================
-
-        // Get offline earnings data that was set by loadGame()
-        const offlineEarningsData = window.offlineEarningsToShow;
-
-        console.log('🔍 CHECKING FOR OFFLINE EARNINGS MODAL');
-        console.log('window.offlineEarningsToShow:', offlineEarningsData);
-        if (offlineEarningsData) {
-            console.log('  ✅ Data exists');
-            console.log('  offlineEarningsData.seconds:', offlineEarningsData.seconds);
-            console.log('  Condition (seconds >= 5):', offlineEarningsData.seconds >= 5);
-        } else {
-            console.log('  ❌ offlineEarningsToShow is null/undefined');
-        }
-
-        // Handle game instructions modal visibility
-        const instructionsEl = document.getElementById('game-instructions');
-        let showedInstructions = false;
-        if (instructionsEl) {
-            // Check if user previously dismissed the instructions
-            const wasDismissed = window.safeStorage.getItem('instructionsDismissed') === 'true';
-
-            // Check if this is a new account that just refreshed for the first time
-            const showAfterRefresh = localStorage.getItem('showInstructionsAfterRefresh') === 'true';
-
-            if (showAfterRefresh) {
-                // New account after first refresh - always show
-                console.log('🎮 New account detected - showing instructions modal after first refresh');
-                instructionsEl.classList.add('show');
-                localStorage.removeItem('showInstructionsAfterRefresh');
-                window.safeStorage.removeItem('instructionsDismissed');
-                showedInstructions = true;
-                console.log('✅ Instructions modal displayed');
-            } else if (wasDismissed) {
-                // User previously dismissed - hide it
-                instructionsEl.style.display = 'none';
-                showedInstructions = false;
-            } else {
-                // New player who hasn't dismissed it yet - show by default
-                console.log('🎮 New player detected - showing instructions modal by default');
-                instructionsEl.classList.add('show');
-                showedInstructions = true;
-            }
-        }
-
-        // Show offline earnings modal AFTER instructions
-        // Only show if not already displayed by cloud load (firebase-save.js shows it immediately)
-        if (offlineEarningsData) {
-            // Check if modal is already visible (set by cloud load)
-            const modalExists = document.querySelector('.offline-modal');
-            if (!modalExists) {
-                console.log('✅ SHOWING OFFLINE EARNINGS MODAL');
-                console.log('  BTC:', offlineEarningsData.btc);
-                console.log('  ETH:', offlineEarningsData.eth);
-                console.log('  DOGE:', offlineEarningsData.doge);
-                console.log('  Staking:', offlineEarningsData.stakingCash);
-                console.log('  Seconds away:', offlineEarningsData.seconds);
-
-                // Delay showing offline earnings modal to avoid overlap with instructions
-                const delayMs = showedInstructions ? 1500 : 500;
-                setTimeout(() => {
-                    showOfflineEarningsModal(
-                        offlineEarningsData.btc,
-                        offlineEarningsData.eth,
-                        offlineEarningsData.doge,
-                        offlineEarningsData.stakingCash,
-                        offlineEarningsData.seconds,
-                        offlineEarningsData.wasCapped,
-                        offlineEarningsData.cappedSeconds
-                    );
-                }, delayMs);
-            } else {
-                console.log('ℹ️ Offline earnings modal already displayed by cloud load');
-            }
-        }
-
-        console.log('✓ About to look for canvas element...');
-        const canvasElement = document.getElementById('nwChart');
-        console.log('Canvas element found?', !!canvasElement);
-        if (canvasElement) {
-            console.log('✓ Canvas element:', canvasElement);
-        }
-
-        if (!canvasElement) {
-            console.error('❌ ERROR: Canvas element not found! This will break the rest of initialization!');
-            console.error('This is CRITICAL - auto-save and price swings will NOT start!');
-            return;  // ← THIS STOPS THE REST OF initializeGame()!
-        }
-
-        // Function to initialize the chart
-        const initChart = () => {
-            // Destroy existing chart instance if it exists
-            if (window.nwChartInstance) {
-                try {
-                    window.nwChartInstance.destroy();
-                    console.log('Destroyed existing chart instance');
-                } catch (e) {
-                    console.error('Error destroying chart:', e);
-                }
-                window.nwChartInstance = null;
-            }
-
-            const ctx = canvasElement.getContext('2d');
-            console.log('Canvas context:', ctx);
-
-            // Verify canvas context is valid
-            if (!ctx) {
-                console.error('ERROR: Could not get canvas 2D context');
-                return null;
-            }
-
-            // Initialize chart with full history (at least one data point)
-            const currentNetWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-            console.log('=== CHART DEBUG ===');
-            console.log('btcBalance:', btcBalance, 'btcPrice:', btcPrice);
-            console.log('ethBalance:', ethBalance, 'ethPrice:', ethPrice);
-            console.log('dogeBalance:', dogeBalance, 'dogePrice:', dogePrice);
-            console.log('hardwareEquity:', hardwareEquity);
-            console.log('Current net worth for chart:', currentNetWorth);
-
-            // Always start chart at 0
-            if (chartHistory.length === 0) {
-                chartHistory.push(0);
-                chartHistory.push(0);
-                chartTimestamps.push({ time: Date.now(), value: 0 });
-                chartTimestamps.push({ time: Date.now() + 1000, value: 0 });
-            }
-
-            console.log('Chart history length:', chartHistory.length, 'Data:', chartHistory);
-
-            // Check if Chart.js loaded
-            if (typeof Chart === 'undefined') {
-                console.error('ERROR: Chart.js library not loaded!');
-                document.querySelector('.chart-wrapper').innerHTML = '<div style="color: #ff3344; padding: 20px; text-align: center; font-size: 0.8rem;">Chart.js failed to load<br>Check internet connection</div>';
-                return null;
-            }
-
-            console.log('Chart.js version:', Chart.version);
-
-            let nwChart;
-            try {
-                nwChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartHistory.map((_, i) => ''),
-                    datasets: [{
-                        data: chartHistory,
-                        borderColor: '#00ff88',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    layout: {
-                        padding: {
-                            left: 5,
-                            right: 5,
-                            top: 10,
-                            bottom: 20
-                        }
-                    },
-                    scales: {
-                        x: {
-                            display: false,
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            display: true,
-                            beginAtZero: true,
-                            min: 0,
-                            grace: '5%',
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                display: true,
-                                color: '#999',
-                                font: {
-                                    size: 10
-                                },
-                                maxTicksLimit: 8,
-                                callback: function(value) {
-                                    if (value >= 1000) {
-                                        return '$' + (value / 1000).toFixed(2) + 'k';
-                                    }
-                                    return '$' + value.toFixed(2);
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    }
-                }
-            });
-
-                console.log('Chart object created:', nwChart);
-                console.log('Chart initialized with data:', chartHistory);
-
-                // Store globally so we can destroy it later
-                window.nwChartInstance = nwChart;
-
-                // Force an immediate render
-                try {
-                    nwChart.update();
-                    console.log('Chart render forced successfully');
-                } catch (renderError) {
-                    console.error('ERROR forcing chart render:', renderError);
-                }
-
-                return nwChart;
-            } catch (error) {
-                console.error('ERROR creating chart:', error);
-                document.querySelector('.chart-wrapper').innerHTML = '<div style="color: #ff3344; padding: 20px; text-align: center; font-size: 0.8rem;">Chart Error: ' + error.message + '<br><small>Try refreshing the page</small></div>';
-                return null;
-            }
-        };
-
-        // Initialize chart with retry logic
-        let nwChart = null;
-        let chartInitialized = false;
-
-        const tryInitChart = () => {
-            // Don't try to initialize if already successful
-            if (chartInitialized) {
-                console.log('⚠️ Chart already initialized, skipping duplicate initialization');
-                return;
-            }
-
-            nwChart = initChart();
-            if (nwChart) {
-                chartInitialized = true;
-                console.log('✅ Chart successfully initialized');
-            }
-        };
-
-        // Try immediate initialization
-        setTimeout(() => {
-            tryInitChart();
-
-            // Retry with delays (especially important for mobile)
-            if (!chartInitialized) {
-                console.log('Chart init failed, retrying with delays...');
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 200);
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 500);
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 1000);
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 2000); // Extra retry for slow mobile devices
-                setTimeout(() => { if (!chartInitialized) tryInitChart(); }, 3000); // Final attempt
-            }
-        }, 100); // Small initial delay to ensure DOM is fully rendered
-
-        // Handle window resize/orientation change on mobile
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                if (nwChart) {
-                    console.log('Window resized, reinitializing chart...');
-                    nwChart.destroy();
-                    chartInitialized = false;
-                    tryInitChart();
-                }
-            }, 300);
-        });
-
-        // Expose function to reinitialize chart (called when switching accounts)
-        window.reinitializeChart = function() {
-            console.log('🔄 Reinitializing chart for account switch...');
-            if (nwChart) {
-                try {
-                    nwChart.destroy();
-                    console.log('✅ Old chart destroyed');
-                } catch (e) {
-                    console.warn('⚠️ Error destroying old chart:', e);
-                }
-                nwChart = null;
-            }
-            chartInitialized = false;
-            // Small delay to ensure clean state
-            setTimeout(() => {
-                tryInitChart();
-                console.log('✅ Chart reinitialized with new data');
-            }, 100);
-        };
-
-        let updateCount = 0;
-        setInterval(() => {
-            if (!nwChart) {
-                // Try initializing again if still not ready
-                if (!chartInitialized) {
-                    tryInitChart();
-                }
-                return;
-            }
-
-            const netWorth = (btcBalance * btcPrice) + (ethBalance * ethPrice) + (dogeBalance * dogePrice);
-
-            // Always update the chart with the current net worth
-            chartHistory.push(netWorth);
-            chartTimestamps.push({ time: Date.now(), value: netWorth });
-
-            // Keep all data points - chart will stretch to the right showing full history
-            // No limit on data points so we preserve the entire game history
-
-            nwChart.data.datasets[0].data = chartHistory;
-            nwChart.data.labels = chartHistory.map((_, i) => '');
-            nwChart.update('none');
-
-            updateCount++;
-            if (updateCount % 5 === 0) {
-                console.log('Chart updated:', updateCount, 'times. Current data points:', chartHistory.length, 'Latest value:', netWorth, 'BTC:', btcBalance, 'ETH:', ethBalance, 'DOGE:', dogeBalance);
-            }
-        }, 2000);
-
-        // Auto-save is already set up earlier in initializeGame() before canvas initialization
-        // to ensure it runs even if canvas fails to load
-
-        // Start price swings: separate timing for each crypto
-        // Only start if not already running (prevents multiple loops on refresh)
-        if (!priceSwingsStarted) {
-            priceSwingsStarted = true;
-            // BTC swings (start immediately)
-            btcTinySwing();       // ±0.05%-0.1% every 2 seconds
-            btcFrequentSwing();   // ±0.1%-1% every 2-60 seconds
-            btcBigSwing();        // ±2.5%-10% every 5-10 minutes
-
-            // ETH swings (start with 700ms delay to stagger from BTC)
-            setTimeout(ethTinySwing, 700);       // ±0.05%-0.1% every 2.3 seconds
-            setTimeout(ethFrequentSwing, 1200);  // ±0.1%-1.2% every 3-75 seconds
-            setTimeout(ethBigSwing, 1500);       // ±2.5%-12% every 4-12 minutes
-
-            // DOGE swings (start with 1400ms delay to stagger from BTC and ETH)
-            setTimeout(dogeTinySwing, 1400);     // ±0.05%-0.15% every 2.7 seconds
-            setTimeout(dogeFrequentSwing, 2100); // ±0.15%-1.8% every 2-45 seconds
-            setTimeout(dogeBigSwing, 2800);      // ±3%-18% every 3-8 minutes
-        }
-    }
-
-    // Save game when page becomes hidden (mobile browser close, tab switch, etc.)
-    let pageHiddenTime = null;
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            console.log('Page hidden - saving game state');
-            pageHiddenTime = Date.now();
-            try {
-                // Update lastSaveTime to NOW (critical for accurate offline calculations)
-                lastSaveTime = Date.now();
-                console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
-
-                saveGame();
-                console.log('Save successful on visibility change');
-            } catch (e) {
-                console.error('Save failed on visibility change:', e);
-            }
-        } else {
-            console.log('Page visible - checking saved data exists');
-            const testSave = window.safeStorage.getItem('satoshiTerminalSave');
-            if (testSave) {
-                console.log('Save data confirmed in storage');
-            } else {
-                console.error('WARNING: No save data found in storage!');
-            }
-
-            // Update leaderboard only if user was away for 6+ hours
-            if (typeof window.updateLeaderboard === 'function' && auth && auth.currentUser && !auth.currentUser.isAnonymous) {
-                const timeAway = pageHiddenTime ? (Date.now() - pageHiddenTime) / 1000 : 0;
-                const SIX_HOURS = 6 * 60 * 60; // 6 hours in seconds
-
-                if (timeAway >= SIX_HOURS) {
-                    console.log('🏆 Updating leaderboard (user was away for ' + Math.floor(timeAway / 3600) + ' hours)');
-                    window.updateLeaderboard().catch(err => {
-                        console.warn('⚠️ Leaderboard update failed:', err);
-                    });
-                } else {
-                    console.log('ℹ️ Skipping leaderboard update (only updates after 6+ hours away, login, or logout)');
-                }
-            }
-            pageHiddenTime = null;
-        }
-    });
-
-    // Save game when user is about to leave the page
-    window.addEventListener('beforeunload', function(e) {
-        console.log('⚠️ PAGE UNLOAD EVENT FIRED - SAVING GAME STATE');
-        console.log('Current BTC Balance:', btcBalance);
-        console.log('Current Dollar Balance:', dollarBalance);
-        console.log('Current Lifetime Earnings:', lifetimeEarnings);
-
-        // Force immediate synchronous save
-        try {
-            // Update lastSaveTime to NOW (critical for accurate offline calculations)
-            lastSaveTime = Date.now();
-            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
-
-            saveGame();
-            console.log('✅ SAVE SUCCESSFUL ON BEFOREUNLOAD');
-            console.log('Game state saved to localStorage');
-
-            // Clear any pending debounced cloud save and force immediate save
-            if (cloudSaveTimeout) {
-                clearTimeout(cloudSaveTimeout);
-                cloudSaveTimeout = null;
-            }
-
-            // CRITICAL: Force immediate cloud save if there are pending changes OR always on unload
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                if (hasPendingCloudSave) {
-                    console.log('📤 Forcing pending cloud save on beforeunload...');
-                } else {
-                    console.log('📤 Attempting cloud save on beforeunload...');
-                }
-                hasPendingCloudSave = false; // Clear the flag
-
-                try {
-                    // Use synchronous approach with fetch API to ensure save completes
-                    window.saveGameToCloud(true).then(() => {
-                        console.log('✅ Cloud save complete on beforeunload');
-                    }).catch(err => {
-                        console.warn('⚠️ Cloud save failed on beforeunload (non-critical):', err);
-                    });
-                } catch (cloudErr) {
-                    console.warn('⚠️ Could not save to cloud on beforeunload:', cloudErr);
-                }
-            }
-        } catch (err) {
-            console.error('❌ SAVE FAILED ON BEFOREUNLOAD:', err);
-        }
-    });
-
-    // Save game when page is hidden on mobile (iOS Safari support)
-    window.addEventListener('pagehide', function(e) {
-        console.log('Page hide event - saving game state');
-        try {
-            // Update lastSaveTime to NOW (critical for accurate offline calculations)
-            lastSaveTime = Date.now();
-            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
-
-            saveGame();
-            console.log('Save successful on pagehide');
-
-            // CRITICAL: Also save to cloud if user is logged in
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('Saving to cloud on pagehide...');
-                try {
-                    window.saveGameToCloud().then(() => {
-                        console.log('✅ Cloud save complete on pagehide');
-                    }).catch(err => {
-                        console.warn('⚠️ Cloud save failed on pagehide (non-critical):', err);
-                    });
-                } catch (cloudErr) {
-                    console.warn('⚠️ Could not save to cloud on pagehide:', cloudErr);
-                }
-            }
-        } catch (err) {
-            console.error('Save failed on pagehide:', err);
-        }
-    });
-
-    // Additional mobile save on freeze event (newer mobile browsers)
-    window.addEventListener('freeze', function(e) {
-        console.log('Page freeze event - saving game state');
-        try {
-            // Update lastSaveTime to NOW (critical for accurate offline calculations)
-            lastSaveTime = Date.now();
-            console.log('⏱️ Updated lastSaveTime to:', new Date(lastSaveTime));
-
-            saveGame();
-            console.log('Save successful on freeze');
-
-            // CRITICAL: Also save to cloud if user is logged in
-            if (typeof window.saveGameToCloud === 'function' && typeof auth !== 'undefined' && auth && auth.currentUser) {
-                console.log('Saving to cloud on freeze...');
-                try {
-                    window.saveGameToCloud().then(() => {
-                        console.log('✅ Cloud save complete on freeze');
-                    }).catch(err => {
-                        console.warn('⚠️ Cloud save failed on freeze (non-critical):', err);
-                    });
-                } catch (cloudErr) {
-                    console.warn('⚠️ Could not save to cloud on freeze:', cloudErr);
-                }
-            }
-        } catch (err) {
-            console.error('Save failed on freeze:', err);
-        }
-    });
-
-    // Age disclaimer modal handling
-    function acceptAgeDisclaimer() {
-        window.safeStorage.setItem('ageDisclaimerAccepted', 'true');
-        document.getElementById('age-disclaimer-modal').style.display = 'none';
-    }
-
-    function checkAgeDisclaimer() {
-        const accepted = window.safeStorage.getItem('ageDisclaimerAccepted');
-        if (!accepted) {
-            document.getElementById('age-disclaimer-modal').style.display = 'flex';
-        }
-    }
-
-    // Privacy policy modal handling
-    function openPrivacyModal() {
-        document.getElementById('privacy-modal').style.display = 'flex';
-    }
-
-    function closePrivacyModal() {
-        document.getElementById('privacy-modal').style.display = 'none';
-    }
-
-    // Make functions available globally
-    window.manualHash = manualHash;
-    window.manualEthHash = manualEthHash;
-    // Update manual hash button display values
-    function updateManualHashButtons() {
-        const mineBtns = document.querySelectorAll('.mine-btn span');
-        if (mineBtns.length >= 1) mineBtns[0].innerText = `+${btcClickValue.toFixed(8)} ₿`;
-        if (mineBtns.length >= 2) mineBtns[1].innerText = `+${ethClickValue.toFixed(8)} Ξ`;
-        if (mineBtns.length >= 3) mineBtns[2].innerText = `+${dogeClickValue.toFixed(8)} Ð`;
-        console.log('✅ Manual hash buttons updated - BTC:', btcClickValue.toFixed(8));
-    }
-
-    window.manualDogeHash = manualDogeHash;
-    window.acceptAgeDisclaimer = acceptAgeDisclaimer;
-    window.openPrivacyModal = openPrivacyModal;
-    window.closePrivacyModal = closePrivacyModal;
-    window.initBtcShop = initBtcShop;
-    window.initEthShop = initEthShop;
-    window.initDogeShop = initDogeShop;
-    window.initPowerShop = initPowerShop;
-    window.updateAutoClickerButtonState = updateAutoClickerButtonState;
-    window.updateManualHashButtons = updateManualHashButtons;
-    // window.updateDisplay = updateDisplay; // REMOVED: function doesn't exist
-    // window.updateUpgradeUI = updateUpgradeUI; // REMOVED: function doesn't exist
-    window.updateUI = updateUI;
-    window.switchTab = switchTab;
-    window.setBuyQuantity = setBuyQuantity;
-    window.startAutoClicker = startAutoClicker;
-    window.toggleMute = toggleMute;
-    window.sellBTC = sellBTC;
-    window.sellAllBTC = sellAllBTC;
-    window.sellETH = sellETH;
-    window.sellAllETH = sellAllETH;
-    window.sellDOGE = sellDOGE;
-    window.sellAllDOGE = sellAllDOGE;
-    window.dismissInstructions = dismissInstructions;
-    window.resetEarningsStats = resetEarningsStats;
-    window.resetGame = resetGame;
-    window.saveGame = saveGame;
-
-    // Verify functions are accessible
-    console.log('✅ GAME.JS LOADED - Functions exported to window:');
-    console.log('  manualHash:', typeof window.manualHash === 'function' ? 'READY ✓' : 'MISSING ✗');
-    console.log('  manualEthHash:', typeof window.manualEthHash === 'function' ? 'READY ✓' : 'MISSING ✗');
-    console.log('  manualDogeHash:', typeof window.manualDogeHash === 'function' ? 'READY ✓' : 'MISSING ✗');
-    console.log('  switchTab:', typeof window.switchTab === 'function' ? 'READY ✓' : 'MISSING ✗');
-    console.log('  toggleMute:', typeof window.toggleMute === 'function' ? 'READY ✓' : 'MISSING ✗');
-
-    // Expose game variables globally for Firebase save/load
-    // This creates a getter/setter interface so firebase-save.js can access the closure variables
-    Object.defineProperty(window, 'btcBalance', {
-        get: () => btcBalance,
-        set: (val) => { btcBalance = val; }
-    });
-    Object.defineProperty(window, 'btcLifetime', {
-        get: () => btcLifetime,
-        set: (val) => { btcLifetime = val; }
-    });
-    Object.defineProperty(window, 'btcPerSec', {
-        get: () => btcPerSec,
-        set: (val) => { btcPerSec = val; }
-    });
-    Object.defineProperty(window, 'btcPrice', {
-        get: () => btcPrice,
-        set: (val) => { btcPrice = val; }
-    });
-    Object.defineProperty(window, 'btcClickValue', {
-        get: () => btcClickValue,
-        set: (val) => { btcClickValue = val; }
-    });
-
-    Object.defineProperty(window, 'ethBalance', {
-        get: () => ethBalance,
-        set: (val) => { ethBalance = val; }
-    });
-    Object.defineProperty(window, 'ethLifetime', {
-        get: () => ethLifetime,
-        set: (val) => { ethLifetime = val; }
-    });
-    Object.defineProperty(window, 'ethPerSec', {
-        get: () => ethPerSec,
-        set: (val) => { ethPerSec = val; }
-    });
-    Object.defineProperty(window, 'ethPrice', {
-        get: () => ethPrice,
-        set: (val) => { ethPrice = val; }
-    });
-    Object.defineProperty(window, 'ethClickValue', {
-        get: () => ethClickValue,
-        set: (val) => { ethClickValue = val; }
-    });
-
-    Object.defineProperty(window, 'dogeBalance', {
-        get: () => dogeBalance,
-        set: (val) => { dogeBalance = val; }
-    });
-    Object.defineProperty(window, 'dogeLifetime', {
-        get: () => dogeLifetime,
-        set: (val) => { dogeLifetime = val; }
-    });
-    Object.defineProperty(window, 'dogePerSec', {
-        get: () => dogePerSec,
-        set: (val) => { dogePerSec = val; }
-    });
-    Object.defineProperty(window, 'dogePrice', {
-        get: () => dogePrice,
-        set: (val) => { dogePrice = val; }
-    });
-    Object.defineProperty(window, 'dogeClickValue', {
-        get: () => dogeClickValue,
-        set: (val) => { dogeClickValue = val; }
-    });
-
-    Object.defineProperty(window, 'dollarBalance', {
-        get: () => dollarBalance,
-        set: (val) => { dollarBalance = val; }
-    });
-    Object.defineProperty(window, 'hardwareEquity', {
-        get: () => hardwareEquity,
-        set: (val) => { hardwareEquity = val; }
-    });
-    Object.defineProperty(window, 'lifetimeEarnings', {
-        get: () => lifetimeEarnings,
-        set: (val) => { lifetimeEarnings = val; }
-    });
-    Object.defineProperty(window, 'sessionEarnings', {
-        get: () => sessionEarnings,
-        set: (val) => { sessionEarnings = val; }
-    });
-    Object.defineProperty(window, 'sessionStartTime', {
-        get: () => sessionStartTime,
-        set: (val) => { sessionStartTime = val; }
-    });
-    Object.defineProperty(window, 'totalPlayTime', {
-        get: () => totalPlayTime,
-        set: (val) => { totalPlayTime = val; }
-    });
-    Object.defineProperty(window, 'totalPowerAvailable', {
-        get: () => totalPowerAvailable,
-        set: (val) => { totalPowerAvailable = val; }
-    });
-    Object.defineProperty(window, 'chartHistory', {
-        get: () => chartHistory,
-        set: (val) => { chartHistory = val; }
-    });
-    Object.defineProperty(window, 'chartTimestamps', {
-        get: () => chartTimestamps,
-        set: (val) => { chartTimestamps = val; }
-    });
-    Object.defineProperty(window, 'chartStartTime', {
-        get: () => chartStartTime,
-        set: (val) => { chartStartTime = val; }
-    });
-    Object.defineProperty(window, 'autoClickerCooldownEnd', {
-        get: () => autoClickerCooldownEnd,
-        set: (val) => { autoClickerCooldownEnd = val; }
-    });
-
-    // Expose arrays/objects
-    Object.defineProperty(window, 'powerUpgrades', {
-        get: () => powerUpgrades,
-        set: (val) => { }
-    });
-    Object.defineProperty(window, 'btcUpgrades', {
-        get: () => btcUpgrades,
-        set: (val) => { }
-    });
-    Object.defineProperty(window, 'ethUpgrades', {
-        get: () => ethUpgrades,
-        set: (val) => { }
-    });
-    Object.defineProperty(window, 'dogeUpgrades', {
-        get: () => dogeUpgrades,
-        set: (val) => { }
-    });
-
-    Object.defineProperty(window, 'lastSaveTime', {
-        get: () => lastSaveTime,
-        set: (val) => { lastSaveTime = val; }
-    });
-
-    // Debug function to test save/load system
-    window.testSaveSystem = function() {
-        console.log('=== SAVE SYSTEM TEST ===');
-        console.log('Current BTC Balance:', btcBalance);
-        console.log('Current Dollar Balance:', dollarBalance);
-        console.log('Current Lifetime Earnings:', lifetimeEarnings);
-        console.log('Current BTC Per Sec:', btcPerSec);
-        console.log('Last Save Time:', new Date(lastSaveTime));
-
-        // Force a save
-        console.log('Forcing save...');
-        saveGame();
-
-        // Try to load it back
-        const saved = window.safeStorage.getItem('satoshiTerminalSave');
-        if (saved) {
-            console.log('✅ Save data found in storage. Size:', saved.length, 'bytes');
-            const parsed = JSON.parse(saved);
-            console.log('Parsed data:');
-            console.log('  BTC Balance:', parsed.btcBalance);
-            console.log('  Dollar Balance:', parsed.dollarBalance);
-            console.log('  Lifetime Earnings:', parsed.lifetimeEarnings);
-            console.log('  BTC Per Sec:', parsed.btcPerSec);
-            console.log('  Last Save Time:', new Date(parsed.lastSaveTime));
-        } else {
-            console.error('❌ Save data NOT found in storage!');
-        }
-    };
-
-    // COMPREHENSIVE DIAGNOSTIC - run this after buying an upgrade
-    window.diagnoseSaveIssue = function() {
-        console.log('\n🔍 === COMPREHENSIVE SAVE ISSUE DIAGNOSIS ===\n');
-
-        // Check 1: safeStorage availability
-        console.log('CHECK 1: SafeStorage Availability');
-        console.log('  window.safeStorage exists?', !!window.safeStorage);
-        console.log('  _isAvailable?', window.safeStorage ? window.safeStorage._isAvailable : 'N/A');
-        console.log('  localStorage works?', (() => {
-            try {
-                localStorage.setItem('_test', 'test');
-                localStorage.removeItem('_test');
-                return true;
-            } catch {
-                return false;
-            }
-        })());
-
-        // Check 2: Current game state
-        console.log('\nCHECK 2: Current Game State (in memory)');
-        console.log('  BTC Balance:', btcBalance);
-        console.log('  Dollar Balance:', dollarBalance);
-        console.log('  Hardware Equity:', hardwareEquity);
-        console.log('  BTC Upgrades count:', btcUpgrades ? btcUpgrades.length : 'N/A');
-        if (btcUpgrades && btcUpgrades.length > 0) {
-            btcUpgrades.slice(0, 5).forEach(u => {
-                console.log('    -', u.name + ':', 'level', u.level, 'yield', u.currentYield);
-            });
-        }
-
-        // Check 3: What's in localStorage
-        console.log('\nCHECK 3: Data in localStorage');
-        const saved = window.safeStorage.getItem('satoshiTerminalSave');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                console.log('  ✅ Save data exists, size:', saved.length, 'bytes');
-                console.log('  Saved BTC Balance:', parsed.btcBalance);
-                console.log('  Saved Dollar Balance:', parsed.dollarBalance);
-                console.log('  Saved Hardware Equity:', parsed.hardwareEquity);
-                console.log('  Saved BTC Upgrades count:', parsed.btcUpgrades ? parsed.btcUpgrades.length : 'N/A');
-                if (parsed.btcUpgrades && parsed.btcUpgrades.length > 0) {
-                    parsed.btcUpgrades.slice(0, 5).forEach(u => {
-                        console.log('    -', u.id + ':', 'level', u.level, 'yield', u.currentYield);
-                    });
-                }
-                console.log('  Last save time:', new Date(parsed.lastSaveTime));
-            } catch (e) {
-                console.error('  ❌ ERROR parsing saved data:', e.message);
-            }
-        } else {
-            console.error('  ❌ NO SAVE DATA IN STORAGE!');
-        }
-
-        // Check 4: Version tracking
-        console.log('\nCHECK 4: Version Tracking (cache clearing)');
-        console.log('  App Version (hardcoded):', '1.0.13');
-        console.log('  Stored Version in localStorage:', localStorage.getItem('appVersion'));
-        console.log('  Match?', localStorage.getItem('appVersion') === '1.0.13');
-
-        // Check 5: Auto-save status
-        console.log('\nCHECK 5: Auto-Save Interval Status');
-        console.log('  saveGame function exists?', typeof saveGame === 'function');
-        console.log('  (check console for saveGame messages - should see "=== ATTEMPTING SAVE ===" every 1.5 seconds)');
-
-        console.log('\n✅ Diagnosis complete. Look for ❌ marks above.');
-    };
-
-    // Force display offline earnings modal (for testing)
-    window.forceShowOfflineModal = function(btc = 0.001, eth = 0.01, doge = 50, staking = 10) {
-        console.log('🔨 FORCING OFFLINE EARNINGS MODAL');
-        showOfflineEarningsModal(btc, eth, doge, staking, 600, false, 600);
-    };
-
-    // Debug function to simulate offline time
-    window.testOfflineEarnings = function(minutesAway = 1) {
-        console.log('=== SIMULATING OFFLINE TIME ===');
-        console.log('Simulating', minutesAway, 'minutes away');
-
-        // Get current saved data
-        const saved = window.safeStorage.getItem('satoshiTerminalSave');
-        if (!saved) {
-            console.error('❌ No save data found!');
-            return;
-        }
-
-        const data = JSON.parse(saved);
-        console.log('Current lastSaveTime:', new Date(data.lastSaveTime));
-
-        // Modify the save to pretend it was made X minutes ago
-        const secondsAway = minutesAway * 60;
-        data.lastSaveTime = Date.now() - (secondsAway * 1000);
-
-        console.log('Modified lastSaveTime:', new Date(data.lastSaveTime), '(' + secondsAway + ' seconds ago)');
-        console.log('BTC Per Sec in save:', data.btcPerSec);
-
-        // Save the modified data
-        window.safeStorage.setItem('satoshiTerminalSave', JSON.stringify(data));
-        console.log('Modified save stored. Reload page to see offline earnings modal!');
-    };
-
-    // Run initialization when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAgeDisclaimer();
-            initializeGame();
-            // Test manual hash buttons after DOM is ready
-            setTimeout(() => {
-                const btcBtn = document.querySelector('button.mine-btn[onclick*="manualHash"]');
-                const ethBtn = document.querySelector('button.mine-btn[onclick*="manualEthHash"]');
-                const dogeBtn = document.querySelector('button.mine-btn[onclick*="manualDogeHash"]');
-                console.log('🔘 Button elements found:');
-                console.log('  BTC button:', btcBtn ? 'EXISTS ✓' : 'MISSING ✗');
-                console.log('  ETH button:', ethBtn ? 'EXISTS ✓' : 'MISSING ✗');
-                console.log('  DOGE button:', dogeBtn ? 'EXISTS ✓' : 'MISSING ✗');
-                if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
-            }, 500);
-        });
-    } else {
-        checkAgeDisclaimer();
-        initializeGame();
-        // Test manual hash buttons after initialization
-        setTimeout(() => {
-            const btcBtn = document.querySelector('button.mine-btn[onclick*="manualHash"]');
-            const ethBtn = document.querySelector('button.mine-btn[onclick*="manualEthHash"]');
-            const dogeBtn = document.querySelector('button.mine-btn[onclick*="manualDogeHash"]');
-            console.log('🔘 Button elements found:');
-            console.log('  BTC button:', btcBtn ? 'EXISTS ✓' : 'MISSING ✗');
-            console.log('  ETH button:', ethBtn ? 'EXISTS ✓' : 'MISSING ✗');
-            console.log('  DOGE button:', dogeBtn ? 'EXISTS ✓' : 'MISSING ✗');
-            if (btcBtn) console.log('  BTC onclick:', btcBtn.onclick ? 'SET ✓' : 'NOT SET ✗', 'Content:', btcBtn.outerHTML.substring(0, 100));
-        }, 500);
-    }
-})();
+                </div>`;if(!u.isClickUpgrade&&u.doubleMultiplier>1){btn.setAttribute('data-has-multiplier','true');btn.setAttribute('data-multiplier',u.doubleMultiplier)}
+container.appendChild(btn);let pressTimeout=null;btn.addEventListener('touchstart',(e)=>{if(pressTimeout)clearTimeout(pressTimeout);btn.classList.add('button-pressed');pressTimeout=setTimeout(()=>{btn.classList.remove('button-pressed');pressTimeout=null},200)});btn.addEventListener('touchend',()=>{btn.blur();setTimeout(()=>{if(document.activeElement===btn){btn.blur()}},0)});btn.addEventListener('click',()=>{btn.blur();setTimeout(()=>{if(document.activeElement===btn){btn.blur()}},0)})})}
+function switchTab(tab){document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.btn-tab').forEach(el=>el.classList.remove('active'));const powerBtn=document.getElementById('power-upgrade-btn');if(powerBtn)powerBtn.classList.remove('active');const tabElement=document.getElementById(tab+'-tab');tabElement.classList.add('active');if(event&&event.target){event.target.classList.add('active')}
+if(tab==='power'&&powerBtn){powerBtn.classList.add('active')}
+if(tab==='power'&&powerChartInstance&&hashRateChartInstance&&hashRateChartInstance.data.labels){setTimeout(()=>{const hashChartDataCount=hashRateChartInstance.data.labels.length;const powerStartIndex=Math.max(0,hashRateChartTimestamps.length-hashChartDataCount);const powerSliceLength=hashChartDataCount;const powerDataPercent=powerChartHistory.slice(powerStartIndex,powerStartIndex+powerSliceLength);const powerLabels=hashRateChartTimestamps.slice(powerStartIndex,powerStartIndex+powerSliceLength).map((ts)=>{const time=ts?.time||Date.now();return new Date(time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})});powerChartInstance.data.labels=powerLabels;powerChartInstance.data.datasets[0].data=powerDataPercent;powerChartInstance._powerChartColors=powerChartColors.slice(powerStartIndex,powerStartIndex+powerSliceLength);powerChartInstance.update('none')},50)}
+setBuyQuantity(1);if(window.innerWidth<=768){setTimeout(()=>{const buttonsContainer=document.querySelector('.tab-buttons');if(buttonsContainer){buttonsContainer.scrollIntoView({behavior:'smooth',block:'start'})}},50)}
+if(tab==='btc-mining'){trackBTCTabClick()}else if(tab==='eth-mining'){trackETHTabClick()}else if(tab==='doge-mining'){trackDOGETabClick()}}
+function setBuyQuantity(qty){buyQuantity=qty;const defaultColor='#888';document.querySelectorAll('.qty-toggle').forEach(el=>{el.classList.remove('active');el.style.borderColor=defaultColor;el.style.color=defaultColor});document.querySelectorAll('.qty-toggle').forEach(el=>{if(el.textContent.trim()===`${qty}x`){el.classList.add('active');el.style.borderColor='#666';el.style.color='#fff';el.style.boxShadow='0 0 10px rgba(255, 255, 255, 0.2)'}})}
+function updateDoublingButtons(){return;upgrades.forEach((u,i)=>{if(!u.isClickUpgrade){const allMilestones=[5,10,25,50,100,150,200,250,300,350,400,450,500];for(let m=550;m<=5000;m+=50){allMilestones.push(m)}
+let firstUnpurchasedMilestone=null;for(let milestone of allMilestones){const isLocalPurchased=u.milestoneDoublings[milestone];const isPermanentPurchased=(typeof hasPermanentMilestoneDoubling==='function'&&hasPermanentMilestoneDoubling('btc',milestone));if(!isLocalPurchased&&!isPermanentPurchased){firstUnpurchasedMilestone=milestone;break}}
+if(firstUnpurchasedMilestone&&u.level>=firstUnpurchasedMilestone){const milestone=firstUnpurchasedMilestone;let btn=document.getElementById(`doubling-${u.id}-${milestone}`);if(!btn){btn=document.createElement('button');btn.id=`doubling-${u.id}-${milestone}`;btn.className='doubling-btn';btn.onclick=()=>purchaseMilestoneDoubling(i,milestone);btn.style.border='none';btn.style.borderRadius='0 0 6px 6px';btn.style.padding='8px 10px';btn.style.fontSize='0.75rem';btn.style.fontWeight='700';btn.style.marginTop='-1px';btn.style.width='100%';btn.style.transition='0.2s';const mainBtn=document.getElementById(`up-${u.id}`);if(mainBtn&&mainBtn.parentNode){const parent=mainBtn.parentNode;const nextElem=mainBtn.nextElementSibling;if(nextElem){parent.insertBefore(btn,nextElem)}else{parent.appendChild(btn)}}}
+btn.style.display='block';btn.style.pointerEvents='auto';const doublingCost=calculateMilestoneDoublingCost(u);const canAfford=dollarBalance>=doublingCost;if(canAfford){btn.style.background='#ff4400';btn.innerHTML=`LEVEL ${milestone} | <span id="doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;btn.style.color='#fff';btn.style.cursor='pointer';btn.style.opacity='1';btn.style.boxShadow='inset 0 -2px 4px rgba(0,0,0,0.4), 0 0 10px rgba(255,68,0,0.6)'}else{btn.style.background='#ff4400';btn.innerHTML=`LEVEL ${milestone} | <span id="doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;btn.style.color='#fff';btn.style.cursor='not-allowed';btn.style.opacity='0.6';btn.style.boxShadow='none'}}}});ethUpgrades.forEach((u,i)=>{if(!u.isClickUpgrade){const allMilestones=[5,10,25,50,100,150,200,250,300,350,400,450,500];for(let m=550;m<=5000;m+=50){allMilestones.push(m)}
+let firstUnpurchasedMilestone=null;for(let milestone of allMilestones){const isLocalPurchased=u.milestoneDoublings[milestone];const isPermanentPurchased=(typeof hasPermanentMilestoneDoubling==='function'&&hasPermanentMilestoneDoubling('eth',milestone));if(!isLocalPurchased&&!isPermanentPurchased){firstUnpurchasedMilestone=milestone;break}}
+if(firstUnpurchasedMilestone&&u.level>=firstUnpurchasedMilestone){const milestone=firstUnpurchasedMilestone;let btn=document.getElementById(`eth-doubling-${u.id}-${milestone}`);if(!btn){btn=document.createElement('button');btn.id=`eth-doubling-${u.id}-${milestone}`;btn.className='doubling-btn';btn.onclick=()=>purchaseMilestoneDoublingEth(i,milestone);btn.style.border='none';btn.style.borderRadius='0 0 6px 6px';btn.style.padding='8px 10px';btn.style.fontSize='0.75rem';btn.style.fontWeight='700';btn.style.marginTop='-1px';btn.style.width='100%';btn.style.transition='0.2s';const mainBtn=document.getElementById(`eth-up-${u.id}`);if(mainBtn&&mainBtn.parentNode){const parent=mainBtn.parentNode;const nextElem=mainBtn.nextElementSibling;if(nextElem){parent.insertBefore(btn,nextElem)}else{parent.appendChild(btn)}}}
+btn.style.display='block';btn.style.pointerEvents='auto';const doublingCost=calculateMilestoneDoublingCost(u);const canAfford=dollarBalance>=doublingCost;if(canAfford){btn.style.background='#627eea';btn.innerHTML=`LEVEL ${milestone} | <span id="eth-doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;btn.style.color='#fff';btn.style.cursor='pointer';btn.style.opacity='1';btn.style.boxShadow='inset 0 -2px 4px rgba(0,0,0,0.4), 0 0 10px rgba(98,126,234,0.6)'}else{btn.style.background='#627eea';btn.innerHTML=`LEVEL ${milestone} | <span id="eth-doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;btn.style.color='#fff';btn.style.cursor='not-allowed';btn.style.opacity='0.6';btn.style.boxShadow='none'}}}});dogeUpgrades.forEach((u,i)=>{if(!u.isClickUpgrade){const allMilestones=[5,10,25,50,100,150,200,250,300,350,400,450,500];for(let m=550;m<=5000;m+=50){allMilestones.push(m)}
+let firstUnpurchasedMilestone=null;for(let milestone of allMilestones){const isLocalPurchased=u.milestoneDoublings[milestone];const isPermanentPurchased=(typeof hasPermanentMilestoneDoubling==='function'&&hasPermanentMilestoneDoubling('doge',milestone));if(!isLocalPurchased&&!isPermanentPurchased){firstUnpurchasedMilestone=milestone;break}}
+if(firstUnpurchasedMilestone&&u.level>=firstUnpurchasedMilestone){const milestone=firstUnpurchasedMilestone;let btn=document.getElementById(`doge-doubling-${u.id}-${milestone}`);if(!btn){btn=document.createElement('button');btn.id=`doge-doubling-${u.id}-${milestone}`;btn.className='doubling-btn';btn.onclick=()=>purchaseMilestoneDoublingDoge(i,milestone);btn.style.border='none';btn.style.borderRadius='0 0 6px 6px';btn.style.padding='8px 10px';btn.style.fontSize='0.75rem';btn.style.fontWeight='700';btn.style.marginTop='-1px';btn.style.width='100%';btn.style.transition='0.2s';const mainBtn=document.getElementById(`doge-up-${u.id}`);if(mainBtn&&mainBtn.parentNode){const parent=mainBtn.parentNode;const nextElem=mainBtn.nextElementSibling;if(nextElem){parent.insertBefore(btn,nextElem)}else{parent.appendChild(btn)}}}
+btn.style.display='block';btn.style.pointerEvents='auto';const doublingCost=calculateMilestoneDoublingCost(u);const canAfford=dollarBalance>=doublingCost;if(canAfford){btn.style.background='#c2a633';btn.innerHTML=`LEVEL ${milestone} | <span id="doge-doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;btn.style.color='#000';btn.style.cursor='pointer';btn.style.opacity='1';btn.style.boxShadow='inset 0 -2px 4px rgba(0,0,0,0.4), 0 0 10px rgba(194,166,51,0.6)'}else{btn.style.background='#c2a633';btn.innerHTML=`LEVEL ${milestone} | <span id="doge-doubling-cost-${u.id}-${milestone}">$${formatNumberForDisplay(doublingCost)}</span>`;btn.style.color='#000';btn.style.cursor='not-allowed';btn.style.opacity='0.6';btn.style.boxShadow='none'}}}})}
+function showSellFeedback(button){if(!button)return;button.classList.add('sell-success');playUpgradeSound();setTimeout(()=>{button.classList.remove('sell-success')},500)}
+function sellBTC(amount){if(btcBalance<amount){alert('Not enough Bitcoin!');return}
+const saleValue=amount*btcPrice;btcBalance-=amount;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);if(typeof tutorialData!=='undefined'){tutorialData.cryptoSoldOnce=!0}
+updateUI();saveGame();playUpgradeSound()}
+function sellAllBTC(button){if(btcBalance<=0)return;const effectivePrice=getEffectiveCryptoPrice(btcPrice);const saleValue=btcBalance*effectivePrice*0.95;addEarnings(saleValue);btcBalance=0;spawnCoinsForClick('usd',saleValue);if(typeof tutorialData!=='undefined'){tutorialData.cryptoSoldOnce=!0}
+updateUI();saveGame();showSellFeedback(button)}
+function sellETH(amount){if(ethBalance<amount){alert('Not enough Ethereum!');return}
+const effectivePrice=getEffectiveCryptoPrice(ethPrice);const saleValue=amount*effectivePrice*0.95;ethBalance-=amount;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);if(typeof tutorialData!=='undefined'){tutorialData.cryptoSoldOnce=!0}
+updateUI();saveGame();playUpgradeSound()}
+function sellAllETH(button){if(ethBalance<=0)return;const effectivePrice=getEffectiveCryptoPrice(ethPrice);const saleValue=ethBalance*effectivePrice*0.95;addEarnings(saleValue);ethBalance=0;spawnCoinsForClick('usd',saleValue);if(typeof tutorialData!=='undefined'){tutorialData.cryptoSoldOnce=!0}
+updateUI();saveGame();showSellFeedback(button)}
+function sellDOGE(amount){if(dogeBalance<amount){alert('Not enough Dogecoin!');return}
+const effectivePrice=getEffectiveCryptoPrice(dogePrice);const saleValue=amount*effectivePrice*0.95;dogeBalance-=amount;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);if(typeof tutorialData!=='undefined'){tutorialData.cryptoSoldOnce=!0}
+updateUI();saveGame();playUpgradeSound()}
+function sellAllDOGE(button){if(dogeBalance<=0)return;const effectivePrice=getEffectiveCryptoPrice(dogePrice);const saleValue=dogeBalance*effectivePrice;addEarnings(saleValue);dogeBalance=0;spawnCoinsForClick('usd',saleValue);if(typeof tutorialData!=='undefined'){tutorialData.cryptoSoldOnce=!0}
+updateUI();saveGame();showSellFeedback(button)}
+function quickSellBTC(percentage,button){if(btcBalance<=0)return;const amountToSell=btcBalance*(percentage/100);const effectivePrice=getEffectiveCryptoPrice(btcPrice);const saleValue=amountToSell*effectivePrice*0.95;btcBalance-=amountToSell;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);updateUI();saveGame();showSellFeedback(button)}
+function quickSellETH(percentage,button){if(ethBalance<=0)return;const amountToSell=ethBalance*(percentage/100);const effectivePrice=getEffectiveCryptoPrice(ethPrice);const saleValue=amountToSell*effectivePrice*0.95;ethBalance-=amountToSell;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);updateUI();saveGame();showSellFeedback(button)}
+function quickSellDOGE(percentage,button){if(dogeBalance<=0)return;const amountToSell=dogeBalance*(percentage/100);const effectivePrice=getEffectiveCryptoPrice(dogePrice);const saleValue=amountToSell*effectivePrice*0.95;dogeBalance-=amountToSell;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);updateUI();saveGame();showSellFeedback(button)}
+function buyPowerUpgrade(i){const u=powerUpgrades[i];const costUsd=u.currentUsd;if(dollarBalance>=costUsd){dollarBalance-=costUsd;totalPowerUSD+=costUsd;hardwareEquity+=u.currentUsd;u.level++;u.currentPower=u.basePower*u.level;totalPowerAvailable+=u.basePower;const availablePower=getTotalPowerAvailableWithBonus();if(availablePower>maxPowerCapacity){maxPowerCapacity=availablePower}
+u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level));if(i===0&&typeof trackPowerStripPurchase==='function'){trackPowerStripPurchase()}
+lastUIUpdateTime=0;updateUI();saveGame();playUpgradeSound();if(typeof checkAchievements==='function'){window.totalPowerUSD=totalPowerUSD;checkAchievements(totalPowerAvailable)}}}
+const hackingDifficultyConfig={'EASY':{vulnerabilities:3,timeLimit:30000,codeLines:12,lives:8,baseUsdValue:100,speedBoost:1.10,boostDuration:120000,cooldown:300000},'MEDIUM':{vulnerabilities:5,timeLimit:19000,codeLines:16,lives:11,baseUsdValue:1000,speedBoost:1.25,boostDuration:120000,cooldown:900000},'HARD':{vulnerabilities:5,timeLimit:13000,codeLines:18,lives:13,baseUsdValue:5000,speedBoost:1.50,boostDuration:120000,cooldown:1800000}};const codeTemplates={'EASY':[`pragma solidity ^0.8.0;\ncontract Vault {\n    mapping(address => uint) balances;\n    \n    function withdraw(uint amount) public {\n        require(balances[msg.sender] > 0);        [V]\n        balances[msg.sender] -= amount;\n        (bool success, ) = msg.sender.call{value: amount}("");  [V]\n        require(success);\n    }\n    \n    function deposit() external payable {\n        balances[msg.sender] = msg.value;         [V]\n    }\n}`,`contract Token {\n    mapping(address => uint) public balances;\n    \n    function transfer(address to, uint amount) public {\n        balances[msg.sender] -= amount;           [V]\n        balances[to] += amount;                    [V]\n    }\n    \n    function mint(uint amount) public {\n        balances[msg.sender] += amount;            [V]\n    }\n}`,],'MEDIUM':[`contract Auction {\n    address public highestBidder;\n    uint public highestBid;\n    \n    function bid() public payable {\n        require(msg.value > highestBid);\n        if (highestBidder != address(0)) {\n            payable(highestBidder).transfer(highestBid);  [V]\n        }\n        highestBidder = msg.sender;                [V]\n        highestBid = msg.value;                    [V]\n    }\n    \n    function claimPrize() public {\n        require(msg.sender == highestBidder);      [V]\n        payable(msg.sender).transfer(address(this).balance);\n    }\n}`,`contract Lottery {\n    address[] public players;\n    \n    function enter() public payable {\n        require(msg.value == 0.1 ether);           [V]\n        players.push(msg.sender);\n    }\n    \n    function random() private view returns (uint) {\n        return uint(keccak256(abi.encodePacked(block.timestamp)));  [V]\n    }\n    \n    function pickWinner() public {\n        uint index = random() % players.length;    [V]\n        payable(players[index]).transfer(address(this).balance);  [V]\n        delete players;                             [V]\n    }\n}`,],'HARD':[`contract Exchange {\n    mapping(address => uint) public ethBalances;\n    mapping(address => uint) public tokenBalances;\n    uint public ethToTokenRate = 100;\n    \n    function depositEth() public payable {\n        ethBalances[msg.sender] += msg.value;      [V]\n    }\n    \n    function swapEthForTokens(uint ethAmount) public {\n        require(ethBalances[msg.sender] >= ethAmount);\n        uint tokens = ethAmount * ethToTokenRate;   [V]\n        ethBalances[msg.sender] -= ethAmount;       [V]\n        tokenBalances[msg.sender] += tokens;        [V]\n        (bool success, ) = msg.sender.call{value: ethAmount}("");  [V]\n        require(success);\n    }\n    \n    function updateRate(uint newRate) public {\n        ethToTokenRate = newRate;                   [V]\n    }\n}`,]};const whackDifficultyConfig={'EASY':{timeLimit:15000,lives:14,spawnRate:700,blockVisibility:950,simultaneousBlocks:1,baseUsdValue:50,cooldown:180000},'MEDIUM':{timeLimit:15000,lives:18,spawnRate:550,blockVisibility:800,simultaneousBlocks:2,baseUsdValue:500,cooldown:600000},'HARD':{timeLimit:15000,lives:22,spawnRate:480,blockVisibility:760,simultaneousBlocks:2,baseUsdValue:2000,cooldown:1200000}};function generateVulnerableCode(difficulty){const templates=codeTemplates[difficulty];const selectedTemplate=templates[Math.floor(Math.random()*templates.length)];const lines=selectedTemplate.split('\n');const vulnerableIndices=[];lines.forEach((line,index)=>{if(line.includes('[V]')){vulnerableIndices.push(index);lines[index]=line.replace('[V]','').trim()}});return{lines,vulnerableIndices}}
+function initHackingMinigame(difficulty){const hasMinigameUnlock=(typeof metaUpgrades!=='undefined'&&metaUpgrades.minigame_unlock&&metaUpgrades.minigame_unlock.purchased);let requiredEarnings=0;let difficultyName='';if(difficulty==='EASY'){requiredEarnings=0;difficultyName='EASY'}else if(difficulty==='MEDIUM'){requiredEarnings=0;difficultyName='MEDIUM'}else if(difficulty==='HARD'){requiredEarnings=0;difficultyName='HARD'}
+if(!hasMinigameUnlock&&lifetimeEarnings<requiredEarnings){return}
+const now=Date.now();const cooldownEnd=hackingCooldowns[difficulty]||0;if(now<cooldownEnd){return}
+hackingGameDifficulty=difficulty;hackingGameActive=!0;console.log(`[HACKING] Starting ${difficulty} game`);const config=hackingDifficultyConfig[difficulty];hackingGameTimeLimit=config.timeLimit;hackingGameStartTime=Date.now();const{lines,vulnerableIndices}=generateVulnerableCode(difficulty);hackingVulnerabilitiesToFind=vulnerableIndices.slice(0,config.vulnerabilities);hackingVulnerabilitiesFound=[];hackingMaxLives=config.lives;hackingLivesRemaining=hackingMaxLives;const notification=document.getElementById('hacking-notification');if(notification)notification.style.display='none';const modal=document.getElementById('hacking-modal');if(!modal)return;modal.style.display='flex';const resultMessage=document.getElementById('hacking-result-message');const gameInfo=document.getElementById('hacking-game-info');if(resultMessage)resultMessage.style.display='none';if(gameInfo)gameInfo.style.display='block';document.getElementById('hacking-difficulty-display').textContent=difficulty;document.getElementById('hacking-found-count').textContent=`0/${config.vulnerabilities}`;document.getElementById('hacking-lives-display').textContent=`❤️ ${hackingLivesRemaining}/${hackingMaxLives}`;const codeContainer=document.getElementById('hacking-code-container');codeContainer.innerHTML='';lines.forEach((line,index)=>{const lineDiv=document.createElement('div');lineDiv.className='hacking-code-line';lineDiv.textContent=`${String(index + 1).padStart(2, ' ')} | ${line}`;lineDiv.setAttribute('data-line-index',index);lineDiv.style.cursor='pointer';lineDiv.onclick=()=>checkHackingVulnerability(index);codeContainer.appendChild(lineDiv)});updateHackingTimer()}
+function checkHackingVulnerability(lineIndex){if(!hackingGameActive)return;if(hackingVulnerabilitiesFound.includes(lineIndex))return;const lineElement=document.querySelector(`[data-line-index="${lineIndex}"]`);if(hackingVulnerabilitiesToFind.includes(lineIndex)){hackingVulnerabilitiesFound.push(lineIndex);lineElement.classList.add('vulnerability-found');lineElement.style.background='rgba(0, 255, 136, 0.3)';lineElement.style.border='1px solid #00ff88';const config=hackingDifficultyConfig[hackingGameDifficulty];document.getElementById('hacking-found-count').textContent=`${hackingVulnerabilitiesFound.length}/${config.vulnerabilities}`;if(hackingVulnerabilitiesFound.length===config.vulnerabilities){endHackingGame(!0)}}else{hackingLivesRemaining--;lineElement.style.background='rgba(255, 51, 68, 0.6)';lineElement.style.border='2px solid #ff3344';setTimeout(()=>{lineElement.style.background='';lineElement.style.border=''},500);const modal=document.getElementById('hacking-modal');const modalContent=modal.querySelector('div');modalContent.classList.add('modal-shake');setTimeout(()=>{modalContent.classList.remove('modal-shake')},500);document.getElementById('hacking-lives-display').textContent=`❤️ ${hackingLivesRemaining}/${hackingMaxLives}`;if(hackingLivesRemaining<=0){endHackingGame(!1)}}}
+function updateHackingTimer(){if(!hackingGameActive)return;const elapsed=Date.now()-hackingGameStartTime;const remaining=Math.max(0,hackingGameTimeLimit-elapsed);const seconds=Math.ceil(remaining/1000);const timerEl=document.getElementById('hacking-timer');if(timerEl){timerEl.textContent=`${seconds}s`;if(seconds<=3){timerEl.style.color='#ff3344'}else if(seconds<=5){timerEl.style.color='#ff9500'}else{timerEl.style.color='#00ff88'}}
+if(remaining<=0){endHackingGame(!1)}else{setTimeout(updateHackingTimer,100)}}
+function endHackingGame(won){hackingGameActive=!1;hackingGamesPlayed++;const modal=document.getElementById('hacking-modal');const config=hackingDifficultyConfig[hackingGameDifficulty];hackingCooldowns[hackingGameDifficulty]=Date.now()+config.cooldown;const cooldownSeconds=Math.ceil(config.cooldown/1000);console.log(`[HACKING] Setting ${hackingGameDifficulty} cooldown to ${config.cooldown}ms (${cooldownSeconds}s)`);console.log('[HACKING] All cooldowns:',hackingCooldowns);window.hackingCooldowns=hackingCooldowns;if(won){hackingGamesWon++;hackingGamesWonByDifficulty[hackingGameDifficulty]++;hackingConsecutiveWins++;const completionTime=Date.now()-hackingGameStartTime;const timeBonus=Math.max(1,1.5-(completionTime/hackingGameTimeLimit));const consecutiveMultiplier=1+(Math.min(hackingConsecutiveWins,5)*0.1);const finalMultiplier=timeBonus*consecutiveMultiplier;const rewards=awardHackingRewards(hackingGameDifficulty,finalMultiplier);hackingLastRewards=rewards;if(speedBoostActive){const currentBonus=speedBoostMultiplier-1;const newBonus=config.speedBoost-1;speedBoostMultiplier=1+currentBonus+newBonus;const remainingTime=Math.max(0,speedBoostEndTime-Date.now());speedBoostEndTime=Date.now()+Math.max(remainingTime,config.boostDuration);console.log(`⚡ Speed boost STACKED: +${((speedBoostMultiplier - 1) * 100).toFixed(0)}% for ${Math.ceil((speedBoostEndTime - Date.now())/60000)} minutes`)}else{speedBoostMultiplier=config.speedBoost;speedBoostEndTime=Date.now()+config.boostDuration;speedBoostActive=!0;console.log(`⚡ Speed boost activated: +${((speedBoostMultiplier - 1) * 100).toFixed(0)}% for ${config.boostDuration/60000} minutes`)}
+if(typeof checkAchievements==='function'){setTimeout(()=>{checkAchievements(totalPowerUsed)},100)}}else{hackingConsecutiveWins=0}
+updateHackingStats();const gameModal=document.getElementById('hacking-modal');const resultsModal=document.getElementById('hacking-results-modal');if(gameModal)gameModal.style.display='none';if(resultsModal){const titleEl=document.getElementById('hacking-results-title');if(titleEl){titleEl.textContent=won?'🔐 AUDIT COMPLETE':'🔐 AUDIT FAILED'}
+const linesEl=document.getElementById('hacking-results-lines');if(linesEl)linesEl.textContent=hackingVulnerabilitiesFound.length;const rewardsEl=document.getElementById('hacking-results-rewards-breakdown');if(rewardsEl){if(won){rewardsEl.innerHTML=`<div style="color: #f7931a; font-weight: 700; margin-bottom: 8px;">Rewards Earned:</div>
+                        <div style="color: #fff; font-size: 0.9rem; line-height: 1.6;">
+                            ₿ ${hackingLastRewards.btc >= 1 ? hackingLastRewards.btc.toFixed(4) : hackingLastRewards.btc.toFixed(8)} BTC<br>
+                            Ξ ${hackingLastRewards.eth >= 1 ? hackingLastRewards.eth.toFixed(4) : hackingLastRewards.eth.toFixed(8)} ETH<br>
+                            Ð ${hackingLastRewards.doge.toFixed(2)} DOGE<br>
+                            💵 $${abbreviateNumber(hackingLastRewards.totalUsd)}
+                        </div>`}else{rewardsEl.innerHTML=`<div style="color: #888;">No rewards earned</div>`}}
+resultsModal.style.display='flex'}
+scheduleHackingNotification();saveGame()}
+function awardHackingRewards(difficulty,multiplier){const config=hackingDifficultyConfig[difficulty];const rugpullLevel=(typeof ascensionLevel!=='undefined')?ascensionLevel:0;const currentBtcPerSec=window.btcPerSec??btcPerSec??0;const currentEthPerSec=window.ethPerSec??ethPerSec??0;const currentDogePerSec=window.dogePerSec??dogePerSec??0;const currentBtcPrice=window.btcPrice??btcPrice??100000;const currentEthPrice=window.ethPrice??ethPrice??3500;const currentDogePrice=window.dogePrice??dogePrice??0.25;const linesValidated=hackingVulnerabilitiesFound.length;const hashRateUsdValue=(currentBtcPerSec*currentBtcPrice)+(currentEthPerSec*currentEthPrice)+(currentDogePerSec*currentDogePrice);const rewardPerLine=50+hashRateUsdValue;let baseUsdValue=linesValidated*rewardPerLine;const totalMultiplier=multiplier;const ascensionMultiplier=Math.pow(1.15,rugpullLevel);const minigameRewardBonus=(typeof getSkillBonus==='function')?getSkillBonus('minigame_rewards'):0;const minigameRewardMultiplier=1+minigameRewardBonus/100;const totalUsdValue=baseUsdValue*totalMultiplier*ascensionMultiplier*minigameRewardMultiplier;const btcUsdValue=totalUsdValue*0.40;const btcReward=btcUsdValue/btcPrice;btcBalance+=btcReward;btcLifetime+=btcReward;const ethUsdValue=totalUsdValue*0.35;const ethReward=ethUsdValue/ethPrice;ethBalance+=ethReward;ethLifetime+=ethReward;const dogeUsdValue=totalUsdValue*0.20;const dogeReward=dogeUsdValue/dogePrice;dogeBalance+=dogeReward;dogeLifetime+=dogeReward;const usdReward=totalUsdValue*0.05;addEarnings(usdReward);hackingTotalRewardsEarned+=totalUsdValue;lifetimeEarnings+=totalUsdValue;sessionEarnings+=totalUsdValue;return{btc:btcReward,eth:ethReward,doge:dogeReward,usd:usdReward,totalUsd:totalUsdValue}}
+function getHackingSpeedBoost(){if(!speedBoostActive)return 1.0;const now=Date.now();if(now>=speedBoostEndTime){speedBoostActive=!1;speedBoostMultiplier=1.0;return 1.0}
+return speedBoostMultiplier}
+function scheduleHackingNotification(){const delay=(30+Math.random()*30)*60*1000;hackingNextNotificationTime=Date.now()+delay}
+function displayHackingNotification(){const notification=document.getElementById('hacking-notification');if(!notification)return;notification.style.display='flex'}
+function closeHackingModal(){const modal=document.getElementById('hacking-modal');if(modal){modal.style.display='none'}
+if(vfxEnabled&&hackingGamesWon>0&&typeof spawnExplosionCoins==='function'){const totalUsdValue=(hackingLastRewards?.btc*btcPrice||0)+(hackingLastRewards?.eth*ethPrice||0)+(hackingLastRewards?.doge*dogePrice||0);const coinCount=Math.max(80,Math.min(300,Math.floor(totalUsdValue/10)));spawnExplosionCoins('btc',coinCount/4);spawnExplosionCoins('eth',coinCount/4);spawnExplosionCoins('doge',coinCount/4);spawnExplosionCoins('usd',coinCount/4)}
+document.getElementById('hacking-code-container').style.display='block';document.getElementById('hacking-result-message').style.display='none';document.getElementById('hacking-close-btn').style.display='none'}
+function closeHackingResultsModal(){const modal=document.getElementById('hacking-results-modal');if(modal)modal.style.display='none';if(vfxEnabled&&hackingGamesWon>0&&typeof spawnExplosionCoins==='function'){const totalUsdValue=(hackingLastRewards?.btc*btcPrice||0)+(hackingLastRewards?.eth*ethPrice||0)+(hackingLastRewards?.doge*dogePrice||0);const coinCount=Math.max(80,Math.min(300,Math.floor(totalUsdValue/10)));spawnExplosionCoins('btc',coinCount/4);spawnExplosionCoins('eth',coinCount/4);spawnExplosionCoins('doge',coinCount/4);spawnExplosionCoins('usd',coinCount/4)}}
+function dismissHackingNotification(){const notification=document.getElementById('hacking-notification');if(notification){notification.style.display='none'}
+scheduleHackingNotification()}
+function updateHackingStats(){const statsContainer=document.getElementById('hacking-stats-content');if(!statsContainer)return;const winRate=hackingGamesPlayed>0?((hackingGamesWon/hackingGamesPlayed)*100).toFixed(1):'0.0';let rewardsDisplay='';if(hackingTotalRewardsEarned>=1e12){rewardsDisplay='$'+(hackingTotalRewardsEarned/1e12).toFixed(2)+'T'}else if(hackingTotalRewardsEarned>=1e9){rewardsDisplay='$'+(hackingTotalRewardsEarned/1e9).toFixed(2)+'B'}else if(hackingTotalRewardsEarned>=1e6){rewardsDisplay='$'+(hackingTotalRewardsEarned/1e6).toFixed(2)+'M'}else if(hackingTotalRewardsEarned>=1e3){rewardsDisplay='$'+(hackingTotalRewardsEarned/1e3).toFixed(2)+'K'}else{rewardsDisplay='$'+hackingTotalRewardsEarned.toFixed(2)}
+statsContainer.innerHTML=`
+            <div style="margin-bottom: 10px;">
+                <span style="color: #888; font-size: 0.8rem;">Games Played:</span>
+                <span style="color: #fff; font-weight: 700; margin-left: 10px;">${hackingGamesPlayed}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span style="color: #888; font-size: 0.8rem;">Win Rate:</span>
+                <span style="color: #00ff88; font-weight: 700; margin-left: 10px;">${winRate}%</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span style="color: #888; font-size: 0.8rem;">Consecutive Wins:</span>
+                <span style="color: #f7931a; font-weight: 700; margin-left: 10px;">${hackingConsecutiveWins}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span style="color: #888; font-size: 0.8rem;">Total Rewards:</span>
+                <span style="color: #fff; font-weight: 700; margin-left: 10px;">${rewardsDisplay}</span>
+            </div>
+            ${speedBoostActive ? `<div style="margin-top: 15px; padding: 10px; background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 6px;"><div style="color: #00ff88; font-weight: 700; margin-bottom: 5px;">⚡ ACTIVE SPEED BOOST</div><div style="color: #fff; font-size: 0.9rem;">+${((speedBoostMultiplier-1)*100).toFixed(0)}%Mining Speed</div><div style="color: #888; font-size: 0.8rem;">${Math.ceil((speedBoostEndTime-Date.now())/60000)}minutes remaining</div></div>` : ''}
+        `}
+function updateWhackStats(){const gamesPlayedEl=document.getElementById('whack-games-played');if(gamesPlayedEl)gamesPlayedEl.textContent=whackGameGamesPlayed;const gamesWonEl=document.getElementById('whack-games-won');if(gamesWonEl)gamesWonEl.textContent=whackGameGamesWon;let rewardsDisplay='';if(whackGameTotalRewardsEarned>=1e12){rewardsDisplay='$'+(whackGameTotalRewardsEarned/1e12).toFixed(2)+'T'}else if(whackGameTotalRewardsEarned>=1e9){rewardsDisplay='$'+(whackGameTotalRewardsEarned/1e9).toFixed(2)+'B'}else if(whackGameTotalRewardsEarned>=1e6){rewardsDisplay='$'+(whackGameTotalRewardsEarned/1e6).toFixed(2)+'M'}else if(whackGameTotalRewardsEarned>=1e3){rewardsDisplay='$'+(whackGameTotalRewardsEarned/1e3).toFixed(2)+'K'}else{rewardsDisplay='$'+whackGameTotalRewardsEarned.toFixed(2)}
+const totalRewardsEl=document.getElementById('whack-total-rewards');if(totalRewardsEl)totalRewardsEl.textContent=rewardsDisplay.slice(1);}
+function updateNetworkStats(){const gamesPlayedEl=document.getElementById('network-games-played');if(gamesPlayedEl)gamesPlayedEl.textContent=networkGameGamesPlayed;const gamesWonEl=document.getElementById('network-games-won');if(gamesWonEl)gamesWonEl.textContent=networkGameGamesWon;let rewardsDisplay='';if(networkGameTotalRewardsEarned>=1e12){rewardsDisplay='$'+(networkGameTotalRewardsEarned/1e12).toFixed(2)+'T'}else if(networkGameTotalRewardsEarned>=1e9){rewardsDisplay='$'+(networkGameTotalRewardsEarned/1e9).toFixed(2)+'B'}else if(networkGameTotalRewardsEarned>=1e6){rewardsDisplay='$'+(networkGameTotalRewardsEarned/1e6).toFixed(2)+'M'}else if(networkGameTotalRewardsEarned>=1e3){rewardsDisplay='$'+(networkGameTotalRewardsEarned/1e3).toFixed(2)+'K'}else{rewardsDisplay='$'+networkGameTotalRewardsEarned.toFixed(2)}
+const totalRewardsEl=document.getElementById('network-total-rewards');if(totalRewardsEl)totalRewardsEl.textContent=rewardsDisplay.slice(1);}
+function updateMinigamesTab(){const hackingWonEl=document.getElementById('hacking-games-won-display');if(hackingWonEl)hackingWonEl.textContent=hackingGamesWon;const hackingPlayedEl=document.getElementById('hacking-games-played-display');if(hackingPlayedEl)hackingPlayedEl.textContent=hackingGamesPlayed;const hackingRewardsEl=document.getElementById('hacking-rewards-display');if(hackingRewardsEl){let hackingRewardsDisplay='';if(hackingTotalRewardsEarned>=1e6){hackingRewardsDisplay='$'+(hackingTotalRewardsEarned/1e6).toFixed(2)+'M'}else if(hackingTotalRewardsEarned>=1e3){hackingRewardsDisplay='$'+(hackingTotalRewardsEarned/1e3).toFixed(2)+'K'}else{hackingRewardsDisplay='$'+hackingTotalRewardsEarned.toFixed(0)}
+hackingRewardsEl.textContent=hackingRewardsDisplay}
+const whackWonEl=document.getElementById('whack-games-won-display');if(whackWonEl)whackWonEl.textContent=whackGameGamesWon;const whackPlayedEl=document.getElementById('whack-games-played-display');if(whackPlayedEl)whackPlayedEl.textContent=whackGameGamesPlayed;const whackRewardsEl=document.getElementById('whack-rewards-display');if(whackRewardsEl){let whackRewardsDisplay='';if(whackGameTotalRewardsEarned>=1e6){whackRewardsDisplay='$'+(whackGameTotalRewardsEarned/1e6).toFixed(2)+'M'}else if(whackGameTotalRewardsEarned>=1e3){whackRewardsDisplay='$'+(whackGameTotalRewardsEarned/1e3).toFixed(2)+'K'}else{whackRewardsDisplay='$'+whackGameTotalRewardsEarned.toFixed(0)}
+whackRewardsEl.textContent=whackRewardsDisplay}
+const networkWonEl=document.getElementById('network-games-won-display');if(networkWonEl)networkWonEl.textContent=networkGameGamesWon;const networkPlayedEl=document.getElementById('network-games-played-display');if(networkPlayedEl)networkPlayedEl.textContent=networkGameGamesPlayed;const networkRewardsEl=document.getElementById('network-rewards-display');if(networkRewardsEl){let networkRewardsDisplay='';if(networkGameTotalRewardsEarned>=1e6){networkRewardsDisplay='$'+(networkGameTotalRewardsEarned/1e6).toFixed(2)+'M'}else if(networkGameTotalRewardsEarned>=1e3){networkRewardsDisplay='$'+(networkGameTotalRewardsEarned/1e3).toFixed(2)+'K'}else{networkRewardsDisplay='$'+networkGameTotalRewardsEarned.toFixed(0)}
+networkRewardsEl.textContent=networkRewardsDisplay}
+const packetWonEl=document.getElementById('packet-games-won-display');if(packetWonEl)packetWonEl.textContent=packetGameGamesWon;const packetPlayedEl=document.getElementById('packet-games-played-display');if(packetPlayedEl)packetPlayedEl.textContent=packetGameGamesPlayed;const packetRewardsEl=document.getElementById('packet-rewards-display');if(packetRewardsEl){let packetRewardsDisplay='';if(packetGameTotalRewardsEarned>=1e6){packetRewardsDisplay='$'+(packetGameTotalRewardsEarned/1e6).toFixed(2)+'M'}else if(packetGameTotalRewardsEarned>=1e3){packetRewardsDisplay='$'+(packetGameTotalRewardsEarned/1e3).toFixed(2)+'K'}else{packetRewardsDisplay='$'+packetGameTotalRewardsEarned.toFixed(0)}
+packetRewardsEl.textContent=packetRewardsDisplay}}
+function updateHackingCooldownDisplays(){const now=Date.now();const unlockRequirements={'EASY':0,'MEDIUM':0,'HARD':0};['EASY','MEDIUM','HARD'].forEach(difficulty=>{const cooldownEnd=hackingCooldowns[difficulty]||0;const cooldownElement=document.getElementById(`hacking-${difficulty.toLowerCase()}-cooldown`);const lockedElement=document.getElementById(`hacking-${difficulty.toLowerCase()}-locked`);const buttonElement=document.getElementById(`hacking-${difficulty.toLowerCase()}-btn`);if(!cooldownElement||!buttonElement||!lockedElement)return;const isLocked=lifetimeEarnings<(unlockRequirements[difficulty]||0);const isOnCooldown=now<cooldownEnd&&!isLocked;if(isLocked){lockedElement.style.visibility='visible';lockedElement.style.pointerEvents='none';lockedElement.innerHTML=`🔒<br>$${(unlockRequirements[difficulty] || 0).toLocaleString()}`;cooldownElement.style.visibility='hidden';buttonElement.style.cursor='pointer';buttonElement.style.opacity='1';buttonElement.dataset.locked='true'}else if(isOnCooldown){lockedElement.style.visibility='hidden';cooldownElement.style.visibility='visible';cooldownElement.style.opacity='1';cooldownElement.style.pointerEvents='none';buttonElement.style.cursor='pointer';buttonElement.style.opacity='0.6';buttonElement.style.pointerEvents='auto';buttonElement.dataset.locked='false';const remainingMs=cooldownEnd-now;const remainingSeconds=Math.ceil(remainingMs/1000);const minutes=Math.floor(remainingSeconds/60);const seconds=remainingSeconds%60;const timerText=`${minutes}:${seconds.toString().padStart(2, '0')}`;cooldownElement.textContent=timerText;if(difficulty==='MEDIUM'||difficulty==='HARD'){console.log(`[HACKING-COOLDOWN] ${difficulty} timer set to: "${timerText}", element visibility: ${cooldownElement.style.visibility}, opacity: ${cooldownElement.style.opacity}`)}}else{lockedElement.style.visibility='hidden';cooldownElement.style.visibility='hidden';buttonElement.style.cursor='pointer';buttonElement.style.opacity='1';buttonElement.style.pointerEvents='auto';buttonElement.dataset.locked='false'}});const now2=Date.now();const whackUnlockRequirements={'EASY':5000,'MEDIUM':25000,'HARD':75000};['EASY','MEDIUM','HARD'].forEach(difficulty=>{const cooldownEnd=whackCooldowns[difficulty]||0;const cooldownElement=document.getElementById(`whack-${difficulty.toLowerCase()}-cooldown`);const lockedElement=document.getElementById(`whack-${difficulty.toLowerCase()}-locked`);const buttonElement=document.getElementById(`whack-${difficulty.toLowerCase()}-btn`);if(!cooldownElement||!buttonElement||!lockedElement)return;const isLocked=lifetimeEarnings<(whackUnlockRequirements[difficulty]||0);const isOnCooldown=now2<cooldownEnd&&!isLocked;if(isLocked){lockedElement.style.display='flex';lockedElement.style.pointerEvents='none';lockedElement.innerHTML=`🔒<br>$${(whackUnlockRequirements[difficulty] || 0).toLocaleString()}`;cooldownElement.style.display='none';buttonElement.style.cursor='pointer';buttonElement.style.opacity='1';buttonElement.dataset.locked='true'}else if(isOnCooldown){lockedElement.style.display='none';cooldownElement.style.removeProperty('display');cooldownElement.style.setProperty('display','flex','important');cooldownElement.style.pointerEvents='none';buttonElement.style.cursor='not-allowed';buttonElement.style.opacity='0.6';buttonElement.dataset.locked='false';const remainingMs=cooldownEnd-now2;const remainingSeconds=Math.ceil(remainingMs/1000);const minutes=Math.floor(remainingSeconds/60);const seconds=remainingSeconds%60;cooldownElement.textContent=`${minutes}:${seconds.toString().padStart(2, '0')}`}else{lockedElement.style.display='none';cooldownElement.style.display='none';buttonElement.style.cursor='pointer';buttonElement.style.opacity='1';buttonElement.dataset.locked='false'}})}
+function updateMinigameCardLocks(){const packetLockedCard=document.getElementById('packet-card-locked');if(packetLockedCard){packetLockedCard.style.display='none'}
+const packetMediumLocked=document.getElementById('packet-medium-locked');if(packetMediumLocked){if(lifetimeEarnings<100000){packetMediumLocked.style.display='flex';document.getElementById('packet-medium-btn').disabled=!0;document.getElementById('packet-medium-btn').style.opacity='0.6'}else{packetMediumLocked.style.display='none';document.getElementById('packet-medium-btn').disabled=!1;document.getElementById('packet-medium-btn').style.opacity='1'}}
+const packetHardLocked=document.getElementById('packet-hard-locked');if(packetHardLocked){if(lifetimeEarnings<1000000){packetHardLocked.style.display='flex';document.getElementById('packet-hard-btn').disabled=!0;document.getElementById('packet-hard-btn').style.opacity='0.6'}else{packetHardLocked.style.display='none';document.getElementById('packet-hard-btn').disabled=!1;document.getElementById('packet-hard-btn').style.opacity='1'}}
+const hasMinigameUnlock=(typeof metaUpgrades!=='undefined'&&metaUpgrades.minigame_unlock&&metaUpgrades.minigame_unlock.purchased);const networkLockedCard=document.getElementById('network-card-locked');const networkPlayBtn=document.getElementById('network-play-btn');if(networkLockedCard){if(!hasMinigameUnlock&&lifetimeEarnings<20000){networkLockedCard.style.display='flex';if(networkPlayBtn){networkPlayBtn.disabled=!0;networkPlayBtn.style.opacity='0.6'}}else{networkLockedCard.style.display='none';if(networkPlayBtn){networkPlayBtn.disabled=!1;networkPlayBtn.style.opacity='1'}}}
+const whackLockedCard=document.getElementById('whack-card-locked');if(whackLockedCard){if(!hasMinigameUnlock&&lifetimeEarnings<50000){whackLockedCard.style.display='flex'}else{whackLockedCard.style.display='none'}}
+const whackEasyLocked=document.getElementById('whack-easy-locked');if(whackEasyLocked){if(!hasMinigameUnlock&&lifetimeEarnings<50000){whackEasyLocked.style.display='flex';document.getElementById('whack-easy-btn').disabled=!0;document.getElementById('whack-easy-btn').style.opacity='0.6'}else{whackEasyLocked.style.display='none';document.getElementById('whack-easy-btn').disabled=!1;document.getElementById('whack-easy-btn').style.opacity='1'}}
+const whackMediumLocked=document.getElementById('whack-medium-locked');if(whackMediumLocked){if(!hasMinigameUnlock&&lifetimeEarnings<150000){whackMediumLocked.style.display='flex';document.getElementById('whack-medium-btn').disabled=!0;document.getElementById('whack-medium-btn').style.opacity='0.6'}else{whackMediumLocked.style.display='none';document.getElementById('whack-medium-btn').disabled=!1;document.getElementById('whack-medium-btn').style.opacity='1'}}
+const whackHardLocked=document.getElementById('whack-hard-locked');if(whackHardLocked){if(!hasMinigameUnlock&&lifetimeEarnings<500000){whackHardLocked.style.display='flex';document.getElementById('whack-hard-btn').disabled=!0;document.getElementById('whack-hard-btn').style.opacity='0.6'}else{whackHardLocked.style.display='none';document.getElementById('whack-hard-btn').disabled=!1;document.getElementById('whack-hard-btn').style.opacity='1'}}
+const hackingLockedCard=document.getElementById('hacking-card-locked');if(hackingLockedCard){if(!hasMinigameUnlock&&lifetimeEarnings<500000){hackingLockedCard.style.display='flex'}else{hackingLockedCard.style.display='none'}}}
+function updatePacketInterceptorStats(packetsCaught,totalReward){packetGameGamesPlayed++;if(packetsCaught>0){packetGameGamesWon++}
+const rugpullMultiplier=typeof rugpullLevel!=='undefined'?Math.pow(1.15,rugpullLevel):1;const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;const minigameRewardBonus=(typeof getSkillBonus==='function')?getSkillBonus('minigame_rewards'):0;const totalUsdValue=totalReward*rugpullMultiplier*(1+ascensionBonus)*(1+minigameRewardBonus/100);console.log(`[Packet Interceptor] Base Reward: $${totalReward}, Rugpull: ${rugpullMultiplier.toFixed(1)}x, Ascension: ${(ascensionBonus * 100).toFixed(1)}%, Final: $${totalUsdValue.toFixed(2)}`);const btcUsdValue=totalUsdValue*0.40;const btcReward=btcUsdValue/btcPrice;btcBalance+=btcReward;btcLifetime+=btcReward;const ethUsdValue=totalUsdValue*0.35;const ethReward=ethUsdValue/ethPrice;ethBalance+=ethReward;ethLifetime+=ethReward;const dogeUsdValue=totalUsdValue*0.20;const dogeReward=dogeUsdValue/dogePrice;dogeBalance+=dogeReward;dogeLifetime+=dogeReward;const usdReward=totalUsdValue*0.05;addEarnings(usdReward);packetGameTotalRewardsEarned+=totalUsdValue;lifetimeEarnings+=totalUsdValue;sessionEarnings+=totalUsdValue;packetLastRewards={btc:btcReward,eth:ethReward,doge:dogeReward,usd:usdReward,totalUsd:totalUsdValue};if(typeof packetGameState!=='undefined'){const difficulty=packetGameState.difficulty;const cooldownDurations={'EASY':30*1000,'MEDIUM':60*1000,'HARD':120*1000};packetCooldowns[difficulty]=Date.now()+(cooldownDurations[difficulty]||30000)}
+updateMinigamesTab();updateMinigameCardLocks();updatePacketCooldownDisplays();saveGame()}
+function updateWhackCooldownDisplays(){const now=Date.now();['EASY','MEDIUM','HARD'].forEach(difficulty=>{const cooldownEnd=whackCooldowns[difficulty]||0;const cooldownElement=document.getElementById(`whack-${difficulty.toLowerCase()}-cooldown`);const buttonElement=document.getElementById(`whack-${difficulty.toLowerCase()}-btn`);if(!cooldownElement||!buttonElement)return;const isOnCooldown=now<cooldownEnd;if(isOnCooldown){cooldownElement.style.removeProperty('display');cooldownElement.style.setProperty('display','flex','important');cooldownElement.style.pointerEvents='none';buttonElement.style.cursor='not-allowed';buttonElement.style.opacity='0.6';const remainingMs=cooldownEnd-now;const remainingSeconds=Math.ceil(remainingMs/1000);const minutes=Math.floor(remainingSeconds/60);const seconds=remainingSeconds%60;cooldownElement.textContent=`${minutes}:${seconds.toString().padStart(2, '0')}`}else{cooldownElement.style.display='none';buttonElement.style.cursor='pointer';buttonElement.style.opacity='1'}})}
+function updatePacketCooldownDisplays(){const now=Date.now();['EASY','MEDIUM','HARD'].forEach(difficulty=>{const cooldownEnd=packetCooldowns[difficulty]||0;const cooldownElement=document.getElementById(`packet-${difficulty.toLowerCase()}-cooldown`);const buttonElement=document.getElementById(`packet-${difficulty.toLowerCase()}-btn`);if(!cooldownElement||!buttonElement)return;const isOnCooldown=now<cooldownEnd;if(isOnCooldown){cooldownElement.style.removeProperty('display');cooldownElement.style.setProperty('display','flex','important');cooldownElement.style.pointerEvents='none';buttonElement.style.cursor='not-allowed';buttonElement.style.opacity='0.6';buttonElement.dataset.locked='false';const remainingMs=cooldownEnd-now;const remainingSeconds=Math.ceil(remainingMs/1000);const minutes=Math.floor(remainingSeconds/60);const seconds=remainingSeconds%60;cooldownElement.textContent=`${minutes}:${seconds.toString().padStart(2, '0')}`}else{cooldownElement.style.display='none';buttonElement.style.cursor='pointer';buttonElement.style.opacity='1';buttonElement.dataset.locked='false'}})}
+function initWhackMinigame(difficulty){let requiredEarnings=0;let difficultyName='';if(difficulty==='EASY'){requiredEarnings=50000;difficultyName='EASY'}else if(difficulty==='MEDIUM'){requiredEarnings=25000;difficultyName='MEDIUM'}else if(difficulty==='HARD'){requiredEarnings=75000;difficultyName='HARD'}
+if(lifetimeEarnings<requiredEarnings){return}
+const now=Date.now();const cooldownEnd=whackCooldowns[difficulty]||0;if(now<cooldownEnd){return}
+whackGameDifficulty=difficulty;whackGameActive=!0;const config=whackDifficultyConfig[difficulty];whackGameTimeLimit=config.timeLimit;whackGameStartTime=Date.now();whackGameScore=0;whackGameBlocksHit=0;whackGameMaxLives=config.lives;whackGameLivesRemaining=whackGameMaxLives;whackActiveBlock=null;whackActiveBlocks.clear();const modal=document.getElementById('whack-modal');if(!modal)return;modal.style.display='flex';document.body.classList.add('modal-open');const gameInfo=document.getElementById('whack-game-info');const resultsMessage=document.getElementById('whack-results-message');const closeBtn=document.getElementById('whack-close-btn');if(gameInfo)gameInfo.style.display='block';if(resultsMessage)resultsMessage.style.display='none';if(closeBtn)closeBtn.style.display='none';document.getElementById('whack-difficulty-display').textContent=difficulty;document.getElementById('whack-lives-display').textContent=`❤️ ${whackGameLivesRemaining}/${whackGameMaxLives}`;document.getElementById('whack-score-display').textContent='0';document.getElementById('whack-time-display').textContent='30s';const gridContainer=document.getElementById('whack-grid');gridContainer.innerHTML='';for(let i=0;i<16;i++){const block=document.createElement('div');block.className='whack-block';block.setAttribute('data-block-id',i);block.onclick=()=>hitBlock(i);gridContainer.appendChild(block)}
+whackStartGame(config)}
+function whackStartGame(config){whackSpawnBlock(config.spawnRate);whackGameInterval=setInterval(()=>{const elapsed=Date.now()-whackGameStartTime;const remaining=Math.max(0,whackGameTimeLimit-elapsed);const seconds=Math.ceil(remaining/1000);const timeDisplay=document.getElementById('whack-time-display');if(timeDisplay)timeDisplay.textContent=seconds+'s';if(remaining<=0){endWhackGame(!1)}},100)}
+function whackSpawnBlock(spawnRate){const config=whackDifficultyConfig[whackGameDifficulty];const blockVisibility=config.blockVisibility||800;const simultaneousBlocks=config.simultaneousBlocks||1;whackSpawnInterval=setInterval(()=>{if(!whackGameActive)return;if(whackActiveBlocks.size<simultaneousBlocks){let blockId=Math.floor(Math.random()*16);let attempts=0;while(whackActiveBlocks.has(blockId)&&attempts<10){blockId=Math.floor(Math.random()*16);attempts++}
+if(!whackActiveBlocks.has(blockId)){const block=document.querySelector(`[data-block-id="${blockId}"]`);if(block){whackActiveBlocks.add(blockId);block.classList.add('active');setTimeout(()=>{if(whackActiveBlocks.has(blockId)){whackActiveBlocks.delete(blockId);block.classList.remove('active');if(whackGameActive){missBlock()}}},blockVisibility)}}}},spawnRate)}
+function hitBlock(blockId){if(!whackGameActive)return;const block=document.querySelector(`[data-block-id="${blockId}"]`);if(block&&block.classList.contains('active')){whackGameScore+=10;whackGameBlocksHit++;whackActiveBlocks.delete(blockId);if(block){block.classList.remove('active');block.classList.add('hit');setTimeout(()=>block.classList.remove('hit'),200)}
+const scoreDisplay=document.getElementById('whack-score-display');if(scoreDisplay)scoreDisplay.textContent=whackGameBlocksHit;playClickSound()}else{if(block&&!block.classList.contains('active')){const grid=document.getElementById('whack-grid');if(grid){grid.classList.add('whack-error-flash');setTimeout(()=>grid.classList.remove('whack-error-flash'),300)}
+missBlock()}}}
+function missBlock(){if(!whackGameActive)return;const grid=document.getElementById('whack-grid');if(grid){grid.classList.add('whack-error-flash');setTimeout(()=>grid.classList.remove('whack-error-flash'),300)}
+if(whackActiveBlock!==null){const block=document.querySelector(`[data-block-id="${whackActiveBlock}"]`);if(block){block.classList.remove('active')}
+whackActiveBlock=null}
+whackGameLivesRemaining--;const livesDisplay=document.getElementById('whack-lives-display');if(livesDisplay)livesDisplay.textContent=`❤️ ${whackGameLivesRemaining}/${whackGameMaxLives}`;if(whackGameLivesRemaining<=0){endWhackGame(!1)}}
+function endWhackGame(won){if(whackGameManuallyClosed){whackGameManuallyClosed=!1;if(whackSpawnInterval)clearInterval(whackSpawnInterval);if(whackGameInterval)clearInterval(whackGameInterval);return}
+whackGameActive=!1;if(whackSpawnInterval)clearInterval(whackSpawnInterval);if(whackGameInterval)clearInterval(whackGameInterval);whackGameGamesPlayed++;const config=whackDifficultyConfig[whackGameDifficulty];let totalReward=0;if(whackGameLivesRemaining>0){whackGameGamesWon++;const rugpullLevel=(typeof ascensionLevel!=='undefined')?ascensionLevel:0;const currentBtcPerSec=window.btcPerSec??btcPerSec??0;const currentEthPerSec=window.ethPerSec??ethPerSec??0;const currentDogePerSec=window.dogePerSec??dogePerSec??0;const currentBtcPrice=window.btcPrice??btcPrice??100000;const currentEthPrice=window.ethPrice??ethPrice??3500;const currentDogePrice=window.dogePrice??dogePrice??0.25;const blocksHit=whackGameBlocksHit;const hashRateUsdValue=(currentBtcPerSec*currentBtcPrice)+(currentEthPerSec*currentEthPrice)+(currentDogePerSec*currentDogePrice);const rewardPerBlock=50+hashRateUsdValue;let baseUsdValue=blocksHit*rewardPerBlock;const maxBlocks=15;const scoreMultiplier=Math.min(1.5,(blocksHit/maxBlocks));const ascensionMultiplier=Math.pow(1.15,rugpullLevel);const minigameRewardBonus=(typeof getSkillBonus==='function')?getSkillBonus('minigame_rewards'):0;const minigameRewardMultiplier=1+minigameRewardBonus/100;const totalUsdValue=baseUsdValue*scoreMultiplier*ascensionMultiplier*minigameRewardMultiplier;const btcUsdValue=totalUsdValue*0.40;const btcReward=btcUsdValue/btcPrice;btcBalance+=btcReward;btcLifetime+=btcReward;const ethUsdValue=totalUsdValue*0.35;const ethReward=ethUsdValue/ethPrice;ethBalance+=ethReward;ethLifetime+=ethReward;const dogeUsdValue=totalUsdValue*0.20;const dogeReward=dogeUsdValue/dogePrice;dogeBalance+=dogeReward;dogeLifetime+=dogeReward;const usdReward=totalUsdValue*0.05;addEarnings(usdReward);totalReward=totalUsdValue;whackGameTotalRewardsEarned+=totalUsdValue;lifetimeEarnings+=totalUsdValue;sessionEarnings+=totalUsdValue;whackLastRewards={btc:btcReward,eth:ethReward,doge:dogeReward,usd:usdReward,totalUsd:totalUsdValue}}
+whackCooldowns[whackGameDifficulty]=Date.now()+config.cooldown;const gameModal=document.getElementById('whack-modal');const resultsModal=document.getElementById('whack-results-modal');if(gameModal)gameModal.style.display='none';if(resultsModal){const titleEl=document.getElementById('whack-results-title');if(titleEl){titleEl.textContent=whackGameLivesRemaining>0?'⚡ VICTORY!':'⚡ DEFEAT!'}
+const scoreEl=document.getElementById('whack-results-score');if(scoreEl)scoreEl.textContent=whackGameBlocksHit;const blocksEl=document.getElementById('whack-results-blocks');if(blocksEl)blocksEl.textContent=whackGameBlocksHit;const livesEl=document.getElementById('whack-results-lives');if(livesEl)livesEl.textContent=whackGameLivesRemaining;const rewardsEl=document.getElementById('whack-results-rewards-breakdown');if(rewardsEl){if(whackGameLivesRemaining>0){rewardsEl.innerHTML=`<div style="color: #f7931a; font-weight: 700; margin-bottom: 8px;">Rewards Earned:</div>
+                        <div style="color: #fff; font-size: 0.9rem; line-height: 1.6;">
+                            ₿ ${whackLastRewards.btc >= 1 ? whackLastRewards.btc.toFixed(4) : whackLastRewards.btc.toFixed(8)} BTC<br>
+                            Ξ ${whackLastRewards.eth >= 1 ? whackLastRewards.eth.toFixed(4) : whackLastRewards.eth.toFixed(8)} ETH<br>
+                            Ð ${whackLastRewards.doge.toFixed(2)} DOGE<br>
+                            💵 $${abbreviateNumber(whackLastRewards.totalUsd)}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #aaa; margin-top: 10px; margin-bottom: 5px; font-style: italic;">
+                            Paid as: 40% BTC • 35% ETH • 20% DOGE • 5% Cash
+                        </div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 0px;">
+                            Base Reward: $50 + your mining hash rate value
+                        </div>`}else{rewardsEl.innerHTML=`<div style="color: #888;">No rewards earned</div>`}}
+resultsModal.style.display='flex'}
+updateUI();saveGame()}
+function closeWhackResultsModal(){const modal=document.getElementById('whack-results-modal');if(modal)modal.style.display='none';if(vfxEnabled&&whackGameGamesWon>0&&typeof spawnExplosionCoins==='function'){const totalUsdValue=whackLastRewards?.totalUsd||0;const coinCount=Math.max(15,Math.min(50,Math.floor(totalUsdValue/50)));spawnExplosionCoins('btc',coinCount/4);spawnExplosionCoins('eth',coinCount/4);spawnExplosionCoins('doge',coinCount/4);spawnExplosionCoins('usd',coinCount/4)}}
+function closeWhackMidGame(){if(whackGameActive){whackGameActive=!1;whackGameManuallyClosed=!0;const config=whackDifficultyConfig[whackGameDifficulty];whackCooldowns[whackGameDifficulty]=Date.now()+config.cooldown;console.log(`[WHACK] Applied cooldown to ${whackGameDifficulty}: ${config.cooldown}ms`);updateWhackCooldownDisplays()}
+const modal=document.getElementById('whack-modal');if(modal)modal.style.display='none';const resultsModal=document.getElementById('whack-results-modal');if(resultsModal)resultsModal.style.display='none'}
+function closeWhackModal(){const modal=document.getElementById('whack-modal');if(modal)modal.style.display='none';document.body.classList.remove('modal-open');if(vfxEnabled&&whackGameGamesWon>0&&typeof spawnExplosionCoins==='function'){const totalUsdValue=whackLastRewards?.totalUsd||0;const coinCount=Math.max(15,Math.min(50,Math.floor(totalUsdValue/50)));spawnExplosionCoins('btc',coinCount/4);spawnExplosionCoins('eth',coinCount/4);spawnExplosionCoins('doge',coinCount/4);spawnExplosionCoins('usd',coinCount/4)}}
+function getManualHashBonus(){const btcLevel=btcUpgrades[0]?.level||0;const ethLevel=ethUpgrades[0]?.level||0;const dogeLevel=dogeUpgrades[0]?.level||0;const totalUpgrades=btcLevel+ethLevel+dogeLevel;const bonusPercent=(Math.pow(1.1,totalUpgrades)-1)*100;return{totalUpgrades:totalUpgrades,bonusPercent:bonusPercent,displayText:bonusPercent>0?`+${bonusPercent.toFixed(1)}%`:'0%'}}
+function initNetworkMinigame(){const hasMinigameUnlock=(typeof metaUpgrades!=='undefined'&&metaUpgrades.minigame_unlock&&metaUpgrades.minigame_unlock.purchased);if(!hasMinigameUnlock&&lifetimeEarnings<20000){alert(`🔒 Network Stress Test Locked!\n\nRequires $20,000 lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`);return}
+networkGameActive=!0;networkGameStartTime=Date.now();networkGameTotalDamage=0;networkGameClickDamageTotal=0;const difficultyMultiplier=Math.pow(1.3,networkGameGamesWon);networkGameMaxHP=Math.floor(200*difficultyMultiplier);networkGameCurrentHP=networkGameMaxHP;const manualHashBonus=getManualHashBonus();networkGameClickDamage=Math.floor(20*Math.pow(1.1,manualHashBonus.totalUpgrades));const speedBoostMultiplier=0.05+(0.015*networkGameGamesPlayed);const modal=document.getElementById('network-modal');if(!modal)return;modal.style.display='flex';document.body.classList.add('modal-open');const gameInfo=document.getElementById('network-game-info');const resultsMessage=document.getElementById('network-results-message');const closeBtn=document.getElementById('network-close-btn');if(gameInfo)gameInfo.style.display='block';if(resultsMessage)resultsMessage.style.display='none';if(closeBtn)closeBtn.style.display='none';document.getElementById('network-difficulty-display').textContent=`RUN #${networkGameGamesPlayed + 1}`;document.getElementById('network-hp-display').textContent=networkGameMaxHP;document.getElementById('network-hp-max-display').textContent=networkGameMaxHP;document.getElementById('network-time-display').textContent='10s';const bonus=getManualHashBonus();document.getElementById('network-total-damage-display').textContent=bonus.displayText;document.getElementById('network-click-damage-display').textContent=`+${networkGameClickDamage} damage/click`;networkStartGame(speedBoostMultiplier)}
+function networkStartGame(speedBoostMultiplier){networkGameInterval=setInterval(()=>{const elapsed=Date.now()-networkGameStartTime;const remaining=Math.max(0,networkGameTimeLimit-elapsed);const seconds=Math.ceil(remaining/1000);const timeDisplay=document.getElementById('network-time-display');if(timeDisplay)timeDisplay.textContent=seconds+'s';const btcDamagePerSec=btcPerSec*btcPrice;const ethDamagePerSec=ethPerSec*ethPrice;const dogeDamagePerSec=dogePerSec*dogePrice;const totalDamagePerSec=btcDamagePerSec+ethDamagePerSec+dogeDamagePerSec;const passiveDamageThisFrame=totalDamagePerSec/10;if(networkGameActive){networkGameCurrentHP-=passiveDamageThisFrame;networkGameTotalDamage+=passiveDamageThisFrame;const hpDisplay=document.getElementById('network-hp-display');if(hpDisplay)hpDisplay.textContent=Math.max(0,Math.floor(networkGameCurrentHP));const totalDamageDisplay=document.getElementById('network-total-damage-display');if(totalDamageDisplay){const bonus=getManualHashBonus();totalDamageDisplay.textContent=bonus.displayText}
+const passiveDpsDisplay=document.getElementById('network-passive-dps-display');if(passiveDpsDisplay){if(totalDamagePerSec<0.01){passiveDpsDisplay.textContent=totalDamagePerSec.toFixed(4)}else if(totalDamagePerSec<1){passiveDpsDisplay.textContent=totalDamagePerSec.toFixed(2)}else{passiveDpsDisplay.textContent=Math.floor(totalDamagePerSec)}}
+const hpBar=document.getElementById('network-hp-bar');if(hpBar){const hpPercent=Math.max(0,Math.min(100,(networkGameCurrentHP/networkGameMaxHP)*100));hpBar.style.width=hpPercent+'%'}
+updateNetworkRewardsPreview();if(networkGameCurrentHP<=0){endNetworkGame(!0)}}
+if(remaining<=0){endNetworkGame(networkGameCurrentHP<=0)}},100)}
+function networkClickAttack(){if(!networkGameActive)return;networkGameCurrentHP-=networkGameClickDamage;networkGameTotalDamage+=networkGameClickDamage;networkGameClickDamageTotal+=networkGameClickDamage;const hpDisplay=document.getElementById('network-hp-display');if(hpDisplay)hpDisplay.textContent=Math.max(0,Math.floor(networkGameCurrentHP));const totalDamageDisplay=document.getElementById('network-total-damage-display');if(totalDamageDisplay)totalDamageDisplay.textContent=Math.floor(networkGameClickDamageTotal);const hpBar=document.getElementById('network-hp-bar');if(hpBar){const hpPercent=Math.max(0,Math.min(100,(networkGameCurrentHP/networkGameMaxHP)*100));hpBar.style.width=hpPercent+'%'}
+const clickBtn=document.getElementById('network-click-btn');if(clickBtn){clickBtn.style.transform='scale(0.95)';setTimeout(()=>{clickBtn.style.transform='scale(1)'},100)}
+playClickSound();if(networkGameCurrentHP<=0){endNetworkGame(!0)}}
+function updateNetworkRewardsPreview(){const fixedReward=5000*Math.pow(1.39,networkGameGamesWon);const formatAmount=(amount)=>{if(amount>=1e12)return(amount/1e12).toFixed(2)+'T';if(amount>=1e9)return(amount/1e9).toFixed(2)+'B';if(amount>=1e6)return(amount/1e6).toFixed(2)+'M';if(amount>=1e3)return(amount/1e3).toFixed(2)+'K';return amount.toFixed(0)};const btcUsdValue=fixedReward*0.40;const btcReward=btcUsdValue/btcPrice;const ethUsdValue=fixedReward*0.35;const ethReward=ethUsdValue/ethPrice;const dogeUsdValue=fixedReward*0.20;const dogeReward=dogeUsdValue/dogePrice;const usdReward=fixedReward*0.05;const btcDisplay=document.getElementById('network-reward-btc-preview');if(btcDisplay){if(btcReward>=1){btcDisplay.textContent=btcReward.toFixed(4)}else{btcDisplay.textContent=btcReward.toFixed(8)}}
+const ethDisplay=document.getElementById('network-reward-eth-preview');if(ethDisplay){if(ethReward>=1){ethDisplay.textContent=ethReward.toFixed(4)}else{ethDisplay.textContent=ethReward.toFixed(8)}}
+const dogeDisplay=document.getElementById('network-reward-doge-preview');if(dogeDisplay){if(dogeReward>=1){dogeDisplay.textContent=dogeReward.toFixed(4)}else{dogeDisplay.textContent=dogeReward.toFixed(8)}}
+const usdDisplay=document.getElementById('network-reward-usd-preview');if(usdDisplay){usdDisplay.textContent='$'+formatAmount(usdReward)}}
+function endNetworkGame(won){networkGameActive=!1;if(networkGameInterval)clearInterval(networkGameInterval);let totalReward=0;if(won){networkGameWonThisRound=!0;networkGameGamesPlayed++;networkGameGamesWon++;const rugpullLevel=(typeof ascensionLevel!=='undefined')?ascensionLevel:0;const baseReward=5000*Math.pow(1.39,networkGameGamesWon);const damageRatio=Math.min(1.0,networkGameTotalDamage/(networkGameMaxHP*1.5));const successMultiplier=0.5+(damageRatio*1.5);const ascensionMultiplier=Math.pow(1.15,rugpullLevel);const totalUsdValue=baseReward*successMultiplier*ascensionMultiplier;const btcUsdValue=totalUsdValue*0.40;const btcReward=btcUsdValue/btcPrice;btcBalance+=btcReward;btcLifetime+=btcReward;const ethUsdValue=totalUsdValue*0.35;const ethReward=ethUsdValue/ethPrice;ethBalance+=ethReward;ethLifetime+=ethReward;const dogeUsdValue=totalUsdValue*0.20;const dogeReward=dogeUsdValue/dogePrice;dogeBalance+=dogeReward;dogeLifetime+=dogeReward;const usdReward=totalUsdValue*0.05;addEarnings(usdReward);totalReward=totalUsdValue;networkGameTotalRewardsEarned+=totalUsdValue;lifetimeEarnings+=totalUsdValue;sessionEarnings+=totalUsdValue;networkLastRewards={btc:btcReward,eth:ethReward,doge:dogeReward,usd:usdReward,totalUsd:totalUsdValue}}
+const resultsMessage=document.getElementById('network-results-message');if(resultsMessage){if(won){const formatAmount=(amount)=>{if(amount>=1)return amount.toFixed(4);return amount.toFixed(8)};resultsMessage.innerHTML=`<span style="color: #00b4ff; font-size: 1.5rem;">✓ NETWORK DESTROYED!</span><br>
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 8px;">Formula Breakdown:</div>
+                        <div style="color: #fff; font-size: 0.75rem; margin-bottom: 10px; text-align: left; line-height: 1.4;">
+                            <div>Damage Dealt: ${Math.floor(networkGameTotalDamage)}</div>
+                            <div>Base Reward: (Damage × $10) × Score Multiplier</div>
+                            <div>Games Won Bonus: ${networkGameGamesWon} consecutive wins</div>
+                            <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #666;">Total Multiplier: ${(Math.pow(1.15, ascensionLevel || 0) * (1 + (getSkillBonus ? getSkillBonus('minigame_rewards') : 0) / 100)).toFixed(3)}x</div>
+                        </div>
+                        <div style="color: #f7931a; font-weight: 700; margin-bottom: 5px;">Rewards Earned:</div>
+                        <div style="color: #fff; font-size: 0.9rem;">
+                            ₿ ${formatAmount(networkLastRewards.btc)} BTC<br>
+                            Ξ ${formatAmount(networkLastRewards.eth)} ETH<br>
+                            Ð ${formatAmount(networkLastRewards.doge)} DOGE<br>
+                            💵 $${networkLastRewards.usd.toFixed(2)}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #aaa; margin-top: 10px; margin-bottom: 5px; font-style: italic;">
+                            Paid as: 40% BTC • 35% ETH • 20% DOGE • 5% Cash
+                        </div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 0px;">
+                            Base Reward: $10 per damage dealt
+                        </div>
+                    </div>`}else{resultsMessage.innerHTML=`<span style="color: #ff3344; font-size: 1.5rem;">✗ TIME'S UP!</span><br>
+                    <span style="color: #888;">Network HP remaining: ${Math.max(0, Math.floor(networkGameCurrentHP))}<br>You dealt ${Math.floor(networkGameTotalDamage)} damage!</span>`}}
+const gameInfo=document.getElementById('network-game-info');const closeBtn=document.getElementById('network-close-btn');if(gameInfo)gameInfo.style.display='none';if(resultsMessage)resultsMessage.style.display='block';if(closeBtn)closeBtn.style.display='block';updateUI();saveGame()}
+function closeNetworkModal(){const modal=document.getElementById('network-modal');if(modal)modal.style.display='none';document.body.classList.remove('modal-open');if(vfxEnabled&&networkGameWonThisRound&&typeof spawnExplosionCoins==='function'){const totalUsdValue=networkLastRewards?.totalUsd||0;const coinCount=Math.max(20,Math.min(50,Math.floor(totalUsdValue/50)));spawnExplosionCoins('btc',coinCount/4);spawnExplosionCoins('eth',coinCount/4);spawnExplosionCoins('doge',coinCount/4);spawnExplosionCoins('usd',coinCount/4)}
+networkGameWonThisRound=!1}
+function updatePowerDisplay(){const powerUsedEl=document.getElementById('power-used');if(powerUsedEl){const availableWithBonus=getTotalPowerAvailableWithBonus();powerUsedEl.innerText=formatPower(totalPowerUsed)+' / '+formatPower(availableWithBonus);const percentage=availableWithBonus>0?(totalPowerUsed/availableWithBonus*100):0;if(percentage>100){powerUsedEl.style.color='#ff3344'}else if(percentage>80){powerUsedEl.style.color='#ff9500'}else if(percentage>60){powerUsedEl.style.color='#ffdd00'}else{powerUsedEl.style.color='#00ff88'}}
+const powerBarFill=document.getElementById('power-bar-fill');if(powerBarFill){const availableWithBonus=getTotalPowerAvailableWithBonus();const percentage=availableWithBonus>0?(totalPowerUsed/availableWithBonus*100):0;powerBarFill.style.width=Math.min(percentage,100)+'%';if(percentage>100){powerBarFill.style.background='#ff3344'}else if(percentage>80){powerBarFill.style.background='#ff9500'}else if(percentage>60){powerBarFill.style.background='#ffdd00'}else{powerBarFill.style.background='#00ff88'}}
+powerUpgrades.forEach(u=>{const costUsd=u.currentUsd;const nameEl=document.querySelector(`#pow-${u.id} > div:first-child > div:first-child`);if(nameEl){const levelTag=formatLevelTag(u.level);nameEl.innerHTML=nameEl.innerHTML.replace(/\s*<span style="color:#888;font-size:0\.85rem">\[.*?\]<\/span>/g,'')+` <span style="color:#888;font-size:0.85rem">${levelTag}</span>`}
+const currentPowerEl=document.getElementById(`pow-current-${u.id}`);if(currentPowerEl)currentPowerEl.innerText=`+${formatPower(u.currentPower)} - Current Power`;const powerEl=document.getElementById(`pow-power-${u.id}`);if(powerEl)powerEl.innerText=`+${formatPower(u.basePower)} Produced per level`;const usdEl=document.getElementById(`pow-usd-${u.id}`);if(usdEl)usdEl.innerText=`$${formatNumberForDisplay(u.currentUsd)}`;const affordEl=document.getElementById(`pow-afford-${u.id}`);if(affordEl){let remaining=dollarBalance;let canAfford=0;let nextCost=costUsd;let nextLevel=u.level;while(remaining>=nextCost){remaining-=nextCost;canAfford++;nextLevel++;nextCost=u.baseUsd*Math.pow(1.15,nextLevel)}
+affordEl.innerText=`x${canAfford}`;affordEl.style.color=canAfford>0?'#00ff88':'#666'}
+const btn=document.getElementById(`pow-${u.id}`);if(btn){if(dollarBalance<costUsd){btn.style.opacity='0.2';btn.style.cursor='not-allowed';btn.disabled=!0}else{btn.style.opacity='1';btn.style.cursor='pointer';btn.disabled=!1}}})}
+function updateAutoSellButtonUI(){const btn=document.getElementById('auto-sell-toggle-btn');const statusEl=document.getElementById('auto-sell-status');if(!btn||!statusEl)return;const metaUpgrades=typeof window.metaUpgrades!=='undefined'?window.metaUpgrades:null;const upgradeToggleState=typeof window.upgradeToggleState!=='undefined'?window.upgradeToggleState:null;const isPurchased=metaUpgrades&&metaUpgrades.auto_sell&&metaUpgrades.auto_sell.purchased;if(isPurchased){const isEnabled=upgradeToggleState&&upgradeToggleState.auto_sell===!0;btn.disabled=!1;btn.removeAttribute('disabled');btn.title='Click to toggle automatic crypto to USD conversion';statusEl.innerText=isEnabled?'ON':'OFF';const icon=isEnabled?'🟢':'⭕';btn.innerHTML=icon+' Auto-Sell: <span id="auto-sell-status">'+(isEnabled?'ON':'OFF')+'</span>'}else{btn.disabled=!0;btn.setAttribute('disabled','disabled');statusEl.innerText='LOCKED';btn.title='Purchase "Auto-Sell Crypto to Cash" upgrade to enable';btn.innerHTML='🔒 Auto-Sell: <span id="auto-sell-status">LOCKED</span>'}}
+function toggleAutoSellButton(){const metaUpgrades=typeof window.metaUpgrades!=='undefined'?window.metaUpgrades:null;if(!metaUpgrades||!metaUpgrades.auto_sell||!metaUpgrades.auto_sell.purchased){alert('Purchase the "Auto-Sell Crypto to Cash" upgrade first!');return}
+if(typeof toggleAutoSell==='function'){toggleAutoSell();updateAutoSellButtonUI()}}
+function flashCryptoBar(barId){const bar=document.getElementById(barId);if(bar){if(bar.classList.contains('bar-flash')){bar.classList.remove('bar-flash');setTimeout(()=>{bar.classList.add('bar-flash')},10)}else{bar.classList.add('bar-flash')}}}
+function manualHash(){if(typeof pauseCoinRain==='function'){pauseCoinRain();setTimeout(()=>{if(typeof resumeCoinRain==='function'){resumeCoinRain()}},50)}
+const clickBonus=(typeof getClickBonus==='function')?getClickBonus():1;const ascensionClickMultiplier=(typeof ascensionLevel!=='undefined'&&ascensionLevel>0)?(1+ascensionLevel*0.01):1;let actualClickValue=btcClickValue*clickBonus*ascensionClickMultiplier;if(typeof metaUpgrades!=='undefined'){let clickHashRateBonus=0;Object.entries(metaUpgrades).forEach(([key,upgrade])=>{if(upgrade.purchased&&key.includes('click_hashrate')){const tier=parseInt(key.match(/\d+$/)[0]);clickHashRateBonus+=0.5*Math.pow(1.15,tier-1)}});if(clickHashRateBonus>0){actualClickValue+=btcPerSec*(clickHashRateBonus/100)}}
+if(typeof metaUpgrades!=='undefined'&&metaUpgrades.hash_rate_memory&&metaUpgrades.hash_rate_memory.purchased){actualClickValue+=btcPerSec*0.01}
+const btcAutoSold=tryAutoSellCrypto('btc',actualClickValue);if(!btcAutoSold){btcBalance+=actualClickValue}
+btcLifetime+=actualClickValue;const usdValue=actualClickValue*btcPrice;lifetimeEarnings+=usdValue;sessionEarnings+=usdValue;const now=Date.now();manualHashClickTime=now;manualHashCooldownEnd=now+1000;clickTimestamps.push(now);if(clickTimestamps.length>60)clickTimestamps.shift();spawnCoinsForClick('btc',usdValue);flashCryptoBar('btc-bar');playClickSound();requestAnimationFrame(()=>{updateUI()})}
+function manualEthHash(){if(typeof pauseCoinRain==='function'){pauseCoinRain();setTimeout(()=>{if(typeof resumeCoinRain==='function'){resumeCoinRain()}},50)}
+const clickBonus=(typeof getClickBonus==='function')?getClickBonus():1;const ascensionClickMultiplier=(typeof ascensionLevel!=='undefined'&&ascensionLevel>0)?(1+ascensionLevel*0.01):1;let actualClickValue=ethClickValue*clickBonus*ascensionClickMultiplier;if(typeof metaUpgrades!=='undefined'){let clickHashRateBonus=0;Object.entries(metaUpgrades).forEach(([key,upgrade])=>{if(upgrade.purchased&&key.includes('click_hashrate')){const tier=parseInt(key.match(/\d+$/)[0]);clickHashRateBonus+=0.5*Math.pow(1.15,tier-1)}});if(clickHashRateBonus>0){actualClickValue+=ethPerSec*(clickHashRateBonus/100)}}
+if(typeof metaUpgrades!=='undefined'&&metaUpgrades.hash_rate_memory&&metaUpgrades.hash_rate_memory.purchased){actualClickValue+=ethPerSec*0.01}
+const ethAutoSold=tryAutoSellCrypto('eth',actualClickValue);if(!ethAutoSold){ethBalance+=actualClickValue}
+ethLifetime+=actualClickValue;const usdValue=actualClickValue*ethPrice;lifetimeEarnings+=usdValue;sessionEarnings+=usdValue;const now=Date.now();manualHashClickTime=now;manualHashCooldownEnd=now+1000;clickTimestamps.push(now);if(clickTimestamps.length>60)clickTimestamps.shift();spawnCoinsForClick('eth',usdValue);flashCryptoBar('eth-bar');playClickSound();requestAnimationFrame(()=>{updateUI()})}
+function manualDogeHash(){if(typeof pauseCoinRain==='function'){pauseCoinRain();setTimeout(()=>{if(typeof resumeCoinRain==='function'){resumeCoinRain()}},50)}
+const clickBonus=(typeof getClickBonus==='function')?getClickBonus():1;const ascensionClickMultiplier=(typeof ascensionLevel!=='undefined'&&ascensionLevel>0)?(1+ascensionLevel*0.01):1;let actualClickValue=dogeClickValue*clickBonus*ascensionClickMultiplier;if(typeof metaUpgrades!=='undefined'){let clickHashRateBonus=0;Object.entries(metaUpgrades).forEach(([key,upgrade])=>{if(upgrade.purchased&&key.includes('click_hashrate')){const tier=parseInt(key.match(/\d+$/)[0]);clickHashRateBonus+=0.5*Math.pow(1.15,tier-1)}});if(clickHashRateBonus>0){actualClickValue+=dogePerSec*(clickHashRateBonus/100)}}
+if(typeof metaUpgrades!=='undefined'&&metaUpgrades.hash_rate_memory&&metaUpgrades.hash_rate_memory.purchased){actualClickValue+=dogePerSec*0.01}
+const dogeAutoSold=tryAutoSellCrypto('doge',actualClickValue);if(!dogeAutoSold){dogeBalance+=actualClickValue}
+dogeLifetime+=actualClickValue;const usdValue=actualClickValue*dogePrice;lifetimeEarnings+=usdValue;sessionEarnings+=usdValue;const now=Date.now();manualHashClickTime=now;manualHashCooldownEnd=now+1000;clickTimestamps.push(now);if(clickTimestamps.length>60)clickTimestamps.shift();spawnCoinsForClick('doge',usdValue);flashCryptoBar('doge-bar');playClickSound();requestAnimationFrame(()=>{updateUI()})}
+function spawnCoinsForClick(coinType,usdValue){if(!vfxEnabled)return;const now=Date.now();if(now-lastCoinSpawnTime<100){return}
+lastCoinSpawnTime=now;if(typeof window.coinRainSystem==='undefined'||!window.coinRainSystem){if(typeof initializeCoinRain==='function'){initializeCoinRain()}else{return}}
+let coinCount;if(coinType==='usd'){if(usdValue<1){coinCount=1}else if(usdValue<10){coinCount=Math.floor(Math.min(3,usdValue))}else if(usdValue<1000){coinCount=3+Math.floor((usdValue-10)/330)}else if(usdValue<10000){coinCount=4+Math.floor((usdValue-1000)/2250)}else if(usdValue<100000){coinCount=5+Math.floor((usdValue-10000)/22500)}else if(usdValue<1000000){coinCount=6+Math.floor((usdValue-100000)/225000)}else if(usdValue<10000000){coinCount=7+Math.floor((usdValue-1000000)/1285714)}else if(usdValue<100000000){coinCount=8+Math.floor((usdValue-10000000)/10000000)}else{coinCount=10}
+coinCount=Math.max(1,Math.min(10,coinCount))}else{coinCount=1}
+let usdCoinTypes=['usd'];if(coinType==='usd'){if(usdValue>=100000){usdCoinTypes=['usd','usd_stack','usd_stack_2'];coinCount=Math.ceil(coinCount*0.8)}else if(usdValue>=10000){usdCoinTypes=['usd','usd_stack'];coinCount=Math.ceil(coinCount*0.9)}}
+for(let i=0;i<coinCount;i++){setTimeout(()=>{let typeToSpawn=coinType;if(coinType==='usd'){typeToSpawn=usdCoinTypes[Math.floor(Math.random()*usdCoinTypes.length)]}
+window.coinRainSystem.spawnCoin(typeToSpawn,!0)},i*(5+Math.random()*25))}}
+function spawnPacketInterceptorRewardCoins(){if(typeof window.coinRainSystem==='undefined'||!window.coinRainSystem){if(typeof initializeCoinRain==='function'){initializeCoinRain()}else{return}}
+if(typeof packetLastRewards==='undefined'||!packetLastRewards||packetLastRewards.totalUsd<=0){return}
+if(typeof vfxEnabled!=='undefined'&&!vfxEnabled)return;const rewards=packetLastRewards;const totalUsdValue=rewards.totalUsd;let usdCoinCount;if(totalUsdValue>=100000){usdCoinCount=Math.min(6,Math.floor(totalUsdValue/500000))}else if(totalUsdValue>=10000){usdCoinCount=Math.min(5,Math.floor(totalUsdValue/50000))}else{usdCoinCount=Math.min(4,Math.floor(totalUsdValue/10000)+2)}
+usdCoinCount=Math.max(1,usdCoinCount);const btcCoinCount=Math.min(5,Math.max(1,Math.floor(rewards.btc*100)));const ethCoinCount=Math.min(5,Math.max(1,Math.floor(rewards.eth*10)));const dogeCoinCount=Math.min(5,Math.max(1,Math.floor(rewards.doge/1000)));const spawnCoinsOfType=(coinType,count)=>{let usdCoinTypes=null;if(coinType==='usd'){if(totalUsdValue>=100000){usdCoinTypes=['usd','usd_stack','usd_stack_2']}else if(totalUsdValue>=10000){usdCoinTypes=['usd','usd_stack']}else{usdCoinTypes=['usd']}}
+for(let i=0;i<count;i++){setTimeout(()=>{let typeToSpawn=coinType;if(coinType==='usd'&&usdCoinTypes){typeToSpawn=usdCoinTypes[Math.floor(Math.random()*usdCoinTypes.length)]}
+window.coinRainSystem.spawnCoin(typeToSpawn,!0)},i*(10+Math.random()*30))}};spawnCoinsOfType('usd',usdCoinCount);spawnCoinsOfType('btc',btcCoinCount);spawnCoinsOfType('eth',ethCoinCount);spawnCoinsOfType('doge',dogeCoinCount)}
+function buyLevel(i){const u=upgrades[i];const costBtc=u.currentUsd/btcPrice;if(btcBalance>=costBtc){const powerReq=equipmentPowerReqs[u.id]||0;const powerNeeded=totalPowerUsed+powerReq;const availablePower=getTotalPowerAvailableWithBonus();if(powerNeeded>availablePower&&powerReq>0){alert(`Insufficient power! This upgrade requires ${powerReq.toLocaleString()}W per level.\nYou need ${Math.ceil(powerNeeded - availablePower).toLocaleString()}W more power capacity.`);return}
+btcBalance-=costBtc;hardwareEquity+=u.currentUsd;u.level++;if(u.id===0||u.isClickUpgrade){btcClickValue*=1.12;u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level));document.getElementById('btc-hash-value').innerText=`+${btcClickValue.toFixed(8)} ₿`}else{u.currentYield=calculateMinerYield(u);u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level))}
+const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;btcPerSec=upgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);updateUI();saveGame();playUpgradeSound()}}
+function buyLevelMultiple(i,quantity){const u=upgrades[i];const powerReq=equipmentPowerReqs[u.id]||0;let purchased=0;for(let q=0;q<quantity;q++){const costUsd=u.currentUsd;if(dollarBalance<costUsd){break}
+if(powerReq>0){const powerNeeded=totalPowerUsed+powerReq;const availablePower=getTotalPowerAvailableWithBonus();if(powerNeeded>availablePower){break}}
+dollarBalance-=costUsd;hardwareEquity+=u.currentUsd;u.level++;if(u.id===0||u.isClickUpgrade){btcClickValue*=1.12;u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level))}else{u.currentYield=calculateMinerYield(u);u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level))}
+purchased++;calculateTotalPowerUsed()}
+if(purchased>0){if(u.id===0||u.isClickUpgrade){document.getElementById('btc-hash-value').innerText=`+${btcClickValue.toFixed(8)} ₿`}
+btcPerSec=upgrades.reduce((sum,item)=>sum+(item.currentYield||0),0);if(u.id===1&&typeof trackUSBMinerPurchase==='function'){trackUSBMinerPurchase()}
+lastUIUpdateTime=0;updateUI();saveGame();playUpgradeSound()}}
+function restorePermanentMilestoneDoublings(){function recalculateMultiplier(upgrade){if(upgrade.id===0||upgrade.isClickUpgrade)return;let purchasedCount=0;if(upgrade.milestoneDoublings&&typeof upgrade.milestoneDoublings==='object'){purchasedCount=Object.values(upgrade.milestoneDoublings).filter(v=>v===!0).length}
+upgrade.doubleMultiplier=Math.pow(2,purchasedCount)}
+upgrades.forEach(u=>{recalculateMultiplier(u);if(typeof getPermanentDoubleMultiplier==='function'){const btcMultiplier=getPermanentDoubleMultiplier('btc')||1;if(btcMultiplier>1&&u.id!==0&&!u.isClickUpgrade){u.doubleMultiplier*=btcMultiplier}}});ethUpgrades.forEach(u=>{recalculateMultiplier(u);if(typeof getPermanentDoubleMultiplier==='function'){const ethMultiplier=getPermanentDoubleMultiplier('eth')||1;if(ethMultiplier>1&&u.id!==0&&!u.isClickUpgrade){u.doubleMultiplier*=ethMultiplier}}});dogeUpgrades.forEach(u=>{recalculateMultiplier(u);if(typeof getPermanentDoubleMultiplier==='function'){const dogeMultiplier=getPermanentDoubleMultiplier('doge')||1;if(dogeMultiplier>1&&u.id!==0&&!u.isClickUpgrade){u.doubleMultiplier*=dogeMultiplier}}})}
+function calculateMinerYield(u){if(u.id===0||u.isClickUpgrade){return 0}
+const baseYield=u.baseYield*u.level;let multiplier=u.doubleMultiplier;if(btcUpgrades.includes(u)){multiplier*=Math.pow(2,btcMultiplierLevel)}else if(ethUpgrades.includes(u)){multiplier*=Math.pow(2,ethMultiplierLevel)}else if(dogeUpgrades.includes(u)){multiplier*=Math.pow(2,dogeMultiplierLevel)}
+return baseYield*multiplier}
+function purchaseGlobalBTCMultiplier(){const cost=getNextMultiplierCost(btcMultiplierLevel);if(dollarBalance<cost){return}
+dollarBalance-=cost;hardwareEquity+=cost;btcMultiplierLevel++;const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;upgrades.forEach(u=>{if(!u.isClickUpgrade){u.currentYield=calculateMinerYield(u)}});btcPerSec=upgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);lastUIUpdateTime=0;initBtcShop();updateUI();saveGame();playUpgradeSound()}
+function purchaseGlobalETHMultiplier(){const cost=getNextMultiplierCost(ethMultiplierLevel);if(dollarBalance<cost){console.log(`[DEBUG] Cannot afford ETH multiplier. Cost: $${cost}, Balance: $${dollarBalance}`);return}
+dollarBalance-=cost;hardwareEquity+=cost;ethMultiplierLevel++;console.log(`[DEBUG] Purchased ETH multiplier ${ethMultiplierLevel}! Next cost: $${getNextMultiplierCost(ethMultiplierLevel)}`);const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;ethUpgrades.forEach(u=>{if(!u.isClickUpgrade){u.currentYield=calculateMinerYield(u)}});ethPerSec=ethUpgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);window.ethPerSec=ethPerSec;lastUIUpdateTime=0;initEthShop();updateUI();saveGame();playUpgradeSound()}
+function purchaseGlobalDogeMultiplier(){const cost=getNextMultiplierCost(dogeMultiplierLevel);if(dollarBalance<cost){console.log(`[DEBUG] Cannot afford DOGE multiplier. Cost: $${cost}, Balance: $${dollarBalance}`);return}
+dollarBalance-=cost;hardwareEquity+=cost;dogeMultiplierLevel++;console.log(`[DEBUG] Purchased DOGE multiplier ${dogeMultiplierLevel}! Next cost: $${getNextMultiplierCost(dogeMultiplierLevel)}`);const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;dogeUpgrades.forEach(u=>{if(!u.isClickUpgrade){u.currentYield=calculateMinerYield(u)}});dogePerSec=dogeUpgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);window.dogePerSec=dogePerSec;lastUIUpdateTime=0;initDogeShop();updateUI();saveGame();playUpgradeSound()}
+function purchaseBTCManualHashRate(){const cost=getManualHashRateCost(btcManualHashRateLevel);if(dollarBalance<cost){return}
+dollarBalance-=cost;hardwareEquity+=cost;btcManualHashRateLevel++;btcClickValue*=10;const btcUpgrade=upgrades.find(u=>u.name==="Manual Hash Rate");if(btcUpgrade){btcUpgrade.clickIncrease=btcClickValue}
+const btcHashSpan=document.getElementById('btc-hash-value');if(btcHashSpan){btcHashSpan.innerText=`+${btcClickValue.toFixed(8)} ₿`}
+const btcMHRBtn=document.getElementById('btc-manual-hash-rate-btn');if(btcMHRBtn){const btcMHRCost=getManualHashRateCost(btcManualHashRateLevel);const btcMHRCanAfford=dollarBalance>=btcMHRCost;const btcMHRMultiplier=1+(btcManualHashRateLevel*0.5);document.getElementById('btc-mhr-cost').innerHTML=`$${formatNumberForDisplay(btcMHRCost)}`;document.getElementById('btc-mhr-multi').innerHTML=`${btcMHRMultiplier.toFixed(1)}x`;if(!btcMHRCanAfford){btcMHRBtn.style.setProperty('display','none','important');btcMHRBtn.disabled=!0}else{btcMHRBtn.style.setProperty('display','flex','important');btcMHRBtn.style.cursor='pointer';btcMHRBtn.disabled=!1}}
+saveGame();playUpgradeSound()}
+function purchaseETHManualHashRate(){const cost=getManualHashRateCost(ethManualHashRateLevel);if(dollarBalance<cost){return}
+dollarBalance-=cost;hardwareEquity+=cost;ethManualHashRateLevel++;ethClickValue*=10;const ethUpgrade=ethUpgrades.find(u=>u.name==="Manual Hash Rate");if(ethUpgrade){ethUpgrade.clickIncrease=ethClickValue}
+const ethHashSpan=document.getElementById('eth-hash-value');if(ethHashSpan){ethHashSpan.innerText=`+${ethClickValue.toFixed(8)} Ξ`}
+const ethMHRBtn=document.getElementById('eth-manual-hash-rate-btn');if(ethMHRBtn){const ethMHRCost=getManualHashRateCost(ethManualHashRateLevel);const ethMHRCanAfford=dollarBalance>=ethMHRCost;const ethMHRMultiplier=1+(ethManualHashRateLevel*0.5);document.getElementById('eth-mhr-cost').innerHTML=`$${formatNumberForDisplay(ethMHRCost)}`;document.getElementById('eth-mhr-multi').innerHTML=`${ethMHRMultiplier.toFixed(1)}x`;if(!ethMHRCanAfford){ethMHRBtn.style.setProperty('display','none','important');ethMHRBtn.disabled=!0}else{ethMHRBtn.style.setProperty('display','flex','important');ethMHRBtn.style.cursor='pointer';ethMHRBtn.disabled=!1}}
+saveGame();playUpgradeSound()}
+function purchaseDOGEManualHashRate(){const cost=getManualHashRateCost(dogeManualHashRateLevel);if(dollarBalance<cost){return}
+dollarBalance-=cost;hardwareEquity+=cost;dogeManualHashRateLevel++;dogeClickValue*=10;const dogeUpgrade=dogeUpgrades.find(u=>u.name==="Manual Hash Rate");if(dogeUpgrade){dogeUpgrade.clickIncrease=dogeClickValue}
+const dogeHashSpan=document.getElementById('doge-hash-value');if(dogeHashSpan){dogeHashSpan.innerText=`+${dogeClickValue.toFixed(8)} Ð`}
+const dogeMHRBtn=document.getElementById('doge-manual-hash-rate-btn');if(dogeMHRBtn){const dogeMHRCost=getManualHashRateCost(dogeManualHashRateLevel);const dogeMHRCanAfford=dollarBalance>=dogeMHRCost;const dogeMHRMultiplier=1+(dogeManualHashRateLevel*0.5);document.getElementById('doge-mhr-cost').innerHTML=`$${formatNumberForDisplay(dogeMHRCost)}`;document.getElementById('doge-mhr-multi').innerHTML=`${dogeMHRMultiplier.toFixed(1)}x`;if(!dogeMHRCanAfford){dogeMHRBtn.style.setProperty('display','none','important');dogeMHRBtn.disabled=!0}else{dogeMHRBtn.style.setProperty('display','flex','important');dogeMHRBtn.style.cursor='pointer';dogeMHRBtn.disabled=!1}}
+saveGame();playUpgradeSound()}
+function updateGlobalMultiplierButtons(){const btcBtn=document.getElementById('btc-global-multiplier-btn');if(btcBtn){const btcNextCost=getNextMultiplierCost(btcMultiplierLevel);const btcCanAfford=dollarBalance>=btcNextCost;const btcMultiplier=Math.pow(2,btcMultiplierLevel);const btcCostEl=document.getElementById('btc-multiplier-cost');const btcCostText=`Cost: $${formatNumberForDisplay(btcNextCost)}`;if(btcCostEl&&btcCostEl.textContent!==btcCostText){btcCostEl.textContent=btcCostText}
+const btcLevelEl=document.getElementById('btc-multiplier-level');const btcLevelText=`Multiplier: ${btcMultiplier}x`;if(btcLevelEl&&btcLevelEl.textContent!==btcLevelText){btcLevelEl.textContent=btcLevelText}
+if(!btcCanAfford){btcBtn.style.opacity='0.45';btcBtn.style.cursor='not-allowed';btcBtn.disabled=!0}else{btcBtn.style.opacity='1';btcBtn.style.cursor='pointer';btcBtn.disabled=!1}}
+const ethBtn=document.getElementById('eth-global-multiplier-btn');if(ethBtn){const ethNextCost=getNextMultiplierCost(ethMultiplierLevel);const ethCanAfford=dollarBalance>=ethNextCost;const ethMultiplier=Math.pow(2,ethMultiplierLevel);const ethCostEl=document.getElementById('eth-multiplier-cost');const ethCostText=`Cost: $${formatNumberForDisplay(ethNextCost)}`;if(ethCostEl&&ethCostEl.textContent!==ethCostText){ethCostEl.textContent=ethCostText}
+const ethLevelEl=document.getElementById('eth-multiplier-level');const ethLevelText=`Multiplier: ${ethMultiplier}x`;if(ethLevelEl&&ethLevelEl.textContent!==ethLevelText){ethLevelEl.textContent=ethLevelText}
+if(!ethCanAfford){ethBtn.style.opacity='0.45';ethBtn.style.cursor='not-allowed';ethBtn.disabled=!0}else{ethBtn.style.opacity='1';ethBtn.style.cursor='pointer';ethBtn.disabled=!1}}
+const dogeBtn=document.getElementById('doge-global-multiplier-btn');if(dogeBtn){const dogeNextCost=getNextMultiplierCost(dogeMultiplierLevel);const dogeCanAfford=dollarBalance>=dogeNextCost;const dogeMultiplier=Math.pow(2,dogeMultiplierLevel);const dogeCostEl=document.getElementById('doge-multiplier-cost');const dogeCostText=`Cost: $${formatNumberForDisplay(dogeNextCost)}`;if(dogeCostEl&&dogeCostEl.textContent!==dogeCostText){dogeCostEl.textContent=dogeCostText}
+const dogeLevelEl=document.getElementById('doge-multiplier-level');const dogeLevelText=`Multiplier: ${dogeMultiplier}x`;if(dogeLevelEl&&dogeLevelEl.textContent!==dogeLevelText){dogeLevelEl.textContent=dogeLevelText}
+if(!dogeCanAfford){dogeBtn.style.opacity='0.45';dogeBtn.style.cursor='not-allowed';dogeBtn.disabled=!0}else{dogeBtn.style.opacity='1';dogeBtn.style.cursor='pointer';dogeBtn.disabled=!1}}}
+function updateManualHashRateButtons(){const btcMHRBtn=document.getElementById('btc-manual-hash-rate-btn');if(btcMHRBtn){const btcMHRCost=getManualHashRateCost(btcManualHashRateLevel);const btcMHRCanAfford=dollarBalance>=btcMHRCost;const btcMHRMultiplier=1+(btcManualHashRateLevel*0.5);document.getElementById('btc-mhr-cost').innerHTML=`$${formatNumberForDisplay(btcMHRCost)}`;document.getElementById('btc-mhr-multi').innerHTML=`${btcMHRMultiplier.toFixed(1)}x`;if(!btcMHRCanAfford){btcMHRBtn.style.setProperty('display','none','important');btcMHRBtn.disabled=!0}else{btcMHRBtn.style.setProperty('display','flex','important');btcMHRBtn.style.cursor='pointer';btcMHRBtn.disabled=!1}}
+const ethMHRBtn=document.getElementById('eth-manual-hash-rate-btn');if(ethMHRBtn){const ethMHRCost=getManualHashRateCost(ethManualHashRateLevel);const ethMHRCanAfford=dollarBalance>=ethMHRCost;const ethMHRMultiplier=1+(ethManualHashRateLevel*0.5);document.getElementById('eth-mhr-cost').innerHTML=`$${formatNumberForDisplay(ethMHRCost)}`;document.getElementById('eth-mhr-multi').innerHTML=`${ethMHRMultiplier.toFixed(1)}x`;if(!ethMHRCanAfford){ethMHRBtn.style.setProperty('display','none','important');ethMHRBtn.disabled=!0}else{ethMHRBtn.style.setProperty('display','flex','important');ethMHRBtn.style.cursor='pointer';ethMHRBtn.disabled=!1}}
+const dogeMHRBtn=document.getElementById('doge-manual-hash-rate-btn');if(dogeMHRBtn){const dogeMHRCost=getManualHashRateCost(dogeManualHashRateLevel);const dogeMHRCanAfford=dollarBalance>=dogeMHRCost;const dogeMHRMultiplier=1+(dogeManualHashRateLevel*0.5);document.getElementById('doge-mhr-cost').innerHTML=`$${formatNumberForDisplay(dogeMHRCost)}`;document.getElementById('doge-mhr-multi').innerHTML=`${dogeMHRMultiplier.toFixed(1)}x`;if(!dogeMHRCanAfford){dogeMHRBtn.style.setProperty('display','none','important');dogeMHRBtn.disabled=!0}else{dogeMHRBtn.style.setProperty('display','flex','important');dogeMHRBtn.style.cursor='pointer';dogeMHRBtn.disabled=!1}}}
+function buyEthLevel(i,quantity){const u=ethUpgrades[i];const powerReq=equipmentPowerReqs[u.id]||0;let purchased=0;for(let q=0;q<quantity;q++){const costUsd=u.currentUsd;if(dollarBalance<costUsd){break}
+if(powerReq>0){const powerNeeded=totalPowerUsed+powerReq;const availablePower=getTotalPowerAvailableWithBonus();if(powerNeeded>availablePower){break}}
+dollarBalance-=costUsd;hardwareEquity+=u.currentUsd;u.level++;if(u.id===0||u.isClickUpgrade){ethClickValue*=1.12;u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level));document.getElementById('eth-hash-value').innerText=`+${ethClickValue.toFixed(8)} Ξ`}else{u.currentYield=calculateMinerYield(u);u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level))}
+purchased++;calculateTotalPowerUsed()}
+if(purchased>0){const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;ethPerSec=ethUpgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);window.ethPerSec=ethPerSec;if(u.id===1&&typeof trackGPURigPurchase==='function'){trackGPURigPurchase()}
+lastUIUpdateTime=0;updateUI();saveGame();playUpgradeSound()}}
+function buyDogeLevel(i,quantity){const u=dogeUpgrades[i];const powerReq=equipmentPowerReqs[u.id]||0;let purchased=0;for(let q=0;q<quantity;q++){const costUsd=u.currentUsd;if(dollarBalance<costUsd){break}
+if(powerReq>0){const powerNeeded=totalPowerUsed+powerReq;const availablePower=getTotalPowerAvailableWithBonus();if(powerNeeded>availablePower){break}}
+dollarBalance-=costUsd;hardwareEquity+=u.currentUsd;u.level++;if(u.id===0||u.isClickUpgrade){dogeClickValue*=1.12;u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level));document.getElementById('doge-hash-value').innerText=`+${dogeClickValue.toFixed(8)} Ð`}else{u.currentYield=calculateMinerYield(u);u.currentUsd=Math.floor(u.baseUsd*Math.pow(1.15,u.level))}
+purchased++;calculateTotalPowerUsed()}
+if(purchased>0){const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;dogePerSec=dogeUpgrades.reduce((sum,item)=>sum+(item.currentYield||0),0)*(1+ascensionBonus);window.dogePerSec=dogePerSec;lastUIUpdateTime=0;updateUI();saveGame();playUpgradeSound();if(u.id===1&&typeof trackScryptMinerPurchase==='function'){trackScryptMinerPurchase()}}}
+let hoveredMarkerIndex=-1;function updateChartDateTracker(mouseEvent){const tooltip=document.getElementById('chart-marker-tooltip');const trackerElement=document.getElementById('chart-date-tracker');hoveredMarkerIndex=-1;if(tooltip){tooltip.style.display='none'}
+if(trackerElement){trackerElement.textContent='--'}
+if(mouseEvent&&nwChart&&chartMarkers.length>0){const canvas=document.getElementById('nwChart');if(!canvas)return;const rect=canvas.getBoundingClientRect();const mouseX=mouseEvent.clientX-rect.left;const mouseY=mouseEvent.clientY-rect.top;const canvasPosition=Chart.helpers.getRelativePosition(mouseEvent,nwChart);if(!canvasPosition)return;const xScale=nwChart.scales.x;const yScale=nwChart.scales.y;for(let i=0;i<chartMarkers.length;i++){const marker=chartMarkers[i];const markerX=xScale.getPixelForValue(marker.index);const markerY=yScale.getPixelForValue(marker.value);const distance=Math.sqrt((mouseX-markerX)**2+(mouseY-markerY)**2);if(distance<=15){hoveredMarkerIndex=i;const date=new Date(marker.time);const options={month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:!1};const dateStr=date.toLocaleDateString('en-US',options);let valueStr='$0';if(marker.value>=1000000000){valueStr='$'+(marker.value/1000000000).toFixed(1)+'B'}else if(marker.value>=1000000){valueStr='$'+(marker.value/1000000).toFixed(1)+'M'}else if(marker.value>=1000){valueStr='$'+(marker.value/1000).toFixed(1)+'k'}else if(marker.value>0){valueStr='$'+marker.value.toFixed(2)}
+if(tooltip){tooltip.textContent=valueStr;tooltip.style.display='block';tooltip.style.left=(markerX-tooltip.offsetWidth/2)+'px';tooltip.style.top=(markerY-40)+'px'}
+if(trackerElement){trackerElement.textContent=dateStr}
+break}}}}
+function updateSessionStats(){const now=Date.now();const sessionSeconds=Math.floor((now-sessionStartTime)/1000);const hours=Math.floor(sessionSeconds/3600);const minutes=Math.floor((sessionSeconds%3600)/60);const seconds=sessionSeconds%60;let timeStr='';if(hours>0)timeStr+=hours+'h ';if(minutes>0)timeStr+=minutes+'m ';timeStr+=seconds+'s';document.getElementById('session-time').innerText=timeStr;const sessionEarningEl=document.getElementById('session-earning');if(sessionEarningEl){sessionEarningEl.innerText=formatCurrencyAbbreviated(sessionEarnings,1)}
+const lifetimeEarningEl=document.getElementById('lifetime-earning');if(lifetimeEarningEl){const totalLifetimeEarnings=(window.rugpullState?.lifetimeEarningsDisplay||0)+lifetimeEarnings;lifetimeEarningEl.innerText='$'+abbreviateNumber(totalLifetimeEarnings,3)}}
+function abbreviateNumber(num,decimals=3){if(num instanceof BigNumber){const value=num.toNumber();if(isFinite(value)){return abbreviateNumber(value,decimals)}
+for(let i=0;i<ABBREVIATIONS.length;i++){const thresholdExp=Math.floor(Math.log10(ABBREVIATIONS[i].threshold));if(num.exponent===thresholdExp){const mantissaAbbr=num.mantissa.toFixed(2).replace(/\.?0+$/,'');return mantissaAbbr+ABBREVIATIONS[i].suffix}}
+const mantissaAbbr=num.mantissa.toFixed(2).replace(/\.?0+$/,'');return mantissaAbbr+' × 10^'+num.exponent}
+if(typeof num==='string'){if(num==='∞'){return'∞'}
+num=parseFloat(num)}
+if(typeof num!=='number'||isNaN(num)){return'0'}
+const abs=Math.abs(num);if(!isFinite(abs)){return'∞'}
+for(let i=0;i<ABBREVIATIONS.length;i++){if(abs>=ABBREVIATIONS[i].threshold){const divided=num/ABBREVIATIONS[i].threshold;const abbreviated=divided.toFixed(decimals);const cleaned=abbreviated.replace(/\.?0+$/,'');const suffix=String(ABBREVIATIONS[i].suffix||'');return cleaned+suffix}}
+if(abs>=1){if(num===Math.floor(num)){return Math.floor(num).toString()}
+return num.toFixed(decimals).replace(/\.?0+$/,'')}
+return num.toFixed(decimals)}
+function formatNumberForDisplay(num){return abbreviateNumber(num,3)}
+function formatCryptoYield(num){const abs=Math.abs(num);if(abs<1e3){return num.toFixed(8)}
+if(abs>=1e30){return(num/1e30).toFixed(2)+'N'}else if(abs>=1e27){return(num/1e27).toFixed(2)+'O'}else if(abs>=1e24){return(num/1e24).toFixed(2)+'Sep'}else if(abs>=1e21){return(num/1e21).toFixed(2)+'S'}else if(abs>=1e18){return(num/1e18).toFixed(2)+'Qa'}else if(abs>=1e15){return(num/1e15).toFixed(2)+'Q'}else if(abs>=1e12){return(num/1e12).toFixed(2)+'T'}else if(abs>=1e9){return(num/1e9).toFixed(2)+'B'}else if(abs>=1e6){return(num/1e6).toFixed(2)+'M'}else if(abs>=1e3){return(num/1e3).toFixed(2)+'K'}
+return num.toFixed(8)}
+function formatLevelTag(level){if(level===0)return'[0]';if(level>=1e3)return'['+abbreviateNumber(level,1)+']';return'['+level+']'}
+function formatCryptoPrice(num){const abs=Math.abs(num);if(abs<1){return num.toFixed(8)}
+if(abs>=1e30){return(num/1e30).toFixed(1)+'N'}else if(abs>=1e27){return(num/1e27).toFixed(1)+'O'}else if(abs>=1e24){return(num/1e24).toFixed(1)+'Sep'}else if(abs>=1e21){return(num/1e21).toFixed(1)+'S'}else if(abs>=1e18){return(num/1e18).toFixed(1)+'Qa'}else if(abs>=1e15){return(num/1e15).toFixed(1)+'Q'}else if(abs>=1e12){return(num/1e12).toFixed(1)+'T'}else if(abs>=1e9){return(num/1e9).toFixed(1)+'B'}else if(abs>=1e6){return(num/1e6).toFixed(1)+'M'}else if(abs>=1e3){return(num/1e3).toFixed(1)+'K'}
+return num.toFixed(1)}
+function formatCurrencyAbbreviated(num,decimals=1){const abs=Math.abs(num);for(let i=0;i<ABBREVIATIONS.length;i++){if(abs>=ABBREVIATIONS[i].threshold){return'$'+(num/ABBREVIATIONS[i].threshold).toFixed(decimals)+ABBREVIATIONS[i].suffix}}
+if(abs<1000){return'$'+num.toFixed(decimals)}
+return'$'+Math.floor(num).toLocaleString()}
+function formatCryptoAmount(amount,decimals=8){const abs=Math.abs(amount);if(abs<1){return amount.toFixed(decimals)}
+for(let i=0;i<ABBREVIATIONS.length;i++){if(abs>=ABBREVIATIONS[i].threshold){return(amount/ABBREVIATIONS[i].threshold).toFixed(2)+ABBREVIATIONS[i].suffix}}
+return amount.toFixed(2)}
+function formatPower(watts){if(watts>=1e3){return abbreviateNumber(watts,2)+'W'}else{return watts.toFixed(2)+'W'}}
+function initBars(){const btcBar=document.getElementById('btc-bar');const ethBar=document.getElementById('eth-bar');const dogeBar=document.getElementById('doge-bar');if(!btcBar||!ethBar||!dogeBar){console.warn('Crypto bar elements not found');return!1}
+updateCryptoBars();return!0}
+function updateCryptoBars(){const btcValue=btcBalance*btcPrice;const ethValue=ethBalance*ethPrice;const dogeValue=dogeBalance*dogePrice;const totalValue=btcValue+ethValue+dogeValue;let btcPercent=0;let ethPercent=0;let dogePercent=0;if(totalValue>0){btcPercent=(btcValue/totalValue)*100;ethPercent=(ethValue/totalValue)*100;dogePercent=(dogeValue/totalValue)*100}
+const btcBar=document.getElementById('btc-bar');const ethBar=document.getElementById('eth-bar');const dogeBar=document.getElementById('doge-bar');if(btcBar)btcBar.style.width=btcPercent+'%';if(ethBar)ethBar.style.width=ethPercent+'%';if(dogeBar)dogeBar.style.width=dogePercent+'%';document.getElementById('btc-bar-percent').textContent=btcPercent.toFixed(1)+'%';document.getElementById('eth-bar-percent').textContent=ethPercent.toFixed(1)+'%';document.getElementById('doge-bar-percent').textContent=dogePercent.toFixed(1)+'%'}
+function updateHashrateBars(){const btcHashrate=btcPerSec*totalMiningMultiplier;const ethHashrate=ethPerSec*totalMiningMultiplier;const dogeHashrate=dogePerSec*totalMiningMultiplier;const btcUsdPerSec=btcHashrate*btcPrice;const ethUsdPerSec=ethHashrate*ethPrice;const dogeUsdPerSec=dogeHashrate*dogePrice;const totalUsdPerSec=btcUsdPerSec+ethUsdPerSec+dogeUsdPerSec;let btcPercent=0;let ethPercent=0;let dogePercent=0;if(totalUsdPerSec>0){btcPercent=(btcUsdPerSec/totalUsdPerSec)*100;ethPercent=(ethUsdPerSec/totalUsdPerSec)*100;dogePercent=(dogeUsdPerSec/totalUsdPerSec)*100}
+const btcHashrateBar=document.getElementById('btc-hashrate-bar');const ethHashrateBar=document.getElementById('eth-hashrate-bar');const dogeHashrateBar=document.getElementById('doge-hashrate-bar');if(btcHashrateBar)btcHashrateBar.style.width=btcPercent+'%';if(ethHashrateBar)ethHashrateBar.style.width=ethPercent+'%';if(dogeHashrateBar)dogeHashrateBar.style.width=dogePercent+'%';const btcHashratePercent=document.getElementById('btc-hashrate-percent');const ethHashratePercent=document.getElementById('eth-hashrate-percent');const dogeHashratePercent=document.getElementById('doge-hashrate-percent');if(btcHashratePercent)btcHashratePercent.textContent=formatCurrencyAbbreviated(btcUsdPerSec)+'/sec';if(ethHashratePercent)ethHashratePercent.textContent=formatCurrencyAbbreviated(ethUsdPerSec)+'/sec';if(dogeHashratePercent)dogeHashratePercent.textContent=formatCurrencyAbbreviated(dogeUsdPerSec)+'/sec'}
+function updateRugpullProgressDisplay(){let earningsThisSession=0;if(typeof lifetimeEarningsThisRugpull!=='undefined'){earningsThisSession=lifetimeEarningsThisRugpull}else if(typeof window.lifetimeEarningsThisRugpull!=='undefined'){earningsThisSession=window.lifetimeEarningsThisRugpull}
+let ascensionLvl=(typeof ascensionLevel!=='undefined')?ascensionLevel:0;const level=ascensionLvl+1;const requirement=1000000*Math.pow(level,3);const formatNum=(num)=>{if(num>=1e9)return'$'+(num/1e9).toFixed(1)+'B';if(num>=1e6)return'$'+(num/1e6).toFixed(1)+'M';if(num>=1e3)return'$'+(num/1e3).toFixed(1)+'K';return'$'+Math.floor(num).toLocaleString()};const earningsLabel=formatNum(earningsThisSession);const requirementLabel=formatNum(requirement);const displayText=earningsLabel+' / '+requirementLabel;const progressPercent=Math.min(100,(earningsThisSession/requirement)*100);const displayElements=[document.getElementById('rugpull-progress-text'),document.getElementById('rugpull-progress-text-mobile'),document.getElementById('rugpull-progress-text-desktop')];displayElements.forEach(el=>{if(el){el.textContent=displayText}});const progressBars=[document.getElementById('rugpull-progress-fill-mobile'),document.getElementById('rugpull-progress-fill-desktop')];progressBars.forEach(bar=>{if(bar){bar.style.width=progressPercent+'%'}})}
+function updateUI(){const now=Date.now();const timeSinceLastUpdate=now-lastUIUpdateTime;if(timeSinceLastUpdate<150){return}
+lastUIUpdateTime=now;try{updateGlobalMultiplierButtons();updateManualHashRateButtons()}catch(e){console.error('Error updating global multiplier buttons:',e)}
+const timeSinceLastShopUpdate=now-lastShopReinitTime;if(timeSinceLastShopUpdate>=100){try{updateDoublingButtons();lastShopReinitTime=now}catch(e){console.error('Error updating doubling buttons:',e)}}
+const newSessionEarnings=sessionEarnings-lastSyncedSessionEarnings;if(newSessionEarnings>0&&typeof window.rugpullAddEarnings==='function'){window.rugpullAddEarnings(newSessionEarnings);lastSyncedSessionEarnings=sessionEarnings}
+if(now-lastAscensionUIUpdateTime>=10000){lastAscensionUIUpdateTime=now;if(typeof window.updateAscensionUI==='function'){window.updateAscensionUI()}else{updateRugpullProgressDisplay()}}
+if(now-lastAchievementCheckTime>=1000){lastAchievementCheckTime=now;if(typeof checkAchievements==='function'){checkAchievements(totalPowerUsed)}}
+let cryptoPortfolioValue=(btcBalance*btcPrice)+(ethBalance*ethPrice)+(dogeBalance*dogePrice);const isMobileUI=window.innerWidth<=768;if((isMobileUI&&cryptoPortfolioValue>=1000)||(cryptoPortfolioValue>100000000)){const abbrev=abbreviateNumber(cryptoPortfolioValue,3);document.getElementById('nw-val').innerText="$"+abbrev}else{document.getElementById('nw-val').innerText="$"+cryptoPortfolioValue.toLocaleString(undefined,{minimumFractionDigits:2})}
+if(document.getElementById('nw-breakdown')){const btcValue=formatCryptoAmount(btcBalance,8);const ethValue=formatCryptoAmount(ethBalance,8);const dogeValue=formatCryptoAmount(dogeBalance,8);document.getElementById('nw-btc').innerText=btcValue;document.getElementById('nw-eth').innerText=ethValue;document.getElementById('nw-doge').innerText=dogeValue;const btcAmountEl=document.querySelector('.btc-amount');const ethAmountEl=document.querySelector('.eth-amount');const dogeAmountEl=document.querySelector('.doge-amount');if(btcAmountEl)btcAmountEl.innerText=btcValue;if(ethAmountEl)ethAmountEl.innerText=ethValue;if(dogeAmountEl)dogeAmountEl.innerText=dogeValue}
+const formatCryptoBalance=(balance,decimals=8)=>{if(balance>=1e3){return abbreviateNumber(balance,2)}else{return balance.toFixed(decimals)}};if(document.getElementById('bal-btc'))document.getElementById('bal-btc').innerText=formatCryptoBalance(btcBalance);if(document.getElementById('bal-eth'))document.getElementById('bal-eth').innerText=formatCryptoBalance(ethBalance);if(document.getElementById('bal-doge'))document.getElementById('bal-doge').innerText=formatCryptoBalance(dogeBalance);updateCryptoBars();updateHashrateBars();const ascensionClickMultiplier=(typeof ascensionLevel!=='undefined'&&ascensionLevel>0)?(1+ascensionLevel*0.01):1;const clickSpeedBonus=(typeof getSkillBonus==='function')?getSkillBonus('click_speed'):0;const clickMultiplier=1+clickSpeedBonus;let clickHashRateBonus=0;if(typeof metaUpgrades!=='undefined'){Object.entries(metaUpgrades).forEach(([key,upgrade])=>{if(upgrade.purchased&&key.includes('click_hashrate')){const tier=parseInt(key.match(/\d+$/)[0]);clickHashRateBonus+=0.5*Math.pow(1.15,tier-1)}})}
+const mineBtnSpan=document.getElementById('btc-hash-value');if(mineBtnSpan){const totalBtcClick=btcClickValue*clickMultiplier*ascensionClickMultiplier;const hashRateAddition=btcPerSec*(clickHashRateBonus/100);const totalWithHashRate=totalBtcClick+hashRateAddition;mineBtnSpan.innerText=`+${totalWithHashRate.toFixed(8)} ₿`}
+const ethMineBtnSpan=document.getElementById('eth-hash-value');if(ethMineBtnSpan){const totalEthClick=ethClickValue*clickMultiplier*ascensionClickMultiplier;const hashRateAddition=ethPerSec*(clickHashRateBonus/100);const totalWithHashRate=totalEthClick+hashRateAddition;ethMineBtnSpan.innerText=`+${totalWithHashRate.toFixed(8)} Ξ`}
+const dogeMineBtnSpan=document.getElementById('doge-hash-value');if(dogeMineBtnSpan){const totalDogeClick=dogeClickValue*clickMultiplier*ascensionClickMultiplier;const hashRateAddition=dogePerSec*(clickHashRateBonus/100);const totalWithHashRate=totalDogeClick+hashRateAddition;dogeMineBtnSpan.innerText=`+${totalWithHashRate.toFixed(8)} Ð`}
+const hardwareEquityText='$'+abbreviateNumber(hardwareEquity,2);document.getElementById('asset-usd').innerText=hardwareEquityText;const assetUsdAllTabsEl=document.getElementById('asset-usd-all-tabs');if(assetUsdAllTabsEl)assetUsdAllTabsEl.innerText=hardwareEquityText;const formatHashrate=(hashrate)=>{if(hashrate>=1e3){return abbreviateNumber(hashrate,2)+'/s'}else{return hashrate.toFixed(8)+'/s'}};const miningBonus=(typeof getSkillBonus==='function')?(1+getSkillBonus('mining_speed')):1;const hackingBoost=getHackingSpeedBoost();const totalMiningMultiplier=miningBonus*hackingBoost;window.totalMiningMultiplier=totalMiningMultiplier;window.btcPrice=btcPrice;window.ethPrice=ethPrice;window.dogePrice=dogePrice;const isSpeedBoosted=hackingBoost>1.0;if(vfxEnabled&&typeof updateCoinRain==='function'){const btcUsdPerSec=(btcPerSec*totalMiningMultiplier)*btcPrice;const ethUsdPerSec=(ethPerSec*totalMiningMultiplier)*ethPrice;const dogeUsdPerSec=(dogePerSec*totalMiningMultiplier)*dogePrice;updateCoinRain(btcUsdPerSec,ethUsdPerSec,dogeUsdPerSec)}else if(!vfxEnabled&&typeof updateCoinRain==='function'){updateCoinRain(0,0,0)}
+const btcEl=document.getElementById('yield-btc');const ethEl=document.getElementById('yield-eth');const dogeEl=document.getElementById('yield-doge');if(btcEl){btcEl.innerText=formatHashrate(btcPerSec*totalMiningMultiplier);if(isSpeedBoosted){btcEl.style.color='#00ff88';btcEl.style.textShadow='0 0 10px #00ff88, 0 0 20px #00ff88';btcEl.style.fontWeight='bold'}else{btcEl.style.color='';btcEl.style.textShadow='';btcEl.style.fontWeight=''}}
+if(ethEl){ethEl.innerText=formatHashrate(ethPerSec*totalMiningMultiplier);if(isSpeedBoosted){ethEl.style.color='#00ff88';ethEl.style.textShadow='0 0 10px #00ff88, 0 0 20px #00ff88';ethEl.style.fontWeight='bold'}else{ethEl.style.color='';ethEl.style.textShadow='';ethEl.style.fontWeight=''}}
+if(dogeEl){dogeEl.innerText=formatHashrate(dogePerSec*totalMiningMultiplier);if(isSpeedBoosted){dogeEl.style.color='#00ff88';dogeEl.style.textShadow='0 0 10px #00ff88, 0 0 20px #00ff88';dogeEl.style.fontWeight='bold'}else{dogeEl.style.color='';dogeEl.style.textShadow='';dogeEl.style.fontWeight=''}}
+const btcDisplayEl=document.getElementById('yield-btc-display');const ethDisplayEl=document.getElementById('yield-eth-display');const dogeDisplayEl=document.getElementById('yield-doge-display');if(btcDisplayEl){btcDisplayEl.innerText=formatHashrate(btcPerSec*totalMiningMultiplier);if(isSpeedBoosted){btcDisplayEl.style.color='#00ff88';btcDisplayEl.style.textShadow='0 0 10px #00ff88, 0 0 20px #00ff88';btcDisplayEl.style.fontWeight='bold'}else{btcDisplayEl.style.color='';btcDisplayEl.style.textShadow='';btcDisplayEl.style.fontWeight=''}}
+if(ethDisplayEl){ethDisplayEl.innerText=formatHashrate(ethPerSec*totalMiningMultiplier);if(isSpeedBoosted){ethDisplayEl.style.color='#00ff88';ethDisplayEl.style.textShadow='0 0 10px #00ff88, 0 0 20px #00ff88';ethDisplayEl.style.fontWeight='bold'}else{ethDisplayEl.style.color='';ethDisplayEl.style.textShadow='';ethDisplayEl.style.fontWeight=''}}
+if(dogeDisplayEl){dogeDisplayEl.innerText=formatHashrate(dogePerSec*totalMiningMultiplier);if(isSpeedBoosted){dogeDisplayEl.style.color='#00ff88';dogeDisplayEl.style.textShadow='0 0 10px #00ff88, 0 0 20px #00ff88';dogeDisplayEl.style.fontWeight='bold'}else{dogeDisplayEl.style.color='';dogeDisplayEl.style.textShadow='';dogeDisplayEl.style.fontWeight=''}}
+document.getElementById('btc-price').innerText="$"+formatCryptoPrice(btcPrice);document.getElementById('eth-price').innerText="$"+formatCryptoPrice(ethPrice);document.getElementById('doge-price').innerText="$"+formatCryptoPrice(dogePrice);let displayBalance=dollarBalance;if(typeof dollarBalance==='number'&&!isFinite(dollarBalance)&&dollarBalance>0){displayBalance=new BigNumber(1,500)}else if(typeof dollarBalance==='number'&&!isFinite(dollarBalance)){displayBalance='∞'}
+const dollarText="$"+abbreviateNumber(displayBalance,2);const dollarBalanceEl=document.getElementById('dollar-balance');if(dollarBalanceEl)dollarBalanceEl.innerText=dollarText;const dollarBalanceBtcEl=document.getElementById('dollar-balance-btc');if(dollarBalanceBtcEl)dollarBalanceBtcEl.innerText=dollarText;const dollarBalanceEthEl=document.getElementById('dollar-balance-eth');if(dollarBalanceEthEl)dollarBalanceEthEl.innerText=dollarText;const dollarBalanceDogeEl=document.getElementById('dollar-balance-doge');if(dollarBalanceDogeEl)dollarBalanceDogeEl.innerText=dollarText;const dollarBalancePowerEl=document.getElementById('dollar-balance-power');if(dollarBalancePowerEl)dollarBalancePowerEl.innerText=dollarText;const dollarBalanceExchangeEl=document.getElementById('dollar-balance-exchange');if(dollarBalanceExchangeEl)dollarBalanceExchangeEl.innerText=dollarText;const dollarBalanceAllTabsEl=document.getElementById('dollar-balance-all-tabs');if(dollarBalanceAllTabsEl)dollarBalanceAllTabsEl.innerText=dollarText;const marketBtcPrice=document.getElementById('market-btc-price');const marketEthPrice=document.getElementById('market-eth-price');const marketDogePrice=document.getElementById('market-doge-price');if(marketBtcPrice)marketBtcPrice.innerText=formatCryptoPrice(btcPrice);if(marketEthPrice)marketEthPrice.innerText=formatCryptoPrice(ethPrice);if(marketDogePrice)marketDogePrice.innerText=formatCryptoPrice(dogePrice);updateSessionStats();calculateTotalPowerUsed();updatePowerDisplay();const hackingTabBtn=document.getElementById('hacking-tab-btn');if(hackingTabBtn){if(lifetimeEarnings<10000){hackingTabBtn.style.opacity='0.5';hackingTabBtn.style.cursor='not-allowed';hackingTabBtn.innerHTML=`🔒 HACKING<br><span style="font-size: 0.6rem;">($${(lifetimeEarnings).toFixed(0)}/$10,000)</span>`;hackingTabBtn.onclick=function(e){e.preventDefault();alert(`🔒 Hacking Feature Locked!\n\nRequires $10,000 lifetime earnings to unlock.\n\nCurrent: $${lifetimeEarnings.toFixed(2)}`)}}else{hackingTabBtn.style.opacity='1';hackingTabBtn.style.cursor='pointer';hackingTabBtn.textContent='HACKING';hackingTabBtn.onclick=function(){switchTab('hacking')}}}
+const hasMinigameUnlock=(typeof metaUpgrades!=='undefined'&&metaUpgrades.minigame_unlock&&metaUpgrades.minigame_unlock.purchased);const easyBtn=document.getElementById('hacking-easy-btn');const mediumBtn=document.getElementById('hacking-medium-btn');const hardBtn=document.getElementById('hacking-hard-btn');if(easyBtn){if(!hasMinigameUnlock&&lifetimeEarnings<10000){easyBtn.style.opacity='0.5';easyBtn.style.cursor='not-allowed'}else{easyBtn.style.opacity='1';easyBtn.style.cursor='pointer'}}
+if(mediumBtn){if(!hasMinigameUnlock&&lifetimeEarnings<50000){mediumBtn.style.opacity='0.5';mediumBtn.style.cursor='not-allowed';const currentAbbrev=lifetimeEarnings>=1000?'$'+(lifetimeEarnings/1000).toFixed(1)+'K':'$'+lifetimeEarnings.toFixed(0);mediumBtn.innerHTML=`<div style="margin-bottom: 5px;">🔒 MEDIUM</div>
+                    <div style="font-size: 0.65rem; font-weight: 400;">${currentAbbrev}/$50K</div>`}else{mediumBtn.style.opacity='1';mediumBtn.style.cursor='pointer';mediumBtn.innerHTML=`<div style="margin-bottom: 5px;">MEDIUM</div>
+                    <div style="font-size: 0.7rem; font-weight: 400;">4 bugs | 20s | 8 lives</div>
+                    <div style="font-size: 0.65rem; margin-top: 5px;">+25% speed for 2min</div>`}}
+if(hardBtn){if(!hasMinigameUnlock&&lifetimeEarnings<100000){hardBtn.style.opacity='0.5';hardBtn.style.cursor='not-allowed';const currentAbbrev=lifetimeEarnings>=1000?'$'+(lifetimeEarnings/1000).toFixed(1)+'K':'$'+lifetimeEarnings.toFixed(0);hardBtn.innerHTML=`<div style="margin-bottom: 5px;">🔒 HARD</div>
+                    <div style="font-size: 0.65rem; font-weight: 400;">${currentAbbrev}/$100K</div>`}else{hardBtn.style.opacity='1';hardBtn.style.cursor='pointer';hardBtn.innerHTML=`<div style="margin-bottom: 5px;">HARD</div>
+                    <div style="font-size: 0.7rem; font-weight: 400;">5 bugs | 12s | 10 lives</div>
+                    <div style="font-size: 0.65rem; margin-top: 5px;">+50% speed for 2min</div>`}}
+btcUpgrades.forEach(u=>{const costUsd=u.currentUsd;const nameEl=document.querySelector(`#up-${u.id} > div:first-child > div:first-child`);if(nameEl){const levelTag=formatLevelTag(u.level);nameEl.innerHTML=nameEl.innerHTML.replace(/\s*<span style="color:#888;font-size:0\.85rem">\[.*?\]<\/span>/g,'')+` <span style="color:#888;font-size:0.85rem">${levelTag}</span>`}
+const yEl=document.getElementById(`yield-${u.id}`);if(yEl){if(u.isClickUpgrade){yEl.innerText=`+10% MANUAL HASH RATE`}else{const btcBonus=(typeof getSkillBonus==='function')?getSkillBonus('btc_mining_speed'):0;const miningBonus=(typeof getSkillBonus==='function')?getSkillBonus('mining_speed'):0;const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;const baseSpeed=u.baseYield*u.level;const globalMultiplier=Math.pow(2,btcMultiplierLevel);const currentSpeed=baseSpeed*(1+miningBonus+btcBonus+ascensionBonus)*u.doubleMultiplier*globalMultiplier;yEl.innerText=`+${formatCryptoYield(currentSpeed)} ₿/s - Current Speed`}}
+const increaseEl=document.getElementById(`increase-${u.id}`);if(increaseEl){if(u.isClickUpgrade){increaseEl.style.display='none'}else{const btcBonus=(typeof getSkillBonus==='function')?getSkillBonus('btc_mining_speed'):0;const miningBonus=(typeof getSkillBonus==='function')?getSkillBonus('mining_speed'):0;const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;const baseIncrease=u.baseYield;const globalMultiplier=Math.pow(2,btcMultiplierLevel);const perLevelIncrease=baseIncrease*(1+miningBonus+btcBonus+ascensionBonus)*u.doubleMultiplier*globalMultiplier;increaseEl.innerText=`+${formatCryptoYield(perLevelIncrease)} ₿/s per level`;increaseEl.style.display='block'}}
+const uEl=document.getElementById(`usd-${u.id}`);if(uEl){let displayCost=0;let tempLevel=u.level;for(let i=0;i<buyQuantity;i++){if(u.isClickUpgrade){displayCost+=u.baseUsd*Math.pow(1.15,tempLevel)}else{displayCost+=u.baseUsd*Math.pow(1.15,tempLevel)}
+tempLevel++}
+uEl.innerText=`$${formatNumberForDisplay(Math.floor(displayCost))}`}
+const powerEl=document.getElementById(`power-${u.id}`);if(powerEl){const powerReq=equipmentPowerReqs[u.id]||0;if(powerReq>0){const effectivePower=getEffectivePowerRequirement(powerReq);powerEl.innerText=`${formatPower(effectivePower)} Consumed per level`}}
+const affordEl=document.getElementById(`afford-${u.id}`);if(affordEl){let remaining=dollarBalance;let canAfford=0;let nextCost=costUsd;let nextLevel=u.level;while(remaining>=nextCost){remaining-=nextCost;canAfford++;nextLevel++;if(u.isClickUpgrade){nextCost=u.baseUsd*Math.pow(1.15,nextLevel)}else{nextCost=u.baseUsd*Math.pow(1.15,nextLevel)}}
+affordEl.innerText=`x${canAfford}`;affordEl.style.color=canAfford>0?'#00ff88':'#666'}
+const bEl=document.getElementById(`up-${u.id}`);if(bEl){let totalCost=0;let tempLevel=u.level;for(let i=0;i<buyQuantity;i++){if(u.isClickUpgrade){totalCost+=u.baseUsd*Math.pow(1.15,tempLevel)}else{totalCost+=u.baseUsd*Math.pow(1.15,tempLevel)}
+tempLevel++}
+const hasEnoughDollars=dollarBalance>=totalCost;const powerReq=equipmentPowerReqs[u.id]||0;const powerNeeded=totalPowerUsed+(powerReq*buyQuantity);const availablePower=getTotalPowerAvailableWithBonus();const hasEnoughPower=powerNeeded<=availablePower||powerReq===0;const shouldDisable=!(hasEnoughDollars&&hasEnoughPower);bEl.disabled=shouldDisable;if(shouldDisable){bEl.style.opacity='0.2';bEl.style.cursor='not-allowed'}else{bEl.style.opacity='1';bEl.style.cursor='pointer'}
+if(bEl.style.position!=='absolute'&&bEl.style.position!=='fixed'){bEl.style.position='relative'}
+if(!hasEnoughDollars&&!hasEnoughPower&&powerReq>0){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE CASH';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE CASH'}
+bEl.title=`Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - availablePower).toLocaleString()}W more power`}else if(!hasEnoughDollars){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE CASH';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE CASH'}
+bEl.title=`Need $${(totalCost - dollarBalance).toLocaleString()} more`}else if(!hasEnoughPower&&powerReq>0){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE POWER';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE POWER'}
+bEl.title=`Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - availablePower).toLocaleString()}W more power capacity.`}else{let overlay=bEl.querySelector('.power-overlay');if(overlay)overlay.remove();bEl.title=''}}
+const doublingCostEl=document.getElementById(`doubling-cost-${u.id}`);if(doublingCostEl){const doublingCost=calculateMilestoneDoublingCost(u);doublingCostEl.innerText=`$${Math.floor(doublingCost).toLocaleString()}`}
+const doublingBtn=document.getElementById(`doubling-${u.id}`);if(doublingBtn){const doublingCost=calculateMilestoneDoublingCost(u);const canAfford=dollarBalance>=doublingCost;if(!canAfford){doublingBtn.style.opacity='0.6'}else{doublingBtn.style.opacity='1'}}});ethUpgrades.forEach(u=>{const costUsd=u.currentUsd;const nameEl=document.querySelector(`#eth-up-${u.id} > div:first-child > div:first-child`);if(nameEl){const levelTag=formatLevelTag(u.level);nameEl.innerHTML=nameEl.innerHTML.replace(/\s*<span style="color:#888;font-size:0\.85rem">\[.*?\]<\/span>/g,'')+` <span style="color:#888;font-size:0.85rem">${levelTag}</span>`}
+const yEl=document.getElementById(`eth-yield-${u.id}`);if(yEl){if(u.isClickUpgrade){yEl.innerText=`+10% MANUAL ETH RATE`}else{const ethBonus=(typeof getSkillBonus==='function')?getSkillBonus('eth_mining_speed'):0;const miningBonus=(typeof getSkillBonus==='function')?getSkillBonus('mining_speed'):0;const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;const baseSpeed=u.baseYield*u.level;const globalMultiplier=Math.pow(2,ethMultiplierLevel);const currentSpeed=baseSpeed*(1+miningBonus+ethBonus+ascensionBonus)*u.doubleMultiplier*globalMultiplier;yEl.innerText=`+${formatCryptoYield(currentSpeed)} Ξ/s - Current Speed`}}
+const ethIncreaseEl=document.getElementById(`eth-increase-${u.id}`);if(ethIncreaseEl){if(u.isClickUpgrade){ethIncreaseEl.style.display='none'}else{const ethBonus=(typeof getSkillBonus==='function')?getSkillBonus('eth_mining_speed'):0;const miningBonus=(typeof getSkillBonus==='function')?getSkillBonus('mining_speed'):0;const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;const baseIncrease=u.baseYield;const globalMultiplier=Math.pow(2,ethMultiplierLevel);const perLevelIncrease=baseIncrease*(1+miningBonus+ethBonus+ascensionBonus)*u.doubleMultiplier*globalMultiplier;ethIncreaseEl.innerText=`+${formatCryptoYield(perLevelIncrease)} Ξ/s per level`;ethIncreaseEl.style.display='block'}}
+const uEl=document.getElementById(`eth-usd-${u.id}`);if(uEl){let displayCost=0;let tempLevel=u.level;for(let i=0;i<buyQuantity;i++){if(u.isClickUpgrade){displayCost+=u.baseUsd*Math.pow(1.15,tempLevel)}else{displayCost+=u.baseUsd*Math.pow(1.15,tempLevel)}
+tempLevel++}
+uEl.innerText=`$${formatNumberForDisplay(Math.floor(displayCost))}`}
+const ethPowerEl=document.getElementById(`eth-power-${u.id}`);if(ethPowerEl){const powerReq=equipmentPowerReqs[u.id]||0;if(powerReq>0){const effectivePower=getEffectivePowerRequirement(powerReq);ethPowerEl.innerText=`${formatPower(effectivePower)} Consumed per level`}}
+const affordEl=document.getElementById(`eth-afford-${u.id}`);if(affordEl){let remaining=dollarBalance;let canAfford=0;let nextCost=costUsd;let nextLevel=u.level;while(remaining>=nextCost){remaining-=nextCost;canAfford++;nextLevel++;if(u.isClickUpgrade){nextCost=u.baseUsd*Math.pow(1.15,nextLevel)}else{nextCost=u.baseUsd*Math.pow(1.15,nextLevel)}}
+affordEl.innerText=`x${canAfford}`;affordEl.style.color=canAfford>0?'#00ff88':'#666'}
+const bEl=document.getElementById(`eth-up-${u.id}`);if(bEl){let totalCost=0;let tempLevel=u.level;for(let i=0;i<buyQuantity;i++){if(u.isClickUpgrade){totalCost+=u.baseUsd*Math.pow(1.15,tempLevel)}else{totalCost+=u.baseUsd*Math.pow(1.15,tempLevel)}
+tempLevel++}
+const hasEnoughDollars=dollarBalance>=totalCost;const powerReq=equipmentPowerReqs[u.id]||0;const powerNeeded=totalPowerUsed+(powerReq*buyQuantity);const ethAvailablePower=getTotalPowerAvailableWithBonus();const hasEnoughPower=powerNeeded<=ethAvailablePower||powerReq===0;const shouldDisable=!(hasEnoughDollars&&hasEnoughPower);bEl.disabled=shouldDisable;if(shouldDisable){bEl.style.opacity='0.2';bEl.style.cursor='not-allowed'}else{bEl.style.opacity='1';bEl.style.cursor='pointer'}
+if(bEl.style.position!=='absolute'&&bEl.style.position!=='fixed'){bEl.style.position='relative'}
+if(!hasEnoughDollars&&!hasEnoughPower&&powerReq>0){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE CASH';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE CASH'}
+bEl.title=`Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - ethAvailablePower).toLocaleString()}W more power`}else if(!hasEnoughDollars){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE CASH';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE CASH'}
+bEl.title=`Need $${(totalCost - dollarBalance).toLocaleString()} more`}else if(!hasEnoughPower&&powerReq>0){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE POWER';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE POWER'}
+bEl.title=`Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - ethAvailablePower).toLocaleString()}W more power capacity.`}else{let overlay=bEl.querySelector('.power-overlay');if(overlay)overlay.remove();bEl.title=''}}
+const ethDoublingCostEl=document.getElementById(`eth-doubling-cost-${u.id}`);if(ethDoublingCostEl){const doublingCost=calculateMilestoneDoublingCost(u);ethDoublingCostEl.innerText=`$${Math.floor(doublingCost).toLocaleString()}`}
+const ethDoublingBtn=document.getElementById(`eth-doubling-${u.id}`);if(ethDoublingBtn){const doublingCost=calculateMilestoneDoublingCost(u);ethDoublingBtn.disabled=(dollarBalance<doublingCost)}});dogeUpgrades.forEach(u=>{const costUsd=u.currentUsd;const nameEl=document.querySelector(`#doge-up-${u.id} > div:first-child > div:first-child`);if(nameEl){const levelTag=formatLevelTag(u.level);nameEl.innerHTML=nameEl.innerHTML.replace(/\s*<span style="color:#888;font-size:0\.85rem">\[.*?\]<\/span>/g,'')+` <span style="color:#888;font-size:0.85rem">${levelTag}</span>`}
+const yEl=document.getElementById(`doge-yield-${u.id}`);if(yEl){if(u.isClickUpgrade){yEl.innerText=`+10% MANUAL DOGE RATE`}else{const dogeBonus=(typeof getSkillBonus==='function')?getSkillBonus('doge_mining_speed'):0;const miningBonus=(typeof getSkillBonus==='function')?getSkillBonus('mining_speed'):0;const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;const baseSpeed=u.baseYield*u.level;const globalMultiplier=Math.pow(2,dogeMultiplierLevel);const currentSpeed=baseSpeed*(1+miningBonus+dogeBonus+ascensionBonus)*u.doubleMultiplier*globalMultiplier;yEl.innerText=`+${formatCryptoYield(currentSpeed)} Ð/s - Current Speed`}}
+const dogeIncreaseEl=document.getElementById(`doge-increase-${u.id}`);if(dogeIncreaseEl){if(u.isClickUpgrade){dogeIncreaseEl.style.display='none'}else{const dogeBonus=(typeof getSkillBonus==='function')?getSkillBonus('doge_mining_speed'):0;const miningBonus=(typeof getSkillBonus==='function')?getSkillBonus('mining_speed'):0;const ascensionBonus=(typeof getAscensionMiningBonus==='function')?getAscensionMiningBonus():0;const baseIncrease=u.baseYield;const globalMultiplier=Math.pow(2,dogeMultiplierLevel);const perLevelIncrease=baseIncrease*(1+miningBonus+dogeBonus+ascensionBonus)*u.doubleMultiplier*globalMultiplier;dogeIncreaseEl.innerText=`+${formatCryptoYield(perLevelIncrease)} Ð/s per level`;dogeIncreaseEl.style.display='block'}}
+const uEl=document.getElementById(`doge-usd-${u.id}`);if(uEl){let displayCost=0;let tempLevel=u.level;for(let i=0;i<buyQuantity;i++){if(u.isClickUpgrade){displayCost+=u.baseUsd*Math.pow(1.15,tempLevel)}else{displayCost+=u.baseUsd*Math.pow(1.15,tempLevel)}
+tempLevel++}
+uEl.innerText=`$${formatNumberForDisplay(Math.floor(displayCost))}`}
+const dogePowerEl=document.getElementById(`doge-power-${u.id}`);if(dogePowerEl){const powerReq=equipmentPowerReqs[u.id]||0;if(powerReq>0){const effectivePower=getEffectivePowerRequirement(powerReq);dogePowerEl.innerText=`${formatPower(effectivePower)} Consumed per level`}}
+const affordEl=document.getElementById(`doge-afford-${u.id}`);if(affordEl){let remaining=dollarBalance;let canAfford=0;let nextCost=costUsd;let nextLevel=u.level;while(remaining>=nextCost){remaining-=nextCost;canAfford++;nextLevel++;if(u.isClickUpgrade){nextCost=u.baseUsd*Math.pow(1.15,nextLevel)}else{nextCost=u.baseUsd*Math.pow(1.15,nextLevel)}}
+affordEl.innerText=`x${canAfford}`;affordEl.style.color=canAfford>0?'#00ff88':'#666'}
+const bEl=document.getElementById(`doge-up-${u.id}`);if(bEl){let totalCost=0;let tempLevel=u.level;for(let i=0;i<buyQuantity;i++){if(u.isClickUpgrade){totalCost+=u.baseUsd*Math.pow(1.15,tempLevel)}else{totalCost+=u.baseUsd*Math.pow(1.15,tempLevel)}
+tempLevel++}
+const hasEnoughDollars=dollarBalance>=totalCost;const powerReq=equipmentPowerReqs[u.id]||0;const powerNeeded=totalPowerUsed+(powerReq*buyQuantity);const dogeAvailablePower=getTotalPowerAvailableWithBonus();const hasEnoughPower=powerNeeded<=dogeAvailablePower||powerReq===0;const shouldDisable=!(hasEnoughDollars&&hasEnoughPower);bEl.disabled=shouldDisable;if(shouldDisable){bEl.style.opacity='0.2';bEl.style.cursor='not-allowed'}else{bEl.style.opacity='1';bEl.style.cursor='pointer'}
+if(bEl.style.position!=='absolute'&&bEl.style.position!=='fixed'){bEl.style.position='relative'}
+if(!hasEnoughDollars&&!hasEnoughPower&&powerReq>0){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE CASH';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE CASH'}
+bEl.title=`Need $${(totalCost - dollarBalance).toLocaleString()} more cash AND ${Math.ceil(powerNeeded - dogeAvailablePower).toLocaleString()}W more power`}else if(!hasEnoughDollars){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE CASH';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE CASH'}
+bEl.title=`Need $${(totalCost - dollarBalance).toLocaleString()} more`}else if(!hasEnoughPower&&powerReq>0){let overlay=bEl.querySelector('.power-overlay');if(!overlay){overlay=document.createElement('div');overlay.className='power-overlay';overlay.style.position='absolute';overlay.style.inset='0';overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';overlay.style.background='rgba(0,0,0,0.5)';overlay.style.borderRadius='10px';overlay.style.color='#999';overlay.style.fontWeight='bold';overlay.style.fontSize='1.1rem';overlay.style.textAlign='center';overlay.style.zIndex='9999';overlay.style.pointerEvents='none';overlay.innerHTML='YOU NEED MORE POWER';bEl.appendChild(overlay)}else{overlay.innerHTML='YOU NEED MORE POWER'}
+bEl.title=`Insufficient power! This requires ${powerReq.toLocaleString()}W per level. Need ${Math.ceil(powerNeeded - dogeAvailablePower).toLocaleString()}W more power capacity.`}else{let overlay=bEl.querySelector('.power-overlay');if(overlay)overlay.remove();bEl.title=''}}
+const dogeDoublingCostEl=document.getElementById(`doge-doubling-cost-${u.id}`);if(dogeDoublingCostEl){const doublingCost=calculateMilestoneDoublingCost(u);dogeDoublingCostEl.innerText=`$${Math.floor(doublingCost).toLocaleString()}`}
+const dogeDoublingBtn=document.getElementById(`doge-doubling-${u.id}`);if(dogeDoublingBtn){const doublingCost=calculateMilestoneDoublingCost(u);dogeDoublingBtn.disabled=(dollarBalance<doublingCost)}});if(typeof window.updateStakingUI==='function'){window.updateStakingUI()}
+if(typeof window.updateAscensionUI==='function'){window.updateAscensionUI()}
+if(typeof window.updateStoreButtonVisibility==='function'){window.updateStoreButtonVisibility()}}
+setInterval(()=>{const now=Date.now();const deltaTime=(now-lastTickTime)/1000;lastTickTime=now;const miningBonus=(typeof getSkillBonus==='function')?(1+getSkillBonus('mining_speed')):1;const hackingBoost=getHackingSpeedBoost();if(btcPerSec>0){let gain=btcPerSec*deltaTime*miningBonus*hackingBoost;let effectivePrice=getEffectiveCryptoPrice(btcPrice);let usdValue=gain*effectivePrice;const btcAutoSold=tryAutoSellCrypto('btc',gain);if(!btcAutoSold){btcBalance+=gain}
+btcLifetime+=gain;lifetimeEarnings+=usdValue;sessionEarnings+=usdValue}
+if(ethPerSec>0){let gain=ethPerSec*deltaTime*miningBonus*hackingBoost;let effectivePrice=getEffectiveCryptoPrice(ethPrice);let usdValue=gain*effectivePrice;const ethAutoSold=tryAutoSellCrypto('eth',gain);if(!ethAutoSold){ethBalance+=gain}
+ethLifetime+=gain;lifetimeEarnings+=usdValue;sessionEarnings+=usdValue}
+if(dogePerSec>0){let gain=dogePerSec*deltaTime*miningBonus*hackingBoost;let effectivePrice=getEffectiveCryptoPrice(dogePrice);let usdValue=gain*effectivePrice;const dogeAutoSold=tryAutoSellCrypto('doge',gain);if(!dogeAutoSold){dogeBalance+=gain}
+dogeLifetime+=gain;lifetimeEarnings+=usdValue;sessionEarnings+=usdValue}
+const tokenGenerationRate=(typeof getTokenGenerationRate==='function')?getTokenGenerationRate():0;if(tokenGenerationRate>0&&typeof rugpullCurrency!=='undefined'){const tokensGenerated=tokenGenerationRate*deltaTime;rugpullCurrency+=tokensGenerated}
+window.gameState.lifetimeEarnings=lifetimeEarnings;window.gameState.dollarBalance=dollarBalance;updateUI();if(now-lastStatsUpdateTime>=250){updateAutoClickerButtonState();updateWhackStats();updateNetworkStats();updateMinigamesTab();lastStatsUpdateTime=now}
+if(!rugpullMilestoneAnnounced&&(now-lastMilestoneCheckTime>=2000)){lastMilestoneCheckTime=now;const hasCheckFunc=typeof window.checkRugpullMilestone==='function';const hasReqFunc=typeof window.getRugpullRequirement==='function';const earnings=window.lifetimeEarningsThisRugpull;if(earnings>0&&earnings%5000000<100000){console.log('[MILESTONE-DEBUG] Check func: '+hasCheckFunc+', Req func: '+hasReqFunc+', Earnings: $'+earnings.toFixed(0))}
+if(hasCheckFunc){window.checkRugpullMilestone();if(hasReqFunc){const requirement=window.getRugpullRequirement();if(earnings>0&&earnings%1000000<100000){console.log('[MILESTONE-CHECK] Earnings: $'+earnings.toFixed(0)+' vs Requirement: $'+requirement.toFixed(0)+' | Flag: '+rugpullMilestoneAnnounced)}
+if(earnings>=requirement&&earnings>0){rugpullMilestoneAnnounced=!0;console.log('✅ RUGPULL MILESTONE ANNOUNCED - Earnings: $'+earnings.toFixed(0)+' >= Requirement: $'+requirement.toFixed(0));console.log('🎯 Stopping milestone checks to save CPU - flag is now true')}}}}
+const hardwareEquityText='$'+abbreviateNumber(hardwareEquity,2);const assetUsdEl=document.getElementById('asset-usd');if(assetUsdEl)assetUsdEl.innerText=hardwareEquityText;const assetUsdAllTabsEl=document.getElementById('asset-usd-all-tabs');if(assetUsdAllTabsEl)assetUsdAllTabsEl.innerText=hardwareEquityText;let displayBalance=dollarBalance;if(typeof dollarBalance==='number'&&!isFinite(dollarBalance)&&dollarBalance>0){displayBalance=new BigNumber(1,500)}else if(typeof dollarBalance==='number'&&!isFinite(dollarBalance)){displayBalance='∞'}
+const dollarText="$"+abbreviateNumber(displayBalance,2);const dollarBalanceEl=document.getElementById('dollar-balance');if(dollarBalanceEl)dollarBalanceEl.innerText=dollarText;const dollarBalanceBtcEl=document.getElementById('dollar-balance-btc');if(dollarBalanceBtcEl)dollarBalanceBtcEl.innerText=dollarText;const dollarBalanceEthEl=document.getElementById('dollar-balance-eth');if(dollarBalanceEthEl)dollarBalanceEthEl.innerText=dollarText;const dollarBalanceDogeEl=document.getElementById('dollar-balance-doge');if(dollarBalanceDogeEl)dollarBalanceDogeEl.innerText=dollarText;const dollarBalancePowerEl=document.getElementById('dollar-balance-power');if(dollarBalancePowerEl)dollarBalancePowerEl.innerText=dollarText;const dollarBalanceExchangeEl=document.getElementById('dollar-balance-exchange');if(dollarBalanceExchangeEl)dollarBalanceExchangeEl.innerText=dollarText;const dollarBalanceAllTabsEl=document.getElementById('dollar-balance-all-tabs');if(dollarBalanceAllTabsEl)dollarBalanceAllTabsEl.innerText=dollarText},100);function initializeGame(){document.body.style.overflow='auto';document.body.style.position='static';try{localStorage.setItem('test','test');localStorage.removeItem('test');console.log('localStorage is available and working')}catch(e){console.error('localStorage is NOT available:',e);alert('WARNING: Browser storage is disabled! Your game progress will not be saved. Please enable cookies/storage in your browser settings.')}
+try{initBtcShop();initEthShop();initDogeShop();initPowerShop()}catch(e){console.error('Error initializing shops:',e)}
+if(typeof initAchievements==='function'){initAchievements();console.log('✓ Achievements system initialized')}
+loadGame();updateAutoClickerButtonState();setBuyQuantity(1);updateAutoSellButtonUI();initStaking();updateStakingUI();if(typeof initTutorial==='function'){initTutorial();console.log('🎓 Tutorial system initialized')}
+if(hackingNextNotificationTime===0){scheduleHackingNotification();console.log('⚡ Hacking minigame notification scheduled')}['EASY','MEDIUM','HARD'].forEach(difficulty=>{const hackingBtn=document.getElementById(`hacking-${difficulty.toLowerCase()}-btn`);if(hackingBtn){const hackingCooldownEnd=hackingCooldowns[difficulty]||0;hackingBtn.dataset.onCooldown=Date.now()<hackingCooldownEnd?'true':'false';hackingBtn.style.filter=Date.now()<hackingCooldownEnd?'brightness(0.5)':''}
+const whackBtn=document.getElementById(`whack-${difficulty.toLowerCase()}-btn`);if(whackBtn){const whackCooldownEnd=whackCooldowns[difficulty]||0;whackBtn.dataset.onCooldown=Date.now()<whackCooldownEnd?'true':'false';whackBtn.style.filter=Date.now()<whackCooldownEnd?'brightness(0.5)':''}});updateHackingStats();updateWhackStats();updateNetworkStats();updateMinigamesTab();const manualBtcBtns=document.querySelectorAll('#manual-hash-btc-btn');const manualEthBtns=document.querySelectorAll('#manual-hash-eth-btn');const manualDogeBtns=document.querySelectorAll('#manual-hash-doge-btn');const setupManualHashButton=(buttons,clickHandler,trackingFn)=>{buttons.forEach(btn=>{let touched=!1;let animTimeout=null;const triggerAnimation=()=>{if(animTimeout)clearTimeout(animTimeout);btn.classList.remove('active');void btn.offsetWidth;btn.classList.add('active');animTimeout=setTimeout(()=>{btn.classList.remove('active');animTimeout=null},150)};btn.addEventListener('touchstart',()=>{touched=!0;triggerAnimation();trackingFn();clickHandler()});btn.addEventListener('click',()=>{if(!touched){triggerAnimation();trackingFn();clickHandler()}
+touched=!1})})};setupManualHashButton(manualBtcBtns,manualHash,trackManualHashClick);setupManualHashButton(manualEthBtns,manualEthHash,trackManualHashClick);setupManualHashButton(manualDogeBtns,manualDogeHash,trackManualHashClick);const mhrButtons=[{id:'btc-manual-hash-rate-btn',name:'BTC'},{id:'eth-manual-hash-rate-btn',name:'ETH'},{id:'doge-manual-hash-rate-btn',name:'DOGE'}];mhrButtons.forEach(btnInfo=>{const btn=document.getElementById(btnInfo.id);if(btn){let pressTimeout=null;btn.addEventListener('touchstart',(e)=>{if(pressTimeout)clearTimeout(pressTimeout);btn.classList.add('button-pressed');pressTimeout=setTimeout(()=>{btn.classList.remove('button-pressed');pressTimeout=null},200)});btn.addEventListener('touchend',(e)=>{if(pressTimeout){clearTimeout(pressTimeout);pressTimeout=setTimeout(()=>{btn.classList.remove('button-pressed');pressTimeout=null},50)}})}});const sellStakeButtonSelectors=['button[onclick*="Sell"]','button[onclick*="Stake"]','button[onclick*="quickUnstake"]'];sellStakeButtonSelectors.forEach(selector=>{const buttons=document.querySelectorAll(selector);buttons.forEach(btn=>{let animTimeout=null;btn.addEventListener('touchstart',(e)=>{if(animTimeout)clearTimeout(animTimeout);btn.classList.remove('active');void btn.offsetWidth;btn.classList.add('active');animTimeout=setTimeout(()=>{btn.classList.remove('active');animTimeout=null},150)});btn.addEventListener('click',(e)=>{if(animTimeout)clearTimeout(animTimeout);btn.classList.remove('active');void btn.offsetWidth;btn.classList.add('active');animTimeout=setTimeout(()=>{btn.classList.remove('active');animTimeout=null},150)},!0)})});const minigameButtonIds=['network-play-btn','packet-play-btn','whack-play-btn','packet-easy-btn','packet-medium-btn','packet-hard-btn','whack-easy-btn','whack-medium-btn','whack-hard-btn'];minigameButtonIds.forEach(btnId=>{const btn=document.getElementById(btnId);if(btn){let animTimeout=null;btn.addEventListener('touchstart',(e)=>{if(animTimeout)clearTimeout(animTimeout);btn.classList.remove('active');void btn.offsetWidth;btn.classList.add('active');animTimeout=setTimeout(()=>{btn.classList.remove('active');animTimeout=null},150)});btn.addEventListener('click',(e)=>{if(animTimeout)clearTimeout(animTimeout);btn.classList.remove('active');void btn.offsetWidth;btn.classList.add('active');animTimeout=setTimeout(()=>{btn.classList.remove('active');animTimeout=null},150)},!0)}});const globalMultiplierButtons=[{id:'btc-global-multiplier-btn',name:'BTC'},{id:'eth-global-multiplier-btn',name:'ETH'},{id:'doge-global-multiplier-btn',name:'DOGE'}];globalMultiplierButtons.forEach(btnInfo=>{const btn=document.getElementById(btnInfo.id);if(btn){let pressTimeout=null;btn.addEventListener('touchstart',(e)=>{if(pressTimeout)clearTimeout(pressTimeout);btn.classList.add('button-pressed');pressTimeout=setTimeout(()=>{btn.classList.remove('button-pressed');pressTimeout=null},200)});btn.addEventListener('touchend',(e)=>{if(pressTimeout){clearTimeout(pressTimeout);pressTimeout=setTimeout(()=>{btn.classList.remove('button-pressed');pressTimeout=null},50)}})}});const tutorialCompleted=localStorage.getItem('tutorialCompleted')==='true';const isNewPlayer=!localStorage.getItem('gameStarted');const isTutorialActive=typeof tutorialData!=='undefined'&&!tutorialData.completed;if(!isNewPlayer&&!isTutorialActive&&!tutorialCompleted&&localStorage.getItem('instructionsDismissed')!=='true'){const hasAscended=typeof ascensionLevel!=='undefined'&&ascensionLevel>0;if(!hasAscended){const instructionsEl=document.getElementById('game-instructions');if(instructionsEl){instructionsEl.style.display='flex'}}}
+console.log('=== MODAL CHECK ===');console.log('window.offlineEarningsToShow:',window.offlineEarningsToShow);console.log('Type:',typeof window.offlineEarningsToShow);if(window.offlineEarningsToShow){console.log('✓ SHOWING OFFLINE EARNINGS MODAL');console.log('Data:',window.offlineEarningsToShow);setTimeout(()=>{console.log('Calling showOfflineEarningsModal function...');showOfflineEarningsModal(window.offlineEarningsToShow.btc||0,window.offlineEarningsToShow.eth||0,window.offlineEarningsToShow.doge||0,window.offlineEarningsToShow.stakingCash||0,window.offlineEarningsToShow.corruptTokens||0,window.offlineEarningsToShow.seconds,window.offlineEarningsToShow.wasCapped||!1,window.offlineEarningsToShow.cappedSeconds||window.offlineEarningsToShow.seconds);window.offlineEarningsToShow=null;setTimeout(()=>{showBackupReminder()},600000)},500)}else{console.log('✗ No offline earnings data - modal will not show');setTimeout(()=>{showBackupReminder()},600000)}
+const canvasElement=document.getElementById('nwChart');console.log('Canvas element:',canvasElement);if(!canvasElement){console.error('ERROR: Canvas element not found!');return}
+const initChart=()=>{const currentNetWorth=(btcBalance*btcPrice)+(ethBalance*ethPrice)+(dogeBalance*dogePrice);console.log('=== CHART DEBUG ===');console.log('btcBalance:',btcBalance,'btcPrice:',btcPrice);console.log('ethBalance:',ethBalance,'ethPrice:',ethPrice);console.log('dogeBalance:',dogeBalance,'dogePrice:',dogePrice);console.log('hardwareEquity:',hardwareEquity);console.log('Current net worth for chart:',currentNetWorth);if(chartHistory.length===0){const btcUSD=btcBalance*btcPrice;const ethUSD=ethBalance*ethPrice;const dogeUSD=dogeBalance*dogePrice;const netWorthVal=btcUSD+ethUSD+dogeUSD+dollarBalance;chartHistory.push(netWorthVal);btcChartHistory.push(btcUSD);ethChartHistory.push(ethUSD);dogeChartHistory.push(dogeUSD);cashChartHistory.push(dollarBalance);chartTimestamps.push({time:Date.now(),value:netWorthVal,cash:dollarBalance,btc:btcBalance,eth:ethBalance,doge:dogeBalance})}
+console.log('Chart history length:',chartHistory.length,'Data:',chartHistory);if(typeof Chart==='undefined'){console.error('ERROR: Chart.js library not loaded!');document.querySelector('.chart-wrapper').innerHTML='<div style="color: #ff3344; padding: 20px; text-align: center; font-size: 0.8rem;">Chart.js failed to load<br>Check internet connection</div>';return null}
+console.log('Chart.js loaded');let nwChart;try{const ctx=document.getElementById('nwChart');if(!ctx){console.error('Canvas element not found');return null}
+const getChartLabels=()=>{return chartTimestamps.map((ts)=>new Date(ts.time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}))};const getChartValues=()=>{return chartHistory};nwChart=new Chart(ctx,{type:'line',data:{labels:getChartLabels(),datasets:[{label:'BTC',data:btcChartHistory,borderColor:'#f7931a',backgroundColor:'transparent',borderWidth:2.5,fill:!1,tension:0,spanGaps:!0,pointRadius:0,pointBackgroundColor:'#f7931a',pointBorderColor:'transparent',pointBorderWidth:0,pointHoverRadius:5,pointHoverBackgroundColor:'#f7931a',pointHoverBorderColor:'transparent',pointHoverBorderWidth:0},{label:'ETH',data:ethChartHistory,borderColor:'#627eea',backgroundColor:'transparent',borderWidth:2.5,fill:!1,tension:0,spanGaps:!0,pointRadius:0,pointBackgroundColor:'#627eea',pointBorderColor:'transparent',pointBorderWidth:0,pointHoverRadius:5,pointHoverBackgroundColor:'#627eea',pointHoverBorderColor:'transparent',pointHoverBorderWidth:0},{label:'DOGE',data:dogeChartHistory,borderColor:'#c2a633',backgroundColor:'transparent',borderWidth:2.5,fill:!1,tension:0,spanGaps:!0,pointRadius:0,pointBackgroundColor:'#c2a633',pointBorderColor:'transparent',pointBorderWidth:0,pointHoverRadius:5,pointHoverBackgroundColor:'#c2a633',pointHoverBorderColor:'transparent',pointHoverBorderWidth:0},{label:'CASH',data:cashChartHistory,borderColor:'#00ff88',backgroundColor:'transparent',borderWidth:2.5,fill:!1,tension:0,spanGaps:!0,pointRadius:0,pointBackgroundColor:'#00ff88',pointBorderColor:'transparent',pointBorderWidth:0,pointHoverRadius:5,pointHoverBackgroundColor:'#00ff88',pointHoverBorderColor:'transparent',pointHoverBorderWidth:0}]},options:{responsive:!0,maintainAspectRatio:!1,animation:!1,interaction:{intersect:!1,mode:'index'},plugins:{legend:{display:!0,position:'top',align:window.innerWidth<=448?'end':'center',labels:{color:'#999',font:{size:window.innerWidth<=448?10:(window.innerWidth<=932?12:16)},boxWidth:14,boxHeight:12,padding:8},padding:{top:0,bottom:5}},tooltip:{enabled:!0,backgroundColor:'rgba(0, 0, 0, 0.8)',titleColor:'#00ff88',bodyColor:'#ffffff',borderColor:'#00ff88',borderWidth:1,padding:10,displayColors:!0,callbacks:{title:function(context){if(context.length>0){const index=context[0].dataIndex;return chartTimestamps[index]?new Date(chartTimestamps[index].time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):''}
+return''},labelColor:function(context){return{borderColor:context.dataset.borderColor,backgroundColor:context.dataset.borderColor,borderWidth:0,borderRadius:0}},label:function(context){const value=parseFloat(context.parsed.y)||0;return context.dataset.label+': $'+abbreviateNumber(value,2)}}},decimation:{enabled:!0,algorithm:'lttb',samples:600}},scales:{x:{display:!0,grid:{display:!1,drawBorder:!1},ticks:{color:'transparent',font:{size:11},maxTicksLimit:6}},y:{display:!0,position:'left',min:0,max:(()=>{if(userLockedChartMax!==null){return userLockedChartMax}
+const allValues=[...btcChartHistory,...ethChartHistory,...dogeChartHistory,...cashChartHistory].filter(v=>v!==undefined&&v!==null);const maxValue=allValues.length>0?Math.max(...allValues):100;return maxValue})(),grace:0,grid:{color:'rgba(255, 255, 255, 0.05)',drawBorder:!1},ticks:{color:'#999',font:{size:11},callback:function(value){return'$'+abbreviateNumber(value,1)}}}}}});console.log('Chart object created:',nwChart);console.log('Chart initialized with data:',chartHistory);return nwChart}catch(error){console.error('ERROR creating chart:',error);document.querySelector('.chart-wrapper').innerHTML='<div style="color: #ff3344; padding: 20px; text-align: center; font-size: 0.8rem;">Chart Error: '+error.message+'<br><small>Try refreshing the page</small></div>';return null}};let nwChart=null;let chartInitialized=!1;const tryInitChart=()=>{nwChart=initChart();if(nwChart){chartInitialized=!0;console.log('Chart successfully initialized');if(chartHistory.length===0){const now=Date.now();const currentNetWorth=(btcBalance*btcPrice)+(ethBalance*ethPrice)+(dogeBalance*dogePrice)+dollarBalance;chartHistory.push(currentNetWorth);btcChartHistory.push(btcBalance*btcPrice);ethChartHistory.push(ethBalance*ethPrice);dogeChartHistory.push(dogeBalance*dogePrice);cashChartHistory.push(dollarBalance);chartTimestamps.push({time:now,value:currentNetWorth,cash:dollarBalance,btc:btcBalance*btcPrice,eth:ethBalance*ethPrice,doge:dogeBalance*dogePrice});chartStartTime=now;trimChartData();console.log('Chart initialized with current data point')}
+updateChartDateTracker()}};const isDesktop=window.innerWidth>1200;setTimeout(()=>{tryInitChart();console.log('Initializing hash rate chart...');const hrInitResult=initializeHashRateChart();if(!hrInitResult){console.log('Hash rate chart init failed, will retry...');setTimeout(()=>{console.log('Retrying hash rate chart initialization...');initializeHashRateChart()},200)}
+console.log('Initializing crypto bars...');if(initBars()){console.log('Crypto bars successfully initialized')}
+if(!chartInitialized){console.log('Chart init failed, retrying with delays...');setTimeout(tryInitChart,200);setTimeout(tryInitChart,500);setTimeout(tryInitChart,1000);setTimeout(tryInitChart,2000);setTimeout(tryInitChart,3000)}},100);const initializeRugpullVisibility=()=>{const isDesktop=window.innerWidth>1200;const desktopRugpull=document.getElementById('desktop-rugpull-section');const mobileRugpull=document.getElementById('mobile-rugpull-section');if(desktopRugpull&&mobileRugpull){desktopRugpull.style.display=isDesktop?'flex':'none';mobileRugpull.style.display=isDesktop?'none':'flex'}};initializeRugpullVisibility();let resizeTimeout;window.addEventListener('resize',()=>{clearTimeout(resizeTimeout);resizeTimeout=setTimeout(()=>{const isDesktop=window.innerWidth>1200;const desktopRugpull=document.getElementById('desktop-rugpull-section');const mobileRugpull=document.getElementById('mobile-rugpull-section');if(desktopRugpull&&mobileRugpull){desktopRugpull.style.display=isDesktop?'flex':'none';mobileRugpull.style.display=isDesktop?'none':'flex'}
+if(nwChart){console.log('Window resized, re-rendering net worth chart...');nwChart.resize()}
+if(isDesktop&&hashRateChartInstance){console.log('Window resized to desktop, re-rendering hash rate chart...');hashRateChartInstance.resize()}else if(isDesktop&&!hashRateChartInstance){console.log('Window resized to desktop, initializing hash rate chart...');initializeHashRateChart()}},300)});const yAxisScaleSlider=document.getElementById('y-axis-scale-slider');const yAxisScaleValue=document.getElementById('y-axis-scale-value');if(yAxisScaleSlider){yAxisScaleSlider.addEventListener('input',(e)=>{const sliderValue=parseFloat(e.target.value);const allValues=[...btcChartHistory,...ethChartHistory,...dogeChartHistory,...cashChartHistory].filter(v=>v!==undefined&&v!==null);const maxValue=allValues.length>0?Math.max(...allValues):100;const minZoom=10;const maxZoom=maxValue;const normalizedSlider=sliderValue/100;const reversedNormalized=1-normalizedSlider;const calculatedMax=minZoom*Math.pow(maxZoom/minZoom,reversedNormalized);chartYAxisScaleMultiplier=sliderValue;userControllingZoom=!0;if(sliderValue<=10){userHasSetZoom=!1;userLockedChartMax=null}else{userHasSetZoom=!0;userLockedChartMax=calculatedMax}
+if(sliderValue>0&&sliderValue<=10){yAxisScaleValue.innerText='FIXED'}else{const zoomPercentage=Math.round(sliderValue);yAxisScaleValue.innerText=zoomPercentage+'%'}
+if(nwChart){if(sliderValue<=10){nwChart.options.scales.y.max=undefined}else{nwChart.options.scales.y.max=calculatedMax}
+nwChart.options.scales.y.min=0;nwChart.update('none')}});yAxisScaleSlider.addEventListener('change',()=>{userControllingZoom=!1;if(nwChart&&userHasSetZoom&&userLockedChartMax!==null){nwChart.options.scales.y.min=0;nwChart.options.scales.y.max=userLockedChartMax;nwChart.update('none')}})}
+const resetChartBtn=document.getElementById('reset-chart-btn');if(resetChartBtn){resetChartBtn.addEventListener('click',()=>{if(confirm('Are you sure you want to clear all chart data? This cannot be undone.')){chartHistory=[];chartTimestamps=[];btcChartHistory=[];ethChartHistory=[];dogeChartHistory=[];cashChartHistory=[];powerChartHistory=[];powerChartColors=[];hashRateChartTimestamps=[];chartMarkers=[];chartStartTime=Date.now();if(yAxisScaleSlider){yAxisScaleSlider.value=10;yAxisScaleValue.innerText='FIXED'}
+userHasSetZoom=!1;userLockedChartMax=null;const now=Date.now();const currentNetWorth=(btcBalance*btcPrice)+(ethBalance*ethPrice)+(dogeBalance*dogePrice)+dollarBalance;chartHistory.push(currentNetWorth);btcChartHistory.push(btcBalance*btcPrice);ethChartHistory.push(ethBalance*ethPrice);dogeChartHistory.push(dogeBalance*dogePrice);cashChartHistory.push(dollarBalance);chartTimestamps.push({time:now,value:currentNetWorth,cash:dollarBalance,btc:btcBalance*btcPrice,eth:ethBalance*ethPrice,doge:dogeBalance*dogePrice});if(nwChart){nwChart.options.scales.y.max=undefined;nwChart.options.scales.y.min=0;nwChart.update('none')}
+saveGame();console.log('[Chart] Reset chart data - fresh start')}})}
+let updateCount=0;let lastTrimTime=Date.now();setInterval(()=>{if(!nwChart){if(!chartInitialized){tryInitChart()}
+return}
+const timeRangeSlider=document.getElementById('chart-time-slider');const timeRangePercent=timeRangeSlider?parseInt(timeRangeSlider.value):100;const now=Date.now();const netWorth=(btcBalance*btcPrice)+(ethBalance*ethPrice)+(dogeBalance*dogePrice);calculateTotalPowerUsed();const timeDeltaSeconds=(now-lastHashRateChartUpdateTime)/1000;cumulativePowerUsed+=totalPowerUsed*timeDeltaSeconds;const availablePower=getTotalPowerAvailableWithBonus();if(availablePower>maxPowerCapacity){maxPowerCapacity=availablePower}
+const currentPercentage=(totalPowerUsed/availablePower)*100;const color=currentPercentage>50?'#ff3333':'#00ff88';lastHashRateChartUpdateTime=now;if(powerChartHistory.length>0&&hashRateChartTimestamps.length>0){powerChartHistory[powerChartHistory.length-1]=currentPercentage;powerChartColors[powerChartColors.length-1]=color}
+if(now-lastMarkerTime>=60000){chartMarkers.push({index:chartHistory.length-1,time:now,value:netWorth});lastMarkerTime=now;if(chartMarkers.length>50){chartMarkers.splice(20,10)}}
+const wasEmpty=chartHistory.length===0;chartHistory.push(netWorth);btcChartHistory.push(btcBalance*btcPrice);ethChartHistory.push(ethBalance*ethPrice);dogeChartHistory.push(dogeBalance*dogePrice);cashChartHistory.push(dollarBalance);chartTimestamps.push({time:now,value:netWorth,cash:dollarBalance,btc:btcBalance,eth:ethBalance,doge:dogeBalance});hashRateChartHistory.push(btcPerSec*totalMiningMultiplier);ethHashRateChartHistory.push(ethPerSec*totalMiningMultiplier);dogeHashRateChartHistory.push(dogePerSec*totalMiningMultiplier);if(!1){console.log('===== DECIMATION START =====');console.log('Before decimation:',chartTimestamps.length,'points');const decimationFactor=Math.ceil(chartTimestamps.length/targetChartPoints);console.log('Decimation factor:',decimationFactor);let newTimestamps=[];let newChartHistory=[];let newBtcHistory=[];let newEthHistory=[];let newDogeHistory=[];let newCashHistory=[];newTimestamps.push(chartTimestamps[0]);newChartHistory.push(chartHistory[0]);newBtcHistory.push(btcChartHistory[0]);newEthHistory.push(ethChartHistory[0]);newDogeHistory.push(dogeChartHistory[0]);newCashHistory.push(cashChartHistory[0]);for(let i=decimationFactor;i<chartTimestamps.length;i+=decimationFactor){newTimestamps.push(chartTimestamps[i]);newChartHistory.push(chartHistory[i]);newBtcHistory.push(btcChartHistory[i]);newEthHistory.push(ethChartHistory[i]);newDogeHistory.push(dogeChartHistory[i]);newCashHistory.push(cashChartHistory[i])}
+if(newTimestamps[newTimestamps.length-1]!==chartTimestamps[chartTimestamps.length-1]){newTimestamps.push(chartTimestamps[chartTimestamps.length-1]);newChartHistory.push(chartHistory[chartHistory.length-1]);newBtcHistory.push(btcChartHistory[btcChartHistory.length-1]);newEthHistory.push(ethChartHistory[ethChartHistory.length-1]);newDogeHistory.push(dogeChartHistory[dogeChartHistory.length-1]);newCashHistory.push(cashChartHistory[cashChartHistory.length-1])}
+chartTimestamps=newTimestamps;chartHistory=newChartHistory;btcChartHistory=newBtcHistory;ethChartHistory=newEthHistory;dogeChartHistory=newDogeHistory;cashChartHistory=newCashHistory;console.log('After decimation:',chartTimestamps.length,'points');let flatlineFiltered=[];let flatlineTimestamps=[];let flatlineBTC=[];let flatlineETH=[];let flatlineDOGE=[];let flatlineCASH=[];for(let i=0;i<chartTimestamps.length;i++){if(i===0||i===chartTimestamps.length-1){flatlineTimestamps.push(chartTimestamps[i]);flatlineFiltered.push(chartHistory[i]);flatlineBTC.push(btcChartHistory[i]);flatlineETH.push(ethChartHistory[i]);flatlineDOGE.push(dogeChartHistory[i]);flatlineCASH.push(cashChartHistory[i])}else{const prevIdx=i-1;const anyChanged=chartHistory[i]!==chartHistory[prevIdx]||btcChartHistory[i]!==btcChartHistory[prevIdx]||ethChartHistory[i]!==ethChartHistory[prevIdx]||dogeChartHistory[i]!==dogeChartHistory[prevIdx]||cashChartHistory[i]!==cashChartHistory[prevIdx];if(anyChanged){flatlineTimestamps.push(chartTimestamps[i]);flatlineFiltered.push(chartHistory[i]);flatlineBTC.push(btcChartHistory[i]);flatlineETH.push(ethChartHistory[i]);flatlineDOGE.push(dogeChartHistory[i]);flatlineCASH.push(cashChartHistory[i])}}}
+const beforeFlatline=chartTimestamps.length;chartTimestamps=flatlineTimestamps;chartHistory=flatlineFiltered;btcChartHistory=flatlineBTC;ethChartHistory=flatlineETH;dogeChartHistory=flatlineDOGE;cashChartHistory=flatlineCASH;console.log('FLATLINE FILTER: Before =',beforeFlatline,'After =',chartTimestamps.length,'Removed =',beforeFlatline-chartTimestamps.length);console.log('===== DECIMATION END =====');if(hashRateChartTimestamps.length>maxChartPoints){const hashDecFactor=Math.ceil(hashRateChartTimestamps.length/targetChartPoints);let newHashTimestamps=[];let newHashRate=[];let newEthHashRate=[];let newDogeHashRate=[];newHashTimestamps.push(hashRateChartTimestamps[0]);newHashRate.push(hashRateChartHistory[0]);newEthHashRate.push(ethHashRateChartHistory[0]);newDogeHashRate.push(dogeHashRateChartHistory[0]);for(let i=hashDecFactor;i<hashRateChartTimestamps.length;i+=hashDecFactor){newHashTimestamps.push(hashRateChartTimestamps[i]);newHashRate.push(hashRateChartHistory[i]);newEthHashRate.push(ethHashRateChartHistory[i]);newDogeHashRate.push(dogeHashRateChartHistory[i])}
+if(newHashTimestamps[newHashTimestamps.length-1]!==hashRateChartTimestamps[hashRateChartTimestamps.length-1]){newHashTimestamps.push(hashRateChartTimestamps[hashRateChartTimestamps.length-1]);newHashRate.push(hashRateChartHistory[hashRateChartHistory.length-1]);newEthHashRate.push(ethHashRateChartHistory[ethHashRateChartHistory.length-1]);newDogeHashRate.push(dogeHashRateChartHistory[dogeHashRateChartHistory.length-1])}
+hashRateChartTimestamps=newHashTimestamps;hashRateChartHistory=newHashRate;ethHashRateChartHistory=newEthHashRate;dogeHashRateChartHistory=newDogeHashRate}
+lastCachedChartLength=0;lastCachedLabelCount=0;console.log('DECIMATED: After =',chartTimestamps.length,'points')}
+const timeSinceLastChartUpdate=now-lastChartUpdateTime;if((wasEmpty||timeSinceLastChartUpdate>=1000)&&nwChart&&chartTimestamps.length>0){lastChartUpdateTime=now;const labels=chartTimestamps.map(ts=>{return new Date(ts.time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})});nwChart.data.labels=labels;nwChart.data.datasets[0].data=btcChartHistory;nwChart.data.datasets[1].data=ethChartHistory;nwChart.data.datasets[2].data=dogeChartHistory;nwChart.data.datasets[3].data=cashChartHistory;nwChart.update('none');if(userHasSetZoom&&userLockedChartMax!==null){nwChart.options.scales.y.min=0;nwChart.options.scales.y.max=userLockedChartMax}
+if(!userControllingZoom&&(btcChartHistory.length>0||ethChartHistory.length>0||dogeChartHistory.length>0||cashChartHistory.length>0)){const currentDataLength=btcChartHistory.length+ethChartHistory.length+dogeChartHistory.length+cashChartHistory.length;if(currentDataLength!==lastCachedChartLength){lastCachedChartLength=currentDataLength;let currentMax=0;if(btcChartHistory.length>0){for(let i=0;i<btcChartHistory.length;i++){if(btcChartHistory[i]>currentMax)currentMax=btcChartHistory[i]}}
+if(ethChartHistory.length>0){for(let i=0;i<ethChartHistory.length;i++){if(ethChartHistory[i]>currentMax)currentMax=ethChartHistory[i]}}
+if(dogeChartHistory.length>0){for(let i=0;i<dogeChartHistory.length;i++){if(dogeChartHistory[i]>currentMax)currentMax=dogeChartHistory[i]}}
+if(cashChartHistory.length>0){for(let i=0;i<cashChartHistory.length;i++){if(cashChartHistory[i]>currentMax)currentMax=cashChartHistory[i]}}
+cachedChartMax=currentMax}
+if(userHasSetZoom&&userLockedChartMax!==null){}else if(!userHasSetZoom){let yAxisMax;if(chartYAxisScaleMultiplier===0){yAxisMax=cachedChartMax}else{const paddingPercent=(10-chartYAxisScaleMultiplier)/100;yAxisMax=cachedChartMax*(1+paddingPercent)}
+nwChart.options.scales.y.min=0;nwChart.options.scales.y.max=yAxisMax}}
+nwChart.update('none')}
+if(hashRateChartInstance&&hashRateChartHistory.length>0&&hashRateChartTimestamps.length>0){const dataLength=Math.min(hashRateChartHistory.length,ethHashRateChartHistory.length,dogeHashRateChartHistory.length,hashRateChartTimestamps.length);const minHashPoints=Math.max(3,Math.ceil(dataLength*(timeRangePercent/100)));const hashRateStartIndex=Math.max(0,dataLength-minHashPoints);const sliceLength=Math.max(3,dataLength-hashRateStartIndex);const btcUsdPerSec=hashRateChartHistory.slice(hashRateStartIndex,hashRateStartIndex+sliceLength).map(v=>v*btcPrice);const ethUsdPerSec=ethHashRateChartHistory.slice(hashRateStartIndex,hashRateStartIndex+sliceLength).map(v=>v*ethPrice);const dogeUsdPerSec=dogeHashRateChartHistory.slice(hashRateStartIndex,hashRateStartIndex+sliceLength).map(v=>v*dogePrice);const hashLabels=hashRateChartTimestamps.slice(hashRateStartIndex,hashRateStartIndex+sliceLength).map((ts)=>{const time=ts?.time||Date.now();return new Date(time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})});hashRateChartInstance.data.labels=hashLabels;hashRateChartInstance.data.datasets[0].data=btcUsdPerSec;hashRateChartInstance.data.datasets[1].data=ethUsdPerSec;hashRateChartInstance.data.datasets[2].data=dogeUsdPerSec;hashRateChartInstance.update('none')}
+updateChartDateTracker();updateUI();updateCount++;if(updateCount%10===0){console.log('Chart:',chartTimestamps.length,'points | BTC:',btcChartHistory.length,'ETH:',ethChartHistory.length,'DOGE:',dogeChartHistory.length,'CASH:',cashChartHistory.length)}},1000);const nwChartCanvas=document.getElementById('nwChart');if(nwChartCanvas){nwChartCanvas.addEventListener('mousemove',(e)=>{updateChartDateTracker(e)});nwChartCanvas.addEventListener('mouseleave',()=>{hoveredMarkerIndex=-1;updateChartDateTracker()})}
+const timeRangeLabel=document.getElementById('chart-time-label');const intervalButtons=document.querySelectorAll('.chart-interval-btn');if(intervalButtons.length>0){intervalButtons.forEach(btn=>{btn.addEventListener('click',(e)=>{const interval=parseFloat(e.target.getAttribute('data-interval'));chartIntervalMinutes=interval;intervalButtons.forEach(b=>{b.style.background='rgba(100,100,100,0.2)';b.style.borderColor='#666';b.style.color='#999'});e.target.style.background='rgba(0,255,136,0.2)';e.target.style.borderColor='#00ff88';e.target.style.color='#00ff88';const labels={0.0167:'1s',0.0833:'5s',0.5:'30s',1:'1m',5:'5m',10:'10m',30:'30m',60:'1h',240:'4h',1440:'1d'};timeRangeLabel.textContent=labels[interval]+' interval';if(nwChart){nwChart.update('none')}})})}
+const timeRangeSlider=document.getElementById('chart-time-slider');let sliderUpdateTimeout;if(!1&&timeRangeSlider){timeRangeSlider.addEventListener('input',(e)=>{const sliderValue=parseInt(e.target.value);const VIEWPORT_SIZE=10;let maxSliderValue=100;if(chartTimestamps.length>0){const oldestTimestamp=chartTimestamps[0].time;const ageMs=Date.now()-oldestTimestamp;const ageMinutes=Math.ceil(ageMs/(60*1000));maxSliderValue=Math.max(VIEWPORT_SIZE,ageMinutes);if(parseInt(timeRangeSlider.max)!==maxSliderValue){timeRangeSlider.max=maxSliderValue}}
+const viewportEndMinutesAgo=Math.max(VIEWPORT_SIZE,sliderValue);let label;const startMinutesAgo=viewportEndMinutesAgo+VIEWPORT_SIZE;if(viewportEndMinutesAgo===VIEWPORT_SIZE){label='Last 10 Minutes'}else if(startMinutesAgo<60){label=`${Math.round(startMinutesAgo)}-${Math.round(viewportEndMinutesAgo)} min ago`}else{const startHours=(startMinutesAgo/60).toFixed(1);const endHours=(viewportEndMinutesAgo/60).toFixed(1);label=`${startHours}-${endHours}h ago`}
+timeRangeLabel.textContent=label;clearTimeout(sliderUpdateTimeout);sliderUpdateTimeout=setTimeout(()=>{if(nwChart&&chartHistory.length>0){const now=Date.now();const endTimeMs=now-(viewportEndMinutesAgo*60*1000);const startTimeMs=endTimeMs-(10*60*1000);let startIndex=0;let endIndex=chartTimestamps.length-1;for(let i=0;i<chartTimestamps.length;i++){if(chartTimestamps[i].time>=startTimeMs){startIndex=i;break}}
+for(let i=chartTimestamps.length-1;i>=0;i--){if(chartTimestamps[i].time<=endTimeMs){endIndex=i;break}}
+const sliceLength=Math.max(1,endIndex-startIndex+1);nwChart.data.labels=chartTimestamps.slice(startIndex,startIndex+sliceLength).map((ts)=>new Date(ts.time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}));const slicedBTC=btcChartHistory.slice(startIndex,startIndex+sliceLength);const slicedETH=ethChartHistory.slice(startIndex,startIndex+sliceLength);const slicedDOGE=dogeChartHistory.slice(startIndex,startIndex+sliceLength);const slicedCASH=cashChartHistory.slice(startIndex,startIndex+sliceLength);nwChart.data.datasets[0].data=slicedBTC;nwChart.data.datasets[1].data=slicedETH;nwChart.data.datasets[2].data=slicedDOGE;nwChart.data.datasets[3].data=slicedCASH;if(slicedBTC.length>0||slicedETH.length>0||slicedDOGE.length>0||slicedCASH.length>0){const allValues=[...slicedBTC,...slicedETH,...slicedDOGE,...slicedCASH].filter(v=>v!==undefined&&v!==null);if(allValues.length>0){const minValue=Math.min(...allValues,0);const maxValue=Math.max(...allValues,0);const range=maxValue-minValue;const padding=range<1?range*0.2:range*0.05;const paddingAmount=Math.max(padding,maxValue*0.1);nwChart.options.scales.y.min=0;nwChart.options.scales.y.max=maxValue+paddingAmount}}
+nwChart.update('none')}
+if(hashRateChartInstance&&hashRateChartHistory.length>0){const dataLength=Math.min(hashRateChartHistory.length,ethHashRateChartHistory.length,dogeHashRateChartHistory.length,hashRateChartTimestamps.length);const startIndex=Math.max(0,dataLength-Math.max(1,Math.ceil(dataLength*percentRatio)));const sliceLength=Math.max(1,dataLength-startIndex);const btcUsdPerSec=hashRateChartHistory.slice(startIndex,startIndex+sliceLength).map(v=>v*btcPrice);const ethUsdPerSec=ethHashRateChartHistory.slice(startIndex,startIndex+sliceLength).map(v=>v*ethPrice);const dogeUsdPerSec=dogeHashRateChartHistory.slice(startIndex,startIndex+sliceLength).map(v=>v*dogePrice);const labels=hashRateChartTimestamps.slice(startIndex,startIndex+sliceLength).map((ts)=>{const time=ts?.time||Date.now();return new Date(time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})});hashRateChartInstance.data.labels=labels;hashRateChartInstance.data.datasets[0].data=btcUsdPerSec;hashRateChartInstance.data.datasets[1].data=ethUsdPerSec;hashRateChartInstance.data.datasets[2].data=dogeUsdPerSec;hashRateChartInstance.update('none')}
+if(powerChartInstance&&hashRateChartTimestamps.length>0){if(hashRateChartInstance&&hashRateChartInstance.data.labels&&hashRateChartInstance.data.labels.length>0){const hashChartDataCount=hashRateChartInstance.data.labels.length;const startIndex=Math.max(0,hashRateChartTimestamps.length-hashChartDataCount);const sliceLength=hashChartDataCount;const powerDataPercent=powerChartHistory.slice(startIndex,startIndex+sliceLength);const labels=hashRateChartTimestamps.slice(startIndex,startIndex+sliceLength).map((ts)=>{const time=ts?.time||Date.now();return new Date(time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})});powerChartInstance.data.labels=labels;powerChartInstance.data.datasets[0].data=powerDataPercent;powerChartInstance._powerChartColors=powerChartColors.slice(startIndex,startIndex+sliceLength);powerChartInstance.update('none')}}},200)})}
+window.swapChartView=function(){if(window.innerWidth<=1200){const nwContainer=document.getElementById('nw-chart-container');const hrContainer=document.getElementById('hr-chart-container');const swapBtn=document.getElementById('swap-chart-btn');if(currentChartView==='networth'){currentChartView='hashrate';nwContainer.style.cssText='display: none !important;';hrContainer.style.cssText='display: block !important;';swapBtn.textContent='SWAP CHARTS (NET WORTH)';setTimeout(()=>{if(!hashRateChartInstance){initializeHashRateChart()}else{hashRateChartInstance.resize()}},50)}else{currentChartView='networth';nwContainer.style.cssText='display: block !important;';hrContainer.style.cssText='display: none !important;';swapBtn.textContent='SWAP CHARTS';setTimeout(()=>{if(nwChart){nwChart.resize()}},50)}}};window.initializeHashRateChart=function(){try{const canvasEl=document.getElementById('hashRateChart');if(!canvasEl){console.warn('Hash rate chart canvas not found in DOM yet');return!1}
+const ctx=canvasEl.getContext('2d');if(!ctx){console.warn('Could not get canvas context for hash rate chart');return!1}
+if(hashRateChartInstance){hashRateChartInstance.destroy()}
+if(hashRateChartHistory.length===0){if(chartHistory.length>0&&chartTimestamps.length>0){for(let i=0;i<chartHistory.length;i++){hashRateChartHistory.push(btcPerSec*totalMiningMultiplier);ethHashRateChartHistory.push(ethPerSec*totalMiningMultiplier);dogeHashRateChartHistory.push(dogePerSec*totalMiningMultiplier);const availablePower=getTotalPowerAvailableWithBonus();const powerPercentage=availablePower>0?(totalPowerUsed/availablePower)*100:0;powerChartHistory.push(powerPercentage);const color=powerPercentage>50?'#ff3333':'#00ff88';powerChartColors.push(color);hashRateChartTimestamps.push(chartTimestamps[i])}}else{hashRateChartHistory.push(btcPerSec*totalMiningMultiplier);ethHashRateChartHistory.push(ethPerSec*totalMiningMultiplier);dogeHashRateChartHistory.push(dogePerSec*totalMiningMultiplier);const availablePower=getTotalPowerAvailableWithBonus();const powerPercentage=availablePower>0?(totalPowerUsed/availablePower)*100:0;powerChartHistory.push(powerPercentage);const color=powerPercentage>50?'#ff3333':'#00ff88';powerChartColors.push(color);hashRateChartTimestamps.push({time:Date.now()})}}
+const timeRangeSlider=document.getElementById('chart-time-slider');const timeRangePercent=timeRangeSlider?parseInt(timeRangeSlider.value):100;const dataLength=Math.min(hashRateChartHistory.length,ethHashRateChartHistory.length,dogeHashRateChartHistory.length,hashRateChartTimestamps.length);const startIndex=Math.max(0,dataLength-Math.max(1,Math.ceil(dataLength*(timeRangePercent/100))));const sliceLength=Math.max(1,dataLength-startIndex);const btcUsdPerSec=hashRateChartHistory.slice(startIndex,startIndex+sliceLength).map(v=>v*btcPrice);const ethUsdPerSec=ethHashRateChartHistory.slice(startIndex,startIndex+sliceLength).map(v=>v*ethPrice);const dogeUsdPerSec=dogeHashRateChartHistory.slice(startIndex,startIndex+sliceLength).map(v=>v*dogePrice);const labels=hashRateChartTimestamps.slice(startIndex,startIndex+sliceLength).map((ts)=>{const time=ts?.time||Date.now();return new Date(time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})});hashRateChartInstance=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'BTC',data:btcUsdPerSec,borderColor:'#f7931a',backgroundColor:'rgba(247, 147, 26, 0.1)',pointBackgroundColor:'#f7931a',pointBorderColor:'#f7931a',pointRadius:0,pointHoverRadius:0,yAxisID:'y',tension:0,fill:!1,borderWidth:2},{label:'ETH',data:ethUsdPerSec,borderColor:'#627eea',backgroundColor:'rgba(98, 126, 234, 0.1)',pointBackgroundColor:'#627eea',pointBorderColor:'#627eea',pointRadius:0,pointHoverRadius:0,yAxisID:'y',tension:0,fill:!1,borderWidth:2},{label:'DOGE',data:dogeUsdPerSec,borderColor:'#c2a633',backgroundColor:'rgba(194, 166, 51, 0.1)',pointBackgroundColor:'#c2a633',pointBorderColor:'#c2a633',pointRadius:0,pointHoverRadius:0,yAxisID:'y',tension:0,fill:!1,borderWidth:2}]},options:{responsive:!0,maintainAspectRatio:!1,interaction:{mode:'index',intersect:!1,},stacked:!1,plugins:{legend:{display:!0,labels:{color:'#999',font:{size:window.innerWidth<=448?6:(window.innerWidth<=932?8:12)}}},tooltip:{enabled:!0,backgroundColor:'rgba(0, 0, 0, 0.8)',titleColor:'#00ff88',bodyColor:'#ffffff',borderColor:'#00ff88',borderWidth:1,padding:10,displayColors:!0,callbacks:{title:function(context){if(context.length>0){const index=context[0].dataIndex;return hashRateChartTimestamps[index]?new Date(hashRateChartTimestamps[index].time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):''}
+return''},labelColor:function(context){return{borderColor:context.dataset.borderColor,backgroundColor:context.dataset.borderColor,borderWidth:0,borderRadius:0}},label:function(context){const value=parseFloat(context.parsed.y)||0;const formatted='$'+abbreviateNumber(value,2);return context.dataset.label+': '+formatted}}}},scales:{x:{display:!0,grid:{display:!1,drawBorder:!1},ticks:{color:'#999',font:{size:11},maxTicksLimit:6}},y:{type:'linear',display:!0,position:'left',beginAtZero:!1,ticks:{color:'#999',font:{size:10},callback:function(value){return formatCurrencyAbbreviated(value,1)}},grid:{color:'rgba(255, 255, 255, 0.05)',drawBorder:!1},title:{display:!0,text:'USD Value per Second',color:'#999'}}}}});console.log('✅ Hash rate chart initialized successfully');return!0}catch(error){console.error('Error creating hash rate chart:',error);return!1}};window.initializePowerChart=function(){try{const canvasEl=document.getElementById('powerChart');if(!canvasEl){console.warn('Power chart canvas not found in DOM yet');return!1}
+const ctx=canvasEl.getContext('2d');if(!ctx){console.warn('Could not get canvas context for power chart');return!1}
+if(powerChartInstance){powerChartInstance.destroy()}
+if(powerChartHistory.length===0){const availablePower=getTotalPowerAvailableWithBonus();const currentPercentage=(totalPowerUsed/availablePower)*100;const color=currentPercentage>50?'#ff3333':'#00ff88';const dataPointsNeeded=Math.max(hashRateChartTimestamps.length,10);for(let i=0;i<dataPointsNeeded;i++){powerChartHistory.push(currentPercentage);powerChartColors.push(color)}}
+if(powerChartHistory.length===0){return!1}
+let startIndex=0;let sliceLength=Math.max(powerChartHistory.length,1);if(hashRateChartInstance&&hashRateChartInstance.data.labels&&hashRateChartInstance.data.labels.length>0){const hashChartDataCount=hashRateChartInstance.data.labels.length;startIndex=Math.max(0,powerChartHistory.length-hashChartDataCount);sliceLength=Math.min(hashChartDataCount,powerChartHistory.length-startIndex)}
+const powerData=powerChartHistory.slice(startIndex,startIndex+sliceLength);if(powerData.length===0){return!1}
+const powerDataPercent=powerData;const labels=[];const timestampsSlice=hashRateChartTimestamps.slice(startIndex,startIndex+sliceLength);if(timestampsSlice.length>=sliceLength){for(let i=0;i<sliceLength;i++){const ts=timestampsSlice[i];const time=ts?.time||Date.now();labels.push(new Date(time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}))}}else{for(let i=0;i<sliceLength;i++){labels.push('')}}
+console.log('🔋 Creating power chart with data:',{labels:labels.length,powerDataPercent:powerDataPercent.length,dataPoints:powerDataPercent.slice(0,5),startIndex:startIndex,sliceLength:sliceLength,powerChartHistoryLength:powerChartHistory.length,hashRateTimestampsLength:hashRateChartTimestamps.length,totalPowerUsed:totalPowerUsed,availablePower:getTotalPowerAvailableWithBonus()});powerChartInstance=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Power Usage',data:powerDataPercent,borderColor:'#00ff88',backgroundColor:'rgba(0, 0, 0, 0)',pointRadius:0,pointHoverRadius:5,borderWidth:2,fill:!1,stepped:'middle',spanGaps:!0,segment:{borderColor:function(context){const p0DataIndex=context.p0DataIndex;const p1DataIndex=context.p1DataIndex;if(context.dataset&&context.dataset.data&&p0DataIndex!==undefined&&p1DataIndex!==undefined){const value0=context.dataset.data[p0DataIndex];const value1=context.dataset.data[p1DataIndex];return(value0>50||value1>50)?'#ff3333':'#00ff88'}
+return'#00ff88'}}}]},options:{responsive:!0,maintainAspectRatio:!1,layout:{padding:{top:5,bottom:5,left:0,right:0}},plugins:{legend:{display:!1},tooltip:{backgroundColor:'rgba(0,0,0,0.8)',padding:10,titleFont:{size:12,weight:'bold'},bodyFont:{size:11},borderColor:'#00ff88',borderWidth:1,mode:'index',intersect:!1,callbacks:{label:function(context){const percentValue=context.parsed.y;return percentValue.toFixed(1)+'%'}}}},interaction:{mode:'index',intersect:!1},scales:{x:{display:!0,grid:{display:!1,drawBorder:!1},ticks:{color:'#999',font:{size:11},maxTicksLimit:6}},y:{grid:{color:'rgba(255,255,255,0.05)',drawBorder:!1},min:0,max:100,ticks:{color:'#999',font:{size:10},stepSize:25,callback:function(value){return value.toFixed(0)+'%'}}}}}});powerChartInstance._powerDataPercent=powerDataPercent;powerChartInstance._powerData=powerData;powerChartInstance._powerChartColors=powerChartColors.slice(startIndex,startIndex+powerDataPercent.length);console.log('✅ Power chart initialized successfully',{instance:!!powerChartInstance,dataLength:powerDataPercent.length,minValue:Math.min(...powerDataPercent),maxValue:Math.max(...powerDataPercent)});return!0}catch(error){console.error('Error creating power chart:',error);return!1}};setInterval(saveGame,1500);setInterval(()=>{if(typeof checkTutorialProgress==='function'){checkTutorialProgress()}
+if(hackingNextNotificationTime>0&&Date.now()>=hackingNextNotificationTime){hackingNextNotificationTime=0;if(lifetimeEarnings>=10000){displayHackingNotification()}}
+if(document.getElementById('hacking-tab')&&document.getElementById('hacking-tab').classList.contains('active')){updateHackingStats()}
+updateHackingCooldownDisplays();updateWhackCooldownDisplays();updatePacketCooldownDisplays();updateMinigameCardLocks()},1000);if(!priceSwingsStarted){priceSwingsStarted=!0;btcTinySwing();btcFrequentSwing();btcBigSwing();setTimeout(ethTinySwing,700);setTimeout(ethFrequentSwing,1200);setTimeout(ethBigSwing,1500);setTimeout(dogeTinySwing,1400);setTimeout(dogeFrequentSwing,2100);setTimeout(dogeBigSwing,2800)}}
+document.addEventListener('visibilitychange',function(){if(document.hidden){console.log('Page hidden - saving game state');try{saveGame();console.log('Save successful on visibility change')}catch(e){console.error('Save failed on visibility change:',e)}}else{console.log('Page visible - checking saved data exists');const testSave=localStorage.getItem('satoshiTerminalSave');if(testSave){console.log('Save data confirmed in localStorage')}else{console.error('WARNING: No save data found in localStorage!')}}});window.addEventListener('beforeunload',function(e){console.log('Page unloading - saving game state');try{saveGame();console.log('Save successful on beforeunload')}catch(err){console.error('Save failed on beforeunload:',err)}});window.addEventListener('pagehide',function(e){console.log('Page hide event - saving game state');try{saveGame();console.log('Save successful on pagehide')}catch(err){console.error('Save failed on pagehide:',err)}});window.addEventListener('freeze',function(e){console.log('Page freeze event - saving game state');try{saveGame();console.log('Save successful on freeze')}catch(err){console.error('Save failed on freeze:',err)}});function acceptAgeAndTerms(){localStorage.setItem('ageDisclaimerAccepted','true');localStorage.setItem('termsAccepted','true');document.getElementById('age-terms-modal').style.display='none'}
+function openAgeAndTermsModal(){document.getElementById('age-terms-modal').style.display='flex'}
+function openPrivacyModal(){document.getElementById('privacy-modal').style.display='flex'}
+function closePrivacyModal(){document.getElementById('privacy-modal').style.display='none'}
+function showBackupReminder(){if(localStorage.getItem('backupReminderDismissed')==='true'){return}
+const modal=document.getElementById('backup-reminder-modal');if(modal){modal.style.display='flex'}
+if(!window.backupReminderShownThisSession){window.backupReminderShownThisSession=!0;setInterval(()=>{if(localStorage.getItem('backupReminderDismissed')!=='true'){const modal=document.getElementById('backup-reminder-modal');if(modal){modal.style.display='flex'}}},600000)}}
+function dismissBackupReminderPermanently(){localStorage.setItem('backupReminderDismissed','true');closeBackupReminder()}
+function closeBackupReminder(){const modal=document.getElementById('backup-reminder-modal');if(modal){modal.style.display='none'}}
+window.acceptAgeAndTerms=acceptAgeAndTerms;window.openAgeAndTermsModal=openAgeAndTermsModal;window.openPrivacyModal=openPrivacyModal;window.closePrivacyModal=closePrivacyModal;window.showBackupReminder=showBackupReminder;window.closeBackupReminder=closeBackupReminder;window.dismissBackupReminderPermanently=dismissBackupReminderPermanently;window.openExportImportModal=openExportImportModal;window.closeExportImportModal=closeExportImportModal;window.exportSaveToClipboard=exportSaveToClipboard;window.exportSaveToFile=exportSaveToFile;window.importSaveFromText=importSaveFromText;window.importSaveFromFile=importSaveFromFile;window.initHackingMinigame=initHackingMinigame;window.closeHackingModal=closeHackingModal;window.dismissHackingNotification=dismissHackingNotification;window.initWhackMinigame=initWhackMinigame;window.closeWhackMidGame=closeWhackMidGame;window.closeWhackModal=closeWhackModal;window.closeWhackResultsModal=closeWhackResultsModal;window.initNetworkMinigame=initNetworkMinigame;window.closeNetworkModal=closeNetworkModal;window.networkClickAttack=networkClickAttack;window.openMetaUpgradesModal=function(){const modal=document.getElementById('meta-upgrades-modal');if(modal){modal.style.display='flex';console.log('✓ Meta-upgrades modal opened')}else{alert('Meta-upgrades modal not found in HTML')}};window.closeMetaUpgradesModal=function(){const modal=document.getElementById('meta-upgrades-modal');if(modal){modal.style.display='none';console.log('✓ Meta-upgrades modal closed')}};window.handleRugpullButtonClick=function(){console.log('Rugpull button clicked');if(typeof window._rugpullImpl?.handleRugpullButtonClick==='function'){window._rugpullImpl.handleRugpullButtonClick()}else{window.openMetaUpgradesModal()}};window.setTestEarnings=function(amount){lifetimeEarnings=amount;sessionEarnings=amount;addEarnings(amount);console.log('TEST: Set lifetimeEarnings to $'+amount.toLocaleString())};window.test1Billion=function(){lifetimeEarnings=1000000000;dollarBalance=1000000000;sessionEarnings=1000000000;if(typeof window.rugpullAddEarnings==='function'){window.rugpullAddEarnings(1000000000)}
+console.log('✓ TEST: Set earnings to $1,000,000,000');console.log('✓ Rugpull eligible! First rugpull reward: ~20 tokens');updateUI();if(typeof showRugpullOffer==='function'){setTimeout(()=>showRugpullOffer(),500)}};window.testRugpullEarnings=function(amount){console.log(`TEST: Adding $${amount.toLocaleString()} to rugpull progress`);addEarnings(amount);updateUI()};window.debugCheckSave=function(){const data=localStorage.getItem('satoshiTerminalSave');if(!data){console.log('NO SAVE DATA IN LOCALSTORAGE');alert('No save data found in localStorage!');return}
+try{const parsed=JSON.parse(data);console.log('=== LOCALSTORAGE CONTENTS ===');console.log('BTC Balance:',parsed.btcBalance);console.log('ETH Balance:',parsed.ethBalance);console.log('DOGE Balance:',parsed.dogeBalance);console.log('Dollar Balance:',parsed.dollarBalance);console.log('Hardware Equity:',parsed.hardwareEquity);console.log('Lifetime Earnings:',parsed.lifetimeEarnings);console.log('Full data:',parsed);alert('Check console for localStorage contents.\nBTC: '+parsed.btcBalance+'\nETH: '+parsed.ethBalance+'\nDOGE: '+parsed.dogeBalance+'\n$: '+parsed.dollarBalance)}catch(e){console.error('Error parsing save:',e);alert('Error parsing save data: '+e.message)}};if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){initializeGame();document.addEventListener('touchstart',function(e){if(e.target){const btn=e.target.closest('button');if(btn)btn.style.WebkitTapHighlightColor='transparent'}});document.addEventListener('touchend',function(e){if(e.target){const el=e.target.closest('button');if(el){el.blur();document.body.focus()}}})})}else{initializeGame();document.addEventListener('touchstart',function(e){if(e.target){const btn=e.target.closest('button');if(btn)btn.style.WebkitTapHighlightColor='transparent'}});document.addEventListener('touchend',function(e){if(e.target){const el=e.target.closest('button');if(el){el.blur();document.body.focus()}}})}
