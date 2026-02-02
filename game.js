@@ -247,6 +247,12 @@ const effectivePrice=getEffectiveCryptoPrice(dogePrice);const saleValue=amount*e
 updateUI();saveGame();playUpgradeSound()}
 function sellAllDOGE(button){if(dogeBalance<=0)return;const effectivePrice=getEffectiveCryptoPrice(dogePrice);const saleValue=dogeBalance*effectivePrice;addEarnings(saleValue);dogeBalance=0;spawnCoinsForClick('usd',saleValue);if(typeof tutorialData!=='undefined'){tutorialData.cryptoSoldOnce=!0}
 updateUI();saveGame();showSellFeedback(button)}
+function sellAllCrypto(){let totalSaleValue=0;let didSellAnything=!1;if(btcBalance>0){const effectivePrice=getEffectiveCryptoPrice(btcPrice);const saleValue=btcBalance*effectivePrice*0.95;totalSaleValue+=saleValue;btcBalance=0;didSellAnything=!0}
+if(ethBalance>0){const effectivePrice=getEffectiveCryptoPrice(ethPrice);const saleValue=ethBalance*effectivePrice*0.95;totalSaleValue+=saleValue;ethBalance=0;didSellAnything=!0}
+if(dogeBalance>0){const effectivePrice=getEffectiveCryptoPrice(dogePrice);const saleValue=dogeBalance*effectivePrice;totalSaleValue+=saleValue;dogeBalance=0;didSellAnything=!0}
+if(!didSellAnything){alert('No crypto to sell!');return}
+addEarnings(totalSaleValue);spawnCoinsForClick('usd',totalSaleValue);if(typeof tutorialData!=='undefined'){tutorialData.cryptoSoldOnce=!0}
+updateUI();saveGame();playUpgradeSound()}
 function quickSellBTC(percentage,button){if(btcBalance<=0)return;const amountToSell=btcBalance*(percentage/100);const effectivePrice=getEffectiveCryptoPrice(btcPrice);const saleValue=amountToSell*effectivePrice*0.95;btcBalance-=amountToSell;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);updateUI();saveGame();showSellFeedback(button)}
 function quickSellETH(percentage,button){if(ethBalance<=0)return;const amountToSell=ethBalance*(percentage/100);const effectivePrice=getEffectiveCryptoPrice(ethPrice);const saleValue=amountToSell*effectivePrice*0.95;ethBalance-=amountToSell;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);updateUI();saveGame();showSellFeedback(button)}
 function quickSellDOGE(percentage,button){if(dogeBalance<=0)return;const amountToSell=dogeBalance*(percentage/100);const effectivePrice=getEffectiveCryptoPrice(dogePrice);const saleValue=amountToSell*effectivePrice*0.95;dogeBalance-=amountToSell;addEarnings(saleValue);spawnCoinsForClick('usd',saleValue);updateUI();saveGame();showSellFeedback(button)}
